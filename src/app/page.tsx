@@ -2,6 +2,9 @@
 
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface ComponentItem {
   name: string;
@@ -149,6 +152,13 @@ export default function Home() {
     }
   };
 
+  function getPreviewButtonLabel(filename: string) {
+    if (filename.endsWith('.md')) return '문서 보기';
+    if (filename.endsWith('.html')) return '웹페이지 보기';
+    if (filename.endsWith('.tsx') || filename.endsWith('.ts')) return '코드 보기';
+    return '내용 보기';
+  }
+
   return (
     <div className="min-h-screen p-8 pb-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 items-center">
@@ -191,7 +201,7 @@ export default function Home() {
                   className="ml-2 px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
                   onClick={() => handlePreview(item)}
                 >
-                  미리보기
+                  {getPreviewButtonLabel(item.name)}
                 </button>
               </li>
             ))}
@@ -278,7 +288,23 @@ export default function Home() {
             </button>
             <h2 className="text-lg font-bold mb-4 break-all">{previewFileName}</h2>
             <div className="flex-1 overflow-auto bg-gray-100 dark:bg-black/30 rounded p-4 text-xs whitespace-pre-wrap">
-              {previewLoading ? "로딩 중..." : previewContent}
+              {previewLoading ? (
+                "로딩 중..."
+              ) : previewFileName.endsWith('.md') ? (
+                <ReactMarkdown>{previewContent}</ReactMarkdown>
+              ) : previewFileName.endsWith('.html') ? (
+                <iframe
+                  srcDoc={previewContent}
+                  title="HTML 미리보기"
+                  className="w-full h-[60vh] bg-white border rounded"
+                />
+              ) : previewFileName.endsWith('.tsx') || previewFileName.endsWith('.ts') ? (
+                <SyntaxHighlighter language="tsx" style={oneDark} wrapLongLines>
+                  {previewContent}
+                </SyntaxHighlighter>
+              ) : (
+                <pre>{previewContent}</pre>
+              )}
             </div>
           </div>
         </div>
