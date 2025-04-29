@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface ComponentItem {
   name: string;
@@ -14,6 +14,11 @@ export default function Home() {
   const [components, setComponents] = useState<ComponentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function fetchComponents() {
@@ -34,6 +39,58 @@ export default function Home() {
     fetchComponents();
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
+    setFile(selectedFile);
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreview(e.target?.result as string);
+      };
+      reader.readAsText(selectedFile);
+    } else {
+      setPreview("");
+    }
+  };
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("filename", file.name);
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert("업로드 성공!");
+        setShowUpload(false);
+        setFile(null);
+        setPreview("");
+        // 새로고침 없이 목록 갱신
+        setComponents((prev) => [
+          ...prev,
+          {
+            name: file.name,
+            path: `components/${file.name}`,
+            url: `/components/${file.name}`,
+            downloadUrl: data.url || "",
+          },
+        ]);
+      } else {
+        alert(`업로드 실패: ${data.error}`);
+      }
+    } catch (error) {
+      alert("업로드 중 오류 발생");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen p-8 pb-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 items-center">
@@ -46,6 +103,12 @@ export default function Home() {
           priority
         />
         <h1 className="text-2xl font-bold mb-4">업로드된 파일 목록</h1>
+        <button
+          className="mb-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          onClick={() => setShowUpload(true)}
+        >
+          업로드
+        </button>
         {loading ? (
           <div>로딩 중...</div>
         ) : error ? (
@@ -71,6 +134,44 @@ export default function Home() {
           </ul>
         )}
       </main>
+      {/* 업로드 모달 */}
+      {showUpload && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 w-full max-w-md shadow-lg relative">
+            <button
+              className="absolute top-2 right-2 text-2xl text-gray-400 hover:text-gray-700 dark:hover:text-white"
+              onClick={() => setShowUpload(false)}
+              aria-label="닫기"
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-bold mb-4">파일 업로드</h2>
+            <form onSubmit={handleUpload} className="space-y-4">
+              <input
+                type="file"
+                accept=".tsx,.ts,.html,.md"
+                onChange={handleFileChange}
+                ref={fileInputRef}
+                required
+                className="border rounded px-2 py-1 w-full"
+              />
+              {preview && (
+                <div className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-40">
+                  <h3 className="font-semibold mb-1">파일 미리보기:</h3>
+                  <pre>{preview}</pre>
+                </div>
+              )}
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50 w-full"
+                disabled={!file || uploading}
+              >
+                {uploading ? "업로드 중..." : "업로드"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
