@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>다중 포맷 문서 갤러리</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 마크다운 뷰어 기본 스타일 */
+    .markdown-body {
+      color: #24292e;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+    .markdown-body h1 {
+      font-size: 2em;
+      margin: 0.67em 0;
+      font-weight: 600;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid #eaecef;
+    }
+    .markdown-body h2 {
+      font-size: 1.5em;
+      margin-top: 1em;
+      margin-bottom: 16px;
+      font-weight: 600;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid #eaecef;
+    }
+    .code-preview {
+      background-color: #f6f8fa;
+      border-radius: 6px;
+      padding: 16px;
+      overflow: auto;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .print-content, .print-content * {
+        visibility: visible;
+      }
+      .print-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- 헤더 -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <a href="#" class="text-xl font-bold text-indigo-600">다중 포맷 문서 갤러리</a>
+      </div>
+      <nav>
+        <ul class="flex space-x-6">
+          <li><a href="#" class="text-gray-600 hover:text-indigo-600 transition-colors">홈</a></li>
+          <li><a href="#upload" class="text-gray-600 hover:text-indigo-600 transition-colors">업로드</a></li>
+          <li><a href="#styles" class="text-gray-600 hover:text-indigo-600 transition-colors">스타일</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- 파일 업로드 섹션 -->
+    <section id="upload" class="mb-12">
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-medium text-gray-900">새 문서 업로드</h2>
+        </div>
+        <div class="px-6 py-4">
+          <form action="#" method="POST" class="space-y-6">
+            <!-- 파일 업로드 영역 -->
+            <div class="border-2 border-gray-300 border-dashed rounded-md px-6 pt-5 pb-6 flex justify-center">
+              <div class="space-y-1 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div class="flex text-sm text-gray-600">
+                  <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                    <span>파일 선택</span>
+                    <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".md,.html,.tsx">
+                  </label>
+                  <p class="pl-1">또는 드래그 앤 드롭</p>
+                </div>
+                <p class="text-xs text-gray-500">
+                  지원 파일: MD, HTML, TSX (최대 10MB)
+                </p>
+              </div>
+            </div>
+
+            <!-- 문서 타입 선택 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700">문서 타입</label>
+              <div class="mt-2 flex space-x-4">
+                <div class="flex items-center">
+                  <input id="type-md" name="document-type" type="radio" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                  <label for="type-md" class="ml-2 block text-sm text-gray-700">
+                    Markdown (.md)
+                  </label>
+                </div>
+                <div class="flex items-center">
+                  <input id="type-html" name="document-type" type="radio" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label for="type-html" class="ml-2 block text-sm text-gray-700">
+                    HTML (.html)
+                  </label>
+                </div>
+                <div class="flex items-center">
+                  <input id="type-tsx" name="document-type" type="radio" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label for="type-tsx" class="ml-2 block text-sm text-gray-700">
+                    TSX (.tsx)
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 문서 제목 및 설명 -->
+            <div>
+              <label for="document-title" class="block text-sm font-medium text-gray-700">문서 제목</label>
+              <input type="text" id="document-title" name="document-title" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            <div>
+              <label for="document-description" class="block text-sm font-medium text-gray-700">설명 (선택사항)</label>
+              <textarea id="document-description" name="document-description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+            </div>
+
+            <!-- 태그 -->
+            <div>
+              <label for="document-tags" class="block text-sm font-medium text-gray-700">태그 (쉼표로 구분)</label>
+              <input type="text" id="document-tags" name="document-tags" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="예: 보고서, 법률, 마스골프">
+            </div>
+
+            <!-- 제출 버튼 -->
+            <div class="flex justify-end">
+              <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                업로드
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- 갤러리 섹션 -->
+    <section class="mb-12">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">문서 갤러리</h2>
+        
+        <!-- 필터링 및 검색 -->
+        <div class="flex space-x-4">
+          <div>
+            <select class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+              <option>모든 타입</option>
+              <option>Markdown</option>
+              <option>HTML</option>
+              <option>TSX</option>
+            </select>
+          </div>
+          <div class="relative flex-1 min-w-[200px]">
+            <input type="text" placeholder="검색어 입력..." class="block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-10 pr-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-search text-gray-400"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 문서 카드 그리드 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- 문서 카드 1: Markdown -->
+        <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+          <div class="px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+              <span class="inline-flex items-center justify-center p-2 bg-blue-100 text-blue-600 rounded-md mr-3">
+                <i class="fab fa-markdown text-lg"></i>
+              </span>
+              <h3 class="text-lg font-medium text-gray-900 truncate">프로젝트 기획안</h3>
+            </div>
+            <span class="text-xs text-gray-500">2023.04.30</span>
+          </div>
+          <div class="px-6 py-2 border-t border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-wrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
+                마크다운
+              </span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-800 mr-2 mb-2">
+                기획
+              </span>
+            </div>
+          </div>
+          <div class="px-6 py-4">
+            <p class="text-sm text-gray-600 line-clamp-2">
+              프로젝트 기획안 문서입니다. 주요 목표와 일정, 예산 계획이 포함되어 있습니다.
+            </p>
+          </div>
+          <div class="px-6 py-3 bg-gray-50 flex justify-end">
+            <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+              자세히 보기 →
+            </a>
+          </div>
+        </div>
+
+        <!-- 문서 카드 2: HTML -->
+        <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+          <div class="px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+              <span class="inline-flex items-center justify-center p-2 bg-orange-100 text-orange-600 rounded-md mr-3">
+                <i class="fab fa-html5 text-lg"></i>
+              </span>
+              <h3 class="text-lg font-medium text-gray-900 truncate">웹사이트 헤더</h3>
+            </div>
+            <span class="text-xs text-gray-500">2023.04.28</span>
+          </div>
+          <div class="px-6 py-2 border-t border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-wrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-orange-100 text-orange-800 mr-2 mb-2">
+                HTML
+              </span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-800 mr-2 mb-2">
+                Tailwind
+              </span>
+            </div>
+          </div>
+          <div class="px-6 py-4">
+            <p class="text-sm text-gray-600 line-clamp-2">
+              회사 웹사이트용 반응형 헤더 컴포넌트입니다. Tailwind CSS로 구현되었습니다.
+            </p>
+          </div>
+          <div class="px-6 py-3 bg-gray-50 flex justify-end">
+            <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+              자세히 보기 →
+            </a>
+          </div>
+        </div>
+
+        <!-- 문서 카드 3: TSX -->
+        <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+          <div class="px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+              <span class="inline-flex items-center justify-center p-2 bg-blue-100 text-blue-600 rounded-md mr-3">
+                <i class="fab fa-react text-lg"></i>
+              </span>
+              <h3 class="text-lg font-medium text-gray-900 truncate">데이터 테이블 컴포넌트</h3>
+            </div>
+            <span class="text-xs text-gray-500">2023.04.25</span>
+          </div>
+          <div class="px-6 py-2 border-t border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-wrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
+                TSX
+              </span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-800 mr-2 mb-2">
+                React
+              </span>
+            </div>
+          </div>
+          <div class="px-6 py-4">
+            <p class="text-sm text-gray-600 line-clamp-2">
+              정렬 및 페이지네이션이 가능한 데이터 테이블 React 컴포넌트입니다.
+            </p>
+          </div>
+          <div class="px-6 py-3 bg-gray-50 flex justify-end">
+            <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+              자세히 보기 →
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 문서 상세 보기 섹션 (예시) -->
+    <section class="mb-12">
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 flex justify-between items-center border-b border-gray-200">
+          <div class="flex items-center">
+            <span class="inline-flex items-center justify-center p-2 bg-blue-100 text-blue-600 rounded-md mr-3">
+              <i class="fab fa-markdown text-lg"></i>
+            </span>
+            <h2 class="text-xl font-medium text-gray-900">프로젝트 기획안</h2>
+          </div>
+          <div class="flex space-x-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
+              마크다운
+            </span>
+            <span class="text-xs text-gray-500">
+              업로드: 2023.04.30
+            </span>
+          </div>
+        </div>
+
+        <!-- 문서 탭 내비게이션 -->
+        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+          <div class="flex -mb-px">
+            <button class="px-4 py-2 border-b-2 border-indigo-500 text-sm font-medium text-indigo-600">
+              미리보기
+            </button>
+            <button class="px-4 py-2 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              코드 보기
+            </button>
+          </div>
+        </div>
+
+        <!-- 문서 내용 (마크다운 렌더링된 상태) -->
+        <div class="p-6">
+          <!-- 스타일 및 액션 버튼 -->
+          <div class="flex justify-between items-center mb-6 print:hidden">
+            <div class="flex items-center">
+              <label class="mr-2 text-sm text-gray-700">스타일:</label>
+              <select class="mt-1 block w-40 pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
+                <option>기본 스타일</option>
+                <option>법률 문서</option>
+                <option>비즈니스 보고서</option>
+                <option>마스골프 브랜드</option>
+                <option>고객용 문서</option>
+              </select>
+            </div>
+            <div class="flex space-x-3">
+              <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-download mr-2"></i> 다운로드
+              </button>
+              <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-print mr-2"></i> 인쇄
+              </button>
+            </div>
+          </div>
+
+          <!-- 문서 내용 -->
+          <div class="markdown-body print-content">
+            <h1>프로젝트 기획안</h1>
+            <h2>1. 프로젝트 개요</h2>
+            <p>이 문서는 새로운 다중 포맷 문서 갤러리 시스템 구축을 위한 기획안입니다. 마크다운, HTML, TSX 등 다양한 형식의 문서를 저장하고 표시하며 스타일을 적용할 수 있는 시스템을 개발합니다.</p>
+            
+            <h2>2. 목표</h2>
+            <ul>
+              <li>다양한 형식의 문서를 한 곳에서 관리</li>
+              <li>문서별 맞춤 스타일 적용 기능</li>
+              <li>코드 추출 및 재사용 기능</li>
+              <li>인쇄 및 PDF 변환 지원</li>
+            </ul>
+            
+            <h2>3. 일정</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>단계</th>
+                  <th>기간</th>
+                  <th>내용</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>기획</td>
+                  <td>2주</td>
+                  <td>요구사항 정의 및 디자인</td>
+                </tr>
+                <tr>
+                  <td>개발</td>
+                  <td>8주</td>
+                  <td>프론트엔드 및 백엔드 개발</td>
+                </tr>
+                <tr>
+                  <td>테스트</td>
+                  <td>2주</td>
+                  <td>기능 테스트 및 버그 수정</td>
+                </tr>
+                <tr>
+                  <td>배포</td>
+                  <td>1주</td>
+                  <td>시스템 배포 및 사용자 교육</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <h2>4. 예산</h2>
+            <p>총 예산: 50,000,000원</p>
+            <ul>
+              <li>개발 인건비: 35,000,000원</li>
+              <li>서버 및 인프라: 10,000,000원</li>
+              <li>교육 및 기타: 5,000,000원</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HTML/TSX 문서 상세 보기 예시 -->
+    <section class="mb-12">
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 flex justify-between items-center border-b border-gray-200">
+          <div class="flex items-center">
+            <span class="inline-flex items-center justify-center p-2 bg-orange-100 text-orange-600 rounded-md mr-3">
+              <i class="fab fa-html5 text-lg"></i>
+            </span>
+            <h2 class="text-xl font-medium text-gray-900">웹사이트 헤더</h2>
+          </div>
+          <div class="flex space-x-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-orange-100 text-orange-800">
+              HTML
+            </span>
+            <span class="text-xs text-gray-500">
+              업로드: 2023.04.28
+            </span>
+          </div>
+        </div>
+
+        <!-- 문서 탭 내비게이션 -->
+        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+          <div class="flex -mb-px">
+            <button class="px-4 py-2 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              미리보기
+            </button>
+            <button class="px-4 py-2 border-b-2 border-indigo-500 text-sm font-medium text-indigo-600">
+              코드 보기
+            </button>
+          </div>
+        </div>
+
+        <!-- 코드 뷰 -->
+        <div class="p-6">
+          <!-- 코드 액션 버튼 -->
+          <div class="flex justify-between items-center mb-6">
+            <div class="flex space-x-3">
+              <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                <i class="fas fa-code mr-2"></i> HTML 추출
+              </button>
+              <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-teal-700 bg-teal-100 hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                <i class="fab fa-css3 mr-2"></i> CSS 클래스 추출
+              </button>
+            </div>
+            <div class="flex space-x-3">
+              <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-download mr-2"></i> 다운로드
+              </button>
+              <button class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="far fa-copy mr-2"></i> 복사
+              </button>
+            </div>
+          </div>
+
+          <!-- 코드 표시 -->
+          <div class="code-preview">
+            <pre class="text-sm text-gray-800">
+&lt;!-- 반응형 네비게이션 헤더 -->
+&lt;header class="bg-white shadow">
+  &lt;div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    &lt;div class="flex justify-between h-16">
+      &lt;div class="flex">
+        &lt;div class="flex-shrink-0 flex items-center">
+          &lt;img class="block h-8 w-auto" src="/logo.svg" alt="로고">
+        &lt;/div>
+        &lt;nav class="hidden md:ml-6 md:flex md:space-x-8">
+          &lt;a href="#" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            홈
+          &lt;/a>
+          &lt;a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            회사소개
+          &lt;/a>
+          &lt;a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            서비스
+          &lt;/a>
+          &lt;a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            연락처
+          &lt;/a>
+        &lt;/nav>
+      &lt;/div>
+      
+      &lt;div class="hidden md:ml-4 md:flex md:items-center">
+        &lt;button class="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          &lt;span class="sr-only">알림 보기&lt;/span>
+          &lt;svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            &lt;path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          &lt;/svg>
+        &lt;/button>
+
+        &lt;div class="ml-3 relative">
+          &lt;button class="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            &lt;img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+          &lt;/button>
+        &lt;/div>
+      &lt;/div>
+
+      &lt;div class="-mr-2 flex items-center md:hidden">
+        &lt;button class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+          &lt;span class="sr-only">메뉴 열기&lt;/span>
+          &lt;svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            &lt;path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          &lt;/svg>
+        &lt;/button>
+      &lt;/div>
+    &lt;/div>
+  &lt;/div>
+&lt;/header>
+            </pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="bg-white border-t border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="md:flex md:items-center md:justify-between">
+        <div class="flex justify-center md:order-2 space-x-6">
+          <a href="#" class="text-gray-400 hover:text-gray-500">
+            <span class="sr-only">GitHub</span>
+            <i class="fab fa-github text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-gray-500">
+            <span class="sr-only">Twitter</span>
+            <i class="fab fa-twitter text-xl"></i>
+          </a>
+        </div>
+        <div class="mt-8 md:mt-0 md:order-1">
+          <p class="text-center text-base text-gray-400">
+            &copy; 2023 다중 포맷 문서 갤러리. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
