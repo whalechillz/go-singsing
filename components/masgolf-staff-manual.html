@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MASGOLF 직원용 고객 응대 매뉴얼</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f5f5f5;
+      color: #333333;
+      padding: 40px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: #FFFFFF;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      padding: 60px;
+    }
+    
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #FFD700;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #333;
+    }
+    
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #002147;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      border-left: 5px solid #FFD700;
+      padding-left: 10px;
+    }
+    
+    h3 {
+      font-size: 20px;
+      color: #555555;
+      margin-top: 30px;
+      margin-bottom: 15px;
+    }
+    
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    
+    .highlight-box {
+      background-color: #F1F1F5;
+      border: 1px solid #CCCCCC;
+      padding: 20px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    
+    .script-card {
+      background-color: #FFFFFF;
+      border-left: 4px solid #FFD700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin: 20px 0;
+      position: relative;
+    }
+    
+    .question {
+      font-weight: 700;
+      color: #002147;
+      margin-bottom: 10px;
+    }
+    
+    .answer {
+      padding-left: 10px;
+      border-left: 2px solid #EEEEEE;
+    }
+    
+    .tips {
+      background-color: #FFF9E0;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    
+    .tips h4 {
+      color: #BB8608;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    
+    th {
+      background-color: #F1F1F5;
+      color: #111111;
+      padding: 12px;
+      border: 1px solid #EEEEEE;
+      text-align: left;
+    }
+    
+    td {
+      padding: 10px;
+      border: 1px solid #EEEEEE;
+      font-size: 15px;
+    }
+    
+    .tab-section {
+      margin-top: 20px;
+    }
+    
+    .tab-content {
+      display: block;
+    }
+    
+    .info-icon {
+      display: inline-block;
+      background-color: #002147;
+      color: white;
+      width: 20px;
+      height: 20px;
+      text-align: center;
+      line-height: 20px;
+      border-radius: 50%;
+      margin-right: 5px;
+      font-size: 12px;
+    }
+    
+    .category-label {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      margin-right: 10px;
+      font-weight: 500;
+    }
+    
+    .sales {
+      background-color: #E3F2FD;
+      color: #0D47A1;
+    }
+    
+    .repair {
+      background-color: #E8F5E9;
+      color: #1B5E20;
+    }
+    
+    .customer-service {
+      background-color: #FFF3E0;
+      color: #E65100;
+    }
+    
+    .footer {
+      margin-top: 60px;
+      font-size: 14px;
+      color: #777777;
+      text-align: center;
+      border-top: 1px solid #EEEEEE;
+      padding-top: 20px;
+    }
+    
+    @media print {
+      body {
+        padding: 0;
+        background-color: white;
+      }
+      
+      .container {
+        box-shadow: none;
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 28px;
+      }
+      
+      h2 {
+        font-size: 22px;
+      }
+      
+      .script-card {
+        break-inside: avoid;
+      }
+      
+      .footer {
+        position: fixed;
+        bottom: 20px;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MASGOLF 직원용 고객 응대 매뉴얼</h1>
+    
+    <div class="highlight-box">
+      <p>이 매뉴얼은 MASGOLF 매장 직원들이 고객 응대 시 활용할 수 있는 상황별 스크립트와 가이드라인을 제공합니다. 고객의 질문과 우려사항에 대해 일관되고 전문적인 답변을 제공하여 MASGOLF의 브랜드 가치를 전달하세요.</p>
+    </div>
+    
+    <h2>목차</h2>
+    <ol style="margin-left: 20px; line-height: 1.8;">
+      <li>제품 관련 응대 스크립트</li>
+      <li>보험 안내 응대 스크립트</li>
+      <li>피팅 및 수리 관련 응대 스크립트</li>
+      <li>고객 불만 처리 가이드라인</li>
+      <li>자주 묻는 질문 (FAQ)</li>
+    </ol>
+    
+    <h2>1. 제품 관련 응대 스크립트</h2>
+    
+    <div class="script-card">
+      <span class="category-label sales">판매</span>
+      <p class="question">고객: "MASGOLF 드라이버가 다른 브랜드보다 좋은 점이 뭔가요?"</p>
+      <div class="answer">
+        <p>직원: "MASGOLF 드라이버는 시니어 골퍼의 비거리 향상에 최적화된 일본 장인의 고반발 기술을 바탕으로 제작되었습니다. 일반적인 타 브랜드 대비 15~25m의 비거리 향상을 경험하실 수 있으며, 특히 스윙 스피드가 빠르지 않은 아마추어, 시니어, 여성 골퍼분들께 최적화되어 있습니다. 또한 가격 대비 가치가 높고, 일본 명장의 수제작 방식으로 제작되어 품질이 우수합니다."</p>
+      </div>
+      
+      <div class="tips">
+        <h4>응대 팁</h4>
+        <ul style="margin-left: 15px;">
+          <li>고객의 골프 실력, 스윙 스피드, 선호도를 먼저 파악한 후 적절한 제품을 추천하세요.</li>
+          <li>가능하면 제품을 고객이 직접 체험할 수 있도록 유도하세요.</li>
+          <li>비교 질문에는 타사 제품을 폄하하지 말고, MASGOLF의 강점을 강조하세요.</li>
+        </ul>
+      </div>
+    </div>
+    
+    <h2>2. 보험 안내 응대 스크립트</h2>
+    
+    <div class="script-card">
+      <span class="category-label sales">판매</span>
+      <p class="question">고객: "이거 헤드 깨지면 수리비 얼마나 들어요?"</p>
+      <div class="answer">
+        <p>직원: "사장님, 이 드라이버는 헤드 교체만 해도 50만 원 이상 들어갑니다. 그런데 요즘은 연간 2만 원 정도면 이런 고가 드라이버 파손을 보장해주는 골프보험이 있어요. 예를 들면 DB손해보험 상품은 드라이버 파손 시 최대 50만 원까지 보상되고, 모바일로 청구도 쉬워서 고객님들이 많이 가입하세요."</p>
+      </div>
+      
+      <p class="question">고객: "그거 어디서 가입하는 거예요?"</p>
+      <div class="answer">
+        <p>직원: "모바일로 바로 가입 가능하고요, 원하시면 상품 안내 링크도 문자로 보내드릴 수 있어요. 미리 가입해두시면, 다음에 혹시라도 파손되었을 때 수리비 걱정 안 하셔도 됩니다."</p>
+      </div>
+      
+      <div class="tips">
+        <h4>응대 팁</h4>
+        <ul style="margin-left: 15px;">
+          <li>고가 장비 구매 고객에게는 보험 가입의 필요성을 자연스럽게 안내하세요.</li>
+          <li>보험 회사를 직접 추천하기보다는 여러 옵션을 제시하는 것이 좋습니다.</li>
+          <li>가입 링크가 담긴 안내문을 문자로 발송할 수 있도록 준비해두세요.</li>
+          <li>주요 보험사 링크:
+            <ul>
+              <li>DB손해보험: https://www.directdb.co.kr/product/gnrl/custinfoGnrl.do?pdcDvcd=g_golf&searchPdcCd=10545&searchPdcTrtHistCd=00</li>
+              <li>현대해상: https://direct.hi.co.kr/service.do?m=74b0e768bb</li>
+              <li>캐롯손해보험: https://www.carrotins.com/product/holeinone/intro/</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>보험사</th>
+          <th>상품명</th>
+          <th>보험료</th>
+          <th>보장금액</th>
+          <th>특징</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>DB손해보험</td>
+          <td>프로미 다이렉트 골프보험</td>
+          <td>연 약 22,000원</td>
+          <td>드라이버 파손 최대 50만 원</td>
+          <td>다이렉트 가입, 반복 보상, 빠른 청구</td>
+        </tr>
+        <tr>
+          <td>현대해상</td>
+          <td>다이렉트 골프보험</td>
+          <td>연 약 23,000원</td>
+          <td>최대 50만 원</td>
+          <td>모바일 접수, AI 심사, 신속 보상</td>
+        </tr>
+        <tr>
+          <td>KB손해보험</td>
+          <td>골프플랜 특약</td>
+          <td>월 약 20,000~30,000원</td>
+          <td>골프용품 전체 최대 300만 원</td>
+          <td>장기 보장, 골프 전체 장비 대상</td>
+        </tr>
+        <tr>
+          <td>캐롯손해보험</td>
+          <td>골프 원데이</td>
+          <td>1일 약 2,000원</td>
+          <td>최대 50만 원</td>
+          <td>단기 보험, 당일 라운드만 보장</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <h2>3. 피팅 및 수리 관련 응대 스크립트</h2>
+    
+    <div class="script-card">
+      <span class="category-label repair">수리</span>
+      <p class="question">고객: "매장 바로 옆에서 한다면서 왜 수리 3일이나 걸려요?"</p>
+      <div class="answer">
+        <p>직원: "네, 일부 피팅은 매장에서 바로 진행되지만, 드라이버처럼 정밀하고 고가인 제품은 반드시 초음파 측정과 밸런스 확인 같은 검증 절차를 거칩니다. 또한 내부 피팅실과 전문 장비가 있는 협력처에서 처리되기 때문에 통상 입고 후 3일 정도 소요됩니다."</p>
+      </div>
+      
+      <p class="question">고객: "좀 빨리 안 되나?"</p>
+      <div class="answer">
+        <p>직원: "사장님 요청 최대한 반영해서 빠르게 처리해드리겠습니다. 다만, 정확한 피팅과 장비 테스트를 거쳐야 하기 때문에 급하게 처리할 경우 오히려 품질이 떨어질 수 있어 양해 부탁드립니다."</p>
+      </div>
+      
+      <div class="tips">
+        <h4>응대 팁</h4>
+        <ul style="margin-left: 15px;">
+          <li>수리 과정의 전문성과 정밀함을 강조하세요.</li>
+          <li>급한 고객에게는 대체 클럽 대여 서비스를 안내해볼 수 있습니다.</li>
+          <li>가능하면 수리 진행 상황을 중간에 문자로 안내하세요.</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="script-card">
+      <span class="category-label repair">수리</span>
+      <p class="question">고객: "A/S 기간이 지났는데도 무상 수리 가능한가요?"</p>
+      <div class="answer">
+        <p>직원: "MASGOLF 제품의 품질 보증 기간은 구매일로부터 1년입니다. 기간이 지난 경우 유상 수리로 진행되지만, 간단한 조정이나 경미한 수리는 매장 판단에 따라 무상으로 도와드리기도 합니다. 제품을 먼저 확인해보고 안내해 드릴게요."</p>
+        <p>만약 고객이 자주 방문하는 VIP 고객이거나 특별한 상황이라면: "사장님께서 저희 매장을 자주 이용해주시는 고객님이시라 최대한 도움 드리겠습니다. 제품 상태 확인 후 가능한 부분은 무상으로 처리해드리겠습니다."</p>
+      </div>
+    </div>
+    
+    <h2>4. 고객 불만 처리 가이드라인</h2>
+    
+    <div class="highlight-box">
+      <h3 style="margin-top: 0;">고객 불만 처리 5단계</h3>
+      <ol style="margin-left: 20px; line-height: 1.6;">
+        <li><strong>경청하기</strong> - 고객의 불만 사항을 중단하지 말고 끝까지 경청하세요.</li>
+        <li><strong>공감하기</strong> - "불편을 겪으셨군요. 정말 죄송합니다."와 같은 공감 표현을 사용하세요.</li>
+        <li><strong>명확히 하기</strong> - "정확히 이해했는지 확인하겠습니다. 말씀하신 내용은..."</li>
+        <li><strong>해결책 제시하기</strong> - 가능한 해결책을 제시하고 고객의 의견을 물어보세요.</li>
+        <li><strong>후속 조치</strong> - 필요한 경우 담당자 연결, 진행상황 안내 등 후속 조치를 약속하세요.</li>
+      </ol>
+    </div>
+    
+    <div class="script-card">
+      <span class="category-label customer-service">고객 서비스</span>
+      <p class="question">고객: "이 드라이버 샀는데 생각보다 비거리가 안 나오네요. 환불해주세요."</p>
+      <div class="answer">
+        <p>직원: "불편을 드려 정말 죄송합니다. 드라이버 성능이 기대에 미치지 못하셨군요. (경청+공감) 혹시 구매하신 후 얼마나 사용해 보셨나요? 그리고 어떤 부분이 가장 불만족스러우셨는지 여쭤봐도 될까요? (명확히 하기)"</p>
+        <p>고객 응답 후: "말씀해주신 내용 이해했습니다. 환불도 가능하지만, 먼저 무료 피팅 서비스를 통해 고객님의 스윙에 맞게 조정해 보는 것은 어떨까요? 많은 고객님들이 피팅 후 만족도가 크게 향상되셨습니다. 그래도 만족스럽지 않으시다면 교환이나 환불도 도와드리겠습니다. (해결책 제시)"</p>
+        <p>결정 후: "알겠습니다. 피팅은 내일 오후 2시에 예약해 드렸고, 담당 피팅 전문가가 직접 도와드릴 예정입니다. 혹시 추가 문의사항 있으시면 언제든지 연락주세요. (후속 조치)"</p>
+      </div>
+    </div>
+    
+    <h2>5. 자주 묻는 질문 (FAQ)</h2>
+    
+    <div class="tab-section">
+      <div class="tab-content">
+        <div class="script-card">
+          <span class="info-icon">Q</span>
+          <p class="question">"MASGOLF 드라이버는 왜 다른 브랜드보다 비싼가요?"</p>
+          <div class="answer">
+            <span class="info-icon">A</span>
+            <p>MASGOLF 드라이버는 일본 명장의 수제작 방식으로 제작되며, 일반 공장 대량생산 제품과는 달리 장인의 손길이 담긴 제품입니다. 또한 비거리 향상을 위한 고반발 기술과 최상급 소재를 사용하기 때문에 가격이 다소 높게 책정되어 있습니다. 하지만 성능과 내구성 측면에서 뛰어나 장기적으로 봤을 때 가격 대비 가치가 우수합니다.</p>
+          </div>
+        </div>
+        
+        <div class="script-card">
+          <span class="info-icon">Q</span>
+          <p class="question">"드라이버 헤드 교체와 샤프트 교체의 차이점은 무엇인가요?"</p>
+          <div class="answer">
+            <span class="info-icon">A</span>
+            <p>드라이버 헤드 교체는 타구 면인 헤드 부분만 교체하는 것으로, 파손이나 크랙이 발생했을 때 주로 진행합니다. 비용은 약 50만 원 이상이 소요됩니다. 반면 샤프트 교체는 드라이버의 '막대' 부분을 교체하는 것으로, 스윙 특성이나 비거리를 변화시키고 싶을 때 진행합니다. 샤프트 종류에 따라 10만 원부터 50만 원까지 다양한 가격대가 있습니다. 두 교체 모두 전문 피팅 과정을 거쳐야 최상의 결과를 얻을 수 있습니다.</p>
+          </div>
+        </div>
+        
+        <div class="script-card">
+          <span class="info-icon">Q</span>
+          <p class="question">"MASGOLF 제품의 A/S 기간은 얼마인가요?"</p>
+          <div class="answer">
+            <span class="info-icon">A</span>
+            <p>MASGOLF 제품의 기본 무상 A/S 기간은 구매일로부터 1년입니다. 이 기간 내에는 제품 자체의 하자로 인한 문제 발생 시 무상 수리를 제공합니다. 단, 고객 과실로 인한 파손이나 정상적 사용 범위를 벗어난 손상의 경우에는 유상 수리로 진행됩니다. 또한 일부 프리미엄 제품의 경우 2년 연장 보증 서비스를 별도로 제공하고 있으니 구매 시 확인하시기 바랍니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>© 2025 MASGOLF. 이 매뉴얼은 MASGOLF의 내부 교육용 자료로, 무단 배포를 금지합니다.</p>
+      <p>버전: 1.0 | 최종 업데이트: 2025.04.21</p>
+    </div>
+  </div>
+</body>
+</html>
