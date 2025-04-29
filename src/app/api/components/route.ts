@@ -23,13 +23,22 @@ export async function GET() {
     }
 
     // 각 파일의 기본 정보 추출
-    const components = (response.data as Record<string, unknown>[])
-      .filter((item) => (item as any).type === "file" && (item as any).name !== ".gitkeep")
+    const components = (response.data as unknown[])
+      .filter((item): item is { type: string; name: string; path: string; download_url: string } =>
+        typeof item === "object" &&
+        item !== null &&
+        "type" in item &&
+        "name" in item &&
+        "path" in item &&
+        "download_url" in item &&
+        (item as { type: string }).type === "file" &&
+        (item as { name: string }).name !== ".gitkeep"
+      )
       .map((item) => ({
-        name: (item as any).name,
-        path: (item as any).path,
-        url: `/components/${(item as any).name}`,
-        downloadUrl: (item as any).download_url,
+        name: item.name,
+        path: item.path,
+        url: `/components/${item.name}`,
+        downloadUrl: item.download_url,
       }));
 
     return NextResponse.json({ success: true, components });
