@@ -65,7 +65,7 @@ export default function Home() {
       try {
         const res = await fetch(`/api/components`);
         const data = await res.json();
-        const found = data.components.find((c: any) => c.name === file.name);
+        const found = (data.components as ComponentItem[]).find((c) => c.name === file.name);
         if (found && found.sha) {
           setOverwriteSha(found.sha);
         } else {
