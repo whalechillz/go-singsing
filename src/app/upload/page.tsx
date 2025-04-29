@@ -41,8 +41,12 @@ export default function UploadPage() {
       } else {
         alert(`업로드 실패: ${data.error}`);
       }
-    } catch (error: any) {
-      alert(`오류 발생: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(`오류 발생: ${error.message}`);
+      } else {
+        alert("알 수 없는 오류가 발생했습니다.");
+      }
     } finally {
       setLoading(false);
     }
