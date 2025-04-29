@@ -24,7 +24,7 @@ export async function GET() {
 
     // 각 파일의 기본 정보 추출
     const components = (response.data as unknown[])
-      .filter((item): item is { type: string; name: string; path: string; download_url: string } =>
+      .filter((item): item is { type: string; name: string; path: string; download_url: string; sha?: string } =>
         typeof item === "object" &&
         item !== null &&
         "type" in item &&
@@ -39,6 +39,7 @@ export async function GET() {
         path: item.path,
         url: `/components/${item.name}`,
         downloadUrl: item.download_url,
+        sha: item.sha,
       }));
 
     return NextResponse.json({ success: true, components });
