@@ -23,19 +23,19 @@ export async function GET() {
     }
 
     // 각 파일의 기본 정보 추출
-    const components = (response.data as Record<string, any>[])
-      .filter((item) => item.type === "file" && item.name !== ".gitkeep")
+    const components = (response.data as Record<string, unknown>[])
+      .filter((item) => (item as any).type === "file" && (item as any).name !== ".gitkeep")
       .map((item) => ({
-        name: item.name,
-        path: item.path,
-        url: `/components/${item.name}`,
-        downloadUrl: item.download_url,
+        name: (item as any).name,
+        path: (item as any).path,
+        url: `/components/${(item as any).name}`,
+        downloadUrl: (item as any).download_url,
       }));
 
     return NextResponse.json({ success: true, components });
   } catch (error) {
     // components 디렉토리가 없는 경우
-    if ((error as any).status === 404) {
+    if (typeof error === "object" && error && "status" in error && (error as { status?: number }).status === 404) {
       return NextResponse.json({ success: true, components: [] });
     }
     console.error("GitHub API 에러:", error);
