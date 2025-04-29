@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       status: 200,
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "파일을 찾을 수 없습니다." }, { status: 404 });
   }
 } 
