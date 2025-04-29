@@ -25,7 +25,7 @@ export default function Home() {
         } else {
           setError(data.error || "알 수 없는 오류");
         }
-      } catch (e) {
+      } catch {
         setError("네트워크 오류");
       } finally {
         setLoading(false);

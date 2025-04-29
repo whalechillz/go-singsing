@@ -23,9 +23,9 @@ export async function GET() {
     }
 
     // 각 파일의 기본 정보 추출
-    const components = response.data
-      .filter((item: any) => item.type === "file" && item.name !== ".gitkeep")
-      .map((item: any) => ({
+    const components = (response.data as Record<string, any>[])
+      .filter((item) => item.type === "file" && item.name !== ".gitkeep")
+      .map((item) => ({
         name: item.name,
         path: item.path,
         url: `/components/${item.name}`,
