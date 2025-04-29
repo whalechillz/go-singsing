@@ -22,6 +22,10 @@ export default function Home() {
   const [showOverwrite, setShowOverwrite] = useState(false);
   const [overwriteSha, setOverwriteSha] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewContent, setPreviewContent] = useState("");
+  const [previewFileName, setPreviewFileName] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     async function fetchComponents() {
@@ -125,6 +129,26 @@ export default function Home() {
     await doUpload(overwriteSha);
   };
 
+  const handlePreview = async (item: ComponentItem) => {
+    setShowPreview(true);
+    setPreviewFileName(item.name);
+    setPreviewContent("");
+    setPreviewLoading(true);
+    try {
+      const res = await fetch(`/api/raw?name=${encodeURIComponent(item.name)}`);
+      if (res.ok) {
+        const text = await res.text();
+        setPreviewContent(text);
+      } else {
+        setPreviewContent("파일을 불러오지 못했습니다.");
+      }
+    } catch {
+      setPreviewContent("파일을 불러오지 못했습니다.");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen p-8 pb-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 items-center">
@@ -163,6 +187,12 @@ export default function Home() {
                 >
                   다운로드
                 </a>
+                <button
+                  className="ml-2 px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                  onClick={() => handlePreview(item)}
+                >
+                  미리보기
+                </button>
               </li>
             ))}
           </ul>
@@ -232,6 +262,23 @@ export default function Home() {
               >
                 취소
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPreview && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 w-full max-w-3xl max-h-[90vh] shadow-lg relative flex flex-col">
+            <button
+              className="absolute top-2 right-2 text-2xl text-gray-400 hover:text-gray-700 dark:hover:text-white"
+              onClick={() => setShowPreview(false)}
+              aria-label="닫기"
+            >
+              ×
+            </button>
+            <h2 className="text-lg font-bold mb-4 break-all">{previewFileName}</h2>
+            <div className="flex-1 overflow-auto bg-gray-100 dark:bg-black/30 rounded p-4 text-xs whitespace-pre-wrap">
+              {previewLoading ? "로딩 중..." : previewContent}
             </div>
           </div>
         </div>
