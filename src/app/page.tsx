@@ -84,7 +84,7 @@ export default function Home() {
       } else {
         alert(`업로드 실패: ${data.error}`);
       }
-    } catch (error) {
+    } catch {
       alert("업로드 중 오류 발생");
     } finally {
       setUploading(false);
