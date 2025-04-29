@@ -8,6 +8,7 @@ interface ComponentItem {
   path: string;
   url: string;
   downloadUrl: string;
+  sha?: string;
 }
 
 export default function Home() {
@@ -18,6 +19,8 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState("");
+  const [showOverwrite, setShowOverwrite] = useState(false);
+  const [overwriteSha, setOverwriteSha] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,9 +60,34 @@ export default function Home() {
     e.preventDefault();
     if (!file) return;
     setUploading(true);
+    const exist = components.find((c) => c.name === file.name);
+    if (exist) {
+      try {
+        const res = await fetch(`/api/components`);
+        const data = await res.json();
+        const found = data.components.find((c: any) => c.name === file.name);
+        if (found && found.sha) {
+          setOverwriteSha(found.sha);
+        } else {
+          setOverwriteSha(null);
+        }
+      } catch {
+        setOverwriteSha(null);
+      }
+      setShowOverwrite(true);
+      setUploading(false);
+      return;
+    }
+    await doUpload();
+  };
+
+  const doUpload = async (sha?: string | null) => {
+    if (!file) return;
+    setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
     formData.append("filename", file.name);
+    if (sha) formData.append("sha", sha);
     try {
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -69,16 +97,18 @@ export default function Home() {
       if (data.success) {
         alert("업로드 성공!");
         setShowUpload(false);
+        setShowOverwrite(false);
         setFile(null);
         setPreview("");
-        // 새로고침 없이 목록 갱신
+        setOverwriteSha(null);
         setComponents((prev) => [
-          ...prev,
+          ...prev.filter((c) => c.name !== file.name),
           {
             name: file.name,
             path: `components/${file.name}`,
             url: `/components/${file.name}`,
             downloadUrl: data.url || "",
+            sha: sha || undefined,
           },
         ]);
       } else {
@@ -89,6 +119,10 @@ export default function Home() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleOverwrite = async () => {
+    await doUpload(overwriteSha);
   };
 
   return (
@@ -134,7 +168,6 @@ export default function Home() {
           </ul>
         )}
       </main>
-      {/* 업로드 모달 */}
       {showUpload && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 rounded-lg p-8 w-full max-w-md shadow-lg relative">
@@ -169,6 +202,37 @@ export default function Home() {
                 {uploading ? "업로드 중..." : "업로드"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      {showOverwrite && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 w-full max-w-sm shadow-lg relative">
+            <button
+              className="absolute top-2 right-2 text-2xl text-gray-400 hover:text-gray-700 dark:hover:text-white"
+              onClick={() => setShowOverwrite(false)}
+              aria-label="닫기"
+            >
+              ×
+            </button>
+            <h2 className="text-lg font-bold mb-4">덮어쓰기 확인</h2>
+            <p className="mb-4">동일한 이름의 파일이 이미 존재합니다.<br />덮어쓰시겠습니까?</p>
+            <div className="flex gap-4">
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+                onClick={handleOverwrite}
+                disabled={uploading}
+              >
+                덮어쓰기
+              </button>
+              <button
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded"
+                onClick={() => setShowOverwrite(false)}
+                disabled={uploading}
+              >
+                취소
+              </button>
+            </div>
           </div>
         </div>
       )}
