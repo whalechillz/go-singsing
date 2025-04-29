@@ -183,7 +183,7 @@ export default function Home() {
                   className="text-blue-600 underline ml-4"
                   target="_blank"
                   rel="noopener noreferrer"
-                  download
+                  download={item.name}
                 >
                   다운로드
                 </a>
