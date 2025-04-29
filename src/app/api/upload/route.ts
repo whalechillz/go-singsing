@@ -26,6 +26,13 @@ export async function POST(req: NextRequest) {
     const safeFilename = filename.replace(/[^a-zA-Z0-9_.-]/g, "_");
     const componentPath = `components/${safeFilename}`;
 
+    // 허용 확장자 검사
+    const allowedExtensions = [".tsx", ".ts", ".html", ".md"];
+    const ext = safeFilename.slice(safeFilename.lastIndexOf(".")).toLowerCase();
+    if (!allowedExtensions.includes(ext)) {
+      return NextResponse.json({ success: false, error: `허용되지 않는 파일 형식입니다. (${allowedExtensions.join(", ")})` }, { status: 400 });
+    }
+
     // GitHub에 파일 업로드
     await octokit.repos.createOrUpdateFileContents({
       owner: REPO_OWNER,

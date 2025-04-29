@@ -61,7 +61,7 @@ export default function UploadPage() {
           <input
             type="file"
             id="file"
-            accept=".tsx"
+            accept=".tsx,.ts,.html,.md"
             onChange={handleFileChange}
             required
             className="border rounded px-2 py-1"
