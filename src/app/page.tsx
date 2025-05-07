@@ -138,7 +138,8 @@ export default function Home() {
     setPreviewContent("");
     setPreviewLoading(true);
     try {
-      const res = await fetch(`/api/raw?name=${encodeURIComponent(item.name)}`);
+      const encodedName = encodeURIComponent(encodeURIComponent(item.name));
+      const res = await fetch(`/api/raw?name=${encodedName}`);
       if (res.ok) {
         const text = await res.text();
         setPreviewContent(text);
