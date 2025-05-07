@@ -29,6 +29,8 @@ export default function Home() {
   const [previewContent, setPreviewContent] = useState("");
   const [previewFileName, setPreviewFileName] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     async function fetchComponents() {
@@ -132,22 +134,19 @@ export default function Home() {
     await doUpload(overwriteSha);
   };
 
-  const handlePreview = async (item: ComponentItem) => {
-    setShowPreview(true);
-    setPreviewFileName(item.name);
-    setPreviewContent("");
+  const handlePreview = async (name: string) => {
+    setPreviewFileName(name);
+    setPreviewContent(null);
     setPreviewLoading(true);
+    setPreviewError(null);
+    setPreviewOpen(true);
     try {
-      const encodedName = encodeURIComponent(item.name);
-      const res = await fetch(`/api/raw?name=${encodedName}`);
-      if (res.ok) {
-        const text = await res.text();
-        setPreviewContent(text);
-      } else {
-        setPreviewContent("파일을 불러오지 못했습니다.");
-      }
-    } catch {
-      setPreviewContent("파일을 불러오지 못했습니다.");
+      const res = await fetch(`/api/raw?name=${name}`);
+      if (!res.ok) throw new Error("파일을 불러오지 못했습니다");
+      const text = await res.text();
+      setPreviewContent(text);
+    } catch (e) {
+      setPreviewError("파일을 불러오지 못했습니다");
     } finally {
       setPreviewLoading(false);
     }
@@ -212,32 +211,32 @@ export default function Home() {
                   className="cursor-pointer select-none px-1 py-0.5 rounded hover:bg-blue-100 focus:bg-blue-200 outline-none"
                   tabIndex={0}
                   role="button"
-                  aria-label={`${decodeURIComponent(item.name)} 문서 보기`}
-                  onClick={() => handlePreview(item)}
+                  aria-label={`${item.name} 문서 보기`}
+                  onClick={() => handlePreview(item.name)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') handlePreview(item);
+                    if (e.key === 'Enter' || e.key === ' ') handlePreview(item.name);
                   }}
                 >
-                  {decodeURIComponent(item.name)}
+                  {item.name}
                 </span>
                 <a
                   href={item.downloadUrl}
                   className="text-blue-600 underline ml-4"
                   target="_blank"
                   rel="noopener noreferrer"
-                  download={decodeURIComponent(item.name)}
+                  download={item.name}
                 >
                   다운로드
                 </a>
                 <button
                   className="ml-2 px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-                  onClick={() => handlePreview(item)}
+                  onClick={() => handlePreview(item.name)}
                 >
-                  {getPreviewButtonLabel(decodeURIComponent(item.name))}
+                  {getPreviewButtonLabel(item.name)}
                 </button>
                 <button
                   className="ml-2 px-3 py-1 border border-red-500 bg-transparent text-red-400 hover:bg-red-500 hover:text-white focus:bg-red-600 focus:text-white rounded text-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
-                  aria-label={`${decodeURIComponent(item.name)} 삭제`}
+                  aria-label={`${item.name} 삭제`}
                   tabIndex={0}
                   onClick={() => handleDelete(item)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDelete(item); }}
@@ -327,7 +326,7 @@ export default function Home() {
             >
               ×
             </button>
-            <h2 className="text-lg font-bold mb-4 break-all">{decodeURIComponent(previewFileName)}</h2>
+            <h2 className="text-lg font-bold mb-4 break-all">{previewFileName}</h2>
             <div className="flex-1 overflow-auto bg-gray-100 dark:bg-black/30 rounded p-4 text-xs whitespace-pre-wrap">
               {previewLoading ? (
                 "로딩 중..."

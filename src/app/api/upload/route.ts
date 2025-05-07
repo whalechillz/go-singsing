@@ -22,14 +22,13 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const fileContent = Buffer.from(arrayBuffer).toString("utf8");
 
-    // 파일 이름 인코딩 (한 번만 적용)
-    const encodedFilename = encodeURIComponent(filename);
+    // 파일 이름 인코딩 없이 그대로 사용
     const dotIdx = filename.lastIndexOf(".");
     const namePart = dotIdx !== -1 ? filename.slice(0, dotIdx) : filename;
     const extPart = dotIdx !== -1 ? filename.slice(dotIdx) : "";
-    let componentPath = `components/${encodedFilename}`;
+    let componentPath = `components/${filename}`;
     let uniqueIndex = 1;
-    // 파일명 중복 시 (1), (2) 등 suffix 추가 (한 번만 인코딩)
+    // 파일명 중복 시 (1), (2) 등 suffix 추가 (그대로 사용)
     while (true) {
       try {
         await octokit.repos.getContent({
@@ -38,8 +37,7 @@ export async function POST(req: NextRequest) {
           path: componentPath,
         });
         // 이미 존재하면 suffix 추가
-        const encodedNamePart = encodeURIComponent(namePart);
-        componentPath = `components/${encodedNamePart}(${uniqueIndex})${extPart}`;
+        componentPath = `components/${namePart}(${uniqueIndex})${extPart}`;
         uniqueIndex++;
       } catch {
         // 존재하지 않으면 break
@@ -52,7 +50,7 @@ export async function POST(req: NextRequest) {
     if (!allowedExtensions.includes(ext)) {
       return NextResponse.json({ success: false, error: `허용되지 않는 파일 형식입니다. (${allowedExtensions.join(", ")})` }, { status: 400 });
     }
-    // GitHub에 파일 업로드 (항상 새 파일, 인코딩된 경로)
+    // GitHub에 파일 업로드 (항상 새 파일, 파일명 그대로)
     await octokit.repos.createOrUpdateFileContents({
       owner: REPO_OWNER,
       repo: REPO_NAME,
