@@ -187,7 +187,18 @@ export default function Home() {
           <ul className="w-full max-w-xl space-y-2">
             {components.map((item) => (
               <li key={item.name} className="flex justify-between items-center border rounded px-4 py-2 bg-white/80 dark:bg-black/30">
-                <span>{item.name}</span>
+                <span
+                  className="cursor-pointer select-none px-1 py-0.5 rounded hover:bg-blue-100 focus:bg-blue-200 outline-none"
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${item.name} 문서 보기`}
+                  onClick={() => handlePreview(item)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') handlePreview(item);
+                  }}
+                >
+                  {item.name}
+                </span>
                 <a
                   href={item.downloadUrl}
                   className="text-blue-600 underline ml-4"
