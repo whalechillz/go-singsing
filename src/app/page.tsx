@@ -136,6 +136,7 @@ export default function Home() {
     setPreviewFileName(name);
     setPreviewContent("");
     setPreviewLoading(true);
+    setShowPreview(true);
     try {
       const res = await fetch(`/api/raw?name=${name}`);
       if (!res.ok) throw new Error("파일을 불러오지 못했습니다");
@@ -170,7 +171,6 @@ export default function Home() {
 
   function getPreviewButtonLabel(filename: string) {
     if (filename.endsWith('.md')) return '문서 보기';
-    if (filename.endsWith('.html')) return '웹페이지 보기';
     if (filename.endsWith('.tsx') || filename.endsWith('.ts')) return '코드 보기';
     return '내용 보기';
   }
@@ -224,12 +224,6 @@ export default function Home() {
                 >
                   다운로드
                 </a>
-                <button
-                  className="ml-2 px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-                  onClick={() => handlePreview(item.name)}
-                >
-                  {getPreviewButtonLabel(item.name)}
-                </button>
                 <button
                   className="ml-2 px-3 py-1 border border-red-500 bg-transparent text-red-400 hover:bg-red-500 hover:text-white focus:bg-red-600 focus:text-white rounded text-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
                   aria-label={`${item.name} 삭제`}
