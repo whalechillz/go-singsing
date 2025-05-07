@@ -60,8 +60,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         message: `Add component: ${filename}`,
-        content: Buffer.from(fileContent).toString("base64"),
-        branch: "main",
+      content: Buffer.from(fileContent).toString("base64"),
+      branch: "main",
       }),
     });
     if (!uploadRes.ok) {
