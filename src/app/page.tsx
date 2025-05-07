@@ -136,7 +136,6 @@ export default function Home() {
     setPreviewFileName(name);
     setPreviewContent("");
     setPreviewLoading(true);
-    setPreviewOpen(true);
     try {
       const res = await fetch(`/api/raw?name=${name}`);
       if (!res.ok) throw new Error("파일을 불러오지 못했습니다");
