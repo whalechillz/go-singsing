@@ -152,6 +152,26 @@ export default function Home() {
     }
   };
 
+  const handleDelete = async (item: ComponentItem) => {
+    if (!confirm(`${item.name} 파일을 삭제하시겠습니까?`)) return;
+    try {
+      const res = await fetch(`/api/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: item.name })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setComponents((prev) => prev.filter((c) => c.name !== item.name));
+        alert('삭제 성공!');
+      } else {
+        alert(`삭제 실패: ${data.error}`);
+      }
+    } catch {
+      alert('삭제 중 오류 발생');
+    }
+  };
+
   function getPreviewButtonLabel(filename: string) {
     if (filename.endsWith('.md')) return '문서 보기';
     if (filename.endsWith('.html')) return '웹페이지 보기';
@@ -213,6 +233,15 @@ export default function Home() {
                   onClick={() => handlePreview(item)}
                 >
                   {getPreviewButtonLabel(item.name)}
+                </button>
+                <button
+                  className="ml-2 px-3 py-1 border border-red-500 bg-transparent text-red-400 hover:bg-red-500 hover:text-white focus:bg-red-600 focus:text-white rounded text-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  aria-label={`${item.name} 삭제`}
+                  tabIndex={0}
+                  onClick={() => handleDelete(item)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDelete(item); }}
+                >
+                  삭제
                 </button>
               </li>
             ))}
