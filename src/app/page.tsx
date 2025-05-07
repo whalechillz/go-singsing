@@ -138,7 +138,7 @@ export default function Home() {
     setPreviewContent("");
     setPreviewLoading(true);
     try {
-      const encodedName = encodeURIComponent(encodeURIComponent(item.name));
+      const encodedName = encodeURIComponent(item.name);
       const res = await fetch(`/api/raw?name=${encodedName}`);
       if (res.ok) {
         const text = await res.text();
@@ -212,20 +212,20 @@ export default function Home() {
                   className="cursor-pointer select-none px-1 py-0.5 rounded hover:bg-blue-100 focus:bg-blue-200 outline-none"
                   tabIndex={0}
                   role="button"
-                  aria-label={`${item.name} 문서 보기`}
+                  aria-label={`${decodeURIComponent(item.name)} 문서 보기`}
                   onClick={() => handlePreview(item)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') handlePreview(item);
                   }}
                 >
-                  {item.name}
+                  {decodeURIComponent(item.name)}
                 </span>
                 <a
                   href={item.downloadUrl}
                   className="text-blue-600 underline ml-4"
                   target="_blank"
                   rel="noopener noreferrer"
-                  download={item.name}
+                  download={decodeURIComponent(item.name)}
                 >
                   다운로드
                 </a>
@@ -233,11 +233,11 @@ export default function Home() {
                   className="ml-2 px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
                   onClick={() => handlePreview(item)}
                 >
-                  {getPreviewButtonLabel(item.name)}
+                  {getPreviewButtonLabel(decodeURIComponent(item.name))}
                 </button>
                 <button
                   className="ml-2 px-3 py-1 border border-red-500 bg-transparent text-red-400 hover:bg-red-500 hover:text-white focus:bg-red-600 focus:text-white rounded text-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
-                  aria-label={`${item.name} 삭제`}
+                  aria-label={`${decodeURIComponent(item.name)} 삭제`}
                   tabIndex={0}
                   onClick={() => handleDelete(item)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDelete(item); }}

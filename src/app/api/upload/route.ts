@@ -22,14 +22,14 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const fileContent = Buffer.from(arrayBuffer).toString("utf8");
 
-    // 파일 이름 인코딩
+    // 파일 이름 인코딩 (한 번만 적용)
     const encodedFilename = encodeURIComponent(filename);
     const dotIdx = filename.lastIndexOf(".");
     const namePart = dotIdx !== -1 ? filename.slice(0, dotIdx) : filename;
     const extPart = dotIdx !== -1 ? filename.slice(dotIdx) : "";
     let componentPath = `components/${encodedFilename}`;
     let uniqueIndex = 1;
-    // 파일명 중복 시 (1), (2) 등 suffix 추가 (인코딩 적용)
+    // 파일명 중복 시 (1), (2) 등 suffix 추가 (한 번만 인코딩)
     while (true) {
       try {
         await octokit.repos.getContent({
@@ -57,14 +57,14 @@ export async function POST(req: NextRequest) {
       owner: REPO_OWNER,
       repo: REPO_NAME,
       path: componentPath,
-      message: `Add component: ${decodeURIComponent(componentPath.split("/").pop()!)}`,
+      message: `Add component: ${filename}`,
       content: Buffer.from(fileContent).toString("base64"),
       branch: "main",
     });
     return NextResponse.json({
       success: true,
-      componentId: decodeURIComponent(componentPath.split("/").pop()!),
-      url: `/component/${decodeURIComponent(componentPath.split("/").pop()!)}`,
+      componentId: filename,
+      url: `/component/${filename}`,
     });
   } catch (error) {
     console.error("GitHub 업로드 에러:", error);
