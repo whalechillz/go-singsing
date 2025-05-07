@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>싱싱골프투어 상품 안내</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans KR', 'Arial', sans-serif;
+    }
+    
+    body {
+      background-color: #f5f7fa;
+      color: #343a40;
+      line-height: 1.6;
+      padding: 0;
+      font-size: 16px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      overflow: hidden;
+      background-color: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* 헤더 스타일 */
+    .header {
+      background-color: #2c5282;
+      color: white;
+      padding: 20px 15px;
+      text-align: center;
+    }
+    
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .company-info {
+      font-size: 13px;
+      line-height: 1.4;
+      opacity: 0.9;
+    }
+    
+    /* 섹션 기본 스타일 */
+    .section {
+      padding: 0;
+      margin-bottom: 15px;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin: 0 15px;
+      padding: 15px 0 10px 0;
+      color: #2c5282;
+      border-bottom: 2px solid #2c5282;
+    }
+    
+    /* 상품 정보 통합 카드 */
+    .product-info-box {
+      margin: 15px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      background-color: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .info-row {
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    
+    .info-label {
+      width: 100px;
+      padding: 12px 15px;
+      background-color: #edf2f7;
+      font-weight: bold;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+    }
+    
+    .info-value {
+      flex: 1;
+      padding: 12px 15px;
+      color: #4a5568;
+    }
+    
+    /* 중요 정보 강조 */
+    .important {
+      font-weight: 600;
+      color: #2d3748;
+    }
+    
+    /* 유의사항 박스 */
+    .notice-box {
+      margin: 15px;
+      background-color: #f8f9fa;
+      border-left: 3px solid #4299e1;
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+    
+    .notice-title {
+      font-weight: bold;
+      color: #2b6cb0;
+      margin-bottom: 10px;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+    }
+    
+    .notice-list {
+      list-style-type: none;
+    }
+    
+    .notice-list li {
+      padding: 4px 0;
+      color: #4A5568;
+      font-size: 14px;
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .notice-list li:before {
+      content: "•";
+      margin-right: 8px;
+      color: #4299e1;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+    
+    /* 일정 안내 스타일 */
+    .schedule-section {
+      margin: 15px;
+    }
+    
+    .day-schedule {
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .day-schedule:last-child {
+      margin-bottom: 0;
+    }
+    
+    .day-title {
+      background: #2c5282;
+      color: white;
+      padding: 10px 15px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .day-content {
+      padding: 15px;
+    }
+    
+    .schedule-list {
+      list-style-position: outside;
+      padding-left: 20px;
+      margin-bottom: 15px;
+    }
+    
+    .schedule-list li {
+      margin-bottom: 8px;
+      color: #4a5568;
+    }
+    
+    .schedule-list li.highlight {
+      color: #2b6cb0;
+    }
+    
+    .tee-time-box {
+      background-color: #ebf8ff;
+      border-left: 3px solid #63b3ed;
+      padding: 10px 12px;
+      margin: 10px 0 15px 0;
+      border-radius: 4px;
+    }
+    
+    .tee-time-title {
+      font-weight: bold;
+      color: #2b6cb0;
+      margin-bottom: 5px;
+    }
+    
+    .tee-time-info {
+      display: flex;
+      flex-direction: column;
+      color: #4a5568;
+      font-size: 0.95em;
+    }
+    
+    .tee-time-course {
+      margin-bottom: 4px;
+    }
+    
+    .tee-time-course:last-child {
+      margin-bottom: 0;
+    }
+    
+    .meal-info {
+      display: flex;
+      background: #edf2f7;
+      padding: 10px;
+      border-radius: 6px;
+      justify-content: space-between;
+    }
+    
+    .meal {
+      text-align: center;
+      padding: 0 10px;
+    }
+    
+    .meal-status {
+      font-weight: bold;
+      margin-top: 4px;
+    }
+    
+    .included {
+      color: #2F855A;
+    }
+    
+    .not-included {
+      color: #C53030;
+    }
+    
+    /* 이용 안내 섹션 */
+    .usage-section {
+      margin: 15px;
+    }
+    
+    .usage-card {
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .usage-card:last-child {
+      margin-bottom: 0;
+    }
+    
+    .usage-header {
+      background: #2c5282;
+      color: white;
+      padding: 10px 15px;
+      font-weight: bold;
+    }
+    
+    .usage-body {
+      padding: 15px;
+    }
+    
+    .info-list {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+    
+    .info-list li {
+      margin-bottom: 8px;
+      color: #4a5568;
+    }
+    
+    .sub-list {
+      list-style-type: circle;
+      padding-left: 20px;
+      margin-top: 5px;
+    }
+    
+    .sub-list li {
+      margin-bottom: 5px;
+      font-size: 0.95em;
+    }
+    
+    /* 푸터 스타일 */
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #DEE2E6;
+    }
+
+    .heart {
+      color: #e53e3e;
+      font-size: 16px;
+    }
+    
+    .note {
+      background-color: #fff5f5;
+      border-left: 3px solid #fc8181;
+      padding: 10px 15px;
+      margin-top: 15px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #4a5568;
+    }
+
+    /* 미디어 쿼리 추가 */
+    @media (min-width: 768px) {
+      .container {
+        max-width: 980px; /* 태블릿 크기에서는 980px로 */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 헤더 -->
+    <div class="header">
+      <div class="logo">싱싱골프투어</div>
+      <div class="company-info">
+        수원시 영통구 법조로149번길 200<br>
+        고객센터 TEL 031-215-3990
+      </div>
+    </div>
+    
+    <!-- 상품 정보 -->
+    <div class="section">
+      <div class="section-title">상품 정보</div>
+      
+      <div class="product-info-box">
+        <div class="info-row">
+          <div class="info-label">상품명</div>
+          <div class="info-value important">2박3일 순천버스핑</div>
+        </div>
+        
+        <div class="info-row">
+          <div class="info-label">일정</div>
+          <div class="info-value important">5/19(월) ~ 21(수)</div>
+        </div>
+        
+        <div class="info-row">
+          <div class="info-label">골프장</div>
+          <div class="info-value">파인힐스</div>
+        </div>
+        
+        <div class="info-row">
+          <div class="info-label">숙소</div>
+          <div class="info-value">파인힐스 골프텔</div>
+        </div>
+        
+        <div class="info-row">
+          <div class="info-label">포함 사항</div>
+          <div class="info-value">그린피(18홀×3일), 숙박 2박, 전일정 클럽식, 카트비, 리무진 버스(상해보장), 2일차 관광</div>
+        </div>
+        
+        <div class="info-row">
+          <div class="info-label">불포함 사항</div>
+          <div class="info-value">캐디피</div>
+        </div>
+      </div>
+      
+      <div class="notice-box">
+        <div class="notice-title">예약 안내 사항</div>
+        <ul class="notice-list">
+          <li>티오프 시간: 사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다.</li>
+          <li>객실 배정: 예약 접수 순서대로 진행되오니 참고 부탁드립니다.</li>
+          <li>식사 서비스: 불참 시에도 별도 환불이 불가하오니 양해 바랍니다.</li>
+          <li>리무진 좌석: 가는 날 좌석은 오는 날에도 동일하게 이용해 주세요. 멀미 증상이 있으신 분은 사전 요청 시 앞좌석 배정 가능.</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- 일정 안내 -->
+    <div class="section">
+      <div class="section-title">일정 안내</div>
+      
+      <div class="schedule-section">
+        <!-- 1일차 -->
+        <div class="day-schedule">
+          <div class="day-title">
+            <div>5/19(월)</div>
+            <div>오후 라운드</div>
+          </div>
+          <div class="day-content">
+            <ol class="schedule-list">
+              <li>탑승지 출발</li>
+              <li>이동 중 간편식 제공</li>
+              <li>휴게소 정차: 1~2회 정차 예정</li>
+              <li>마트 경유</li>
+              <li>골프장 도착</li>
+              <li>점심식사</li>
+            </ol>
+            
+            <div class="tee-time-box">
+              <div class="tee-time-title">티오프 시간</div>
+              <div class="tee-time-info">
+                <div class="tee-time-course">파인 코스: 13:38, 13:45, 13:53</div>
+                <div class="tee-time-course">레이크/힐스 코스: 13:45, 13:53</div>
+              </div>
+            </div>
+            
+            <ol class="schedule-list" start="5">
+              <li>18홀 골프 라운드</li>
+              <li>저녁식사</li>
+              <li>숙소로 이동 후 휴식</li>
+            </ol>
+            
+            <div class="meal-info">
+              <div class="meal">
+                <div>조식</div>
+                <div class="meal-status included">O</div>
+              </div>
+              <div class="meal">
+                <div>중식</div>
+                <div class="meal-status included">O</div>
+              </div>
+              <div class="meal">
+                <div>석식</div>
+                <div class="meal-status included">O</div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 15px; background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 14px;">
+              <p style="font-weight: bold; margin-bottom: 5px; color: #2b6cb0;">식사 메뉴</p>
+              <div style="display: flex; flex-direction: column;">
+                <div style="margin-bottom: 5px;"><span style="font-weight: bold; min-width: 40px; display: inline-block;">조식:</span> 간편식</div>
+                <div style="margin-bottom: 5px;"><span style="font-weight: bold; min-width: 40px; display: inline-block;">중식:</span> 해물 몽글순두부 찌개, 오이스틱(코스 지참용)</div>
+                <div><span style="font-weight: bold; min-width: 40px; display: inline-block;">석식:</span> 소고기만두전골, 그린샐러드, 후라이드치킨&감자튀김, 계란찜</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 2일차 -->
+        <div class="day-schedule">
+          <div class="day-title">
+            <div>5/20(화)</div>
+            <div>오전 라운드</div>
+          </div>
+          <div class="day-content">
+            <ol class="schedule-list">
+              <li>아침식사</li>
+            </ol>
+            
+            <div class="tee-time-box">
+              <div class="tee-time-title">티오프 시간</div>
+              <div class="tee-time-info">
+                <div class="tee-time-course">파인/레이크 코스: 06:30, 06:38</div>
+                <div class="tee-time-course">힐스 코스: 06:23, 06:30, 06:38</div>
+              </div>
+            </div>
+            
+            <ol class="schedule-list" start="2">
+              <li>18홀 골프 라운드</li>
+              <li>점심식사</li>
+              <li>관광지 투어</li>
+              <li>저녁식사</li>
+              <li>숙소로 이동 후 휴식</li>
+            </ol>
+            
+            <div class="meal-info">
+              <div class="meal">
+                <div>조식</div>
+                <div class="meal-status included">O</div>
+              </div>
+              <div class="meal">
+                <div>중식</div>
+                <div class="meal-status included">O</div>
+              </div>
+              <div class="meal">
+                <div>석식</div>
+                <div class="meal-status included">O</div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 15px; background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 14px;">
+              <p style="font-weight: bold; margin-bottom: 5px; color: #2b6cb0;">식사 메뉴</p>
+              <div style="display: flex; flex-direction: column;">
+                <div style="margin-bottom: 5px;"><span style="font-weight: bold; min-width: 40px; display: inline-block;">조식:</span> 황태해장국, 시리얼, 삶은계란, 우유</div>
+                <div style="margin-bottom: 5px;"><span style="font-weight: bold; min-width: 40px; display: inline-block;">중식:</span> 보리굴비, 녹차물&데일리국</div>
+                <div><span style="font-weight: bold; min-width: 40px; display: inline-block;">석식:</span> 소고기모듬버섯전골, 그린샐러드, 생선조림, 명태회무침, 홍어삼합</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 3일차 -->
+        <div class="day-schedule">
+          <div class="day-title">
+            <div>5/21(수)</div>
+            <div>오전 라운드</div>
+          </div>
+          <div class="day-content">
+            <ol class="schedule-list">
+              <li>아침식사</li>
+            </ol>
+            
+            <div class="tee-time-box">
+              <div class="tee-time-title">티오프 시간</div>
+              <div class="tee-time-info">
+                <div class="tee-time-course">파인/힐스 코스: 06:30, 06:38</div>
+                <div class="tee-time-course">레이크 코스: 06:23, 06:30, 06:38</div>
+              </div>
+            </div>
+            
+            <ol class="schedule-list" start="2">
+              <li>18홀 골프 라운드</li>
+              <li>점심식사</li>
+              <li>골프장 출발 (휴게소 정차 서비스 포함)</li>
+            </ol>
+            
+            <div class="meal-info">
+              <div class="meal">
+                <div>조식</div>
+                <div class="meal-status included">O</div>
+              </div>
+              <div class="meal">
+                <div>중식</div>
+                <div class="meal-status included">O</div>
+              </div>
+              <div class="meal">
+                <div>석식</div>
+                <div class="meal-status not-included">X</div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 15px; background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 14px;">
+              <p style="font-weight: bold; margin-bottom: 5px; color: #2b6cb0;">식사 메뉴</p>
+              <div style="display: flex; flex-direction: column;">
+                <div style="margin-bottom: 5px;"><span style="font-weight: bold; min-width: 40px; display: inline-block;">조식:</span> 아욱국(건새우), 식빵, 딸기잼, 삶은계란, 우유</div>
+                <div style="margin-bottom: 5px;"><span style="font-weight: bold; min-width: 40px; display: inline-block;">중식:</span> 육전비빔밥&소된장, 도토리묵무침</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="note">
+          ※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.
+        </div>
+      </div>
+    </div>
+    
+    <!-- 이용 안내 -->
+    <div class="section">
+      <div class="section-title">이용 안내</div>
+      
+      <div class="usage-section">
+        <!-- 라운드 규정 -->
+        <div class="usage-card">
+          <div class="usage-header">라운드 규정</div>
+          <div class="usage-body">
+            <ul class="info-list">
+              <li>티오프 15분 전까지 카트 대기선 도착 필수</li>
+              <li>3인 플레이 시 4인 요금 적용</li>
+              <li>추가 라운드는 프론트 데스크에 문의</li>
+              <li>티오프 시간은 선착순 배정, 현장 변경 불가</li>
+              <li>기상 악화 시 골프장 취소 규정 적용</li>
+              <li>개인 사유로 라운드 취소 시 환불 불가</li>
+              <li>그늘집 이용은 별도 결제 후 진행</li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- 숙소 이용 -->
+        <div class="usage-card">
+          <div class="usage-header">숙소 이용</div>
+          <div class="usage-body">
+            <ul class="info-list">
+              <li>객실 선착순 배정</li>
+              <li>기본 제공: 샴푸, 린스, 비누, 바디워시, 로션, 스킨, 드라이기, 커피포트</li>
+              <li>
+                준비 필요 및 추가 사항:
+                <ul class="sub-list">
+                  <li>준비 필요: 칫솔, 치약, 면도기, 휴대폰 충전기</li>
+                  <li>추가 사항: 건조대 필요 시 프론트에서 대여 가능</li>
+                </ul>
+              </li>
+              <li>매일 1인당 생수 500ml 2병 제공 (추가 요청 시 비용 발생)</li>
+              <li>귀중품은 프론트 보관 권장 (분실 시 책임 불가)</li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- 식사 안내 -->
+        <div class="usage-card">
+          <div class="usage-header">식사 안내</div>
+          <div class="usage-body">
+            <ul class="info-list">
+              <li>클럽하우스 운영 시간 내 이용</li>
+              <li>외부 음식 및 주류 반입 금지</li>
+              <li>미이용 시 환불 불가</li>
+              <li>패키지 외 추가 식사는 당일 결제 필수</li>
+              <li>현지 사정에 따라 메뉴가 일부 변경될 수 있습니다</li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- 락카 이용 -->
+        <div class="usage-card">
+          <div class="usage-header">락카 이용</div>
+          <div class="usage-body">
+            <ul class="info-list">
+              <li>2일 차부터 제공, 프론트 데스크에서 개별 배정</li>
+              <li>매일 새로운 번호로 배정, 사용 시마다 수령 필요</li>
+              <li>장시간(2박 3일) 보관 불가, 분실 시 책임지지 않음</li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- 버스 이용 -->
+        <div class="usage-card">
+          <div class="usage-header">버스 이용</div>
+          <div class="usage-body">
+            <ul class="info-list">
+              <li>기재된 시간은 버스 출발 시간이며, 정시 출발 원칙 (20분 전 도착)</li>
+              <li>일정에 따라 탑승 시간이 변동될 수 있음</li>
+              <li>28인승 리무진 버스 운영, 가는 날 배정된 좌석은 오는 날에도 동일하게 이용해 주세요</li>
+              <li>멀미가 심하신 고객님은 출발 전 기사님께 말씀해 주시면 앞좌석으로 안내해 드립니다</li>
+              <li>평균 연령대 60대 이상 고객님을 고려하여 약 2시간 간격으로 화장실 정차 서비스 제공</li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- 관광지 투어 -->
+        <div class="usage-card">
+          <div class="usage-header">관광지 투어</div>
+          <div class="usage-body">
+            <ul class="info-list">
+              <li>2일 차 관광 불참 시 환불 없음</li>
+              <li>현장 상황에 따라 일정 및 방문지 변동 가능</li>
+              <li>주요 관광지: 순천만 국가정원, 송광사, 순천만 습지 중 현지 상황에 따라 선정</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 푸터 -->
+    <div class="footer">
+      <p><span class="heart">♡</span> 즐거운 하루 되시길 바랍니다. <span class="heart">♡</span></p>
+      <p>싱싱골프투어 ☎ 031-215-3990</p>
+    </div>
+  </div>
+</body>
+</html>
