@@ -327,7 +327,7 @@ export default function Home() {
             >
               ×
             </button>
-            <h2 className="text-lg font-bold mb-4 break-all">{previewFileName}</h2>
+            <h2 className="text-lg font-bold mb-4 break-all">{decodeURIComponent(previewFileName)}</h2>
             <div className="flex-1 overflow-auto bg-gray-100 dark:bg-black/30 rounded p-4 text-xs whitespace-pre-wrap">
               {previewLoading ? (
                 "로딩 중..."
