@@ -134,7 +134,7 @@ export default function Home() {
 
   const handlePreview = async (name: string) => {
     setPreviewFileName(name);
-    setPreviewContent(null);
+    setPreviewContent("");
     setPreviewLoading(true);
     setPreviewOpen(true);
     try {
