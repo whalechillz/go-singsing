@@ -15,10 +15,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "파일명이 필요합니다." }, { status: 400 });
   }
   try {
+    const decodedName = decodeURIComponent(name);
     const response = await octokit.repos.getContent({
       owner: REPO_OWNER,
       repo: REPO_NAME,
-      path: `components/${name}`,
+      path: `components/${decodedName}`,
     });
     if (!("content" in response.data)) {
       return NextResponse.json({ error: "파일을 찾을 수 없습니다." }, { status: 404 });
