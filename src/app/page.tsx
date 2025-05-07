@@ -141,8 +141,8 @@ export default function Home() {
       if (!res.ok) throw new Error("파일을 불러오지 못했습니다");
       const text = await res.text();
       setPreviewContent(text);
-    } catch (e) {
-      setPreviewError("파일을 불러오지 못했습니다");
+    } catch {
+      setError("파일을 불러오지 못했습니다");
     } finally {
       setPreviewLoading(false);
     }
