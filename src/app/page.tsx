@@ -29,8 +29,6 @@ export default function Home() {
   const [previewContent, setPreviewContent] = useState("");
   const [previewFileName, setPreviewFileName] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     async function fetchComponents() {
@@ -138,7 +136,6 @@ export default function Home() {
     setPreviewFileName(name);
     setPreviewContent(null);
     setPreviewLoading(true);
-    setPreviewError(null);
     setPreviewOpen(true);
     try {
       const res = await fetch(`/api/raw?name=${name}`);
@@ -213,8 +210,8 @@ export default function Home() {
                   role="button"
                   aria-label={`${item.name} 문서 보기`}
                   onClick={() => handlePreview(item.name)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') handlePreview(item.name);
+                  onKeyDown={() => {
+                    handlePreview(item.name);
                   }}
                 >
                   {item.name}
@@ -239,7 +236,9 @@ export default function Home() {
                   aria-label={`${item.name} 삭제`}
                   tabIndex={0}
                   onClick={() => handleDelete(item)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDelete(item); }}
+                  onKeyDown={() => {
+                    handleDelete(item);
+                  }}
                 >
                   삭제
                 </button>
