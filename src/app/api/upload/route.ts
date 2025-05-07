@@ -23,32 +23,49 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const fileContent = Buffer.from(arrayBuffer).toString("utf8");
 
-    // 파일 이름에서 특수문자 제거
-    const safeFilename = filename.replace(/[^a-zA-Z0-9_.-]/g, "_");
-    const componentPath = `components/${safeFilename}`;
-
+    // 파일 이름 인코딩
+    const encodedFilename = encodeURIComponent(filename);
+    const dotIdx = filename.lastIndexOf(".");
+    const namePart = dotIdx !== -1 ? filename.slice(0, dotIdx) : filename;
+    const extPart = dotIdx !== -1 ? filename.slice(dotIdx) : "";
+    let componentPath = `components/${encodedFilename}`;
+    let uniqueIndex = 1;
+    // 파일명 중복 시 (1), (2) 등 suffix 추가 (인코딩 적용)
+    while (true) {
+      try {
+        await octokit.repos.getContent({
+          owner: REPO_OWNER,
+          repo: REPO_NAME,
+          path: componentPath,
+        });
+        // 이미 존재하면 suffix 추가
+        const encodedNamePart = encodeURIComponent(namePart);
+        componentPath = `components/${encodedNamePart}(${uniqueIndex})${extPart}`;
+        uniqueIndex++;
+      } catch {
+        // 존재하지 않으면 break
+        break;
+      }
+    }
     // 허용 확장자 검사
     const allowedExtensions = [".tsx", ".ts", ".html", ".md"];
-    const ext = safeFilename.slice(safeFilename.lastIndexOf(".")).toLowerCase();
+    const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
     if (!allowedExtensions.includes(ext)) {
       return NextResponse.json({ success: false, error: `허용되지 않는 파일 형식입니다. (${allowedExtensions.join(", ")})` }, { status: 400 });
     }
-
-    // GitHub에 파일 업로드
+    // GitHub에 파일 업로드 (항상 새 파일, 인코딩된 경로)
     await octokit.repos.createOrUpdateFileContents({
       owner: REPO_OWNER,
       repo: REPO_NAME,
       path: componentPath,
-      message: `Add or update component: ${safeFilename}`,
+      message: `Add component: ${decodeURIComponent(componentPath.split("/").pop()!)}`,
       content: Buffer.from(fileContent).toString("base64"),
       branch: "main",
-      ...(sha ? { sha } : {}),
     });
-
     return NextResponse.json({
       success: true,
-      componentId: safeFilename,
-      url: `/component/${safeFilename}`,
+      componentId: decodeURIComponent(componentPath.split("/").pop()!),
+      url: `/component/${decodeURIComponent(componentPath.split("/").pop()!)}`,
     });
   } catch (error) {
     console.error("GitHub 업로드 에러:", error);
