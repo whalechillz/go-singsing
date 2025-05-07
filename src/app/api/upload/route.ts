@@ -14,7 +14,6 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const filename = formData.get("filename") as string | null;
-    const sha = formData.get("sha") as string | null;
     if (!file || !filename) {
       return NextResponse.json({ success: false, error: "파일이 없습니다." }, { status: 400 });
     }
