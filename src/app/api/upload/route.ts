@@ -50,15 +50,24 @@ export async function POST(req: NextRequest) {
     if (!allowedExtensions.includes(ext)) {
       return NextResponse.json({ success: false, error: `허용되지 않는 파일 형식입니다. (${allowedExtensions.join(", ")})` }, { status: 400 });
     }
-    // GitHub에 파일 업로드 (항상 새 파일, 파일명 그대로)
-    await octokit.repos.createOrUpdateFileContents({
-      owner: REPO_OWNER,
-      repo: REPO_NAME,
-      path: componentPath,
-      message: `Add component: ${filename}`,
-      content: Buffer.from(fileContent).toString("base64"),
-      branch: "main",
+    // GitHub에 파일 업로드 (항상 새 파일, 파일명 그대로, fetch 사용)
+    const githubApiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${componentPath}`;
+    const uploadRes = await fetch(githubApiUrl, {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${process.env.GITHUB_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: `Add component: ${filename}`,
+        content: Buffer.from(fileContent).toString("base64"),
+        branch: "main",
+      }),
     });
+    if (!uploadRes.ok) {
+      const error = await uploadRes.json();
+      return NextResponse.json({ success: false, error: error.message || "GitHub 업로드 실패" }, { status: 500 });
+    }
     return NextResponse.json({
       success: true,
       componentId: filename,
