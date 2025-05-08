@@ -3,54 +3,12 @@
 import { useState } from "react";
 
 const CARD_LIST = [
-  {
-    key: "product-info",
-    title: "상품 정보",
-    description: "일정, 식사, 골프장, 숙박 안내",
-    number: 1,
-    fileName: "product-info.html",
-    locked: false,
-  },
-  {
-    key: "boarding-guide",
-    title: "탑승지 안내",
-    description: "탑승 시간, 위치, 주차 정보",
-    number: 2,
-    fileName: "boarding-guide.html",
-    locked: false,
-  },
-  {
-    key: "room-assignment-customer",
-    title: "객실 배정",
-    description: "팀 명단 및 객실 배정표",
-    number: 3,
-    fileName: "room-assignment.html",
-    locked: false,
-  },
-  {
-    key: "rounding-timetable",
-    title: "라운딩 시간표",
-    description: "일자별 티오프 시간 및 조 편성",
-    number: 4,
-    fileName: "rounding-timetable.html",
-    locked: false,
-  },
-  {
-    key: "boarding-guide-staff",
-    title: "탑승지 배정 (스탭용)",
-    description: "스탭용 탑승지 정보",
-    number: 5,
-    fileName: "boarding-guide-staff.html",
-    locked: true,
-  },
-  {
-    key: "room-assignment-staff",
-    title: "객실 배정 (스탭용)",
-    description: "스탭용 객실 배정 정보",
-    number: 6,
-    fileName: "room-assignment-staff.html",
-    locked: true,
-  },
+  { key: "product-info", title: "상품 정보", description: "일정, 식사, 골프장, 숙박 안내", number: 1, fileName: "product-info.html", locked: false },
+  { key: "boarding-guide", title: "탑승지 안내", description: "탑승 시간, 위치, 주차 정보", number: 2, fileName: "boarding-guide.html", locked: false },
+  { key: "room-assignment-customer", title: "객실 배정", description: "팀 명단 및 객실 배정표", number: 3, fileName: "room-assignment.html", locked: false },
+  { key: "rounding-timetable", title: "라운딩 시간표", description: "일자별 티오프 시간 및 조 편성", number: 4, fileName: "rounding-timetable.html", locked: false },
+  { key: "boarding-guide-staff", title: "탑승지 배정 (스탭용)", description: "스탭용 탑승지 정보", number: 5, fileName: "boarding-guide-staff.html", locked: true },
+  { key: "room-assignment-staff", title: "객실 배정 (스탭용)", description: "스탭용 객실 배정 정보", number: 6, fileName: "room-assignment-staff.html", locked: true },
 ];
 
 const STAFF_PASSWORD = "singsinggolf2025";
@@ -60,9 +18,9 @@ export default function TourPage() {
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState("");
-  const [targetUrl, setTargetUrl] = useState<string | null>(null);
+  const [targetUrl, setTargetUrl] = useState(null);
 
-  const handleCardClick = (card: typeof CARD_LIST[number]) => {
+  const handleCardClick = (card) => {
     if (card.locked) {
       setTargetUrl(`/${card.fileName}`);
       setShowPwModal(true);
@@ -73,7 +31,7 @@ export default function TourPage() {
     }
   };
 
-  const handlePwSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handlePwSubmit = (e) => {
     e.preventDefault();
     if (pwInput === STAFF_PASSWORD) {
       if (targetUrl) window.open(targetUrl, "_blank");
@@ -93,7 +51,7 @@ export default function TourPage() {
           <div className="text-base">순천 2박3일 / 05/19(월)~21(수)</div>
         </div>
         <div className="p-4 flex flex-col gap-4">
-          {CARD_LIST.map((card: typeof CARD_LIST[number]) => (
+          {CARD_LIST.map((card) => (
             <button
               key={card.key}
               className={`w-full rounded-lg border shadow transition-all text-left focus:outline-none ${card.locked ? 'bg-blue-800 text-white' : 'bg-white'} hover:shadow-lg`}
@@ -118,7 +76,7 @@ export default function TourPage() {
         <div className="bg-blue-800 text-white text-center py-2 text-sm">싱싱골프투어 | 031-215-3990</div>
       </div>
       {showPwModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <form className="bg-white rounded-lg p-8 w-full max-w-xs shadow-lg relative" onSubmit={handlePwSubmit}>
             <div className="text-lg font-bold text-blue-800 mb-4 text-center">스탭 전용 페이지</div>
             <input
