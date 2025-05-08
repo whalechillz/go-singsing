@@ -12,7 +12,6 @@ const CARD_LIST = [
 ];
 
 const STAFF_PASSWORD = "singsinggolf2025";
-const tourId = "2025-05-19";
 
 export default function TourPage() {
   const [showPwModal, setShowPwModal] = useState(false);
