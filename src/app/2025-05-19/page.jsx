@@ -44,7 +44,7 @@ export default function TourPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-6">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-6 font-sans">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="bg-blue-800 text-white p-6 text-center">
           <div className="text-2xl font-bold mb-1">싱싱골프투어</div>
@@ -54,18 +54,20 @@ export default function TourPage() {
           {CARD_LIST.map((card) => (
             <button
               key={card.key}
-              className={`w-full rounded-lg border shadow transition-all text-left focus:outline-none ${card.locked ? 'bg-blue-800 text-white' : 'bg-white'} hover:shadow-lg`}
+              className={
+                `w-full rounded-lg border shadow transition-all text-left focus:outline-none bg-blue-800 text-white hover:shadow-lg`
+              }
               onClick={() => handleCardClick(card)}
               tabIndex={0}
               aria-label={card.title + (card.locked ? ' (스탭용, 비밀번호 필요)' : '')}
             >
-              <div className={`flex items-center justify-between px-4 py-3 ${card.locked ? '' : 'bg-blue-800 text-white rounded-t-lg'}`}>
+              <div className="flex items-center justify-between px-4 py-3">
                 <span className="font-bold text-base flex items-center">
                   {card.title} {card.locked && <span className="ml-1">🔒</span>}
                 </span>
-                <span className={`rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm ${card.locked ? 'bg-white text-blue-800' : 'bg-blue-800 text-white'}`}>{card.number}</span>
+                <span className="rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm bg-white text-blue-800">{card.number}</span>
               </div>
-              <div className={`px-4 pb-3 text-sm ${card.locked ? 'text-white' : 'text-gray-700'}`}>{card.description}</div>
+              <div className="px-4 pb-3 text-sm text-white">{card.description}</div>
             </button>
           ))}
         </div>
