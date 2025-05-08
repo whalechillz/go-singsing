@@ -13,7 +13,7 @@ const CARD_LIST = [
 
 const STAFF_PASSWORD = "singsinggolf2025";
 
-export default function TourPage() {
+const TourPage = () => {
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState("");
@@ -25,9 +25,9 @@ export default function TourPage() {
       setShowPwModal(true);
       setPwInput("");
       setPwError("");
-    } else {
-      window.open(`/${card.fileName}`, "_blank");
+      return;
     }
+    window.open(`/${card.fileName}`, "_blank");
   };
 
   const handlePwSubmit = (e) => {
@@ -37,25 +37,23 @@ export default function TourPage() {
       setShowPwModal(false);
       setPwInput("");
       setPwError("");
-    } else {
-      setPwError("비밀번호가 올바르지 않습니다.");
+      return;
     }
+    setPwError("비밀번호가 올바르지 않습니다.");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-6 font-sans">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-blue-800 text-white p-6 text-center">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center py-8 font-sans">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden mx-auto">
+        <div className="bg-blue-800 text-white p-6 text-center rounded-t-2xl">
           <div className="text-2xl font-bold mb-1">싱싱골프투어</div>
           <div className="text-base">순천 2박3일 / 05/19(월)~21(수)</div>
         </div>
-        <div className="p-4 flex flex-col gap-4">
+        <div className="p-6 flex flex-col gap-4">
           {CARD_LIST.map((card) => (
             <button
               key={card.key}
-              className={
-                `w-full rounded-lg border shadow transition-all text-left focus:outline-none bg-blue-800 text-white hover:shadow-lg`
-              }
+              className="w-full rounded-lg border border-blue-800 shadow transition-all text-left focus:outline-none bg-blue-800 text-white hover:bg-blue-700 flex flex-col focus:ring-2 focus:ring-blue-200"
               onClick={() => handleCardClick(card)}
               tabIndex={0}
               aria-label={card.title + (card.locked ? ' (스탭용, 비밀번호 필요)' : '')}
@@ -64,38 +62,41 @@ export default function TourPage() {
                 <span className="font-bold text-base flex items-center">
                   {card.title} {card.locked && <span className="ml-1">🔒</span>}
                 </span>
-                <span className="rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm bg-white text-blue-800">{card.number}</span>
+                <span className="rounded-full w-7 h-7 flex items-center justify-center font-bold text-sm bg-white text-blue-800">{card.number}</span>
               </div>
-              <div className="px-4 pb-3 text-sm text-white">{card.description}</div>
+              <div className="px-4 pb-3 text-sm text-white opacity-90">{card.description}</div>
             </button>
           ))}
         </div>
-        <div className="bg-gray-100 rounded-lg mx-4 my-6 p-4 text-center">
+        <div className="bg-gray-100 rounded-lg mx-6 my-6 p-4 text-center">
           <div className="font-bold text-blue-800 mb-1">담당 기사님</div>
-          <div className="font-bold text-red-600 text-lg">010-5254-9876</div>
+          <div className="font-bold text-red-600 text-lg select-none">010-5254-9876</div>
         </div>
-        <div className="bg-blue-800 text-white text-center py-2 text-sm">싱싱골프투어 | 031-215-3990</div>
+        <div className="bg-blue-800 text-white text-center py-2 text-sm rounded-b-2xl">싱싱골프투어 | 031-215-3990</div>
       </div>
       {showPwModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <form className="bg-white rounded-lg p-8 w-full max-w-xs shadow-lg relative" onSubmit={handlePwSubmit}>
+          <form className="bg-white rounded-lg p-8 w-full max-w-xs shadow-lg relative" onSubmit={handlePwSubmit} aria-label="스탭 전용 비밀번호 입력 모달">
             <div className="text-lg font-bold text-blue-800 mb-4 text-center">스탭 전용 페이지</div>
             <input
               type="password"
-              className="border rounded px-2 py-2 w-full mb-2"
+              className="border border-gray-300 rounded px-3 py-2 w-full mb-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
               value={pwInput}
               onChange={(e) => setPwInput(e.target.value)}
               placeholder="비밀번호 입력"
               autoFocus
+              aria-label="비밀번호 입력"
             />
             {pwError && <div className="text-red-500 text-sm mb-2">{pwError}</div>}
             <div className="flex gap-2 mt-2">
-              <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded w-full">확인</button>
-              <button type="button" className="bg-gray-300 text-gray-800 px-4 py-2 rounded w-full" onClick={() => setShowPwModal(false)}>취소</button>
+              <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded w-full hover:bg-blue-700 focus:bg-blue-700">확인</button>
+              <button type="button" className="bg-gray-300 text-gray-800 px-4 py-2 rounded w-full hover:bg-gray-400 focus:bg-gray-400" onClick={() => setShowPwModal(false)}>취소</button>
             </div>
           </form>
         </div>
       )}
     </div>
   );
-}
+};
+
+export default TourPage;
