@@ -60,9 +60,9 @@ export default function TourPage() {
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState("");
-  const [targetUrl, setTargetUrl] = useState(null);
+  const [targetUrl, setTargetUrl] = useState<string | null>(null);
 
-  const handleCardClick = (card) => {
+  const handleCardClick = (card: typeof CARD_LIST[number]) => {
     if (card.locked) {
       setTargetUrl(`/${card.fileName}`);
       setShowPwModal(true);
@@ -73,7 +73,7 @@ export default function TourPage() {
     }
   };
 
-  const handlePwSubmit = (e) => {
+  const handlePwSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (pwInput === STAFF_PASSWORD) {
       if (targetUrl) window.open(targetUrl, "_blank");
@@ -93,7 +93,7 @@ export default function TourPage() {
           <div className="text-base">순천 2박3일 / 05/19(월)~21(수)</div>
         </div>
         <div className="p-4 flex flex-col gap-4">
-          {CARD_LIST.map((card) => (
+          {CARD_LIST.map((card: typeof CARD_LIST[number]) => (
             <button
               key={card.key}
               className={`w-full rounded-lg border shadow transition-all text-left focus:outline-none ${card.locked ? 'bg-blue-800 text-white' : 'bg-white'} hover:shadow-lg`}
@@ -105,7 +105,7 @@ export default function TourPage() {
                 <span className="font-bold text-base flex items-center">
                   {card.title} {card.locked && <span className="ml-1">🔒</span>}
                 </span>
-                <span className={`rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm ${card.locked ? 'bg-white text-blue-800' : 'bg-white text-blue-800'}`}>{card.number}</span>
+                <span className={`rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm ${card.locked ? 'bg-white text-blue-800' : 'bg-blue-800 text-white'}`}>{card.number}</span>
               </div>
               <div className={`px-4 pb-3 text-sm ${card.locked ? 'text-white' : 'text-gray-700'}`}>{card.description}</div>
             </button>
