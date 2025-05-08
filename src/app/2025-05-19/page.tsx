@@ -56,13 +56,13 @@ const CARD_LIST = [
 const STAFF_PASSWORD = "singsinggolf2025";
 const tourId = "2025-05-19";
 
-const TourPage = () => {
+export default function TourPage() {
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState("");
-  const [targetUrl, setTargetUrl] = useState<string | null>(null);
+  const [targetUrl, setTargetUrl] = useState(null);
 
-  const handleCardClick = (card: typeof CARD_LIST[0]) => {
+  const handleCardClick = (card) => {
     if (card.locked) {
       setTargetUrl(`/${card.fileName}`);
       setShowPwModal(true);
@@ -73,7 +73,7 @@ const TourPage = () => {
     }
   };
 
-  const handlePwSubmit = (e: React.FormEvent) => {
+  const handlePwSubmit = (e) => {
     e.preventDefault();
     if (pwInput === STAFF_PASSWORD) {
       if (targetUrl) window.open(targetUrl, "_blank");
@@ -105,7 +105,7 @@ const TourPage = () => {
                 <span className="font-bold text-base flex items-center">
                   {card.title} {card.locked && <span className="ml-1">🔒</span>}
                 </span>
-                <span className={`rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm ${card.locked ? 'bg-white text-blue-800' : 'bg-blue-800 text-white'}`}>{card.number}</span>
+                <span className={`rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm ${card.locked ? 'bg-white text-blue-800' : 'bg-white text-blue-800'}`}>{card.number}</span>
               </div>
               <div className={`px-4 pb-3 text-sm ${card.locked ? 'text-white' : 'text-gray-700'}`}>{card.description}</div>
             </button>
@@ -118,7 +118,7 @@ const TourPage = () => {
         <div className="bg-blue-800 text-white text-center py-2 text-sm">싱싱골프투어 | 031-215-3990</div>
       </div>
       {showPwModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <form className="bg-white rounded-lg p-8 w-full max-w-xs shadow-lg relative" onSubmit={handlePwSubmit}>
             <div className="text-lg font-bold text-blue-800 mb-4 text-center">스탭 전용 페이지</div>
             <input
@@ -139,6 +139,4 @@ const TourPage = () => {
       )}
     </div>
   );
-};
-
-export default TourPage;
+}
