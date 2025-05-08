@@ -64,12 +64,12 @@ const TourPage = () => {
 
   const handleCardClick = (card: typeof CARD_LIST[0]) => {
     if (card.locked) {
-      setTargetUrl(`/components/${tourId}/${card.fileName}`);
+      setTargetUrl(`/${card.fileName}`);
       setShowPwModal(true);
       setPwInput("");
       setPwError("");
     } else {
-      window.open(`/components/${tourId}/${card.fileName}`, "_blank");
+      window.open(`/${card.fileName}`, "_blank");
     }
   };
 
