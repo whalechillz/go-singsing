@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link href="/tailwind.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 라운딩 조별 시간표</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans KR', 'Arial', sans-serif;
+    }
+    
+    body {
+      background-color: #FFFFFF;
+      color: #2D3748;
+      line-height: 1.6;
+      padding: 10px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    
+    /* 헤더 레이아웃 */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #DEE2E6;
+    }
+    
+    .title-section {
+      flex: 1;
+    }
+    
+    .logo-section {
+      text-align: right;
+      margin-left: 15px;
+    }
+    
+    .logo-text {
+      font-size: 22px;
+      font-weight: bold;
+      color: #34699C;
+    }
+    
+    h1 {
+      color: #34699C;
+      font-size: 24px;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    /* 일자 헤더 스타일 */
+    .day-header {
+      background-color: #f0f5fa;
+      color: #34699C;
+      padding: 10px 15px;
+      margin: 20px 0 10px 0;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 4px;
+      border: 1px solid #dee6ef;
+    }
+    
+    /* 테이블 스타일 */
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 20px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    
+    th, td {
+      border: 1px solid #DEE2E6;
+      padding: 8px;
+      text-align: center;
+    }
+    
+    th {
+      background-color: #ECF0F1;
+      font-weight: bold;
+      color: #34699C;
+    }
+    
+    .course-header {
+      background-color: #34699C;
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      padding: 10px 12px;
+      text-align: left;
+      border-radius: 4px 4px 0 0;
+    }
+    
+    .time-column {
+      width: 80px;
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    
+    .team-type {
+      background-color: #EBF8FF;
+      font-weight: 500;
+      color: #2B6CB0;
+    }
+    
+    .male {
+      color: #2C5282;
+    }
+    
+    .female {
+      color: #B83280;
+    }
+    
+    .player-cell {
+      text-align: left;
+      padding-left: 12px;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #DEE2E6;
+    }
+    
+    .heart {
+      color: #F56565;
+    }
+    
+    .contact {
+      margin-top: 5px;
+      font-weight: bold;
+    }
+    
+    .notice-box {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #fff5f5;
+      border: 1px solid #fed7d7;
+      border-radius: 6px;
+    }
+    
+    .notice-title {
+      font-weight: bold;
+      color: #e53e3e;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    
+    .notice-list {
+      list-style-type: disc;
+      padding-left: 20px;
+      margin: 0;
+    }
+    
+    .notice-list li {
+      margin-bottom: 6px;
+      color: #4a5568;
+    }
+    
+    .contact-info {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #e6fffa;
+      border: 1px solid #b2f5ea;
+      border-radius: 6px;
+    }
+    
+    .contact-title {
+      font-weight: bold;
+      color: #2c7a7b;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    
+    .contact-item {
+      padding: 8px;
+      border-radius: 4px;
+      background-color: white;
+      border: 1px solid #E2E8F0;
+    }
+    
+    .contact-name {
+      font-weight: bold;
+      color: #4A5568;
+    }
+    
+    .contact-phone {
+      color: #2D3748;
+    }
+    
+    /* 모바일 대응 */
+    @media (max-width: 600px) {
+      .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .logo-section {
+        margin-left: 0;
+        margin-top: 10px;
+        text-align: left;
+      }
+      
+      h1 {
+        font-size: 20px;
+      }
+      
+      .logo-text {
+        font-size: 18px;
+      }
+      
+      .day-header {
+        font-size: 16px;
+        padding: 8px 10px;
+      }
+      
+      table {
+        font-size: 12px;
+      }
+      
+      th, td {
+        padding: 6px 4px;
+      }
+      
+      .time-column {
+        width: 60px;
+      }
+      
+      .player-cell {
+        padding-left: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 헤더 섹션 -->
+    <div class="header-container">
+      <div class="title-section">
+        <h1>라운딩 조별 시간표</h1>
+        <p style="color: #4A5568; font-size: 15px;">순천 2박3일 / 04/14(월)~16(수) / 파인힐스 CC</p>
+      </div>
+      <div class="logo-section">
+        <div class="logo-text">싱싱골프투어</div>
+      </div>
+    </div>
+    
+    <!-- 4/14(월) 일정 -->
+    <div class="day-header">4/14(월) - 첫째날</div>
+    <div class="table-container">
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 파인 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">13:08</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            이난희 · 조민자 · 이경순 · 이미자
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">13:15</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">황경식(남)</span> · <span class="male">홍순묵(남)</span> · 
+            고미선 · 심옥자
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">13:23</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            이용미 · 윤경숙 · 손귀순 · 김기남
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 레이크 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">13:15</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">김영기(남)</span> · <span class="male">주강택(남)</span> · 
+            김영은 · 양희순
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">13:23</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            김학란 · 조미영 · 전현선 · 김덕수
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 힐스 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">13:15</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">양부석(남)</span> · <span class="male">정재원(남)</span> · 
+            김애자 · 백영희
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">13:23</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            백연락 · 오규희 · 조나경 · 김미정
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- 4/15(화) 일정 -->
+    <div class="day-header">4/15(화) - 둘째날</div>
+    <div class="table-container">
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 파인 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">06:45</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            김학란 · 조미영 · 전현선 · 김덕수
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">06:53</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">김영기(남)</span> · <span class="male">주강택(남)</span> · 
+            김영은 · 양희순
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 레이크 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">06:45</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            백연락 · 오규희 · 조나경 · 김미정
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">06:53</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">양부석(남)</span> · <span class="male">정재원(남)</span> · 
+            김애자 · 백영희
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 힐스 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">06:45</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            이용미 · 윤경숙 · 손귀순 · 김기남
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">06:53</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            이난희 · 조민자 · 이경순 · 이미자
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">07:00</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">황경식(남)</span> · <span class="male">홍순묵(남)</span> · 
+            고미선 · 심옥자
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- 4/16(수) 일정 -->
+    <div class="day-header">4/16(수) - 셋째날</div>
+    <div class="table-container">
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 파인 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">06:45</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">양부석(남)</span> · <span class="male">정재원(남)</span> · 
+            김애자 · 백영희
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">06:53</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            백연락 · 오규희 · 조나경 · 김미정
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 레이크 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">06:45</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">황경식(남)</span> · <span class="male">홍순묵(남)</span> · 
+            고미선 · 심옥자
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">06:53</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            이용미 · 윤경숙 · 손귀순 · 김기남
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">07:00</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            이난희 · 조민자 · 이경순 · 이미자
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <tr>
+          <td colspan="3" class="course-header">파인힐스 CC - 힐스 코스</td>
+        </tr>
+        <tr>
+          <th>시간</th>
+          <th>조 구성</th>
+          <th>참가자</th>
+        </tr>
+        <tr>
+          <td class="time-column">06:45</td>
+          <td class="team-type">(혼성팀)</td>
+          <td class="player-cell">
+            <span class="male">김영기(남)</span> · <span class="male">주강택(남)</span> · 
+            김영은 · 양희순
+          </td>
+        </tr>
+        <tr>
+          <td class="time-column">06:53</td>
+          <td class="team-type">(여성팀)</td>
+          <td class="player-cell">
+            김학란 · 조미영 · 전현선 · 김덕수
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- 라운딩 주의사항 -->
+    <div class="notice-box">
+      <div class="notice-title">라운딩 주의사항</div>
+      <ul class="notice-list">
+        <li><strong>티오프 시간 준수:</strong> 티오프 15분 전까지 카트 대기선에 도착해주세요.</li>
+        <li><strong>복장 규정:</strong> 골프장 드레스 코드를 준수해주세요. (청바지, 트레이닝복 착용 금지)</li>
+        <li><strong>진행 속도:</strong> 앞 조와의 간격을 유지하여 원활한 플레이를 부탁드립니다.</li>
+        <li><strong>에티켓:</strong> 벙커 정리, 디보트 복구 등 기본 에티켓을 준수해주세요.</li>
+        <li><strong>캐디피:</strong> 캐디피는 별도 현장 결제입니다. (4인 기준: 150,000원)</li>
+        <li><strong>식사:</strong> 라운드 종료 후 식사는 클럽하우스에서 제공됩니다.</li>
+      </ul>
+    </div>
+    
+    <!-- 연락처 정보 -->
+    <div class="contact-info">
+      <div class="contact-title">비상 연락처</div>
+      <div class="contact-grid">
+        <div class="contact-item">
+          <div class="contact-name">김성팔 기사님</div>
+          <div class="contact-phone">010-5254-9876</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 푸터 -->
+    <div class="footer">
+      <p><span class="heart">♡</span> 즐거운 하루 되시길 바랍니다. <span class="heart">♡</span></p>
+      <p class="contact">싱싱골프투어 ☎ 031-215-3990</p>
+    </div>
+  </div>
+</body>
+</html>
