@@ -87,31 +87,33 @@ const TourPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-6">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-blue-800 text-white p-5 text-center">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-blue-800 text-white p-6 text-center">
           <div className="text-2xl font-bold mb-1">싱싱골프투어</div>
           <div className="text-base">순천 2박3일 / 05/19(월)~21(수)</div>
         </div>
-        <div className="p-4 grid grid-cols-1 gap-3">
+        <div className="p-4 flex flex-col gap-4">
           {CARD_LIST.map((card) => (
             <button
               key={card.key}
-              className="block w-full bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg transition-all text-left focus:outline-none"
+              className={`w-full rounded-lg border shadow transition-all text-left focus:outline-none ${card.locked ? 'bg-blue-800 text-white' : 'bg-white'} hover:shadow-lg`}
               onClick={() => handleCardClick(card)}
               tabIndex={0}
               aria-label={card.title + (card.locked ? ' (스탭용, 비밀번호 필요)' : '')}
             >
-              <div className="bg-blue-800 text-white rounded-t-lg px-4 py-2 flex items-center justify-between">
-                <span className="font-bold text-base">{card.title} {card.locked && <span className="ml-1">🔒</span>}</span>
-                <span className="bg-white text-blue-800 rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm">{card.number}</span>
+              <div className={`flex items-center justify-between px-4 py-3 ${card.locked ? '' : 'bg-blue-800 text-white rounded-t-lg'}`}>
+                <span className="font-bold text-base flex items-center">
+                  {card.title} {card.locked && <span className="ml-1">🔒</span>}
+                </span>
+                <span className={`rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm ${card.locked ? 'bg-white text-blue-800' : 'bg-blue-800 text-white'}`}>{card.number}</span>
               </div>
-              <div className="px-4 py-3 text-gray-700 text-sm">{card.description}</div>
+              <div className={`px-4 pb-3 text-sm ${card.locked ? 'text-white' : 'text-gray-700'}`}>{card.description}</div>
             </button>
           ))}
         </div>
-        <div className="bg-gray-100 rounded-lg mx-4 mb-4 p-3 text-center">
+        <div className="bg-gray-100 rounded-lg mx-4 my-6 p-4 text-center">
           <div className="font-bold text-blue-800 mb-1">담당 기사님</div>
-          <div className="font-bold text-red-600 text-base">010-5254-9876</div>
+          <div className="font-bold text-red-600 text-lg">010-5254-9876</div>
         </div>
         <div className="bg-blue-800 text-white text-center py-2 text-sm">싱싱골프투어 | 031-215-3990</div>
       </div>
