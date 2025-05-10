@@ -11,7 +11,7 @@ const TourListPage = () => {
   useEffect(() => {
     const fetchTours = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from("tours").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("singsing_tours").select("*").order("created_at", { ascending: false });
       if (error) setError(error.message);
       else setTours(data);
       setLoading(false);
@@ -21,7 +21,7 @@ const TourListPage = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    const { error } = await supabase.from("tours").delete().eq("id", id);
+    const { error } = await supabase.from("singsing_tours").delete().eq("id", id);
     if (error) {
       alert("삭제 실패: " + error.message);
       return;
