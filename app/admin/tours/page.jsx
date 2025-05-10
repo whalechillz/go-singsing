@@ -54,7 +54,7 @@ const TourListPage = () => {
               <tr key={tour.id} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="py-2 px-4 dark:text-gray-100">{tour.title}</td>
                 <td className="py-2 px-4 dark:text-gray-100">{tour.start_date} ~ {tour.end_date}</td>
-                <td className="py-2 px-4 dark:text-gray-100">{tour.driver_phone}</td>
+                <td className="py-2 px-4 dark:text-gray-100">{tour.driver_name}</td>
                 <td className="py-2 px-4 flex gap-2">
                   <Link href={`/admin/tours/${tour.id}/edit`} className="text-blue-800 dark:text-blue-400 underline hover:text-blue-600 focus:text-blue-600 dark:hover:text-blue-300 dark:focus:text-blue-300" aria-label="수정">수정</Link>
                   <button className="text-red-600 dark:text-red-400 underline hover:text-red-400 focus:text-red-400" aria-label="삭제" onClick={() => handleDelete(tour.id)}>삭제</button>

@@ -17,6 +17,7 @@ const TourEditPage = () => {
     max_participants: "",
     includes: "",
     excludes: "",
+    driver_name: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -70,6 +71,10 @@ const TourEditPage = () => {
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">제목</span>
           <input name="title" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.title} onChange={handleChange} required />
+        </label>
+        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+          <span className="font-medium">기사님 이름</span>
+          <input name="driver_name" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.driver_name || ''} onChange={handleChange} required />
         </label>
         <div className="flex gap-2">
           <label className="flex flex-col gap-1 flex-1 text-gray-700 dark:text-gray-300">
