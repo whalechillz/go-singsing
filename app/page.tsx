@@ -4,16 +4,30 @@ import React, { useState, useEffect } from "react";
 import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
+// Tour 타입 정의
+interface Tour {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  golf_course?: string;
+  accommodation?: string;
+  max_participants?: number;
+  price?: number;
+  driver_name?: string;
+  // 필요시 추가 필드...
+}
+
 const GolfTourPortal = () => {
-  const [tours, setTours] = useState([]);
-  const [selectedTour, setSelectedTour] = useState(null);
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalContent, setModalContent] = useState(null);
+  const [modalContent, setModalContent] = useState<any>(null);
   const [password, setPassword] = useState("");
   const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
   const [isStaffView, setIsStaffView] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Supabase에서 투어 목록 fetch
   useEffect(() => {
@@ -32,11 +46,11 @@ const GolfTourPortal = () => {
     fetchTours();
   }, []);
 
-  const handleCardClick = (tour) => {
+  const handleCardClick = (tour: Tour) => {
     setSelectedTour(tour);
   };
 
-  const handleDocumentClick = (doc) => {
+  const handleDocumentClick = (doc: any) => {
     if (doc.locked) {
       setModalContent(doc);
       setShowModal(true);
@@ -58,7 +72,7 @@ const GolfTourPortal = () => {
     }
   };
 
-  const renderTourCard = (tour) => {
+  const renderTourCard = (tour: Tour) => {
     const isSelected = selectedTour && selectedTour.id === tour.id;
     return (
       <div
