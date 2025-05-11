@@ -22,7 +22,7 @@ const GolfTourPortal = () => {
         setIsLoading(true);
         const { data, error } = await supabase.from("singsing_tours").select("*").order("start_date", { ascending: false });
         if (error) throw error;
-        setTours(data);
+        setTours((data ?? []) as Tour[]);
         setIsLoading(false);
       } catch (err) {
         setError("투어 정보를 불러오는 중 오류가 발생했습니다.");
