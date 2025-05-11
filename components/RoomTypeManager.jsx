@@ -96,9 +96,11 @@ const RoomTypeManager = ({ tourId }) => {
                 <td className="py-1 px-2">{room.room_type}</td>
                 <td className="py-1 px-2">{room.capacity}</td>
                 <td className="py-1 px-2">{room.quantity}</td>
-                <td className="py-1 px-2 flex gap-1">
-                  <button className="text-blue-700 underline" onClick={() => handleEdit(room)} aria-label="수정">수정</button>
-                  <button className="text-red-600 underline" onClick={() => handleDelete(room.id)} aria-label="삭제">삭제</button>
+                <td className="py-1 px-2">
+                  <div className="flex justify-center items-center gap-2">
+                    <button className="text-blue-700 underline" onClick={() => handleEdit(room)} aria-label="수정">수정</button>
+                    <button className="text-red-600 underline" onClick={() => handleDelete(room.id)} aria-label="삭제">삭제</button>
+                  </div>
                 </td>
               </tr>
             ))}

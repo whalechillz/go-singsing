@@ -35,6 +35,23 @@ const RoomAssignmentManager = ({ tourId }) => {
   const handleSave = async (id, roomType) => {
     setSavingId(id);
     setError("");
+    // 최대 인원 초과 체크
+    if (roomType) {
+      const roomInfo = rooms.find(r => r === roomType || r.room_type === roomType);
+      const roomObj = Array.isArray(rooms) && rooms.find(r => r.room_type === roomType);
+      const capacity = roomObj?.capacity ? Number(roomObj.capacity) : 0;
+      const quantity = roomObj?.quantity ? Number(roomObj.quantity) : 0;
+      const max = capacity * quantity;
+      const assignedCount = participants.filter(p => p.room_type === roomType).length;
+      // 본인 포함 시 저장 후 인원
+      const isAlreadyAssigned = participants.find(p => p.id === id)?.room_type === roomType;
+      const afterCount = isAlreadyAssigned ? assignedCount : assignedCount + 1;
+      if (max > 0 && afterCount > max) {
+        setError(`${roomType}의 최대 인원(${max}명)을 초과할 수 없습니다.`);
+        setSavingId(null);
+        return;
+      }
+    }
     const { error } = await supabase.from("singsing_participants").update({ room_type: roomType }).eq("id", id);
     if (error) setError(error.message);
     await fetchData();
