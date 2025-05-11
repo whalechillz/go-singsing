@@ -8,6 +8,10 @@ const ParticipantsManager = ({ tourId }) => {
   const [form, setForm] = useState({ name: "", phone: "", team_name: "", note: "", status: "확정" });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortKey, setSortKey] = useState("created_at");
+  const [sortAsc, setSortAsc] = useState(true);
 
   const fetchParticipants = async () => {
     setLoading(true);
@@ -77,6 +81,22 @@ const ParticipantsManager = ({ tourId }) => {
     else fetchParticipants();
   };
 
+  // 검색/필터/정렬 적용된 참가자 목록
+  const filtered = participants
+    .filter(p =>
+      (!search ||
+        p.name.includes(search) ||
+        p.phone.includes(search) ||
+        (p.team_name || "").includes(search)) &&
+      (!statusFilter || p.status === statusFilter)
+    )
+    .sort((a, b) => {
+      if (!sortKey) return 0;
+      if (a[sortKey] === b[sortKey]) return 0;
+      if (sortAsc) return a[sortKey] > b[sortKey] ? 1 : -1;
+      return a[sortKey] < b[sortKey] ? 1 : -1;
+    });
+
   return (
     <div>
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
@@ -92,6 +112,27 @@ const ParticipantsManager = ({ tourId }) => {
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
         {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정" }); }}>취소</button>}
       </form>
+      <div className="flex flex-col md:flex-row gap-2 mb-2">
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="이름, 전화번호, 팀명 검색"
+          className="border rounded px-2 py-1 flex-1"
+          aria-label="검색"
+        />
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+          className="border rounded px-2 py-1 flex-none"
+          aria-label="상태 필터"
+        >
+          <option value="">전체 상태</option>
+          <option value="확정">확정</option>
+          <option value="대기">대기</option>
+          <option value="취소">취소</option>
+        </select>
+      </div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
@@ -99,16 +140,16 @@ const ParticipantsManager = ({ tourId }) => {
         <table className="w-full bg-white dark:bg-gray-900 rounded shadow text-sm">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-              <th className="py-2 px-2 text-left">이름</th>
-              <th className="py-2 px-2 text-left">연락처</th>
-              <th className="py-2 px-2 text-left">팀명</th>
+              <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("name"); setSortAsc(sortKey === "name" ? !sortAsc : true); }}>이름</th>
+              <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("phone"); setSortAsc(sortKey === "phone" ? !sortAsc : true); }}>연락처</th>
+              <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("team_name"); setSortAsc(sortKey === "team_name" ? !sortAsc : true); }}>팀명</th>
               <th className="py-2 px-2 text-left">메모</th>
-              <th className="py-2 px-2 text-left">상태</th>
+              <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("status"); setSortAsc(sortKey === "status" ? !sortAsc : true); }}>상태</th>
               <th className="py-2 px-2">관리</th>
             </tr>
           </thead>
           <tbody>
-            {participants.map((p) => (
+            {filtered.map((p) => (
               <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="py-1 px-2">{p.name}</td>
                 <td className="py-1 px-2">{p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3')}</td>
