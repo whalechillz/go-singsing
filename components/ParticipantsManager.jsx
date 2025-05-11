@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import * as XLSX from "xlsx";
 
 const ParticipantsManager = ({ tourId }) => {
   const [participants, setParticipants] = useState([]);
@@ -97,6 +98,56 @@ const ParticipantsManager = ({ tourId }) => {
       return a[sortKey] < b[sortKey] ? 1 : -1;
     });
 
+  // 엑셀 다운로드
+  const handleDownloadExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(participants.map(p => ({
+      이름: p.name,
+      연락처: p.phone,
+      팀명: p.team_name,
+      메모: p.note,
+      상태: p.status
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "참가자목록");
+    XLSX.writeFile(wb, "참가자목록.xlsx");
+  };
+
+  // 엑셀 업로드
+  const handleUploadExcel = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const data = evt.target.result;
+      const workbook = XLSX.read(data, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+      let added = 0, skipped = 0;
+      for (const row of rows) {
+        const name = row["이름"]?.toString().trim();
+        const phone = row["연락처"]?.toString().replace(/[^0-9]/g, "");
+        if (!name || !phone) { skipped++; continue; }
+        // 중복 체크
+        if (participants.some(p => p.name === name && p.phone === phone)) { skipped++; continue; }
+        const { error } = await supabase.from("singsing_participants").insert([
+          {
+            name,
+            phone,
+            team_name: row["팀명"] || "",
+            note: row["메모"] || "",
+            status: row["상태"] || "확정",
+            tour_id: tourId
+          }
+        ]);
+        if (!error) added++;
+        else skipped++;
+      }
+      fetchParticipants();
+      alert(`업로드 완료: ${added}명 추가, ${skipped}명 건너뜀`);
+    };
+    reader.readAsBinaryString(file);
+  };
+
   return (
     <div>
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
@@ -132,6 +183,11 @@ const ParticipantsManager = ({ tourId }) => {
           <option value="대기">대기</option>
           <option value="취소">취소</option>
         </select>
+        <button type="button" onClick={handleDownloadExcel} className="bg-green-700 text-white px-3 py-1 rounded">엑셀 다운로드</button>
+        <label className="bg-blue-700 text-white px-3 py-1 rounded cursor-pointer">
+          엑셀 업로드
+          <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" />
+        </label>
       </div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
       {loading ? (
