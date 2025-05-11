@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ParticipantsManager from "@/components/ParticipantsManager";
+import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 
 const TABS = [
   { key: "participants", label: "참가자 관리" },
@@ -48,7 +49,7 @@ const TourDetailPage = () => {
       </div>
       <div className="bg-gray-50 dark:bg-gray-800 rounded-b-lg p-6 min-h-[200px]">
         {activeTab === "participants" && <ParticipantsManager tourId={tourId} />}
-        {activeTab === "rooms" && <div>객실 배정 컴포넌트 (구현 예정)</div>}
+        {activeTab === "rooms" && <RoomAssignmentManager tourId={tourId} />}
         {activeTab === "schedules" && <div>일정 관리 컴포넌트 (구현 예정)</div>}
       </div>
     </div>
