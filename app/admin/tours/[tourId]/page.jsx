@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import ParticipantsManager from "@/components/ParticipantsManager";
 import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 import RoomTypeManager from "@/components/RoomTypeManager";
+import ScheduleManager from "@/components/ScheduleManager";
 
 const TABS = [
   { key: "participants", label: "참가자 관리" },
@@ -56,7 +57,7 @@ const TourDetailPage = () => {
             <RoomAssignmentManager tourId={tourId} />
           </>
         )}
-        {activeTab === "schedules" && <div>일정 관리 컴포넌트 (구현 예정)</div>}
+        {activeTab === "schedules" && <ScheduleManager tourId={tourId} />}
       </div>
     </div>
   );
