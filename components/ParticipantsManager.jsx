@@ -56,7 +56,7 @@ const ParticipantsManager = ({ tourId }) => {
       }
     } else {
       // 추가
-      const { error } = await supabase.from("singsing_participants").insert([{ ...form, phone: form.phone.replace(/[^0-9]/g, "") }]);
+      const { error } = await supabase.from("singsing_participants").insert([{ ...form, tour_id: tourId, phone: form.phone.replace(/[^0-9]/g, "") }]);
       if (error) setError(error.message);
       else {
         setForm({ name: "", phone: "", team_name: "", note: "", status: "확정" });
