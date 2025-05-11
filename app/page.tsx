@@ -1,346 +1,268 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import React, { useState, useEffect } from "react";
+import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
-interface ComponentItem {
-  name: string;
-  path: string;
-  url: string;
-  downloadUrl: string;
-  sha?: string;
-}
+const GolfTourPortal = () => {
+  const [tours, setTours] = useState([]);
+  const [selectedTour, setSelectedTour] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+  const [password, setPassword] = useState("");
+  const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
+  const [isStaffView, setIsStaffView] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default function Home() {
-  const [components, setComponents] = useState<ComponentItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showUpload, setShowUpload] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState("");
-  const [showOverwrite, setShowOverwrite] = useState(false);
-  const [overwriteSha, setOverwriteSha] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewContent, setPreviewContent] = useState("");
-  const [previewFileName, setPreviewFileName] = useState("");
-  const [previewLoading, setPreviewLoading] = useState(false);
-
+  // Supabase에서 투어 목록 fetch
   useEffect(() => {
-    async function fetchComponents() {
+    const fetchTours = async () => {
       try {
-        const res = await fetch("/api/components");
-        const data = await res.json();
-        if (data.success) {
-          setComponents(data.components);
-        } else {
-          setError(data.error || "알 수 없는 오류");
-        }
-      } catch {
-        setError("네트워크 오류");
-      } finally {
-        setLoading(false);
+        setIsLoading(true);
+        const { data, error } = await supabase.from("singsing_tours").select("*").order("start_date", { ascending: false });
+        if (error) throw error;
+        setTours(data);
+        setIsLoading(false);
+      } catch (err) {
+        setError("투어 정보를 불러오는 중 오류가 발생했습니다.");
+        setIsLoading(false);
       }
-    }
-    fetchComponents();
+    };
+    fetchTours();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null;
-    setFile(selectedFile);
-    if (selectedFile) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreview(e.target?.result as string);
-      };
-      reader.readAsText(selectedFile);
+  const handleCardClick = (tour) => {
+    setSelectedTour(tour);
+  };
+
+  const handleDocumentClick = (doc) => {
+    if (doc.locked) {
+      setModalContent(doc);
+      setShowModal(true);
     } else {
-      setPreview("");
+      window.open(`/${doc.id}.html`, "_blank");
     }
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) return;
-    setUploading(true);
-    const exist = components.find((c) => c.name === file.name);
-    if (exist) {
-      try {
-        const res = await fetch(`/api/components`);
-        const data = await res.json();
-        const found = (data.components as ComponentItem[]).find((c) => c.name === file.name);
-        if (found && found.sha) {
-          setOverwriteSha(found.sha);
-        } else {
-          setOverwriteSha(null);
-        }
-      } catch {
-        setOverwriteSha(null);
+  const handlePasswordSubmit = () => {
+    if (password === "singsinggolf2025") {
+      setIsPasswordCorrect(true);
+      setIsStaffView(true);
+      setShowModal(false);
+      if (modalContent) {
+        window.open(`/${modalContent.id}.html`, "_blank");
       }
-      setShowOverwrite(true);
-      setUploading(false);
-      return;
-    }
-    await doUpload();
-  };
-
-  const doUpload = async (sha?: string | null) => {
-    if (!file) return;
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("filename", file.name);
-    if (sha) formData.append("sha", sha);
-    try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      if (data.success) {
-        alert("업로드 성공!");
-        setShowUpload(false);
-        setShowOverwrite(false);
-        setFile(null);
-        setPreview("");
-        setOverwriteSha(null);
-        setComponents((prev) => [
-          ...prev.filter((c) => c.name !== file.name),
-          {
-            name: file.name,
-            path: `components/${file.name}`,
-            url: `/components/${file.name}`,
-            downloadUrl: data.url || "",
-            sha: sha || undefined,
-          },
-        ]);
-      } else {
-        alert(`업로드 실패: ${data.error}`);
-      }
-    } catch {
-      alert("업로드 중 오류 발생");
-    } finally {
-      setUploading(false);
+    } else {
+      setIsPasswordCorrect(false);
     }
   };
 
-  const handleOverwrite = async () => {
-    await doUpload(overwriteSha);
+  const renderTourCard = (tour) => {
+    const isSelected = selectedTour && selectedTour.id === tour.id;
+    return (
+      <div
+        key={tour.id}
+        className={`border rounded-lg shadow-md p-4 cursor-pointer transition-all mb-4 hover:shadow-lg hover:border-blue-200 ${isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"}`}
+        onClick={() => handleCardClick(tour)}
+      >
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-bold text-blue-800">{tour.title}</h3>
+            <div className="flex items-center text-gray-600 mt-1">
+              <Calendar className="w-4 h-4 mr-1" />
+              <span className="text-sm">{tour.start_date} ~ {tour.end_date}</span>
+            </div>
+            <div className="flex items-center text-gray-600 mt-1">
+              <Globe className="w-4 h-4 mr-1" />
+              <span className="text-sm">{tour.golf_course}</span>
+            </div>
+          </div>
+          <div className="bg-blue-100 px-3 py-1 rounded-full text-blue-800 font-semibold">
+            {tour.max_participants || 0}명
+          </div>
+        </div>
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <div className="flex justify-between">
+            <span className="text-gray-700 font-medium">{tour.price?.toLocaleString()}원</span>
+            <span className={tour.max_participants && tour.max_participants <= 0 ? "text-red-600 font-semibold" : "text-green-600"}>
+              모집중
+            </span>
+          </div>
+        </div>
+      </div>
+    );
   };
-
-  const handlePreview = async (name: string) => {
-    setPreviewFileName(name);
-    setPreviewContent("");
-    setPreviewLoading(true);
-    setShowPreview(true);
-    try {
-      const res = await fetch(`/api/raw?name=${name}`);
-      if (!res.ok) throw new Error("파일을 불러오지 못했습니다");
-      const text = await res.text();
-      setPreviewContent(text);
-    } catch {
-      setError("파일을 불러오지 못했습니다");
-    } finally {
-      setPreviewLoading(false);
-    }
-  };
-
-  const handleDelete = async (item: ComponentItem) => {
-    if (!confirm(`${item.name} 파일을 삭제하시겠습니까?`)) return;
-    try {
-      const res = await fetch(`/api/delete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: item.name })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setComponents((prev) => prev.filter((c) => c.name !== item.name));
-        alert('삭제 성공!');
-      } else {
-        alert(`삭제 실패: ${data.error}`);
-      }
-    } catch {
-      alert('삭제 중 오류 발생');
-    }
-  };
-
-  function getPreviewButtonLabel(filename: string) {
-    if (filename.endsWith('.md')) return '문서 보기';
-    if (filename.endsWith('.tsx') || filename.endsWith('.ts')) return '코드 보기';
-    return '내용 보기';
-  }
 
   return (
-    <div className="min-h-screen p-8 pb-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 items-center">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <h1 className="text-2xl font-bold mb-4">업로드된 파일 목록</h1>
-        <button
-          className="mb-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-          onClick={() => setShowUpload(true)}
-        >
-          업로드
-        </button>
-        {loading ? (
-          <div>로딩 중...</div>
+    <div className="min-h-screen bg-gray-100 pb-10">
+      {/* Header */}
+      <div className="bg-blue-800 text-white p-4 shadow-md">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">싱싱골프투어</h1>
+            <div className="flex items-center space-x-4">
+              {isStaffView && (
+                <span className="bg-yellow-500 text-white text-sm px-3 py-1 rounded-full">스탭 모드</span>
+              )}
+              <button
+                className="text-sm bg-white text-blue-800 px-4 py-1 rounded hover:bg-blue-100"
+                onClick={() => setIsStaffView(!isStaffView)}
+              >
+                {isStaffView ? "고객 모드로 전환" : "스탭 모드로 전환"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Main content */}
+      <div className="container mx-auto max-w-6xl px-4 mt-8">
+        {isLoading ? (
+          <div className="text-center py-10">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p>투어 정보를 불러오는 중...</p>
+          </div>
         ) : error ? (
-          <div className="text-red-500">{error}</div>
-        ) : components.length === 0 ? (
-          <div>업로드된 파일이 없습니다.</div>
+          <div className="bg-red-100 text-red-800 p-4 rounded-lg">{error}</div>
         ) : (
-          <ul className="w-full max-w-xl space-y-2">
-            {components.map((item) => (
-              <li key={item.name} className="flex justify-between items-center border rounded px-4 py-2 bg-white/80 dark:bg-black/30">
-                <span
-                  className="cursor-pointer select-none px-1 py-0.5 rounded hover:bg-blue-100 focus:bg-blue-200 outline-none"
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`${item.name} 문서 보기`}
-                  onClick={() => handlePreview(item.name)}
-                  onKeyDown={() => {
-                    handlePreview(item.name);
-                  }}
-                >
-                  {item.name}
-                </span>
-                <a
-                  href={item.downloadUrl}
-                  className="text-blue-600 underline ml-4"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download={item.name}
-                >
-                  다운로드
-                </a>
-                <button
-                  className="ml-2 px-3 py-1 border border-red-500 bg-transparent text-red-400 hover:bg-red-500 hover:text-white focus:bg-red-600 focus:text-white rounded text-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
-                  aria-label={`${item.name} 삭제`}
-                  tabIndex={0}
-                  onClick={() => handleDelete(item)}
-                  onKeyDown={() => {
-                    handleDelete(item);
-                  }}
-                >
-                  삭제
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </main>
-      {showUpload && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 w-full max-w-md shadow-lg relative">
-            <button
-              className="absolute top-2 right-2 text-2xl text-gray-400 hover:text-gray-700 dark:hover:text-white"
-              onClick={() => setShowUpload(false)}
-              aria-label="닫기"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-bold mb-4">파일 업로드</h2>
-            <form onSubmit={handleUpload} className="space-y-4">
-              <input
-                type="file"
-                accept=".tsx,.ts,.html,.md"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                required
-                className="border rounded px-2 py-1 w-full"
-              />
-              {preview && (
-                <div className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-40">
-                  <h3 className="font-semibold mb-1">파일 미리보기:</h3>
-                  <pre>{preview}</pre>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Tour list */}
+            <div className="md:col-span-1">
+              <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+                <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">투어 목록</h2>
+                <div className="space-y-3">
+                  {tours.map(tour => renderTourCard(tour))}
+                </div>
+              </div>
+            </div>
+            {/* Selected tour details */}
+            <div className="md:col-span-2">
+              {selectedTour ? (
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-blue-800">{selectedTour.title}</h2>
+                      <p className="text-gray-600">{selectedTour.start_date} ~ {selectedTour.end_date}</p>
+                    </div>
+                    <div className="bg-blue-100 px-4 py-2 rounded-lg">
+                      <p className="text-lg font-bold text-blue-800">{selectedTour.price?.toLocaleString()}원</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center mb-2">
+                        <Globe className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="font-semibold">골프장</span>
+                      </div>
+                      <p>{selectedTour.golf_course}</p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center mb-2">
+                        <MapPin className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="font-semibold">숙소</span>
+                      </div>
+                      <p>{selectedTour.accommodation}</p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center mb-2">
+                        <Users className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="font-semibold">인원</span>
+                      </div>
+                      <p>
+                        <span className="font-medium">{selectedTour.max_participants}</span>명
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center mb-2">
+                        <Phone className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="font-semibold">담당자</span>
+                      </div>
+                      <p>{selectedTour.driver_name}</p>
+                    </div>
+                  </div>
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-bold mb-4">여행 서류</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* 실제 문서/페이지 링크로 연결 필요 */}
+                      <button className="border rounded-lg p-4 text-left bg-white hover:bg-blue-50 border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <FileText className="w-5 h-5 text-blue-600 mr-2" />
+                            <span className="font-medium">상품 정보</span>
+                          </div>
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">고객용</span>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">일정, 식사, 골프장, 숙박 안내</p>
+                      </button>
+                      {/* 추가 문서/서류 버튼은 실제 서비스에 맞게 확장 */}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-medium text-gray-600 mb-2">투어를 선택해주세요</h3>
+                  <p className="text-gray-500">왼쪽 목록에서 투어를 선택하면 상세 정보를 확인할 수 있습니다.</p>
                 </div>
               )}
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50 w-full"
-                disabled={!file || uploading}
-              >
-                {uploading ? "업로드 중..." : "업로드"}
-              </button>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
-      {showOverwrite && (
+        )}
+      </div>
+      {/* Staff password modal */}
+      {showModal && modalContent && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 w-full max-w-sm shadow-lg relative">
-            <button
-              className="absolute top-2 right-2 text-2xl text-gray-400 hover:text-gray-700 dark:hover:text-white"
-              onClick={() => setShowOverwrite(false)}
-              aria-label="닫기"
-            >
-              ×
-            </button>
-            <h2 className="text-lg font-bold mb-4">덮어쓰기 확인</h2>
-            <p className="mb-4">동일한 이름의 파일이 이미 존재합니다.<br />덮어쓰시겠습니까?</p>
-            <div className="flex gap-4">
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-                onClick={handleOverwrite}
-                disabled={uploading}
-              >
-                덮어쓰기
-              </button>
-              <button
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded"
-                onClick={() => setShowOverwrite(false)}
-                disabled={uploading}
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showPreview && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 w-full max-w-3xl max-h-[90vh] shadow-lg relative flex flex-col">
-            <button
-              className="absolute top-2 right-2 text-2xl text-gray-400 hover:text-gray-700 dark:hover:text-white"
-              onClick={() => setShowPreview(false)}
-              aria-label="닫기"
-            >
-              ×
-            </button>
-            <h2 className="text-lg font-bold mb-4 break-all">{previewFileName}</h2>
-            <div className="flex-1 overflow-auto bg-gray-100 dark:bg-black/30 rounded p-4 text-xs whitespace-pre-wrap">
-              {previewLoading ? (
-                "로딩 중..."
-              ) : previewFileName.endsWith('.md') ? (
-                <ReactMarkdown>{previewContent}</ReactMarkdown>
-              ) : previewFileName.endsWith('.html') ? (
-                <iframe
-                  srcDoc={previewContent}
-                  title="HTML 미리보기"
-                  className="w-full h-[60vh] bg-white border rounded"
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">스탭 전용 페이지</h3>
+            <p className="mb-4">"{modalContent.title}" 문서는 스탭 전용입니다.</p>
+            <div>
+              <div className="mb-4">
+                <label htmlFor="password" className="block text-sm font-medium mb-1">비밀번호</label>
+                <input
+                  type="password"
+                  id="password"
+                  className="w-full border rounded px-3 py-2"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="스탭 비밀번호를 입력하세요"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handlePasswordSubmit();
+                    }
+                  }}
                 />
-              ) : previewFileName.endsWith('.tsx') || previewFileName.endsWith('.ts') ? (
-                <SyntaxHighlighter language="tsx" style={oneDark} wrapLongLines>
-                  {previewContent}
-                </SyntaxHighlighter>
-              ) : (
-                <pre>{previewContent}</pre>
-              )}
+                {password && !isPasswordCorrect && (
+                  <p className="text-red-500 text-sm mt-1">비밀번호가 올바르지 않습니다.</p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded"
+                  onClick={() => setShowModal(false)}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-blue-600 text-white rounded"
+                  onClick={handlePasswordSubmit}
+                >
+                  확인
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+      {/* Footer */}
+      <div className="mt-12 text-center text-gray-500 text-sm">
+        <p>싱싱골프투어 | 031-215-3990</p>
+      </div>
     </div>
   );
-}
+};
+
+export default GolfTourPortal;
+
+// 실제 서비스에서는 각 문서/서류, 상세 정보, 권한 분리 등 추가 구현 필요
