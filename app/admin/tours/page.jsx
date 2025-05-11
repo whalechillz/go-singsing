@@ -52,7 +52,11 @@ const TourListPage = () => {
           <tbody>
             {tours.map((tour) => (
               <tr key={tour.id} className="border-t border-gray-200 dark:border-gray-700">
-                <td className="py-2 px-4 dark:text-gray-100">{tour.title}</td>
+                <td className="py-2 px-4 dark:text-gray-100">
+                  <Link href={`/admin/tours/${tour.id}`} className="underline text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-100">
+                    {tour.title}
+                  </Link>
+                </td>
                 <td className="py-2 px-4 dark:text-gray-100">{tour.start_date} ~ {tour.end_date}</td>
                 <td className="py-2 px-4 dark:text-gray-100">{tour.driver_name}</td>
                 <td className="py-2 px-4 flex gap-2">
