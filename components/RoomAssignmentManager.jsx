@@ -32,17 +32,20 @@ const RoomAssignmentManager = ({ tourId }) => {
     setParticipants(prev => prev.map(p => p.id === id ? { ...p, room_type: value } : p));
   };
 
+  // status가 '확정'인 참가자만 객실 배정 대상으로 사용
+  const confirmedParticipants = participants.filter(p => p.status === '확정');
+
   const handleSave = async (id, roomType) => {
     setSavingId(id);
     setError("");
-    // 최대 인원 초과 체크
+    // 최대 인원 초과 체크 (확정 참가자만)
     if (roomType) {
       const roomObj = rooms.find(r => r.room_type === roomType);
       const capacity = Number(roomObj?.capacity || 0);
       const quantity = Number(roomObj?.quantity || 0);
       const max = capacity * quantity;
-      const assignedCount = participants.filter(p => p.room_type === roomType).length;
-      const isAlreadyAssigned = participants.find(p => p.id === id)?.room_type === roomType;
+      const assignedCount = confirmedParticipants.filter(p => p.room_type === roomType).length;
+      const isAlreadyAssigned = confirmedParticipants.find(p => p.id === id)?.room_type === roomType;
       const afterCount = isAlreadyAssigned ? assignedCount : assignedCount + 1;
       if (max > 0 && afterCount > max) {
         setError(`${roomType}의 최대 인원(${max}명)을 초과할 수 없습니다.`);
@@ -74,7 +77,7 @@ const RoomAssignmentManager = ({ tourId }) => {
             </tr>
           </thead>
           <tbody>
-            {participants.map((p) => (
+            {confirmedParticipants.map((p) => (
               <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="py-1 px-2">{p.name}</td>
                 <td className="py-1 px-2">{p.phone}</td>
@@ -88,7 +91,7 @@ const RoomAssignmentManager = ({ tourId }) => {
                   >
                     <option value="">미배정</option>
                     {rooms.map((type) => (
-                      <option key={type} value={type}>{type}</option>
+                      <option key={type.room_type || type} value={type.room_type || type}>{type.room_type || type}</option>
                     ))}
                   </select>
                 </td>
