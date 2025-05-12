@@ -76,13 +76,7 @@ const AdminParticipantsPage = () => {
   // UI 렌더링
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-blue-800 text-white p-4 shadow-md">
-        <div className="container mx-auto max-w-6xl px-4">
-          <h1 className="text-2xl font-bold">싱싱골프투어 참가자 관리</h1>
-        </div>
-      </div>
-      {/* Main content */}
+      {/* 상단 헤더는 app/page.tsx에서만 렌더링, 이 파일에서는 제거 */}
       <div className="container mx-auto max-w-6xl px-4 py-6">
         {isLoading ? (
           <div className="text-center py-10">
@@ -91,11 +85,10 @@ const AdminParticipantsPage = () => {
           </div>
         ) : (
           <>
-            {/* Controls */}
+            {/* 컨트롤 영역 */}
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4 flex-wrap">
-                  {/* 투어 선택 드롭다운 */}
                   <div className="relative">
                     <select
                       className="bg-white border rounded-lg px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -108,14 +101,11 @@ const AdminParticipantsPage = () => {
                     >
                       <option value="">전체 투어</option>
                       {tours.map(tour => (
-                        <option key={tour.id} value={tour.id}>
-                          {tour.title}
-                        </option>
+                        <option key={tour.id} value={tour.id}>{tour.title}</option>
                       ))}
                     </select>
                     <Calendar className="absolute right-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
-                  {/* 검색 입력 */}
                   <div className="relative">
                     <input
                       type="text"
@@ -127,7 +117,6 @@ const AdminParticipantsPage = () => {
                     <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
                   </div>
                 </div>
-                {/* 참가자 추가 버튼 */}
                 <button
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
                   onClick={() => { setCurrentParticipant({ id: null, name: '', phone: '', email: '', team_name: '', tour_id: selectedTour?.id || '', room_type: '', pickup_location: '', is_confirmed: false, note: '', emergency_contact: '', join_count: 0 }); setIsModalOpen(true); }}
@@ -136,7 +125,6 @@ const AdminParticipantsPage = () => {
                   <span>참가자 추가</span>
                 </button>
               </div>
-              {/* 탭 필터 */}
               <div className="flex border-b">
                 <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'all' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setActiveTab('all')}>전체 ({participants.length})</button>
                 <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'confirmed' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setActiveTab('confirmed')}>확정 ({participants.filter(p => p.is_confirmed).length})</button>
@@ -144,122 +132,62 @@ const AdminParticipantsPage = () => {
                 <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'vip' ? 'border-b-2 border-amber-600 text-amber-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setActiveTab('vip')}>VIP ({participants.filter(p => p.join_count >= 5).length})</button>
               </div>
             </div>
-            {/* Participants table */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+            {/* 테이블/카드 영역 */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 whitespace-nowrap">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">연락처</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팀/동호회</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">투어</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">탑승지</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">객실</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">참여횟수</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredParticipants.length === 0 ? (
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">연락처</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팀/동호회</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">투어</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">탑승지</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">객실</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">참여횟수</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+                      <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                        조건에 맞는 참가자가 없습니다.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredParticipants.length === 0 ? (
-                      <tr>
-                        <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
-                          조건에 맞는 참가자가 없습니다.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredParticipants.map((p) => {
-                        const tour = tours.find(t => t.id === p.tour_id);
-                        return (
-                          <tr key={p.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div className="font-medium text-gray-900">{p.name}</div>
-                                {/* 그룹 인원수 뱃지 */}
-                                {p.group_size > 1 && (
-                                  <span className="ml-2 bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs font-medium">
-                                    +{p.group_size - 1}명
-                                  </span>
-                                )}
-                              </div>
-                              {/* 동반자 정보 */}
-                              {p.companions && p.companions.length > 0 && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  동반자: {p.companions.join(', ')}
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.phone}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {p.team_name ? (
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                  {p.team_name}
-                                </span>
-                              ) : (
-                                <span className="text-gray-400">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {tour ? (
-                                <div>
-                                  <div className="font-medium text-gray-900">{tour.title}</div>
-                                  <div className="text-xs text-gray-500">{tour.start_date}~{tour.end_date}</div>
-                                  {tour.price && (
-                                    <div className="text-xs text-gray-500 mt-1">{tour.price.toLocaleString()}원</div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-gray-400">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {p.pickup_location ? (
-                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
-                                  {p.pickup_location}
-                                </span>
-                              ) : (
-                                <span className="text-gray-400">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.room_type || '-'}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div className="flex items-center">
-                                <span className={`font-medium ${p.join_count >= 5 ? 'text-amber-600' : 'text-gray-900'}`}>{p.join_count}회</span>
-                                {p.join_count >= 5 && (
-                                  <span className="ml-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">VIP</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <button
-                                className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors duration-200 ${p.is_confirmed ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`}
-                                onClick={() => toggleConfirmation(p.id)}
-                              >
-                                {p.is_confirmed ? (
-                                  <>
-                                    <Check className="w-3 h-3" />
-                                    <span>확정</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <X className="w-3 h-3" />
-                                    <span>미확정</span>
-                                  </>
-                                )}
-                              </button>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <button className="text-indigo-600 hover:text-indigo-900 mr-3" onClick={() => { setCurrentParticipant(p); setIsModalOpen(true); }}><Edit className="w-5 h-5" /></button>
-                              <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(p.id)}><Trash2 className="w-5 h-5" /></button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                  ) : (
+                    filteredParticipants.map((p) => {
+                      const tour = tours.find(t => t.id === p.tour_id);
+                      return (
+                        <tr key={p.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-2">
+                            {p.name}
+                            {p.group_size > 1 && (
+                              <span className="ml-1 bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs font-medium">+{p.group_size - 1}명</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-gray-700">{p.phone}</td>
+                          <td className="px-6 py-4">{p.team_name ? <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{p.team_name}</span> : '-'}</td>
+                          <td className="px-6 py-4">{tour?.title || '-'}</td>
+                          <td className="px-6 py-4">{p.pickup_location ? <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{p.pickup_location}</span> : '-'}</td>
+                          <td className="px-6 py-4">{p.room_type || '-'}</td>
+                          <td className="px-6 py-4">
+                            <span className={`font-medium ${p.join_count >= 5 ? 'text-amber-600' : 'text-gray-900'}`}>{p.join_count}회</span>
+                            {p.join_count >= 5 && <span className="ml-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">VIP</span>}
+                          </td>
+                          <td className="px-6 py-4">
+                            <button className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors duration-200 ${p.is_confirmed ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`} onClick={() => toggleConfirmation(p.id)}>{p.is_confirmed ? (<><Check className="w-3 h-3" /><span>확정</span></>) : (<><X className="w-3 h-3" /><span>미확정</span></>)}</button>
+                          </td>
+                          <td className="px-6 py-4 text-right text-sm font-medium">
+                            <button className="text-indigo-600 hover:text-indigo-900 mr-3" onClick={() => { setCurrentParticipant(p); setIsModalOpen(true); }}><Edit className="w-5 h-5" /></button>
+                            <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(p.id)}><Trash2 className="w-5 h-5" /></button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
             {/* 통계 요약 */}
             <div className="mt-6 text-sm text-gray-700 bg-white p-4 rounded-lg shadow-md">
