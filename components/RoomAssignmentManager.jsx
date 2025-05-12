@@ -62,7 +62,10 @@ const RoomAssignmentManager = ({ tourId }) => {
 
   // 객실 배정 변경
   const handleAssignRoom = async (participantId, roomName) => {
-    await supabase.from("singsing_participants").update({ room_name: roomName }).eq("id", participantId);
+    await supabase
+      .from("singsing_participants")
+      .update({ room_name: roomName === "" ? null : roomName })
+      .eq("id", participantId);
     fetchData();
   };
 
