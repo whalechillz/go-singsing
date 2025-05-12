@@ -37,8 +37,12 @@ const RoomAssignmentManager = ({ tourId }) => {
       room_type: newRoomType,
       room_name: `${newRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`
     }));
-    console.log('추가될 객실:', newRooms); // 디버깅용 콘솔
-    await supabase.from("singsing_rooms").insert(newRooms);
+    console.log('추가될 객실:', newRooms); // 2개 이상 객체가 나와야 정상
+    const { error } = await supabase.from("singsing_rooms").insert(newRooms);
+    if (error) {
+      console.error('객실 추가 에러:', error);
+      setError(error.message);
+    }
     setNewRoomType("");
     setNewRoomCount(1);
     fetchData();
