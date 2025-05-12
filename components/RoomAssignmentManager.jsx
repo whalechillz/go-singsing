@@ -46,12 +46,19 @@ const RoomAssignmentManager = ({ tourId }) => {
 
   // 객실별로 참가자 그룹핑
   const roomGroups = {};
-  rooms.forEach(room => { roomGroups[room.room_name] = []; });
+  rooms.forEach(room => {
+    if (room.room_name) {
+      roomGroups[room.room_name] = [];
+    }
+  });
   participants.forEach(p => {
     if (p.room_name && roomGroups[p.room_name]) roomGroups[p.room_name].push(p);
   });
   // 미배정 참가자
   const unassigned = participants.filter(p => !p.room_name);
+
+  // 객실명 표시 함수
+  const displayRoomName = (roomName) => roomName ? roomName : "미배정";
 
   // 객실 배정 변경
   const handleAssignRoom = async (participantId, roomName) => {
@@ -84,8 +91,8 @@ const RoomAssignmentManager = ({ tourId }) => {
           {Object.entries(roomGroups).map(([roomName, members]) => (
             <div key={roomName} className="bg-gray-50 rounded-lg shadow p-4">
               <div className="flex justify-between items-center mb-2">
-                <div className="font-bold text-blue-800">{roomName}</div>
-                <button className="text-red-500 text-xs" onClick={() => handleDeleteRoom(roomName)}>객실 삭제</button>
+                <div className="font-bold text-blue-800">{displayRoomName(roomName)}</div>
+                <button className="text-red-500 text-xs" onClick={() => handleDeleteRoom(roomName)} aria-label="객실 삭제" tabIndex={0}>객실 삭제</button>
               </div>
               {members.length === 0 ? (
                 <div className="text-gray-400 text-sm">배정된 참가자가 없습니다.</div>
@@ -98,7 +105,13 @@ const RoomAssignmentManager = ({ tourId }) => {
                         <span className="ml-2 text-gray-500 text-xs">{p.phone}</span>
                         <span className="ml-2 text-gray-500 text-xs">{p.team_name}</span>
                       </div>
-                      <select className="border rounded px-2 py-1" value={p.room_name || ""} onChange={e => handleAssignRoom(p.id, e.target.value)}>
+                      <select
+                        className="border rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500"
+                        value={p.room_name || ""}
+                        onChange={e => handleAssignRoom(p.id, e.target.value)}
+                        aria-label="객실 선택"
+                        tabIndex={0}
+                      >
                         <option value="">미배정</option>
                         {rooms.map(r => <option key={r.room_name} value={r.room_name}>{r.room_name}</option>)}
                       </select>
@@ -122,7 +135,13 @@ const RoomAssignmentManager = ({ tourId }) => {
                       <span className="ml-2 text-gray-500 text-xs">{p.phone}</span>
                       <span className="ml-2 text-gray-500 text-xs">{p.team_name}</span>
                     </div>
-                    <select className="border rounded px-2 py-1" value={p.room_name || ""} onChange={e => handleAssignRoom(p.id, e.target.value)}>
+                    <select
+                      className="border rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500"
+                      value={p.room_name || ""}
+                      onChange={e => handleAssignRoom(p.id, e.target.value)}
+                      aria-label="객실 선택"
+                      tabIndex={0}
+                    >
                       <option value="">미배정</option>
                       {rooms.map(r => <option key={r.room_name} value={r.room_name}>{r.room_name}</option>)}
                     </select>
