@@ -95,8 +95,9 @@ const AdminParticipantsPage = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto max-w-5xl px-2 py-8">
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+        {/* 상단 컨트롤 카드 (sticky) */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 sticky top-0 z-10">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
             <div className="flex items-center gap-2 flex-1">
               <div className="relative w-48">
                 <select
@@ -156,15 +157,18 @@ const AdminParticipantsPage = () => {
               <span>참가자 추가</span>
             </button>
           </div>
-          <div className="flex border-b mb-4">
+          <div className="flex border-b">
             <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === "all" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600 hover:text-gray-900"}`} onClick={() => setActiveTab("all")}>전체 ({participants.length})</button>
             <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === "confirmed" ? "border-b-2 border-green-600 text-green-600" : "text-gray-600 hover:text-gray-900"}`} onClick={() => setActiveTab("confirmed")}>확정 ({participants.filter((p) => p.is_confirmed).length})</button>
             <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === "unconfirmed" ? "border-b-2 border-red-600 text-red-600" : "text-gray-600 hover:text-gray-900"}`} onClick={() => setActiveTab("unconfirmed")}>미확정 ({participants.filter((p) => !p.is_confirmed).length})</button>
             <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === "vip" ? "border-b-2 border-amber-600 text-amber-600" : "text-gray-600 hover:text-gray-900"}`} onClick={() => setActiveTab("vip")}>VIP ({participants.filter((p) => p.join_count >= 5).length})</button>
           </div>
+        </div>
+        {/* 하단 테이블 카드 (스크롤) */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 max-h-[70vh] overflow-y-auto">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 whitespace-nowrap">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">연락처</th>
