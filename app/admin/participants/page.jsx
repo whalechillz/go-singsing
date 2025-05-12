@@ -75,82 +75,219 @@ const AdminParticipantsPage = () => {
 
   // UI 렌더링
   return (
-    <div className="max-w-5xl mx-auto py-8">
-      <div className="bg-white rounded-xl shadow p-6 mb-8">
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <div className="bg-blue-800 text-white p-4 shadow-md">
+        <div className="container mx-auto max-w-6xl px-4">
+          <h1 className="text-2xl font-bold">싱싱골프투어 참가자 관리</h1>
+        </div>
+      </div>
+      {/* Main content */}
+      <div className="container mx-auto max-w-6xl px-4 py-6">
         {isLoading ? (
-          <div className="text-center py-10">데이터를 불러오는 중...</div>
+          <div className="text-center py-10">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p>데이터를 불러오는 중...</p>
+          </div>
         ) : (
           <>
-            {/* 상단 컨트롤 */}
-            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-              <select className="border rounded-lg px-4 py-2 w-full md:w-48 bg-white text-gray-900" onChange={e => setSelectedTour(tours.find(t => t.id === e.target.value) || null)} value={selectedTour?.id || ''}>
-                <option value="">전체 투어</option>
-                {tours.map(tour => <option key={tour.id} value={tour.id}>{tour.title}</option>)}
-              </select>
-              <input type="text" placeholder="이름, 전화번호, 팀 검색..." className="border rounded-lg px-3 py-2 flex-1 bg-white text-gray-900" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-              <button className="bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold shadow hover:bg-blue-800 transition-colors" onClick={() => { setCurrentParticipant({ id: null, name: '', phone: '', email: '', team_name: '', tour_id: selectedTour?.id || '', room_type: '', pickup_location: '', is_confirmed: false, note: '', emergency_contact: '', join_count: 0 }); setIsModalOpen(true); }}>+ 참가자 추가</button>
+            {/* Controls */}
+            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+              <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
+                <div className="flex items-center gap-4 flex-wrap">
+                  {/* 투어 선택 드롭다운 */}
+                  <div className="relative">
+                    <select
+                      className="bg-white border rounded-lg px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      onChange={(e) => {
+                        const tourId = e.target.value;
+                        const tour = tours.find(t => t.id === tourId);
+                        setSelectedTour(tour || null);
+                      }}
+                      value={selectedTour?.id || ''}
+                    >
+                      <option value="">전체 투어</option>
+                      {tours.map(tour => (
+                        <option key={tour.id} value={tour.id}>
+                          {tour.title}
+                        </option>
+                      ))}
+                    </select>
+                    <Calendar className="absolute right-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                  {/* 검색 입력 */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="이름, 전화번호, 팀 검색..."
+                      className="bg-white border rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 w-64"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                  </div>
+                </div>
+                {/* 참가자 추가 버튼 */}
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+                  onClick={() => { setCurrentParticipant({ id: null, name: '', phone: '', email: '', team_name: '', tour_id: selectedTour?.id || '', room_type: '', pickup_location: '', is_confirmed: false, note: '', emergency_contact: '', join_count: 0 }); setIsModalOpen(true); }}
+                >
+                  <UserPlus className="w-5 h-5" />
+                  <span>참가자 추가</span>
+                </button>
+              </div>
+              {/* 탭 필터 */}
+              <div className="flex border-b">
+                <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'all' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setActiveTab('all')}>전체 ({participants.length})</button>
+                <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'confirmed' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setActiveTab('confirmed')}>확정 ({participants.filter(p => p.is_confirmed).length})</button>
+                <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'unconfirmed' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setActiveTab('unconfirmed')}>미확정 ({participants.filter(p => !p.is_confirmed).length})</button>
+                <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'vip' ? 'border-b-2 border-amber-600 text-amber-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setActiveTab('vip')}>VIP ({participants.filter(p => p.join_count >= 5).length})</button>
+              </div>
             </div>
-            {/* 탭 필터 */}
-            <div className="flex gap-2 mb-6">
-              <button className={`px-4 py-1 rounded-full font-medium ${activeTab === 'all' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`} onClick={() => setActiveTab('all')}>전체 ({participants.length})</button>
-              <button className={`px-4 py-1 rounded-full font-medium ${activeTab === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`} onClick={() => setActiveTab('confirmed')}>확정 ({participants.filter(p => p.is_confirmed).length})</button>
-              <button className={`px-4 py-1 rounded-full font-medium ${activeTab === 'unconfirmed' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600'}`} onClick={() => setActiveTab('unconfirmed')}>미확정 ({participants.filter(p => !p.is_confirmed).length})</button>
-              <button className={`px-4 py-1 rounded-full font-medium ${activeTab === 'vip' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'}`} onClick={() => setActiveTab('vip')}>VIP ({participants.filter(p => p.join_count >= 5).length})</button>
-            </div>
-            {/* 테이블 */}
-            <div className="overflow-x-auto rounded-lg shadow border border-gray-100">
-              <table className="w-full min-w-[900px] text-sm">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-500">이름</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-500">연락처</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-500">팀/동호회</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-500">투어</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-500">탑승지</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-500">객실</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-500">참여횟수</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-500">상태</th>
-                    <th className="px-6 py-3 text-right font-semibold text-gray-500">관리</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredParticipants.length === 0 ? (
-                    <tr><td colSpan="9" className="py-6 text-center text-gray-400">참가자가 없습니다.</td></tr>
-                  ) : (
-                    filteredParticipants.map((p) => {
-                      const tour = tours.find(t => t.id === p.tour_id);
-                      return (
-                        <tr key={p.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 font-semibold text-gray-900">{p.name}</td>
-                          <td className="px-6 py-4 text-gray-700">{p.phone}</td>
-                          <td className="px-6 py-4">{p.team_name ? <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">{p.team_name}</span> : '-'}</td>
-                          <td className="px-6 py-4">{tour?.title || '-'}</td>
-                          <td className="px-6 py-4">{p.pickup_location ? <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">{p.pickup_location}</span> : '-'}</td>
-                          <td className="px-6 py-4">{p.room_type ? <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs">{p.room_type}</span> : '-'}</td>
-                          <td className="px-6 py-4">
-                            <span className={`font-semibold ${p.join_count >= 5 ? 'text-amber-600' : 'text-gray-900'}`}>{p.join_count}회</span>
-                            {p.join_count >= 5 && <span className="ml-2 bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs">VIP</span>}
-                          </td>
-                          <td className="px-6 py-4">
-                            <button className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium ${p.is_confirmed ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`} onClick={() => toggleConfirmation(p.id)}>{p.is_confirmed ? (<><Check className="w-3 h-3" /><span>확정</span></>) : (<><X className="w-3 h-3" /><span>미확정</span></>)}</button>
-                          </td>
-                          <td className="px-6 py-4 text-right text-sm">
-                            <button className="text-indigo-600 hover:text-indigo-900 mr-3" onClick={() => { setCurrentParticipant(p); setIsModalOpen(true); }}><Edit className="w-5 h-5" /></button>
-                            <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(p.id)}><Trash2 className="w-5 h-5" /></button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+            {/* Participants table */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">연락처</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팀/동호회</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">투어</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">탑승지</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">객실</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">참여횟수</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredParticipants.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                          조건에 맞는 참가자가 없습니다.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredParticipants.map((p) => {
+                        const tour = tours.find(t => t.id === p.tour_id);
+                        return (
+                          <tr key={p.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="font-medium text-gray-900">{p.name}</div>
+                                {/* 그룹 인원수 뱃지 */}
+                                {p.group_size > 1 && (
+                                  <span className="ml-2 bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs font-medium">
+                                    +{p.group_size - 1}명
+                                  </span>
+                                )}
+                              </div>
+                              {/* 동반자 정보 */}
+                              {p.companions && p.companions.length > 0 && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  동반자: {p.companions.join(', ')}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.phone}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {p.team_name ? (
+                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                                  {p.team_name}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {tour ? (
+                                <div>
+                                  <div className="font-medium text-gray-900">{tour.title}</div>
+                                  <div className="text-xs text-gray-500">{tour.start_date}~{tour.end_date}</div>
+                                  {tour.price && (
+                                    <div className="text-xs text-gray-500 mt-1">{tour.price.toLocaleString()}원</div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {p.pickup_location ? (
+                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                                  {p.pickup_location}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.room_type || '-'}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <div className="flex items-center">
+                                <span className={`font-medium ${p.join_count >= 5 ? 'text-amber-600' : 'text-gray-900'}`}>{p.join_count}회</span>
+                                {p.join_count >= 5 && (
+                                  <span className="ml-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">VIP</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <button
+                                className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors duration-200 ${p.is_confirmed ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`}
+                                onClick={() => toggleConfirmation(p.id)}
+                              >
+                                {p.is_confirmed ? (
+                                  <>
+                                    <Check className="w-3 h-3" />
+                                    <span>확정</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <X className="w-3 h-3" />
+                                    <span>미확정</span>
+                                  </>
+                                )}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <button className="text-indigo-600 hover:text-indigo-900 mr-3" onClick={() => { setCurrentParticipant(p); setIsModalOpen(true); }}><Edit className="w-5 h-5" /></button>
+                              <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(p.id)}><Trash2 className="w-5 h-5" /></button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
             {/* 통계 요약 */}
-            <div className="mt-6 bg-gray-50 rounded-lg p-4 flex flex-col md:flex-row gap-4 text-sm">
-              <div className="flex-1"><span className="font-bold text-blue-700">총 참가자:</span> {participants.length}명</div>
-              <div className="flex-1"><span className="font-bold text-green-700">확정:</span> {participants.filter(p => p.is_confirmed).length}명</div>
-              <div className="flex-1"><span className="font-bold text-red-700">미확정:</span> {participants.filter(p => !p.is_confirmed).length}명</div>
-              <div className="flex-1"><span className="font-bold text-amber-700">VIP (5회 이상):</span> {participants.filter(p => p.join_count >= 5).length}명</div>
+            <div className="mt-6 text-sm text-gray-700 bg-white p-4 rounded-lg shadow-md">
+              <div className="font-bold text-gray-900 mb-3 border-b pb-2">참가자 현황 요약 ({selectedTour ? selectedTour.title : '전체'})</div>
+              {selectedTour && (
+                <div className="text-gray-600 text-sm mb-3">투어 기간: {selectedTour.start_date}~{selectedTour.end_date}</div>
+              )}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <span className="font-semibold text-blue-800">총 참가자:</span> <span className="text-lg font-bold">{participants.length}</span>명
+                </div>
+                <div>
+                  <span className="font-semibold text-green-700">확정:</span> <span className="text-lg font-bold">{participants.filter(p => p.is_confirmed).length}</span>명
+                </div>
+                <div>
+                  <span className="font-semibold text-red-700">미확정:</span> <span className="text-lg font-bold">{participants.filter(p => !p.is_confirmed).length}</span>명
+                </div>
+                <div>
+                  <span className="font-semibold text-amber-700">VIP (5회 이상):</span> <span className="text-lg font-bold">{participants.filter(p => p.join_count >= 5).length}</span>명
+                </div>
+              </div>
+              {(selectedTour || searchTerm || activeTab !== 'all') && (
+                <div className="mt-4 pt-4 border-t border-gray-200 text-gray-600">
+                  현재 목록 (<span className="font-medium">{filteredParticipants.length}</span>명)
+                  <span className="ml-4">확정: {filteredParticipants.filter(p => p.is_confirmed).length}명</span>
+                  <span className="ml-4">미확정: {filteredParticipants.filter(p => !p.is_confirmed).length}명</span>
+                </div>
+              )}
             </div>
             {/* 참가자 추가/수정 모달 */}
             {isModalOpen && currentParticipant && (
