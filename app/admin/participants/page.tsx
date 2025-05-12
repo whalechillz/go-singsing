@@ -164,8 +164,8 @@ const AdminParticipantsPage = () => {
             <button className={`px-4 py-2 font-medium text-sm transition-colors duration-200 ${activeTab === "vip" ? "border-b-2 border-amber-600 text-amber-600" : "text-gray-600 hover:text-gray-900"}`} onClick={() => setActiveTab("vip")}>VIP ({participants.filter((p) => p.join_count >= 5).length})</button>
           </div>
         </div>
-        {/* 하단 테이블 카드 (스크롤) */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 max-h-[70vh] overflow-y-auto">
+        {/* 하단 테이블 카드 (가로 스크롤만) */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 whitespace-nowrap">
               <thead className="bg-gray-50 sticky top-0 z-10">
