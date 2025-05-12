@@ -30,7 +30,6 @@ const RoomAssignmentManager = ({ tourId }) => {
   // 객실 자동 생성
   const handleAddRooms = async () => {
     if (!newRoomType || newRoomCount < 1) return;
-    // 이미 있는 객실 중 해당 타입의 마지막 번호 찾기
     const sameTypeRooms = rooms.filter(r => r.room_type === newRoomType);
     const lastNum = sameTypeRooms.length;
     const newRooms = Array.from({ length: newRoomCount }, (_, i) => ({
@@ -38,6 +37,7 @@ const RoomAssignmentManager = ({ tourId }) => {
       room_type: newRoomType,
       room_name: `${newRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`
     }));
+    console.log('추가될 객실:', newRooms); // 디버깅용 콘솔
     await supabase.from("singsing_rooms").insert(newRooms);
     setNewRoomType("");
     setNewRoomCount(1);
