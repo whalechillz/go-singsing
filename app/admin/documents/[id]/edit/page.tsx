@@ -46,7 +46,6 @@ export default function EditDocumentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -55,15 +54,6 @@ export default function EditDocumentPage() {
   });
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const isAdmin = session?.user?.user_metadata?.is_admin || false;
-      setIsAdmin(isAdmin);
-      if (!isAdmin) {
-        router.push('/');
-      }
-    };
-
     const fetchDocument = async () => {
       try {
         setIsLoading(true);
@@ -99,7 +89,6 @@ export default function EditDocumentPage() {
       }
     };
 
-    checkAdmin();
     fetchDocument();
     fetchTours();
   }, [id, router]);
@@ -130,10 +119,6 @@ export default function EditDocumentPage() {
       setIsSaving(false);
     }
   };
-
-  if (!isAdmin) {
-    return null; // 리다이렉트 중
-  }
 
   if (isLoading) {
     return (

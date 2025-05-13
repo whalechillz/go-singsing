@@ -180,12 +180,18 @@ export default function DocumentsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+                        <button
+                          className="flex items-center focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          onClick={() => router.push(`/document/${doc.tour_id}/${doc.type}`)}
+                          tabIndex={0}
+                          aria-label={`문서 상세: ${documentTypes[doc.type as keyof typeof documentTypes]?.name}`}
+                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/document/${doc.tour_id}/${doc.type}`); }}
+                        >
                           <Icon className="w-5 h-5 text-blue-600 mr-2" />
-                          <span className="text-sm text-gray-900">
+                          <span className="text-sm text-gray-900 underline hover:text-blue-700 transition-colors">
                             {documentTypes[doc.type as keyof typeof documentTypes]?.name}
                           </span>
-                        </div>
+                        </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(doc.created_at).toLocaleDateString()}
