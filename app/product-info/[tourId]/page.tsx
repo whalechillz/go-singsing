@@ -6,9 +6,14 @@ import { fetchTourAndSchedules } from "./actions";
 import ProductInfo from "@/components/ProductInfo";
 import { Metadata } from "next";
 
+type TourData = {
+  tour: any;
+  schedules: any[] | null;
+}
+
 export default function ProductInfoPage() {
   const params = useParams();
-  const [data, setData] = useState<{ tour: any; schedules: any[] }>({ tour: null, schedules: [] });
+  const [data, setData] = useState<TourData>({ tour: null, schedules: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
