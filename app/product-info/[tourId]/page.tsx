@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import ProductInfo from "@/components/ProductInfo";
+import { Metadata } from "next";
 
 const fetchTourAndSchedules = async (tourId: string) => {
   const { data: tour } = await supabase.from("singsing_tours").select("*").eq("id", tourId).single();
@@ -7,8 +8,12 @@ const fetchTourAndSchedules = async (tourId: string) => {
   return { tour, schedules };
 };
 
-export default async function ProductInfoPage({ params }) {
-  const { tour, schedules } = await fetchTourAndSchedules(params?.tourId);
+type Props = {
+  params: { tourId: string }
+}
+
+export default async function ProductInfoPage({ params }: Props) {
+  const { tour, schedules } = await fetchTourAndSchedules(params.tourId);
   if (!tour) return <div className="p-8 text-center text-red-500">투어 정보를 찾을 수 없습니다.</div>;
   return (
     <div className="min-h-screen bg-gray-100 py-8">
