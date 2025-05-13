@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Save, ArrowLeft } from 'lucide-react';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -34,7 +34,9 @@ const documentTypes = {
   'room-assignment-staff': { name: '객실 배정 (스탭용)', icon: Users },
 };
 
-export default function EditDocumentPage({ params }: { params: { id: string } }) {
+export default function EditDocumentPage() {
+  const params = useParams();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
   const [document, setDocument] = useState<Document | null>(null);
   const [tours, setTours] = useState<Tour[]>([]);
@@ -68,7 +70,7 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
         const { data, error } = await supabase
           .from('documents')
           .select('*')
-          .eq('id', params.id)
+          .eq('id', id)
           .single();
 
         if (error) throw error;
@@ -100,7 +102,7 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
     checkAdmin();
     fetchDocument();
     fetchTours();
-  }, [params.id, router]);
+  }, [id, router]);
 
   const handleSave = async () => {
     if (!selectedTour || !selectedType || !content) {
@@ -118,7 +120,7 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
           content: content,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', params.id);
+        .eq('id', id);
 
       if (error) throw error;
       router.push('/admin/documents');
