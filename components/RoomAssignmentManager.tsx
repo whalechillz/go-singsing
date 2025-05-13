@@ -11,6 +11,11 @@ type Participant = {
   status: string;
   tour_id: string;
   room_name?: string;
+  singsing_rooms?: {
+    room_type?: string;
+    capacity?: number;
+    quantity?: number;
+  };
 };
 
 type Room = {
