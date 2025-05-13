@@ -53,6 +53,13 @@ export default function EditDocumentPage() {
     onUpdate: ({ editor }) => setContent(editor.getHTML()),
   });
 
+  // content가 바뀔 때마다 editor에 반영
+  React.useEffect(() => {
+    if (editor && content) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
+
   useEffect(() => {
     const fetchDocument = async () => {
       try {
