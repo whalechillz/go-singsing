@@ -62,7 +62,7 @@ export default function DocumentPage() {
   }, [params.tourId, params.type]);
 
   // 스탭 전용 문서 체크
-  const isStaffOnly = params.type.toString().includes('-staff');
+  const isStaffOnly = params.type?.toString().includes('-staff') ?? false;
   if (isStaffOnly && !isStaffView) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
