@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, MapPin, Users, Calendar, Lock } from 'lucide-react';
+import { FileText, MapPin, Users, Calendar, Lock, Printer } from 'lucide-react';
 
 // 문서 타입 정의
 interface Document {
@@ -111,8 +111,8 @@ export default function DocumentPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
             {documentType && (
               <>
                 {React.createElement(documentType.icon, { className: "w-6 h-6 text-blue-600 mr-2" })}
@@ -120,7 +120,19 @@ export default function DocumentPage() {
               </>
             )}
           </div>
-          
+          <button
+            type="button"
+            className="flex items-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+            aria-label="문서 프린트"
+            tabIndex={0}
+            onClick={() => window.print()}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') window.print(); }}
+          >
+            <Printer className="w-5 h-5 mr-1" />
+            <span className="hidden sm:inline">프린트</span>
+          </button>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6">
           <div className="prose max-w-none">
             <div dangerouslySetInnerHTML={{ __html: document.content }} />
           </div>
