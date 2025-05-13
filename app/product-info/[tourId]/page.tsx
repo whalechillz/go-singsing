@@ -1,6 +1,9 @@
-import React from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ProductInfo from "@/components/ProductInfo";
+
+type PageProps = {
+  params: { tourId: string };
+};
 
 const fetchTourAndSchedules = async (tourId: string) => {
   const { data: tour } = await supabase.from("singsing_tours").select("*").eq("id", tourId).single();
@@ -8,7 +11,7 @@ const fetchTourAndSchedules = async (tourId: string) => {
   return { tour, schedules };
 };
 
-const ProductInfoPage = async ({ params }: { params: { tourId: string } }) => {
+export default async function ProductInfoPage({ params }: PageProps) {
   const { tour, schedules } = await fetchTourAndSchedules(params.tourId);
   if (!tour) return <div className="p-8 text-center text-red-500">투어 정보를 찾을 수 없습니다.</div>;
   return (
@@ -18,6 +21,4 @@ const ProductInfoPage = async ({ params }: { params: { tourId: string } }) => {
       </div>
     </div>
   );
-};
-
-export default ProductInfoPage; 
+} 
