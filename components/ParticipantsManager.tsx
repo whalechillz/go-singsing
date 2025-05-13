@@ -13,6 +13,11 @@ type Participant = {
   tour_id: string;
   room_name?: string;
   created_at?: string;
+  singsing_rooms?: {
+    room_type?: string;
+    capacity?: number;
+    quantity?: number;
+  };
 };
 
 type ParticipantForm = {

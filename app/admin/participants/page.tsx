@@ -19,7 +19,6 @@ interface Participant {
   email?: string;
   team_name?: string;
   tour_id: string;
-  room_type?: string;
   pickup_location?: string;
   is_confirmed: boolean;
   note?: string;
@@ -29,6 +28,11 @@ interface Participant {
   companion_names?: string;
   companions?: string[];
   isPayingForGroup: boolean;
+  singsing_rooms?: {
+    room_type?: string;
+    capacity?: number;
+    quantity?: number;
+  };
 }
 
 const pickupOptions = [
@@ -166,7 +170,6 @@ const AdminParticipantsPage = () => {
                   email: "",
                   team_name: "",
                   tour_id: selectedTour?.id || "",
-                  room_type: "",
                   pickup_location: "",
                   is_confirmed: false,
                   note: "",
@@ -234,7 +237,7 @@ const AdminParticipantsPage = () => {
                         <td className="px-4 py-3 whitespace-nowrap">{p.team_name ? <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{p.team_name}</span> : '-'}</td>
                         <td className="px-4 py-3 whitespace-nowrap">{tour?.title || '-'}</td>
                         <td className="px-4 py-3 whitespace-nowrap">{p.pickup_location ? <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{p.pickup_location}</span> : '-'}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">{p.room_type || '-'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">{p.singsing_rooms?.room_type || '-'}</td>
                         <td className="px-4 py-3 whitespace-nowrap">{p.companions && p.companions.length > 0 ? p.companions.join(', ') : '-'}</td>
                         <td className="px-4 py-3 text-gray-700 whitespace-normal">{p.note || '-'}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
@@ -290,7 +293,6 @@ const AdminParticipantsPage = () => {
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">전화번호 *</label><input type="text" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.phone} onChange={e => setCurrentParticipant({ ...currentParticipant, phone: e.target.value })} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">이메일</label><input type="email" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.email || ""} onChange={e => setCurrentParticipant({ ...currentParticipant, email: e.target.value })} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">팀/동호회</label><input type="text" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.team_name || ""} onChange={e => setCurrentParticipant({ ...currentParticipant, team_name: e.target.value })} /></div>
-                <div><label className="block text-sm font-medium text-gray-700 mb-1">객실</label><input type="text" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.room_type || ""} onChange={e => setCurrentParticipant({ ...currentParticipant, room_type: e.target.value })} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">탑승지</label><input type="text" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.pickup_location || ""} onChange={e => setCurrentParticipant({ ...currentParticipant, pickup_location: e.target.value })} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">비상 연락처</label><input type="text" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.emergency_contact || ""} onChange={e => setCurrentParticipant({ ...currentParticipant, emergency_contact: e.target.value })} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">참여 횟수</label><input type="number" min="0" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.join_count || 0} onChange={e => setCurrentParticipant({ ...currentParticipant, join_count: parseInt(e.target.value) || 0 })} /></div>
