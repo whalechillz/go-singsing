@@ -35,21 +35,11 @@ export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const isAdmin = session?.user?.user_metadata?.is_admin || false;
-      setIsAdmin(isAdmin);
-      if (!isAdmin) {
-        router.push('/');
-      }
-    };
-
     const fetchDocuments = async () => {
       try {
         setIsLoading(true);
@@ -64,7 +54,6 @@ export default function DocumentsPage() {
             )
           `)
           .order('created_at', { ascending: false });
-
         if (error) throw error;
         setDocuments(data || []);
       } catch (err) {
@@ -73,8 +62,6 @@ export default function DocumentsPage() {
         setIsLoading(false);
       }
     };
-
-    checkAdmin();
     fetchDocuments();
   }, [router]);
 
@@ -104,10 +91,6 @@ export default function DocumentsPage() {
     const matchesType = !selectedType || doc.type === selectedType;
     return matchesSearch && matchesType;
   });
-
-  if (!isAdmin) {
-    return null; // 리다이렉트 중
-  }
 
   if (isLoading) {
     return (
