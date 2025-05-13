@@ -4,11 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Save, ArrowLeft } from 'lucide-react';
-import dynamic from 'next/dynamic';
-
-// ReactQuill 에디터 동적 임포트 (SSR 이슈 방지)
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-import 'react-quill/dist/quill.snow.css';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 
 // 문서 타입 정의
 interface Tour {
@@ -38,6 +35,12 @@ export default function NewDocumentPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content,
+    onUpdate: ({ editor }) => setContent(editor.getHTML()),
+  });
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -173,13 +176,8 @@ export default function NewDocumentPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               문서 내용
             </label>
-            <div className="border rounded-lg">
-              <ReactQuill
-                theme="snow"
-                value={content}
-                onChange={setContent}
-                className="h-96"
-              />
+            <div className="border rounded-lg min-h-[24rem] bg-white">
+              <EditorContent editor={editor} className="prose max-w-none min-h-[22rem] p-4 outline-none" />
             </div>
           </div>
 
