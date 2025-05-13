@@ -24,6 +24,13 @@ type Room = {
 
 type Props = { tourId: string };
 
+const roomTypeColors: Record<string, string> = {
+  "미배정": "bg-gray-200 text-gray-700",
+  "2인실": "bg-blue-100 text-blue-700",
+  "3인실": "bg-green-100 text-green-700",
+  "4인실": "bg-purple-100 text-purple-700",
+};
+
 const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -31,6 +38,8 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   const [error, setError] = useState<string>("");
   const [newRoomType, setNewRoomType] = useState<string>("");
   const [newRoomCount, setNewRoomCount] = useState<number>(1);
+  const [assigning, setAssigning] = useState<string | null>(null);
+  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
 
   // 데이터 fetch
   const fetchData = async () => {
@@ -86,11 +95,20 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
 
   // 객실 배정 변경
   const handleAssignRoom = async (participantId: string, roomName: string) => {
-    await supabase
+    setAssigning(participantId);
+    setAssignSuccess(null);
+    const { error } = await supabase
       .from("singsing_participants")
       .update({ room_name: roomName === "" ? null : roomName })
       .eq("id", participantId);
-    fetchData();
+    setAssigning(null);
+    if (!error) {
+      setAssignSuccess(participantId);
+      setTimeout(() => setAssignSuccess(null), 1200);
+      fetchData();
+    } else {
+      setError(error.message);
+    }
   };
 
   // 객실 삭제
@@ -126,10 +144,12 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                 <ul className="divide-y divide-gray-200">
                   {members.map(p => (
                     <li key={p.id} className="flex items-center justify-between py-2">
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="font-semibold text-gray-900">{p.name}</span>
                         <span className="ml-2 text-gray-500 text-xs">{p.phone}</span>
                         <span className="ml-2 text-gray-500 text-xs">{p.team_name}</span>
+                        <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${roomTypeColors[p.room_name?.split("-")[0] || "미배정"] || roomTypeColors["미배정"]}`}>{p.room_name || "미배정"}</span>
+                        {assignSuccess === p.id && <span className="ml-1 text-green-600 text-xs">✔</span>}
                       </div>
                       <select
                         className="border rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500"
@@ -137,6 +157,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                         onChange={e => handleAssignRoom(p.id, e.target.value)}
                         aria-label="객실 선택"
                         tabIndex={0}
+                        disabled={!!assigning}
                       >
                         <option value="">미배정</option>
                         {rooms.map(r => <option key={r.room_name} value={r.room_name}>{r.room_name}</option>)}
@@ -156,10 +177,12 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
               <ul className="divide-y divide-gray-200">
                 {unassigned.map(p => (
                   <li key={p.id} className="flex items-center justify-between py-2">
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="font-semibold text-gray-900">{p.name}</span>
                       <span className="ml-2 text-gray-500 text-xs">{p.phone}</span>
                       <span className="ml-2 text-gray-500 text-xs">{p.team_name}</span>
+                      <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${roomTypeColors[p.room_name?.split("-")[0] || "미배정"] || roomTypeColors["미배정"]}`}>{p.room_name || "미배정"}</span>
+                      {assignSuccess === p.id && <span className="ml-1 text-green-600 text-xs">✔</span>}
                     </div>
                     <select
                       className="border rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500"
@@ -167,6 +190,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                       onChange={e => handleAssignRoom(p.id, e.target.value)}
                       aria-label="객실 선택"
                       tabIndex={0}
+                      disabled={!!assigning}
                     >
                       <option value="">미배정</option>
                       {rooms.map(r => <option key={r.room_name} value={r.room_name}>{r.room_name}</option>)}
