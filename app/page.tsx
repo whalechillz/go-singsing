@@ -139,9 +139,9 @@ const GolfTourPortal = () => {
         ) : error ? (
           <div className="bg-red-100 text-red-800 p-4 rounded-lg">{error}</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex flex-col gap-6">
             {/* Tour list */}
-            <div className="md:col-span-1">
+            <div>
               <div className="bg-white rounded-lg shadow-md p-4 mb-4">
                 <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">투어 목록</h2>
                 <div className="space-y-3">
@@ -150,10 +150,10 @@ const GolfTourPortal = () => {
               </div>
             </div>
             {/* Selected tour details */}
-            <div className="md:col-span-2">
+            <div>
               {selectedTour ? (
                 <div className="bg-white rounded-lg shadow-md p-6">
-                  <div className="flex justify-between items-start mb-6">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6 gap-4">
                     <div>
                       <h2 className="text-2xl font-bold text-blue-800">{selectedTour.title}</h2>
                       <p className="text-gray-600">{selectedTour.start_date} ~ {selectedTour.end_date}</p>
@@ -196,15 +196,15 @@ const GolfTourPortal = () => {
                   </div>
                   <div className="border-t pt-6">
                     <h3 className="text-lg font-bold mb-4">여행 서류</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-3">
                       {/* 실제 문서/페이지 링크로 연결 필요 */}
-                      <button className="border rounded-lg p-4 text-left bg-white hover:bg-blue-50 border-gray-200">
+                      <button className="border rounded-lg p-4 text-left bg-white hover:bg-blue-50 border-gray-200 flex flex-col gap-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <FileText className="w-5 h-5 text-blue-600 mr-2" />
                             <span className="font-medium">상품 정보</span>
                           </div>
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">고객용</span>
+                          <span className="text-xs px-3 py-1 rounded bg-blue-50 border border-blue-200 text-blue-800 font-semibold">고객용</span>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">일정, 식사, 골프장, 숙박 안내</p>
                       </button>
@@ -216,7 +216,7 @@ const GolfTourPortal = () => {
                 <div className="bg-white rounded-lg shadow-md p-8 text-center">
                   <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-xl font-medium text-gray-600 mb-2">투어를 선택해주세요</h3>
-                  <p className="text-gray-500">왼쪽 목록에서 투어를 선택하면 상세 정보를 확인할 수 있습니다.</p>
+                  <p className="text-gray-500">위 목록에서 투어를 선택하면 상세 정보를 확인할 수 있습니다.</p>
                 </div>
               )}
             </div>
