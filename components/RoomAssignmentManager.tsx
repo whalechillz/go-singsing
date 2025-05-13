@@ -60,13 +60,17 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
 
   // 객실 자동 생성
   const handleAddRooms = async () => {
-    if (!newRoomType || newRoomCount < 1) return;
-    const sameTypeRooms = rooms.filter(r => r.room_type === newRoomType);
+    const trimmedRoomType = newRoomType.trim();
+    if (!trimmedRoomType || newRoomCount < 1) {
+      setError("객실 타입을 입력해 주세요.");
+      return;
+    }
+    const sameTypeRooms = rooms.filter(r => r.room_type === trimmedRoomType);
     const lastNum = sameTypeRooms.length;
     const newRooms = Array.from({ length: newRoomCount }, (_, i) => ({
       tour_id: tourId,
-      room_type: newRoomType,
-      room_name: `${newRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`
+      room_type: trimmedRoomType,
+      room_name: `${trimmedRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`
     }));
     const { error } = await supabase.from("singsing_rooms").insert(newRooms);
     if (error) {
