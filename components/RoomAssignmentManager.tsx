@@ -101,17 +101,26 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   const handleAssignRoom = async (participantId: string, roomName: string) => {
     setAssigning(participantId);
     setAssignSuccess(null);
+    // 낙관적 UI 업데이트
+    setParticipants(prev =>
+      prev.map(p =>
+        p.id === participantId
+          ? { ...p, room_name: roomName === "" ? undefined : roomName }
+          : p
+      )
+    );
     const { error } = await supabase
       .from("singsing_participants")
-      .update({ room_name: roomName === "" ? null : roomName })
+      .update({ room_name: roomName === "" ? undefined : roomName })
       .eq("id", participantId);
     setAssigning(null);
     if (!error) {
       setAssignSuccess(participantId);
       setTimeout(() => setAssignSuccess(null), 1200);
-      fetchData();
+      // 성공 시 fetchData() 호출하지 않음
     } else {
       setError(error.message);
+      fetchData(); // 에러 시에만 fetchData 호출
     }
   };
 
