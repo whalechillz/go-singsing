@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, MapPin, Users, Calendar, Plus, Edit, Trash2, Download, Eye } from 'lucide-react';
+import { FileText, MapPin, Users, Calendar, Plus, Search, Trash2, Edit2 } from 'lucide-react';
 
 // 문서 타입 정의
 interface Document {
@@ -13,14 +13,11 @@ interface Document {
   content: string;
   created_at: string;
   updated_at: string;
-}
-
-// 투어 타입 정의
-interface Tour {
-  id: string;
-  title: string;
-  start_date: string;
-  end_date: string;
+  tour: {
+    title: string;
+    start_date: string;
+    end_date: string;
+  };
 }
 
 // 문서 타입별 설정
@@ -36,12 +33,12 @@ const documentTypes = {
 export default function DocumentsPage() {
   const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [tours, setTours] = useState<Tour[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTour, setSelectedTour] = useState<string>('');
-  const [selectedType, setSelectedType] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -53,38 +50,60 @@ export default function DocumentsPage() {
       }
     };
 
-    const fetchData = async () => {
+    const fetchDocuments = async () => {
       try {
         setIsLoading(true);
-        
-        // 투어 목록 가져오기
-        const { data: toursData, error: toursError } = await supabase
-          .from('singsing_tours')
-          .select('*')
-          .order('start_date', { ascending: false });
-
-        if (toursError) throw toursError;
-        setTours(toursData || []);
-
-        // 문서 목록 가져오기
-        const { data: documentsData, error: documentsError } = await supabase
+        const { data, error } = await supabase
           .from('documents')
-          .select('*')
+          .select(`
+            *,
+            tour:singsing_tours (
+              title,
+              start_date,
+              end_date
+            )
+          `)
           .order('created_at', { ascending: false });
 
-        if (documentsError) throw documentsError;
-        setDocuments(documentsData || []);
-
+        if (error) throw error;
+        setDocuments(data || []);
       } catch (err) {
-        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+        setError('문서 목록을 불러오는 중 오류가 발생했습니다.');
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAdmin();
-    fetchData();
+    fetchDocuments();
   }, [router]);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('정말로 이 문서를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      setIsDeleting(id);
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setDocuments(documents.filter(doc => doc.id !== id));
+    } catch (err) {
+      setError('문서 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = doc.tour.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = !selectedType || doc.type === selectedType;
+    return matchesSearch && matchesType;
+  });
 
   if (!isAdmin) {
     return null; // 리다이렉트 중
@@ -99,17 +118,6 @@ export default function DocumentsPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md text-center">
-          <h1 className="text-xl font-bold text-red-600 mb-2">오류 발생</h1>
-          <p className="text-gray-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto p-6">
@@ -120,8 +128,36 @@ export default function DocumentsPage() {
             onClick={() => router.push('/admin/documents/new')}
           >
             <Plus className="w-5 h-5 mr-2" />
-            새 문서 생성
+            새 문서
           </button>
+        </div>
+
+        {/* 검색 및 필터 */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="투어명으로 검색..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select
+              className="w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+            >
+              <option value="">모든 문서 유형</option>
+              {Object.entries(documentTypes).map(([type, { name }]) => (
+                <option key={type} value={type}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* 문서 목록 */}
@@ -130,73 +166,68 @@ export default function DocumentsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">문서 유형</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">투어</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">생성일</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수정일</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작업</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    투어
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    문서 유형
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    생성일
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    수정일
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    작업
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {documents.map((doc) => {
-                  const tour = tours.find(t => t.id === doc.tour_id);
-                  const docType = documentTypes[doc.type as keyof typeof documentTypes];
-                  
+                {filteredDocuments.map((doc) => {
+                  const Icon = documentTypes[doc.type as keyof typeof documentTypes]?.icon || FileText;
                   return (
                     <tr key={doc.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {docType && (
-                            <>
-                              {React.createElement(docType.icon, { className: "w-5 h-5 text-blue-600 mr-2" })}
-                              <span className="font-medium text-gray-900">{docType.name}</span>
-                            </>
-                          )}
+                        <div className="text-sm font-medium text-gray-900">
+                          {doc.tour.title}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {doc.tour.start_date} ~ {doc.tour.end_date}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{tour?.title}</div>
-                        <div className="text-xs text-gray-500">
-                          {tour?.start_date} ~ {tour?.end_date}
+                        <div className="flex items-center">
+                          <Icon className="w-5 h-5 text-blue-600 mr-2" />
+                          <span className="text-sm text-gray-900">
+                            {documentTypes[doc.type as keyof typeof documentTypes]?.name}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(doc.created_at).toLocaleString('ko-KR')}
+                        {new Date(doc.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(doc.updated_at).toLocaleString('ko-KR')}
+                        {new Date(doc.updated_at).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex space-x-2">
-                          <button
-                            className="text-blue-600 hover:text-blue-800"
-                            onClick={() => router.push(`/document/${doc.tour_id}/${doc.type}`)}
-                            title="미리보기"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
-                          <button
-                            className="text-green-600 hover:text-green-800"
-                            onClick={() => {/* 다운로드 로직 */}}
-                            title="다운로드"
-                          >
-                            <Download className="w-5 h-5" />
-                          </button>
-                          <button
-                            className="text-yellow-600 hover:text-yellow-800"
-                            onClick={() => router.push(`/admin/documents/edit/${doc.id}`)}
-                            title="수정"
-                          >
-                            <Edit className="w-5 h-5" />
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-800"
-                            onClick={() => {/* 삭제 로직 */}}
-                            title="삭제"
-                          >
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                          onClick={() => router.push(`/admin/documents/${doc.id}/edit`)}
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleDelete(doc.id)}
+                          disabled={isDeleting === doc.id}
+                        >
+                          {isDeleting === doc.id ? (
+                            <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
                             <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
+                          )}
+                        </button>
                       </td>
                     </tr>
                   );
@@ -205,6 +236,12 @@ export default function DocumentsPage() {
             </table>
           </div>
         </div>
+
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );
