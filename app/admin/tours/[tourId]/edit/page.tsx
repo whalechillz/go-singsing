@@ -1,11 +1,28 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
-const TourNewPage = () => {
+type TourForm = {
+  title: string;
+  start_date: string;
+  end_date: string;
+  golf_course: string;
+  accommodation: string;
+  price: string;
+  max_participants: string;
+  includes: string;
+  excludes: string;
+  driver_name: string;
+};
+
+type Params = { tourId?: string };
+
+const TourEditPage: React.FC = () => {
   const router = useRouter();
-  const [form, setForm] = useState({
+  const params = useParams() as Params;
+  const tourId = params?.tourId ?? "";
+  const [form, setForm] = useState<TourForm>({
     title: "",
     start_date: "",
     end_date: "",
@@ -17,25 +34,42 @@ const TourNewPage = () => {
     excludes: "",
     driver_name: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-  const handleChange = (e) => {
+  useEffect(() => {
+    const fetchTour = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from("singsing_tours").select("*").eq("id", tourId).single();
+      if (error) setError(error.message);
+      else if (data) setForm({
+        ...data,
+        price: data.price ?? "",
+        max_participants: data.max_participants ?? "",
+        start_date: data.start_date ? data.start_date.substring(0, 10) : "",
+        end_date: data.end_date ? data.end_date.substring(0, 10) : "",
+      });
+      setLoading(false);
+    };
+    if (tourId) fetchTour();
+  }, [tourId]);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError("");
-    const { error } = await supabase.from("singsing_tours").insert([
-      {
-        ...form,
-        price: form.price ? Number(form.price) : null,
-        max_participants: form.max_participants ? Number(form.max_participants) : null,
-      },
-    ]);
-    setLoading(false);
+    const { error } = await supabase.from("singsing_tours").update({
+      ...form,
+      price: form.price ? Number(form.price) : null,
+      max_participants: form.max_participants ? Number(form.max_participants) : null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", tourId);
+    setSaving(false);
     if (error) {
       setError(error.message);
       return;
@@ -43,9 +77,11 @@ const TourNewPage = () => {
     router.push("/admin/tours");
   };
 
+  if (loading) return <div className="text-center py-8 text-gray-500">불러오는 중...</div>;
+
   return (
     <div className="max-w-lg mx-auto bg-white dark:bg-gray-900 rounded-lg shadow p-8">
-      <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">투어 생성</h2>
+      <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">투어 수정</h2>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">제목</span>
@@ -92,10 +128,10 @@ const TourNewPage = () => {
           <textarea name="excludes" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.excludes} onChange={handleChange} />
         </label>
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-        <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700 mt-4" disabled={loading}>{loading ? "저장 중..." : "저장"}</button>
+        <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700 mt-4" disabled={saving}>{saving ? "저장 중..." : "저장"}</button>
       </form>
     </div>
   );
 };
 
-export default TourNewPage; 
+export default TourEditPage; 

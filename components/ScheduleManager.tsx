@@ -1,22 +1,44 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-const initialForm = { day: "", title: "", description: "", meal_breakfast: false, meal_lunch: false, meal_dinner: false };
+type Schedule = {
+  id: string;
+  day: string;
+  title: string;
+  description: string;
+  meal_breakfast: boolean;
+  meal_lunch: boolean;
+  meal_dinner: boolean;
+  tour_id: string;
+};
 
-const ScheduleManager = ({ tourId }) => {
-  const [schedules, setSchedules] = useState([]);
-  const [form, setForm] = useState(initialForm);
-  const [editingId, setEditingId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+type ScheduleForm = {
+  day: string;
+  title: string;
+  description: string;
+  meal_breakfast: boolean;
+  meal_lunch: boolean;
+  meal_dinner: boolean;
+};
+
+const initialForm: ScheduleForm = { day: "", title: "", description: "", meal_breakfast: false, meal_lunch: false, meal_dinner: false };
+
+type Props = { tourId: string };
+
+const ScheduleManager: React.FC<Props> = ({ tourId }) => {
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [form, setForm] = useState<ScheduleForm>(initialForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
   const fetchSchedules = async () => {
     setLoading(true);
     setError("");
     const { data, error } = await supabase.from("singsing_schedules").select("*").eq("tour_id", tourId).order("day", { ascending: true });
     if (error) setError(error.message);
-    else setSchedules(data);
+    else setSchedules((data || []) as Schedule[]);
     setLoading(false);
   };
 
@@ -24,12 +46,12 @@ const ScheduleManager = ({ tourId }) => {
     if (tourId) fetchSchedules();
   }, [tourId]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     if (!form.day || !form.title) {
@@ -54,7 +76,7 @@ const ScheduleManager = ({ tourId }) => {
     }
   };
 
-  const handleEdit = (s) => {
+  const handleEdit = (s: Schedule) => {
     setEditingId(s.id);
     setForm({
       day: s.day || "",
@@ -66,7 +88,7 @@ const ScheduleManager = ({ tourId }) => {
     });
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     const { error } = await supabase.from("singsing_schedules").delete().eq("id", id);
     if (error) setError(error.message);

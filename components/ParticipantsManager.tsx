@@ -1,24 +1,46 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
 
-const ParticipantsManager = ({ tourId }) => {
-  const [participants, setParticipants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ name: "", phone: "", team_name: "", note: "", status: "확정" });
-  const [editingId, setEditingId] = useState(null);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [sortKey, setSortKey] = useState("created_at");
-  const [sortAsc, setSortAsc] = useState(true);
+type Participant = {
+  id: string;
+  name: string;
+  phone: string;
+  team_name: string;
+  note: string;
+  status: string;
+  tour_id: string;
+  room_name?: string;
+  created_at?: string;
+};
+
+type ParticipantForm = {
+  name: string;
+  phone: string;
+  team_name: string;
+  note: string;
+  status: string;
+};
+
+type Props = { tourId: string };
+
+const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [form, setForm] = useState<ParticipantForm>({ name: "", phone: "", team_name: "", note: "", status: "확정" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [error, setError] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sortKey, setSortKey] = useState<keyof Participant | "">("created_at");
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
 
   const fetchParticipants = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("singsing_participants").select("*").eq("tour_id", tourId).order("created_at", { ascending: true });
     if (error) setError(error.message);
-    else setParticipants(data);
+    else setParticipants((data || []) as Participant[]);
     setLoading(false);
   };
 
@@ -26,23 +48,21 @@ const ParticipantsManager = ({ tourId }) => {
     if (tourId) fetchParticipants();
   }, [tourId]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
     if (name === "phone") {
-      // 숫자만 허용, 하이픈 제거
       value = value.replace(/[^0-9]/g, "");
     }
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     if (!form.name || !form.phone) {
       setError("이름과 연락처는 필수입니다.");
       return;
     }
-    // 중복 등록 방지(이름+전화번호)
     const isDuplicate = participants.some(
       (p) => p.name === form.name && p.phone === form.phone
     );
@@ -51,7 +71,6 @@ const ParticipantsManager = ({ tourId }) => {
       return;
     }
     if (editingId) {
-      // 수정
       const { error } = await supabase.from("singsing_participants").update({ ...form, phone: form.phone.replace(/[^0-9]/g, "") }).eq("id", editingId);
       if (error) setError(error.message);
       else {
@@ -60,7 +79,6 @@ const ParticipantsManager = ({ tourId }) => {
         fetchParticipants();
       }
     } else {
-      // 추가
       const { error } = await supabase.from("singsing_participants").insert([{ ...form, tour_id: tourId, phone: form.phone.replace(/[^0-9]/g, "") }]);
       if (error) setError(error.message);
       else {
@@ -70,19 +88,18 @@ const ParticipantsManager = ({ tourId }) => {
     }
   };
 
-  const handleEdit = (p) => {
+  const handleEdit = (p: Participant) => {
     setEditingId(p.id);
     setForm({ name: p.name, phone: p.phone, team_name: p.team_name || "", note: p.note || "", status: p.status || "확정" });
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     const { error } = await supabase.from("singsing_participants").delete().eq("id", id);
     if (error) setError(error.message);
     else fetchParticipants();
   };
 
-  // 검색/필터/정렬 적용된 참가자 목록
   const filtered = participants
     .filter(p =>
       (!search ||
@@ -98,7 +115,6 @@ const ParticipantsManager = ({ tourId }) => {
       return a[sortKey] < b[sortKey] ? 1 : -1;
     });
 
-  // 엑셀 다운로드
   const handleDownloadExcel = () => {
     const ws = XLSX.utils.json_to_sheet(participants.map(p => ({
       이름: p.name,
@@ -112,22 +128,20 @@ const ParticipantsManager = ({ tourId }) => {
     XLSX.writeFile(wb, "참가자목록.xlsx");
   };
 
-  // 엑셀 업로드
-  const handleUploadExcel = async (e) => {
-    const file = e.target.files[0];
+  const handleUploadExcel = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async (evt) => {
-      const data = evt.target.result;
+      const data = evt.target?.result;
       const workbook = XLSX.read(data, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
       let added = 0, skipped = 0;
-      for (const row of rows) {
+      for (const row of rows as any[]) {
         const name = row["이름"]?.toString().trim();
         const phone = row["연락처"]?.toString().replace(/[^0-9]/g, "");
         if (!name || !phone) { skipped++; continue; }
-        // 중복 체크
         if (participants.some(p => p.name === name && p.phone === phone)) { skipped++; continue; }
         const { error } = await supabase.from("singsing_participants").insert([
           {

@@ -1,22 +1,38 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-const initialForm = { room_type: "", capacity: "", quantity: "" };
+type Room = {
+  id: string;
+  room_type: string;
+  capacity: number;
+  quantity: number;
+  tour_id: string;
+};
 
-const RoomTypeManager = ({ tourId }) => {
-  const [rooms, setRooms] = useState([]);
-  const [form, setForm] = useState(initialForm);
-  const [editingId, setEditingId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+type RoomForm = {
+  room_type: string;
+  capacity: string;
+  quantity: string;
+};
+
+const initialForm: RoomForm = { room_type: "", capacity: "", quantity: "" };
+
+type Props = { tourId: string };
+
+const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [form, setForm] = useState<RoomForm>(initialForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
   const fetchRooms = async () => {
     setLoading(true);
     setError("");
     const { data, error } = await supabase.from("singsing_rooms").select("*").eq("tour_id", tourId).order("created_at", { ascending: true });
     if (error) setError(error.message);
-    else setRooms(data);
+    else setRooms((data || []) as Room[]);
     setLoading(false);
   };
 
@@ -24,11 +40,11 @@ const RoomTypeManager = ({ tourId }) => {
     if (tourId) fetchRooms();
   }, [tourId]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     if (!form.room_type || !form.capacity || !form.quantity) {
@@ -55,12 +71,12 @@ const RoomTypeManager = ({ tourId }) => {
     }
   };
 
-  const handleEdit = (room) => {
+  const handleEdit = (room: Room) => {
     setEditingId(room.id);
-    setForm({ room_type: room.room_type, capacity: room.capacity, quantity: room.quantity });
+    setForm({ room_type: room.room_type, capacity: String(room.capacity), quantity: String(room.quantity) });
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     const { error } = await supabase.from("singsing_rooms").delete().eq("id", id);
     if (error) setError(error.message);

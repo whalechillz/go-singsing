@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, MouseEvent, FormEvent } from "react";
 
 const CARD_LIST = [
   { key: "product-info", title: "상품 정보", description: "일정, 식사, 골프장, 숙박 안내", number: 1, fileName: "product-info.html", locked: false },
@@ -13,13 +13,15 @@ const CARD_LIST = [
 
 const STAFF_PASSWORD = "singsinggolf2025";
 
-const TourPage = () => {
-  const [showPwModal, setShowPwModal] = useState(false);
-  const [pwInput, setPwInput] = useState("");
-  const [pwError, setPwError] = useState("");
-  const [targetUrl, setTargetUrl] = useState(null);
+type Card = typeof CARD_LIST[number];
 
-  const handleCardClick = (card) => {
+const TourPage: React.FC = () => {
+  const [showPwModal, setShowPwModal] = useState<boolean>(false);
+  const [pwInput, setPwInput] = useState<string>("");
+  const [pwError, setPwError] = useState<string>("");
+  const [targetUrl, setTargetUrl] = useState<string | null>(null);
+
+  const handleCardClick = (card: Card) => {
     if (card.locked) {
       setTargetUrl(`/${card.fileName}`);
       setShowPwModal(true);
@@ -30,7 +32,7 @@ const TourPage = () => {
     window.open(`/${card.fileName}`, "_blank");
   };
 
-  const handlePwSubmit = (e) => {
+  const handlePwSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (pwInput === STAFF_PASSWORD) {
       if (targetUrl) window.open(targetUrl, "_blank");

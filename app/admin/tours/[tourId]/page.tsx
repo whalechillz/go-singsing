@@ -13,18 +13,28 @@ const TABS = [
   { key: "schedules", label: "일정 관리" },
 ];
 
-const TourDetailPage = () => {
-  const params = useParams();
-  const tourId = params?.tourId;
-  const [activeTab, setActiveTab] = useState("participants");
-  const [tour, setTour] = useState(null);
-  const [loading, setLoading] = useState(true);
+type Tour = {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  driver_name: string;
+};
+
+type Params = { tourId?: string };
+
+const TourDetailPage: React.FC = () => {
+  const params = useParams() as Params;
+  const tourId = params?.tourId ?? "";
+  const [activeTab, setActiveTab] = useState<string>("participants");
+  const [tour, setTour] = useState<Tour | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchTour = async () => {
       setLoading(true);
       const { data } = await supabase.from("singsing_tours").select("*").eq("id", tourId).single();
-      setTour(data);
+      setTour(data as Tour);
       setLoading(false);
     };
     if (tourId) fetchTour();

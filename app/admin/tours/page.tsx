@@ -3,23 +3,31 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-const TourListPage = () => {
-  const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+type Tour = {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  driver_name: string;
+};
+
+const TourListPage: React.FC = () => {
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const fetchTours = async () => {
       setLoading(true);
       const { data, error } = await supabase.from("singsing_tours").select("*").order("created_at", { ascending: false });
       if (error) setError(error.message);
-      else setTours(data);
+      else setTours(data as Tour[]);
       setLoading(false);
     };
     fetchTours();
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     const { error } = await supabase.from("singsing_tours").delete().eq("id", id);
     if (error) {

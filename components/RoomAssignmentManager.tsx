@@ -1,27 +1,49 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-const RoomAssignmentManager = ({ tourId }) => {
-  const [participants, setParticipants] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [newRoomType, setNewRoomType] = useState("");
-  const [newRoomCount, setNewRoomCount] = useState(1);
+type Participant = {
+  id: string;
+  name: string;
+  phone: string;
+  team_name: string;
+  note: string;
+  status: string;
+  tour_id: string;
+  room_name?: string;
+};
+
+type Room = {
+  id: string;
+  room_type: string;
+  room_name: string;
+  capacity: number;
+  quantity: number;
+  tour_id: string;
+};
+
+type Props = { tourId: string };
+
+const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [newRoomType, setNewRoomType] = useState<string>("");
+  const [newRoomCount, setNewRoomCount] = useState<number>(1);
 
   // 데이터 fetch
   const fetchData = async () => {
     setLoading(true);
     setError("");
     const [{ data: participantsData, error: participantsError }, { data: roomsData, error: roomsError }] = await Promise.all([
-      supabase.from("singsing_participants").select("*" ).eq("tour_id", tourId).order("created_at", { ascending: true }),
-      supabase.from("singsing_rooms").select("*" ).eq("tour_id", tourId)
+      supabase.from("singsing_participants").select("*").eq("tour_id", tourId).order("created_at", { ascending: true }),
+      supabase.from("singsing_rooms").select("*").eq("tour_id", tourId)
     ]);
     if (participantsError) setError(participantsError.message);
-    else setParticipants(participantsData || []);
+    else setParticipants((participantsData || []) as Participant[]);
     if (roomsError) setError(roomsError.message);
-    else setRooms(roomsData || []);
+    else setRooms((roomsData || []) as Room[]);
     setLoading(false);
   };
 
@@ -37,10 +59,8 @@ const RoomAssignmentManager = ({ tourId }) => {
       room_type: newRoomType,
       room_name: `${newRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`
     }));
-    console.log('추가될 객실:', newRooms); // 2개 이상 객체가 나와야 정상
     const { error } = await supabase.from("singsing_rooms").insert(newRooms);
     if (error) {
-      console.error('객실 추가 에러:', error);
       setError(error.message);
     }
     setNewRoomType("");
@@ -49,7 +69,7 @@ const RoomAssignmentManager = ({ tourId }) => {
   };
 
   // 객실별로 참가자 그룹핑
-  const roomGroups = {};
+  const roomGroups: Record<string, Participant[]> = {};
   rooms.forEach(room => {
     if (room.room_name) {
       roomGroups[room.room_name] = [];
@@ -62,10 +82,10 @@ const RoomAssignmentManager = ({ tourId }) => {
   const unassigned = participants.filter(p => !p.room_name);
 
   // 객실명 표시 함수
-  const displayRoomName = (roomName) => roomName ? roomName : "미배정";
+  const displayRoomName = (roomName: string | undefined) => roomName ? roomName : "미배정";
 
   // 객실 배정 변경
-  const handleAssignRoom = async (participantId, roomName) => {
+  const handleAssignRoom = async (participantId: string, roomName: string) => {
     await supabase
       .from("singsing_participants")
       .update({ room_name: roomName === "" ? null : roomName })
@@ -74,8 +94,7 @@ const RoomAssignmentManager = ({ tourId }) => {
   };
 
   // 객실 삭제
-  const handleDeleteRoom = async (roomName) => {
-    // 해당 객실 참가자 room_name null 처리
+  const handleDeleteRoom = async (roomName: string) => {
     await supabase.from("singsing_participants").update({ room_name: null }).eq("room_name", roomName);
     await supabase.from("singsing_rooms").delete().eq("room_name", roomName).eq("tour_id", tourId);
     fetchData();

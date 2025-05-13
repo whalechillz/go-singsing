@@ -1,6 +1,7 @@
 import Link from "next/link";
+import React, { PropsWithChildren } from "react";
 
-const AdminLayout = ({ children }) => (
+const AdminLayout: React.FC<PropsWithChildren> = ({ children }) => (
   <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
     <nav className="bg-blue-800 text-white px-6 py-4 flex items-center shadow">
       <Link href="/admin/tours" className="font-bold text-lg hover:underline focus:underline" aria-label="투어 관리">투어 관리</Link>
