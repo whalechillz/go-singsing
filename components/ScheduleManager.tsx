@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 type Schedule = {
   id: string;
-  day: string;
+  date: string;
   title: string;
   description: string;
   meal_breakfast: boolean;
@@ -14,7 +14,7 @@ type Schedule = {
 };
 
 type ScheduleForm = {
-  day: string;
+  date: string;
   title: string;
   description: string;
   meal_breakfast: boolean;
@@ -22,7 +22,7 @@ type ScheduleForm = {
   meal_dinner: boolean;
 };
 
-const initialForm: ScheduleForm = { day: "", title: "", description: "", meal_breakfast: false, meal_lunch: false, meal_dinner: false };
+const initialForm: ScheduleForm = { date: "", title: "", description: "", meal_breakfast: false, meal_lunch: false, meal_dinner: false };
 
 type Props = { tourId: string };
 
@@ -36,7 +36,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId }) => {
   const fetchSchedules = async () => {
     setLoading(true);
     setError("");
-    const { data, error } = await supabase.from("singsing_schedules").select("*").eq("tour_id", tourId).order("day", { ascending: true });
+    const { data, error } = await supabase.from("singsing_schedules").select("*").eq("tour_id", tourId).order("date", { ascending: true });
     if (error) setError(error.message);
     else setSchedules((data || []) as Schedule[]);
     setLoading(false);
@@ -54,7 +54,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId }) => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    if (!form.day || !form.title) {
+    if (!form.date || !form.title) {
       setError("날짜와 제목은 필수입니다.");
       return;
     }
@@ -79,7 +79,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId }) => {
   const handleEdit = (s: Schedule) => {
     setEditingId(s.id);
     setForm({
-      day: s.day || "",
+      date: s.date || "",
       title: s.title || "",
       description: s.description || "",
       meal_breakfast: !!s.meal_breakfast,
@@ -99,7 +99,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId }) => {
     <div>
       <h2 className="text-lg font-semibold mb-4">일정 관리</h2>
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
-        <input name="day" value={form.day} onChange={handleChange} placeholder="날짜 (예: 2025-05-19)" type="date" className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
+        <input name="date" value={form.date} onChange={handleChange} placeholder="날짜 (예: 2025-05-19)" type="date" className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
         <input name="title" value={form.title} onChange={handleChange} placeholder="제목" className="border rounded px-2 py-1 flex-1" required aria-label="제목" />
         <input name="description" value={form.description} onChange={handleChange} placeholder="설명" className="border rounded px-2 py-1 flex-1" aria-label="설명" />
         <label className="flex items-center gap-1">
@@ -133,7 +133,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId }) => {
           <tbody>
             {schedules.map((s) => (
               <tr key={s.id} className="border-t border-gray-200 dark:border-gray-700">
-                <td className="py-1 px-2">{s.day}</td>
+                <td className="py-1 px-2">{s.date}</td>
                 <td className="py-1 px-2">{s.title}</td>
                 <td className="py-1 px-2">{s.description}</td>
                 <td className="py-1 px-2 text-center">{s.meal_breakfast ? "O" : "-"}</td>
