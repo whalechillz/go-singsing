@@ -110,9 +110,11 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
     )
     .sort((a, b) => {
       if (!sortKey) return 0;
-      if (a[sortKey] === b[sortKey]) return 0;
-      if (sortAsc) return a[sortKey] > b[sortKey] ? 1 : -1;
-      return a[sortKey] < b[sortKey] ? 1 : -1;
+      const aValue = a[sortKey] ?? "";
+      const bValue = b[sortKey] ?? "";
+      if (aValue === bValue) return 0;
+      if (sortAsc) return aValue > bValue ? 1 : -1;
+      return aValue < bValue ? 1 : -1;
     });
 
   const handleDownloadExcel = () => {
