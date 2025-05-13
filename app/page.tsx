@@ -197,18 +197,46 @@ const GolfTourPortal = () => {
                   <div className="border-t pt-6">
                     <h3 className="text-lg font-bold mb-4">여행 서류</h3>
                     <div className="flex flex-col gap-3">
-                      {/* 실제 문서/페이지 링크로 연결 필요 */}
-                      <button className="border rounded-lg p-4 text-left bg-white hover:bg-blue-50 border-gray-200 flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <FileText className="w-5 h-5 text-blue-600 mr-2" />
-                            <span className="font-medium">상품 정보</span>
+                      {/* 문서 버튼 목록 */}
+                      {[
+                        { id: 'product-info', name: '상품 정보', desc: '일정, 식사, 골프장, 숙박 안내', badge: '고객용', icon: <FileText className="w-5 h-5 text-blue-600 mr-2" /> },
+                        { id: 'boarding-guide', name: '탑승지 안내', desc: '탑승지 및 교통 정보', badge: '고객용', icon: <MapPin className="w-5 h-5 text-blue-600 mr-2" /> },
+                        { id: 'room-assignment', name: '객실 배정', desc: '객실 배정표', badge: '고객용', icon: <Users className="w-5 h-5 text-blue-600 mr-2" /> },
+                        { id: 'rounding-timetable', name: '라운딩 시간표', desc: '라운딩 조 편성', badge: '고객용', icon: <Calendar className="w-5 h-5 text-blue-600 mr-2" /> },
+                        { id: 'boarding-guide-staff', name: '탑승지 배정', desc: '스탭용 탑승지 배정', badge: '스탭용', icon: <MapPin className="w-5 h-5 text-blue-600 mr-2" />, staffOnly: true },
+                        { id: 'room-assignment-staff', name: '객실 배정', desc: '스탭용 객실 배정', badge: '스탭용', icon: <Users className="w-5 h-5 text-blue-600 mr-2" />, staffOnly: true },
+                      ].map((doc) => (
+                        <button
+                          key={doc.id}
+                          className={`border rounded-lg p-4 text-left bg-white hover:bg-blue-50 border-gray-200 flex flex-col gap-2 ${
+                            doc.staffOnly && !isStaffView ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                          onClick={() => {
+                            if (doc.staffOnly && !isStaffView) return;
+                            window.location.href = `/document/${selectedTour.id}/${doc.id}`;
+                          }}
+                          disabled={doc.staffOnly && !isStaffView}
+                          aria-label={doc.name}
+                          tabIndex={0}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              {doc.icon}
+                              <span className="font-medium">{doc.name}</span>
+                            </div>
+                            <span className="text-xs px-3 py-1 rounded bg-blue-50 border border-blue-200 text-blue-800 font-semibold">
+                              {doc.badge}
+                            </span>
                           </div>
-                          <span className="text-xs px-3 py-1 rounded bg-blue-50 border border-blue-200 text-blue-800 font-semibold">고객용</span>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">일정, 식사, 골프장, 숙박 안내</p>
-                      </button>
-                      {/* 추가 문서/서류 버튼은 실제 서비스에 맞게 확장 */}
+                          <p className="text-sm text-gray-500 mt-1">{doc.desc}</p>
+                          {doc.staffOnly && !isStaffView && (
+                            <div className="flex items-center text-red-500 text-sm mt-1">
+                              <Lock className="w-4 h-4 mr-1" />
+                              스탭 전용
+                            </div>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
