@@ -7,7 +7,7 @@ const fetchTourAndSchedules = async (tourId: string) => {
   return { tour, schedules };
 };
 
-export default async function ProductInfoPage({ params }) {
+export default async function ProductInfoPage({ params }: { params: { tourId: string } }) {
   const { tour, schedules } = await fetchTourAndSchedules(params.tourId);
   if (!tour) return <div className="p-8 text-center text-red-500">투어 정보를 찾을 수 없습니다.</div>;
   return (
