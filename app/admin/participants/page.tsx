@@ -24,6 +24,7 @@ interface Participant {
   emergency_contact?: string;
   join_count: number;
   group_size?: number;
+  companion_names?: string;
 }
 
 const AdminParticipantsPage = () => {
@@ -148,6 +149,7 @@ const AdminParticipantsPage = () => {
                   emergency_contact: "",
                   join_count: 0,
                   group_size: 1,
+                  companion_names: "",
                 });
                 setIsModalOpen(true);
               }}
@@ -170,48 +172,56 @@ const AdminParticipantsPage = () => {
             <table className="min-w-full divide-y divide-gray-200 whitespace-nowrap">
               <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">연락처</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팀/동호회</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">투어</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">탑승지</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">객실</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">참여횟수</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[80px]">이름</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[120px]">연락처</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[120px]">이메일</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[100px]">팀/동호회</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[100px]">투어</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[100px]">탑승지</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[80px]">객실</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[80px]">동반자</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal min-w-[160px]">참고사항</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[80px]">참여횟수</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[80px]">상태</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[80px]">관리</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredParticipants.length === 0 ? (
+                {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
-                      조건에 맞는 참가자가 없습니다.
-                    </td>
+                    <td colSpan={12} className="px-6 py-4 text-center text-gray-500 whitespace-nowrap">데이터 로딩 중...</td>
+                  </tr>
+                ) : filteredParticipants.length === 0 ? (
+                  <tr>
+                    <td colSpan={12} className="px-6 py-4 text-center text-gray-500 whitespace-nowrap">조건에 맞는 참가자가 없습니다.</td>
                   </tr>
                 ) : (
                   filteredParticipants.map((p) => {
                     const tour = tours.find((t) => t.id === p.tour_id);
                     return (
                       <tr key={p.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-2">
+                        <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-2 whitespace-nowrap min-w-[80px]">
                           {p.name}
                           {p.group_size && p.group_size > 1 && (
                             <span className="ml-1 bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs font-medium">+{p.group_size - 1}명</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-gray-700">{p.phone}</td>
-                        <td className="px-6 py-4">{p.team_name ? <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{p.team_name}</span> : '-'}</td>
-                        <td className="px-6 py-4">{tour?.title || '-'}</td>
-                        <td className="px-6 py-4">{p.pickup_location ? <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{p.pickup_location}</span> : '-'}</td>
-                        <td className="px-6 py-4">{p.room_type || '-'}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-gray-700 whitespace-nowrap min-w-[120px]">{p.phone}</td>
+                        <td className="px-6 py-4 text-gray-700 whitespace-nowrap min-w-[120px]">{p.email || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[100px]">{p.team_name ? <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{p.team_name}</span> : '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[100px]">{tour?.title || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[100px]">{p.pickup_location ? <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{p.pickup_location}</span> : '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[80px]">{p.room_type || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[80px]">{p.companion_names || '-'}</td>
+                        <td className="px-6 py-4 text-gray-700 whitespace-normal min-w-[160px]">{p.note || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[80px]">
                           <span className={`font-medium ${p.join_count >= 5 ? "text-amber-600" : "text-gray-900"}`}>{p.join_count}회</span>
                           {p.join_count >= 5 && <span className="ml-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">VIP</span>}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[80px]">
                           <button className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors duration-200 ${p.is_confirmed ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-red-100 text-red-800 hover:bg-red-200"}`} onClick={() => toggleConfirmation(p.id)} aria-label={p.is_confirmed ? "확정 해제" : "확정 처리"}>{p.is_confirmed ? (<><Check className="w-3 h-3" /><span>확정</span></>) : (<><X className="w-3 h-3" /><span>미확정</span></>)}</button>
                         </td>
-                        <td className="px-6 py-4 text-right text-sm font-medium">
+                        <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap min-w-[80px]">
                           <button className="text-indigo-600 hover:text-indigo-900 mr-3" onClick={() => { setCurrentParticipant(p); setIsModalOpen(true); }} aria-label="수정"><Edit className="w-5 h-5" /></button>
                           <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(p.id)} aria-label="삭제"><Trash2 className="w-5 h-5" /></button>
                         </td>
