@@ -8,6 +8,8 @@ interface Tour {
   title: string;
   start_date?: string;
   end_date?: string;
+  date?: string;
+  status?: string;
 }
 
 interface Participant {
@@ -25,7 +27,19 @@ interface Participant {
   join_count: number;
   group_size?: number;
   companion_names?: string;
+  companions?: string[];
+  isPayingForGroup: boolean;
 }
+
+const pickupOptions = [
+  "군포 차고지 (산본역 1번출구 근방)",
+  "양재 매헌 윤봉길의사 기념관",
+  "수원월드컵 경기장 축구공 조형물 앞",
+  "평택 동성골프연습장",
+  "부천체육관",
+  "송탄 우주골프연습장"
+];
+const roomTypeOptions = ["4인실", "2인실"];
 
 const AdminParticipantsPage = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -53,19 +67,29 @@ const AdminParticipantsPage = () => {
   }, []);
 
   useEffect(() => {
-    let base = participants;
-    if (selectedTour) base = base.filter((p) => p.tour_id === selectedTour.id);
-    base = base.filter(
-      (p) =>
-        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.phone?.includes(searchTerm) ||
-        (p.team_name && p.team_name.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-    if (activeTab === "confirmed") base = base.filter((p) => p.is_confirmed);
-    if (activeTab === "unconfirmed") base = base.filter((p) => !p.is_confirmed);
-    if (activeTab === "vip") base = base.filter((p) => p.join_count >= 5);
-    setFilteredParticipants(base);
-  }, [searchTerm, participants, selectedTour, activeTab]);
+    let currentFiltered = participants;
+    if (selectedTour) currentFiltered = currentFiltered.filter(p => p.tour_id === selectedTour.id);
+    if (searchTerm) {
+      currentFiltered = currentFiltered.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.phone.includes(searchTerm) ||
+        (p.team_name && p.team_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p.companions && p.companions.some(c => c.toLowerCase().includes(searchTerm.toLowerCase()))) ||
+        (p.note && p.note.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    if (activeTab === "confirmed") currentFiltered = currentFiltered.filter(p => p.is_confirmed);
+    else if (activeTab === "unconfirmed") currentFiltered = currentFiltered.filter(p => !p.is_confirmed);
+    else if (activeTab === "vip") currentFiltered = currentFiltered.filter(p => p.join_count >= 5);
+    else if (activeTab === "active") {
+      const activeTourIds = tours.filter(t => t.status === "active").map(t => t.id);
+      currentFiltered = currentFiltered.filter(p => activeTourIds.includes(p.tour_id));
+    } else if (activeTab === "canceled") {
+      const canceledTourIds = tours.filter(t => t.status === "canceled").map(t => t.id);
+      currentFiltered = currentFiltered.filter(p => canceledTourIds.includes(p.tour_id));
+    }
+    setFilteredParticipants(currentFiltered);
+  }, [searchTerm, selectedTour, activeTab, participants, tours]);
 
   const handleSave = async () => {
     if (!currentParticipant?.name || !currentParticipant.phone || !currentParticipant.tour_id) {
@@ -114,7 +138,7 @@ const AdminParticipantsPage = () => {
                   <option value="">전체 투어</option>
                   {tours.map((tour) => (
                     <option key={tour.id} value={tour.id}>
-                      {tour.title}
+                      {tour.title} {tour.date ? `(${tour.date})` : ""}
                     </option>
                   ))}
                 </select>
@@ -123,7 +147,7 @@ const AdminParticipantsPage = () => {
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="이름, 전화번호, 팀 검색..."
+                  placeholder="이름, 전화번호, 팀, 동반자, 참고 검색..."
                   className="w-full border rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white text-gray-900"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -149,7 +173,8 @@ const AdminParticipantsPage = () => {
                   emergency_contact: "",
                   join_count: 0,
                   group_size: 1,
-                  companion_names: "",
+                  isPayingForGroup: false,
+                  companions: []
                 });
                 setIsModalOpen(true);
               }}
@@ -212,7 +237,7 @@ const AdminParticipantsPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap min-w-[100px]">{tour?.title || '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap min-w-[100px]">{p.pickup_location ? <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{p.pickup_location}</span> : '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap min-w-[80px]">{p.room_type || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap min-w-[80px]">{p.companion_names || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[80px]">{p.companions && p.companions.length > 0 ? p.companions.join(', ') : '-'}</td>
                         <td className="px-6 py-4 text-gray-700 whitespace-normal min-w-[160px]">{p.note || '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap min-w-[80px]">
                           <span className={`font-medium ${p.join_count >= 5 ? "text-amber-600" : "text-gray-900"}`}>{p.join_count}회</span>
@@ -237,21 +262,13 @@ const AdminParticipantsPage = () => {
         <div className="mt-6 text-sm text-gray-700 bg-white p-4 rounded-2xl shadow-lg">
           <div className="font-bold text-gray-900 mb-3 border-b pb-2">참가자 현황 요약 ({selectedTour ? selectedTour.title : "전체"})</div>
           {selectedTour && (
-            <div className="text-gray-600 text-sm mb-3">투어 기간: {selectedTour.start_date}~{selectedTour.end_date}</div>
+            <div className="text-gray-600 text-sm mb-3">투어 기간: {selectedTour.start_date || selectedTour.date || "미정"}{selectedTour.end_date && ` ~ ${selectedTour.end_date}`}</div>
           )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <span className="font-semibold text-blue-800">총 참가자:</span> <span className="text-lg font-bold">{participants.length}</span>명
-            </div>
-            <div>
-              <span className="font-semibold text-green-700">확정:</span> <span className="text-lg font-bold">{participants.filter((p) => p.is_confirmed).length}</span>명
-            </div>
-            <div>
-              <span className="font-semibold text-red-700">미확정:</span> <span className="text-lg font-bold">{participants.filter((p) => !p.is_confirmed).length}</span>명
-            </div>
-            <div>
-              <span className="font-semibold text-amber-700">VIP (5회 이상):</span> <span className="text-lg font-bold">{participants.filter((p) => p.join_count >= 5).length}</span>명
-            </div>
+            <div><span className="font-semibold text-blue-800">총 참가자:</span> <span className="text-lg font-bold">{participants.length}</span>명</div>
+            <div><span className="font-semibold text-green-700">확정:</span> <span className="text-lg font-bold">{participants.filter((p) => p.is_confirmed).length}</span>명</div>
+            <div><span className="font-semibold text-red-700">미확정:</span> <span className="text-lg font-bold">{participants.filter((p) => !p.is_confirmed).length}</span>명</div>
+            <div><span className="font-semibold text-amber-700">VIP (5회 이상):</span> <span className="text-lg font-bold">{participants.filter((p) => p.join_count >= 5).length}</span>명</div>
           </div>
           {(selectedTour || searchTerm || activeTab !== "all") && (
             <div className="mt-4 pt-4 border-t border-gray-200 text-gray-600">
@@ -263,13 +280,13 @@ const AdminParticipantsPage = () => {
         </div>
         {/* 참가자 추가/수정 모달 */}
         {isModalOpen && currentParticipant && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900">{currentParticipant.id ? "참가자 정보 수정" : "참가자 추가"}</h3>
-                <button className="text-gray-500 hover:text-gray-700" onClick={() => setIsModalOpen(false)} aria-label="닫기"><X className="w-6 h-6" /></button>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[95vh] overflow-y-auto shadow-xl">
+              <div className="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 className="text-xl font-bold text-gray-900">{currentParticipant.id ? "참가자 정보 수정" : "새 참가자 추가"}</h3>
+                <button className="text-gray-500 hover:text-gray-700" onClick={() => { setCurrentParticipant(null); setIsModalOpen(false); setErrorMessage(""); }} aria-label="닫기"><X className="w-6 h-6" /></button>
               </div>
-              {errorMessage && (<div className="mb-4 bg-red-100 text-red-800 p-3 rounded-lg">{errorMessage}</div>)}
+              {errorMessage && (<div className="mb-4 bg-red-100 text-red-800 p-3 rounded-lg text-sm">{errorMessage}</div>)}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">이름 *</label><input type="text" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.name} onChange={e => setCurrentParticipant({ ...currentParticipant, name: e.target.value })} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">전화번호 *</label><input type="text" className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900" value={currentParticipant.phone} onChange={e => setCurrentParticipant({ ...currentParticipant, phone: e.target.value })} /></div>
