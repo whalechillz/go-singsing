@@ -65,14 +65,28 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
       setError("객실 타입을 입력해 주세요.");
       return;
     }
+    // 같은 타입의 마지막 객실 번호 계산
     const sameTypeRooms = rooms.filter(r => r.room_type === trimmedRoomType);
     const lastNum = sameTypeRooms.length;
+    // capacity 자동 추출(2, 3, 4, 8인실 등)
+    const getCapacity = (type: string) => {
+      if (type.includes("2인실")) return 2;
+      if (type.includes("3인실")) return 3;
+      if (type.includes("4인실")) return 4;
+      if (type.includes("8인실")) return 8;
+      return 2; // 기본값
+    };
     const newRooms = Array.from({ length: newRoomCount }, (_, i) => ({
       tour_id: tourId,
       room_type: trimmedRoomType,
-      room_name: `${trimmedRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`
+      room_name: `${trimmedRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`,
+      capacity: getCapacity(trimmedRoomType),
+      quantity: 1,
     }));
-    const { error } = await supabase.from("singsing_rooms").insert(newRooms);
+    // Supabase에 upsert (onConflict: room_name)
+    const { error } = await supabase
+      .from("singsing_rooms")
+      .upsert(newRooms, { onConflict: 'room_name' });
     if (error) {
       setError(error.message);
     }
