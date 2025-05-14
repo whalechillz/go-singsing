@@ -6,11 +6,14 @@ import ParticipantsManager from "@/components/ParticipantsManager";
 import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 import RoomTypeManager from "@/components/RoomTypeManager";
 import ScheduleManager from "@/components/ScheduleManager";
+import TeeTimeManager from "@/components/TeeTimeManager";
 
 const TABS = [
   { key: "participants", label: "참가자 관리" },
   { key: "rooms", label: "객실 배정" },
   { key: "schedules", label: "일정 관리" },
+  { key: "tee-times", label: "티오프 시간 관리" },
+  { key: "pickup-points", label: "탑승지 관리" },
 ];
 
 type Tour = {
@@ -68,6 +71,8 @@ const TourDetailPage: React.FC = () => {
           </>
         )}
         {activeTab === "schedules" && <ScheduleManager tourId={tourId} />}
+        {activeTab === "tee-times" && <TeeTimeManager tourId={tourId} />}
+        {activeTab === "pickup-points" && <div className="text-gray-500">탑승지 관리 기능은 곧 추가됩니다.</div>}
       </div>
     </div>
   );
