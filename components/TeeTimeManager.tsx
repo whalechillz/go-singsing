@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type TeeTime = {
@@ -12,6 +12,11 @@ type TeeTime = {
   players: string[];
 };
 
+type Participant = {
+  id: string;
+  name: string;
+};
+
 const initialForm = {
   date: "",
   course: "",
@@ -20,30 +25,62 @@ const initialForm = {
   players: "",
 };
 
-const TeeTimeManager: React.FC = () => {
+type Props = { tourId: string };
+
+const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   const [form, setForm] = useState({ ...initialForm });
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [autoList, setAutoList] = useState<Participant[]>([]);
+  const [showAuto, setShowAuto] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // 참가자 자동완성 데이터 불러오기
+  useEffect(() => {
+    const fetchParticipants = async () => {
+      const { data, error } = await supabase.from("singsing_participants").select("id, name").eq("tour_id", tourId);
+      if (!error && data) setParticipants(data);
+    };
+    if (tourId) fetchParticipants();
+  }, [tourId]);
 
   // DB에서 티오프 시간표 불러오기
   const fetchTeeTimes = async () => {
     setLoading(true);
     setError("");
-    const { data, error } = await supabase.from("singsing_tee_times").select("*").order("date").order("course").order("team_no");
+    const { data, error } = await supabase.from("singsing_tee_times").select("*").eq("tour_id", tourId).order("date").order("course").order("team_no");
     if (error) setError(error.message);
     else setTeeTimes((data || []).map((t: any) => ({ ...t, players: Array.isArray(t.players) ? t.players : [] })));
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchTeeTimes();
-  }, []);
+    if (tourId) fetchTeeTimes();
+  }, [tourId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
+    if (name === "players") {
+      const last = value.split(/,|\n|\s*·\s*/).pop()?.trim() || "";
+      if (last.length > 0) {
+        setAutoList(participants.filter(p => p.name.includes(last) && !form.players.includes(p.name)));
+        setShowAuto(true);
+      } else {
+        setShowAuto(false);
+      }
+    }
+  };
+
+  const handleAutoSelect = (name: string) => {
+    let playersArr = form.players.split(/,|\n|\s*·\s*/).map(p => p.trim()).filter(Boolean);
+    if (!playersArr.includes(name)) playersArr.push(name);
+    setForm({ ...form, players: playersArr.join(" · ") + " · " });
+    setShowAuto(false);
+    inputRef.current?.focus();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,6 +90,7 @@ const TeeTimeManager: React.FC = () => {
     const playersArr = form.players.split(/,|\n|\s*·\s*/).map(p => p.trim()).filter(Boolean);
     if (editingId) {
       const { error } = await supabase.from("singsing_tee_times").update({
+        tour_id: tourId,
         date: form.date,
         course: form.course,
         team_no: Number(form.team_no),
@@ -68,6 +106,7 @@ const TeeTimeManager: React.FC = () => {
     } else {
       const { error } = await supabase.from("singsing_tee_times").insert([
         {
+          tour_id: tourId,
           date: form.date,
           course: form.course,
           team_no: Number(form.team_no),
@@ -105,7 +144,7 @@ const TeeTimeManager: React.FC = () => {
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-xl font-bold text-blue-800 mb-4">티오프 시간 관리</h2>
-        <form className="flex flex-col md:flex-row gap-2 mb-6" onSubmit={handleSubmit}>
+        <form className="flex flex-col md:flex-row gap-2 mb-6 relative" onSubmit={handleSubmit} autoComplete="off">
           <input name="date" type="date" value={form.date} onChange={handleChange} className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
           <select name="course" value={form.course} onChange={handleChange} className="border rounded px-2 py-1 flex-1" required aria-label="코스">
             <option value="">코스 선택</option>
@@ -115,7 +154,34 @@ const TeeTimeManager: React.FC = () => {
           </select>
           <input name="team_no" type="number" min={1} value={form.team_no} onChange={handleChange} className="border rounded px-2 py-1 w-20" required aria-label="조 번호" />
           <input name="tee_time" type="time" value={form.tee_time} onChange={handleChange} className="border rounded px-2 py-1 w-28" required aria-label="티오프 시간" />
-          <input name="players" value={form.players} onChange={handleChange} placeholder="참가자 (·, ,로 구분)" className="border rounded px-2 py-1 flex-1" required aria-label="참가자" />
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              name="players"
+              value={form.players}
+              onChange={handleChange}
+              placeholder="참가자 (자동완성, ·, ,로 구분)"
+              className="border rounded px-2 py-1 w-full"
+              required
+              aria-label="참가자"
+              autoComplete="off"
+              onFocus={() => setShowAuto(true)}
+              onBlur={() => setTimeout(() => setShowAuto(false), 200)}
+            />
+            {showAuto && autoList.length > 0 && (
+              <ul className="absolute z-10 bg-white border rounded shadow w-full max-h-40 overflow-auto mt-1">
+                {autoList.map((p) => (
+                  <li
+                    key={p.id}
+                    className="px-3 py-2 cursor-pointer hover:bg-blue-100"
+                    onMouseDown={() => handleAutoSelect(p.name)}
+                  >
+                    {p.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
           {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm(initialForm); }}>취소</button>}
         </form>
