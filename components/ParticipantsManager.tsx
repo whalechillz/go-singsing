@@ -11,6 +11,7 @@ type Participant = {
   note: string;
   status: string;
   tour_id: string;
+  role?: string;
   room_name?: string;
   created_at?: string;
   singsing_rooms?: {
@@ -26,6 +27,7 @@ type ParticipantForm = {
   team_name: string;
   note: string;
   status: string;
+  role: string;
 };
 
 type Props = { tourId: string };
@@ -33,13 +35,15 @@ type Props = { tourId: string };
 const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [form, setForm] = useState<ParticipantForm>({ name: "", phone: "", team_name: "", note: "", status: "확정" });
+  const [form, setForm] = useState<ParticipantForm>({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [sortKey, setSortKey] = useState<keyof Participant | "">("created_at");
   const [sortAsc, setSortAsc] = useState<boolean>(true);
+  const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
+  const [customRole, setCustomRole] = useState("");
 
   const fetchParticipants = async () => {
     setLoading(true);
@@ -53,41 +57,52 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
     if (tourId) fetchParticipants();
   }, [tourId]);
 
+  const normalizePhone = (input: string) => {
+    let phone = input.replace(/[^0-9]/g, "");
+    if (phone.length === 10 && !phone.startsWith("0")) phone = "0" + phone;
+    if (phone.length > 11) phone = phone.slice(0, 11);
+    return phone;
+  };
+
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
-    if (name === "phone") {
-      value = value.replace(/[^0-9]/g, "");
-    }
+    if (name === "phone") value = normalizePhone(value);
+    if (name === "role" && value === "기타") setCustomRole("");
     setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    if (!form.name || !form.phone) {
-      setError("이름과 연락처는 필수입니다.");
+    if (!form.name) {
+      setError("이름은 필수입니다.");
       return;
     }
+    const phone = form.phone ? normalizePhone(form.phone) : "";
+    const role = form.role === "기타" ? customRole : form.role;
     const isDuplicate = participants.some(
-      (p) => p.name === form.name && p.phone === form.phone
+      (p) => p.name === form.name && p.phone === phone
     );
     if (!editingId && isDuplicate) {
       setError("이미 등록된 참가자입니다.");
       return;
     }
+    const payload = { ...form, phone, role, tour_id: tourId };
     if (editingId) {
-      const { error } = await supabase.from("singsing_participants").update({ ...form, phone: form.phone.replace(/[^0-9]/g, "") }).eq("id", editingId);
+      const { error } = await supabase.from("singsing_participants").update(payload).eq("id", editingId);
       if (error) setError(error.message);
       else {
         setEditingId(null);
-        setForm({ name: "", phone: "", team_name: "", note: "", status: "확정" });
+        setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" });
+        setCustomRole("");
         fetchParticipants();
       }
     } else {
-      const { error } = await supabase.from("singsing_participants").insert([{ ...form, tour_id: tourId, phone: form.phone.replace(/[^0-9]/g, "") }]);
+      const { error } = await supabase.from("singsing_participants").insert([payload]);
       if (error) setError(error.message);
       else {
-        setForm({ name: "", phone: "", team_name: "", note: "", status: "확정" });
+        setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" });
+        setCustomRole("");
         fetchParticipants();
       }
     }
@@ -95,7 +110,9 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
 
   const handleEdit = (p: Participant) => {
     setEditingId(p.id);
-    setForm({ name: p.name, phone: p.phone, team_name: p.team_name || "", note: p.note || "", status: p.status || "확정" });
+    setForm({ name: p.name, phone: p.phone, team_name: p.team_name || "", note: p.note || "", status: p.status || "확정", role: p.role || "" });
+    if (p.role && !roleOptions.includes(p.role)) setCustomRole(p.role);
+    else setCustomRole("");
   };
 
   const handleDelete = async (id: string) => {
@@ -123,12 +140,14 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
     });
 
   const handleDownloadExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(participants.map(p => ({
+    const ws = XLSX.utils.json_to_sheet(participants.map((p, idx) => ({
+      순번: idx + 1,
       이름: p.name,
       연락처: p.phone,
       팀명: p.team_name,
       메모: p.note,
-      상태: p.status
+      상태: p.status,
+      직책: p.role || ""
     })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "참가자목록");
@@ -147,8 +166,9 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
       let added = 0, skipped = 0;
       for (const row of rows as any[]) {
         const name = row["이름"]?.toString().trim();
-        const phone = row["연락처"]?.toString().replace(/[^0-9]/g, "");
-        if (!name || !phone) { skipped++; continue; }
+        const phone = row["연락처"] ? normalizePhone(row["연락처"].toString()) : "";
+        const role = row["직책"]?.toString().trim() || "";
+        if (!name) { skipped++; continue; }
         if (participants.some(p => p.name === name && p.phone === phone)) { skipped++; continue; }
         const { error } = await supabase.from("singsing_participants").insert([
           {
@@ -157,6 +177,7 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
             team_name: row["팀명"] || "",
             note: row["메모"] || "",
             status: row["상태"] || "확정",
+            role,
             tour_id: tourId
           }
         ]);
@@ -181,8 +202,15 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
           <option value="대기">대기</option>
           <option value="취소">취소</option>
         </select>
+        <select name="role" value={form.role} onChange={handleChange} className="border rounded px-2 py-1 flex-1" aria-label="직책">
+          <option value="">직책 선택</option>
+          {roleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        </select>
+        {form.role === "기타" && (
+          <input name="customRole" value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="직접입력" className="border rounded px-2 py-1 flex-1" />
+        )}
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
-        {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정" }); }}>취소</button>}
+        {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
       </form>
       <div className="flex flex-col md:flex-row gap-2 mb-2">
         <input
@@ -214,23 +242,32 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
+        <div className="mb-2 text-right text-gray-700 font-semibold">총 {filtered.length}명</div>
+      )}
+      {loading ? (
+        <div className="text-center py-4 text-gray-500">불러오는 중...</div>
+      ) : (
         <table className="w-full bg-white dark:bg-gray-900 rounded shadow text-sm">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+              <th className="py-2 px-2">순번</th>
               <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("name"); setSortAsc(sortKey === "name" ? !sortAsc : true); }}>이름</th>
               <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("phone"); setSortAsc(sortKey === "phone" ? !sortAsc : true); }}>연락처</th>
               <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("team_name"); setSortAsc(sortKey === "team_name" ? !sortAsc : true); }}>팀명</th>
+              <th className="py-2 px-2 text-left">직책</th>
               <th className="py-2 px-2 text-left">메모</th>
               <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("status"); setSortAsc(sortKey === "status" ? !sortAsc : true); }}>상태</th>
               <th className="py-2 px-2">관리</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((p) => (
+            {filtered.map((p, idx) => (
               <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
+                <td className="py-1 px-2 text-center">{idx + 1}</td>
                 <td className="py-1 px-2">{p.name}</td>
-                <td className="py-1 px-2">{p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3')}</td>
+                <td className="py-1 px-2">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : ""}</td>
                 <td className="py-1 px-2">{p.team_name}</td>
+                <td className="py-1 px-2">{p.role || "-"}</td>
                 <td className="py-1 px-2">{p.note}</td>
                 <td className="py-1 px-2">
                   <span className={
