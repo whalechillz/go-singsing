@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Save, ArrowLeft } from 'lucide-react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import BoardingGuideForm from "@/components/BoardingGuideForm";
+import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 
 // 문서 타입 정의
 interface Document {
@@ -198,12 +200,21 @@ export default function EditDocumentPage() {
                 >
                   <div className="flex items-center">
                     <Icon className="w-5 h-5 text-blue-600 mr-2" />
-                    <span className="font-medium">{name}</span>
+                    {name}
                   </div>
                 </button>
               ))}
             </div>
           </div>
+
+          {/* BoardingGuideForm & Preview: boarding-guide 유형일 때만 노출 */}
+          {selectedType === "boarding-guide" && selectedTour && (
+            <>
+              <BoardingGuideForm tourId={selectedTour} />
+              <div className="mb-8" />
+              <BoardingGuidePreview tourId={selectedTour} />
+            </>
+          )}
 
           {/* 내용 작성 */}
           <div className="mb-6">
