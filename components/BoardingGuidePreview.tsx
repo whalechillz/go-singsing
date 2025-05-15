@@ -30,6 +30,7 @@ const BoardingGuidePreview: React.FC<Props> = ({ tourId }) => {
   const [schedules, setSchedules] = useState<BoardingSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [guideContent, setGuideContent] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,6 +39,8 @@ const BoardingGuidePreview: React.FC<Props> = ({ tourId }) => {
       const { data: scheduleData, error } = await supabase.from("singsing_boarding_schedules").select("*").eq("tour_id", tourId).order("date").order("depart_time");
       setPlaces(placeData || []);
       setSchedules(scheduleData || []);
+      const { data: guideDoc } = await supabase.from("documents").select("content").eq("tour_id", tourId).eq("type", "boarding-guide").single();
+      setGuideContent(guideDoc?.content || "");
       if (error) setError(error.message);
       setLoading(false);
     };
@@ -86,6 +89,11 @@ const BoardingGuidePreview: React.FC<Props> = ({ tourId }) => {
           );
         })}
       </div>
+      {guideContent && (
+        <div className="mt-8 prose max-w-none">
+          <div dangerouslySetInnerHTML={{ __html: guideContent }} />
+        </div>
+      )}
     </div>
   );
 };
