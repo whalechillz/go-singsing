@@ -31,6 +31,9 @@ const BoardingGuidePreview: React.FC<Props> = ({ tourId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [guideContent, setGuideContent] = useState<string>("");
+  const [routes, setRoutes] = useState<{ time: string; place: string }[]>([]);
+  const [notices, setNotices] = useState<string[]>([]);
+  const [contacts, setContacts] = useState<{ name: string; phone: string; role?: string }[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,8 +42,15 @@ const BoardingGuidePreview: React.FC<Props> = ({ tourId }) => {
       const { data: scheduleData, error } = await supabase.from("singsing_boarding_schedules").select("*").eq("tour_id", tourId).order("date").order("depart_time");
       setPlaces(placeData || []);
       setSchedules(scheduleData || []);
-      const { data: guideDoc } = await supabase.from("documents").select("content").eq("tour_id", tourId).eq("type", "boarding-guide").single();
-      setGuideContent(guideDoc?.content || "");
+      // boarding_guide_routes
+      const { data: routeRows } = await supabase.from("boarding_guide_routes").select("time, place").eq("tour_id", tourId).order("order");
+      setRoutes(routeRows || []);
+      // boarding_guide_notices
+      const { data: noticeRows } = await supabase.from("boarding_guide_notices").select("notice").eq("tour_id", tourId).order("order");
+      setNotices((noticeRows || []).map((n: any) => n.notice));
+      // boarding_guide_contacts
+      const { data: contactRows } = await supabase.from("boarding_guide_contacts").select("name, phone, role").eq("tour_id", tourId);
+      setContacts(contactRows || []);
       if (error) setError(error.message);
       setLoading(false);
     };
@@ -89,9 +99,52 @@ const BoardingGuidePreview: React.FC<Props> = ({ tourId }) => {
           );
         })}
       </div>
-      {guideContent && (
-        <div className="mt-8 prose max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: guideContent }} />
+      {/* 이동 경로 및 정차 정보 */}
+      {routes.length > 0 && (
+        <div className="mt-8 bg-white rounded-xl shadow p-6">
+          <h3 className="text-lg font-bold text-blue-800 mb-3">이동 경로 및 정차 정보</h3>
+          <table className="w-full border rounded mb-4">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="p-2 w-32">시간</th>
+                <th className="p-2">장소</th>
+              </tr>
+            </thead>
+            <tbody>
+              {routes.map((r, i) => (
+                <tr key={i} className="border-t">
+                  <td className="p-2">{r.time}</td>
+                  <td className="p-2">{r.place}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {/* 탑승 주의사항 */}
+      {notices.length > 0 && (
+        <div className="mt-6 bg-white rounded-xl shadow p-6">
+          <h3 className="text-lg font-bold text-blue-800 mb-3">탑승 주의사항</h3>
+          <ul className="list-disc pl-5">
+            {notices.map((n, i) => (
+              <li key={i} className="mb-1">{n}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {/* 비상 연락처 */}
+      {contacts.length > 0 && (
+        <div className="mt-6 bg-white rounded-xl shadow p-6">
+          <h3 className="text-lg font-bold text-blue-800 mb-3">비상 연락처</h3>
+          <ul>
+            {contacts.map((c, i) => (
+              <li key={i} className="mb-2">
+                <span className="font-semibold">{c.name}</span>
+                {c.role && <span className="ml-2 text-gray-500">({c.role})</span>}
+                <span className="ml-4 text-red-600 font-bold">{c.phone}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
