@@ -7,6 +7,7 @@ import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 import RoomTypeManager from "@/components/RoomTypeManager";
 import ScheduleManager from "@/components/ScheduleManager";
 import TeeTimeManager from "@/components/TeeTimeManager";
+import BoardingScheduleManager from "@/components/BoardingScheduleManager";
 
 const TABS = [
   { key: "participants", label: "참가자 관리" },
@@ -72,7 +73,7 @@ const TourDetailPage: React.FC = () => {
         )}
         {activeTab === "schedules" && <ScheduleManager tourId={tourId} />}
         {activeTab === "tee-times" && <TeeTimeManager tourId={tourId} />}
-        {activeTab === "pickup-points" && <div className="text-gray-500">탑승지 관리 기능은 곧 추가됩니다.</div>}
+        {activeTab === "pickup-points" && <BoardingScheduleManager tourId={tourId} />}
       </div>
     </div>
   );
