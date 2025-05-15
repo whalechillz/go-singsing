@@ -8,6 +8,7 @@ import RoomTypeManager from "@/components/RoomTypeManager";
 import ScheduleManager from "@/components/ScheduleManager";
 import TeeTimeManager from "@/components/TeeTimeManager";
 import BoardingScheduleManager from "@/components/BoardingScheduleManager";
+import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 
 const TABS = [
   { key: "participants", label: "참가자 관리" },
@@ -33,6 +34,7 @@ const TourDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("participants");
   const [tour, setTour] = useState<Tour | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showPreview, setShowPreview] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTour = async () => {
@@ -73,7 +75,34 @@ const TourDetailPage: React.FC = () => {
         )}
         {activeTab === "schedules" && <ScheduleManager tourId={tourId} />}
         {activeTab === "tee-times" && <TeeTimeManager tourId={tourId} />}
-        {activeTab === "pickup-points" && <BoardingScheduleManager tourId={tourId} />}
+        {activeTab === "pickup-points" && (
+          <>
+            <BoardingScheduleManager tourId={tourId} />
+            <div className="mt-6 flex justify-end">
+              <button
+                className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800"
+                onClick={() => setShowPreview(true)}
+                aria-label="탑승지 안내 미리보기"
+              >
+                탑승지 안내 미리보기
+              </button>
+            </div>
+            {showPreview && (
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative">
+                  <button
+                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
+                    onClick={() => setShowPreview(false)}
+                    aria-label="미리보기 닫기"
+                  >
+                    ×
+                  </button>
+                  <BoardingGuidePreview tourId={tourId} />
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
