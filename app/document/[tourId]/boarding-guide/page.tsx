@@ -1,3 +1,4 @@
+"use client";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 import { useParams } from "next/navigation";
 
