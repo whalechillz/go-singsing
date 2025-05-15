@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Plus, Search, Trash2, Edit2 } from 'lucide-react';
-import BoardingGuidePreviewDrawer from "@/components/BoardingGuidePreviewDrawer";
 
 // 문서 타입 정의
 interface Document {
@@ -180,7 +179,7 @@ export default function DocumentsPage() {
                           {doc.tour.start_date} ~ {doc.tour.end_date}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap flex items-center gap-2">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           className="flex items-center focus:outline-none focus:ring-2 focus:ring-blue-400"
                           onClick={() => router.push(`/document/${doc.tour_id}/${doc.type}`)}
@@ -193,9 +192,6 @@ export default function DocumentsPage() {
                             {documentTypes[doc.type as keyof typeof documentTypes]?.name}
                           </span>
                         </button>
-                        {doc.type === "boarding-guide" && (
-                          <BoardingGuidePreviewDrawer tourId={doc.tour_id} />
-                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(doc.created_at).toLocaleDateString()}
