@@ -20,10 +20,7 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
       subMenu: [
         { id: 'tours-main', label: '투어 관리', href: '/admin/tours' },
         { id: 'participants', label: '참가자 관리', href: '/admin/participants' },
-        { id: 'rooms', label: '객실 배정', href: '/admin/rooms' },
-        { id: 'schedule', label: '일정 관리', href: '/admin/schedule' },
-        { id: 'tee-time', label: '티오프 시간 관리', href: '/admin/tee-time' },
-        { id: 'boarding', label: '탑승지 관리', href: '/admin/boarding' },
+        { id: 'boarding-places', label: '탑승지 관리', href: '/admin/boarding-places' },
       ]
     },
     { id: 'documents', label: '문서 관리', icon: <FileText className="w-5 h-5" />, href: '/admin/documents' },
@@ -97,7 +94,7 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
                   >
                     <span className="text-blue-200">{item.icon}</span>
                     {isSidebarOpen && <span className="ml-4">{item.label}</span>}
-                    {item.disabled && isSidebarOpen && <span className="ml-2 text-xs text-blue-300">(준비중)</span>}
+                    {item.disabled && isSidebarOpen && <span className="ml-2 text-xs text-blue-200">N/A</span>}
                   </button>
                 )}
               </li>
