@@ -11,11 +11,11 @@ import BoardingScheduleManager from "@/components/BoardingScheduleManager";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 
 const TABS = [
-  { key: "participants", label: "참가자 관리" },
-  { key: "rooms", label: "객실 배정" },
-  { key: "schedules", label: "일정 관리" },
-  { key: "tee-times", label: "티오프 시간 관리" },
-  { key: "pickup-points", label: "탑승지 관리" },
+  { key: "participants", label: "투어별 참가자 관리" },
+  { key: "rooms", label: "투어별 객실 배정" },
+  { key: "schedules", label: "투어별 일정관리" },
+  { key: "tee-times", label: "티오프시간 관리" },
+  { key: "pickup-points", label: "탑승 스케쥴 관리" },
 ];
 
 type Tour = {
