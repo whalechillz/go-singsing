@@ -372,7 +372,7 @@ const Dashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {dashboardData.upcomingTours.map(tour => (
+                      {dashboardData.upcomingTours.map((tour: any) => (
                         <tr key={tour.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
                             <div className="font-medium text-gray-900">{tour.title}</div>
