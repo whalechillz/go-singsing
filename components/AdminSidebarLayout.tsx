@@ -27,11 +27,11 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
       ]
     },
     { id: 'documents', label: '문서 관리', icon: <FileText className="w-5 h-5" />, href: '/admin/documents' },
-    { id: 'notification', label: '알림톡 보내기', icon: <MessageSquare className="w-5 h-5" />, href: '/admin/notification' },
-    { id: 'members', label: '전체회원 관리', icon: <User className="w-5 h-5" />, href: '/admin/members' },
-    { id: 'accounting', label: '매출 매입 정산서 관리', icon: <CreditCard className="w-5 h-5" />, href: '/admin/accounting' },
-    { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },
-    { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
+    { id: 'notification', label: '알림톡 보내기', icon: <MessageSquare className="w-5 h-5" />, href: '/admin/notification', disabled: true },
+    { id: 'members', label: '전체회원 관리', icon: <User className="w-5 h-5" />, href: '/admin/members', disabled: true },
+    { id: 'accounting', label: '매출 매입 정산서 관리', icon: <CreditCard className="w-5 h-5" />, href: '/admin/accounting', disabled: true },
+    { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics', disabled: true },
+    { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings', disabled: true },
   ];
   // TODO: 알림톡 보내기, 전체회원 관리, 매출 매입 정산서 관리 등은 추후 개발 예정. 해당 메뉴 클릭 시 라우트만 연결되어 있고, 실제 페이지/기능은 아직 구현되지 않음.
 
@@ -90,11 +90,14 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
                   </>
                 ) : (
                   <button
-                    className={`w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors ${activeNav === item.id ? 'bg-blue-900' : ''}`}
-                    onClick={() => handleNavClick(item.href, item.id)}
+                    className={`w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors ${activeNav === item.id ? 'bg-blue-900' : ''} ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={() => !item.disabled && handleNavClick(item.href, item.id)}
+                    disabled={item.disabled}
+                    aria-disabled={item.disabled ? 'true' : 'false'}
                   >
                     <span className="text-blue-200">{item.icon}</span>
                     {isSidebarOpen && <span className="ml-4">{item.label}</span>}
+                    {item.disabled && isSidebarOpen && <span className="ml-2 text-xs text-blue-300">(준비중)</span>}
                   </button>
                 )}
               </li>
