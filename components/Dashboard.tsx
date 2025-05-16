@@ -68,7 +68,7 @@ const Dashboard = () => {
   };
   
   // Mark notification as read
-  const markAsRead = (id) => {
+  const markAsRead = (id: number) => {
     setNotifications(
       notifications.map(notification => 
         notification.id === id 
