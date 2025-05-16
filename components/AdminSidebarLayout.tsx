@@ -13,12 +13,12 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
   const [openSubMenu, setOpenSubMenu] = useState(false);
 
   const navItems = [
-    { id: 'tour-status', label: '투어 현황표', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/tours' },
     {
       id: 'tours',
       label: '투어 관리',
       icon: <Briefcase className="w-5 h-5" />,
       subMenu: [
+        { id: 'tours-main', label: '투어 관리', href: '/admin/tours' },
         { id: 'participants', label: '참가자 관리', href: '/admin/participants' },
         { id: 'rooms', label: '객실 배정', href: '/admin/rooms' },
         { id: 'schedule', label: '일정 관리', href: '/admin/schedule' },
@@ -33,7 +33,7 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
     { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },
     { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
   ];
-  // TODO: 알림톡 보내기, 전체회원 관리, 매출 매입 정산서 관리 등은 추후 개발 예정. 해당 메뉴 클릭 시 라우트만 연결되어 있고, 실제 페이지/기능은 아직 구현되지 않음.
+  // TODO: 투어 현황표 메뉴/탑승지 관리 버튼 삭제, 투어 관리 서브메뉴 구조 최신화. 알림톡/전체회원/정산 등은 추후 개발 예정.
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const toggleSubMenu = () => setOpenSubMenu(!openSubMenu);

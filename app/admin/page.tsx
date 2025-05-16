@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
+import Dashboard from "@/components/Dashboard";
 
 export default function AdminIndex() {
-  redirect("/admin/tours");
-  return null;
+  return <Dashboard />;
 } 
