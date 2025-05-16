@@ -5,9 +5,9 @@ import { Menu as MenuIcon } from "lucide-react"
 import React from "react"
 
 const menus = [
-  { label: "참가자 관리", href: "/participants" },
-  { label: "투어 관리", href: "/tours" },
-  { label: "문서 관리", href: "/documents" },
+  { label: "투어 현황표", href: "/admin/participants" },
+  { label: "투어 관리", href: "/admin/tours" },
+  { label: "문서 관리", href: "/admin/documents" },
 ]
 
 const AdminNavbar: React.FC = () => {
