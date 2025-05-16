@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { FileText, Briefcase, MessageSquare, User, CreditCard, BarChart2, Settings, LogOut, ChevronRight, ChevronDown, Menu } from 'lucide-react';
+import { FileText, Briefcase, MessageSquare, User, CreditCard, BarChart2, Settings, LogOut, ChevronRight, ChevronDown, Menu, Home } from 'lucide-react';
 
 interface AdminSidebarLayoutProps {
   children: React.ReactNode;
@@ -13,6 +13,12 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
   const [openSubMenu, setOpenSubMenu] = useState(false);
 
   const navItems = [
+    {
+      id: 'dashboard',
+      label: '대시보드',
+      icon: <Home className="w-5 h-5 text-blue-200" />,
+      href: '/admin',
+    },
     {
       id: 'tours',
       label: '투어 관리',
