@@ -1,5 +1,5 @@
 import "../globals.css";
-import AdminNavbar from "@/components/AdminNavbar";
+import AdminSidebarLayout from "@/components/AdminSidebarLayout";
 
 export const metadata = {
   title: "싱싱골프투어 - 관리자",
@@ -16,8 +16,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         />
       </head>
       <body className="font-sans antialiased">
-        <AdminNavbar />
-        <main>{children}</main>
+        <AdminSidebarLayout>
+          {children}
+        </AdminSidebarLayout>
       </body>
     </html>
   );
