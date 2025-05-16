@@ -195,28 +195,28 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
   return (
     <div>
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
-        <input name="name" value={form.name} onChange={handleChange} placeholder="이름" className="border rounded px-2 py-1 flex-1" required />
-        <input name="phone" value={form.phone} onChange={handleChange} placeholder="연락처(숫자만)" className="border rounded px-2 py-1 flex-1" required maxLength={11} />
-        <input name="team_name" value={form.team_name} onChange={handleChange} placeholder="팀명" className="border rounded px-2 py-1 flex-1" />
-        <input name="note" value={form.note} onChange={handleChange} placeholder="메모" className="border rounded px-2 py-1 flex-1" />
-        <select name="status" value={form.status} onChange={handleChange} className="border rounded px-2 py-1 flex-1" aria-label="상태">
+        <input name="name" value={form.name} onChange={handleChange} placeholder="이름" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" required />
+        <input name="phone" value={form.phone} onChange={handleChange} placeholder="연락처(숫자만)" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" required maxLength={11} />
+        <input name="team_name" value={form.team_name} onChange={handleChange} placeholder="팀명" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" />
+        <input name="note" value={form.note} onChange={handleChange} placeholder="메모" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" />
+        <select name="status" value={form.status} onChange={handleChange} className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" aria-label="상태">
           <option value="확정">확정</option>
           <option value="대기">대기</option>
           <option value="취소">취소</option>
         </select>
-        <select name="role" value={form.role} onChange={handleChange} className="border rounded px-2 py-1 flex-1" aria-label="직책">
+        <select name="role" value={form.role} onChange={handleChange} className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" aria-label="직책">
           <option value="">직책 선택</option>
           {roleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
         </select>
         {form.role === "기타" && (
-          <input name="customRole" value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="직접입력" className="border rounded px-2 py-1 flex-1" />
+          <input name="customRole" value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="직접입력" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" />
         )}
-        <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
-        {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
+        <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-blue-900 transition-colors">{editingId ? "수정" : "추가"}</button>
+        {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-gray-400 transition-colors" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
       </form>
       <div className="w-full flex flex-col md:flex-row gap-2 items-center justify-center mb-2">
-        <button type="button" onClick={handleDownloadExcel} className="bg-green-700 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-400 w-full md:w-auto">엑셀 다운로드</button>
-        <label className="relative bg-blue-700 text-white px-3 py-1 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <button type="button" onClick={handleDownloadExcel} className="bg-blue-100 text-blue-700 px-3 py-1 rounded font-medium toolbar-button hover:bg-blue-200 transition-colors w-full md:w-auto">엑셀 다운로드</button>
+        <label className="relative bg-blue-700 text-white px-3 py-1 rounded cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-blue-400">
           엑셀 업로드
           <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" aria-label="엑셀 업로드" />
         </label>
