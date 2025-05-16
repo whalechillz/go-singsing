@@ -194,45 +194,42 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
 
   return (
     <div>
-      {/* 상단 고정 엑셀 업로드/다운로드/파일 안내 블럭 */}
-      <div className="w-full flex flex-col md:flex-row gap-2 items-center justify-center bg-white border-b py-3 sticky top-0 z-50">
-        <button type="button" onClick={handleDownloadExcel} className="bg-green-700 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-400 w-full md:w-auto">엑셀 다운로드</button>
-        <label className="relative bg-blue-700 text-white px-3 py-1 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400">
-          엑셀 업로드
-          <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" aria-label="엑셀 업로드" />
-        </label>
-        <div className="text-xs text-black font-bold bg-white border px-3 py-1 rounded min-w-[120px] text-center" aria-live="polite" style={{ opacity: 1, zIndex: 1000 }}>
-          {selectedFileName || "선택된 파일 없음"}
+      {/* 상단 고정 엑셀 업로드/다운로드/파일 안내 + 검색/필터/총 인원 블럭 (노란색 배경) */}
+      <div className="bg-yellow-50 border rounded p-4 mb-4">
+        <div className="w-full flex flex-col md:flex-row gap-2 items-center justify-center mb-2">
+          <button type="button" onClick={handleDownloadExcel} className="bg-green-700 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-400 w-full md:w-auto">엑셀 다운로드</button>
+          <label className="relative bg-blue-700 text-white px-3 py-1 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400">
+            엑셀 업로드
+            <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" aria-label="엑셀 업로드" />
+          </label>
+          <div className="text-xs text-black font-bold bg-white border px-3 py-1 rounded min-w-[120px] text-center" aria-live="polite" style={{ opacity: 1, zIndex: 1000 }}>
+            {selectedFileName || "선택된 파일 없음"}
+          </div>
         </div>
-      </div>
-      {/* 1. 검색/필터 블럭 */}
-      <div className="flex flex-col md:flex-row gap-2 mb-2 items-center mt-4">
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="이름, 전화번호, 팀명 검색"
-          className="border rounded px-2 py-1 flex-1"
-          aria-label="검색"
-        />
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="border rounded px-2 py-1 flex-none"
-          aria-label="상태 필터"
-        >
-          <option value="">전체 상태</option>
-          <option value="확정">확정</option>
-          <option value="대기">대기</option>
-          <option value="취소">취소</option>
-        </select>
+        <div className="flex flex-col md:flex-row gap-2 items-center mb-2">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="이름, 전화번호, 팀명 검색"
+            className="border rounded px-2 py-1 flex-1"
+            aria-label="검색"
+          />
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="border rounded px-2 py-1 flex-none"
+            aria-label="상태 필터"
+          >
+            <option value="">전체 상태</option>
+            <option value="확정">확정</option>
+            <option value="대기">대기</option>
+            <option value="취소">취소</option>
+          </select>
+        </div>
+        <div className="text-right text-gray-700 font-semibold">총 {filtered.length}명</div>
       </div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-      {loading ? (
-        <div className="text-center py-4 text-gray-500">불러오는 중...</div>
-      ) : (
-        <div className="mb-2 text-right text-gray-700 font-semibold">총 {filtered.length}명</div>
-      )}
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
