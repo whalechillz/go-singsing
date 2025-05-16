@@ -481,7 +481,7 @@ const Dashboard = () => {
                 </div>
                 <div className="p-4">
                   <div className="divide-y divide-gray-200">
-                    {dashboardData.documentsToGenerate.map(doc => (
+                    {dashboardData.documentsToGenerate.map((doc: any) => (
                       <div key={doc.id} className="py-3 flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="p-2 bg-red-100 rounded text-red-600">
