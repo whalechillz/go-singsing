@@ -82,7 +82,7 @@ const Dashboard = () => {
   const toggleSubMenu = () => setOpenSubMenu(!openSubMenu);
   
   // Handle navigation click
-  const handleNavClick = (href, id) => {
+  const handleNavClick = (href: string, id: string) => {
     setActiveNav(id);
     if (href) window.location.href = href;
   };
