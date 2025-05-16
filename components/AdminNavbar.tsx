@@ -1,83 +1,79 @@
 "use client"
 import { usePathname } from "next/navigation"
-import { Drawer, DrawerTrigger, DrawerContent } from "@/components/ui/drawer"
 import { Menu as MenuIcon } from "lucide-react"
-import React from "react"
+import React, { useState } from "react"
 
-const menus = [
-  { label: "투어 현황표", href: "/admin/participants" },
-  { label: "투어 관리", href: "/admin/tours" },
-  { label: "문서 관리", href: "/admin/documents" },
-]
+// 관리자 네비게이션 링크 목록
+const navLinks = [
+  { href: "/admin/participants", label: "투어 현황표" },
+  { href: "/admin/tours", label: "투어 관리" },
+  { href: "/admin/documents", label: "문서 관리" },
+];
 
-const AdminNavbar: React.FC = () => {
-  const pathname = usePathname()
+export default function AdminNavbar() {
+  const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="w-full border-b bg-white sticky top-0 z-30">
-      <div className="max-w-5xl mx-auto flex items-center justify-between px-4 h-14">
+    <nav className="border-b bg-white">
+      <div className="flex h-16 items-center px-4 relative">
+        {/* 모바일 햄버거 */}
+        <button 
+          onClick={() => setIsMenuOpen(!isMenuOpen)} 
+          className="md:hidden p-2 rounded-md hover:bg-gray-100"
+          aria-label="메뉴 열기"
+        >
+          <MenuIcon className="h-5 w-5 text-gray-600" />
+        </button>
         {/* 로고/타이틀 */}
-        <div className="font-bold text-lg select-none" tabIndex={0} aria-label="관리자 홈">관리자</div>
+        <a href="/admin" className="flex items-center gap-2 ml-2 md:ml-0" tabIndex={0} aria-label="관리자 홈">
+          <span className="text-lg font-semibold">관리자</span>
+        </a>
         {/* 데스크탑 메뉴 */}
-        <div className="hidden md:flex gap-6">
-          {menus.map((menu) => (
+        <div className="hidden md:flex gap-6 ml-8">
+          {navLinks.map((link) => (
             <a
-              key={menu.href}
-              href={menu.href}
+              key={link.href}
+              href={link.href}
+              className={`px-2 py-1 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                pathname === link.href
+                  ? "bg-blue-100 text-blue-700 font-bold underline"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
               tabIndex={0}
-              aria-label={menu.label}
-              className={
-                `px-2 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary ` +
-                (pathname.startsWith(menu.href)
-                  ? "text-primary font-bold underline"
-                  : "text-gray-700 hover:text-primary")
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  window.location.href = menu.href
-                }
-              }}
+              aria-label={link.label}
             >
-              {menu.label}
+              {link.label}
             </a>
           ))}
         </div>
-        {/* 모바일 햄버거 */}
-        <div className="md:hidden">
-          <Drawer>
-            <DrawerTrigger aria-label="메뉴 열기" className="p-2 rounded focus:outline-none focus:ring-2 focus:ring-primary">
-              <MenuIcon className="w-6 h-6" />
-            </DrawerTrigger>
-            <DrawerContent>
-              <div className="flex flex-col gap-4 p-4">
-                {menus.map((menu) => (
-                  <a
-                    key={menu.href}
-                    href={menu.href}
-                    tabIndex={0}
-                    aria-label={menu.label}
-                    className={
-                      `px-2 py-2 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary ` +
-                      (pathname.startsWith(menu.href)
-                        ? "text-primary font-bold underline"
-                        : "text-gray-700 hover:text-primary")
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        window.location.href = menu.href
-                      }
-                    }}
-                  >
-                    {menu.label}
-                  </a>
-                ))}
-              </div>
-            </DrawerContent>
-          </Drawer>
+        {/* 모바일 메뉴 (드로어 대신 드롭다운) */}
+        {isMenuOpen && (
+          <div className="absolute top-16 left-0 right-0 bg-white shadow-md z-50 border-t md:hidden">
+            <div className="flex flex-col p-2">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                    pathname === link.href
+                      ? "bg-blue-100 text-blue-700 font-bold underline"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                  tabIndex={0}
+                  aria-label={link.label}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="ml-auto flex items-center gap-2">
+          {/* 프로필/설정 등 우측 아이콘 필요시 여기에 추가 */}
         </div>
       </div>
     </nav>
   )
-}
-
-export default AdminNavbar 
+} 
