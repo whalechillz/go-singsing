@@ -445,7 +445,7 @@ const Dashboard = () => {
                   </div>
                   <div className="p-4">
                     <div className="divide-y divide-gray-200">
-                      {dashboardData.messages.map(message => (
+                      {dashboardData.messages.map((message: any) => (
                         <div key={message.id} className="py-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center">
@@ -460,9 +460,7 @@ const Dashboard = () => {
                           </div>
                           <p className="text-sm text-gray-600 mt-1">{message.message}</p>
                           <div className="mt-2">
-                            <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                              응답하기
-                            </button>
+                            <button className="text-xs text-blue-600 hover:text-blue-800 font-medium" disabled>// TODO: 응답하기 기능 구현 필요</button>
                           </div>
                         </div>
                       ))}
