@@ -89,7 +89,7 @@ const BoardingGuideForm: React.FC<Props> = ({ tourId }) => {
   };
 
   return (
-    <form className="bg-white rounded-lg shadow p-6 mb-8" onSubmit={handleSave} aria-label="탑승지 안내 하단 입력 폼">
+    <form className="bg-white rounded-lg shadow p-6 mb-8 flex flex-col gap-4" onSubmit={handleSave} aria-label="탑승지 안내 하단 입력 폼">
       <h2 className="text-xl font-bold mb-4">탑승지 안내 하단 입력</h2>
       {/* 이동 경로 */}
       <div className="mb-6">
@@ -189,7 +189,7 @@ const BoardingGuideForm: React.FC<Props> = ({ tourId }) => {
       </div>
       {/* 저장 버튼 및 알림 */}
       <div className="flex items-center gap-4 mt-6">
-        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition" disabled={loading} aria-label="저장" tabIndex={0}>저장</button>
+        <button type="submit" className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors" disabled={loading} aria-label="저장" tabIndex={0}>저장</button>
         {success && <span className="text-green-600 font-semibold">{success}</span>}
         {error && <span className="text-red-600 font-semibold">{error}</span>}
       </div>
