@@ -316,7 +316,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="mt-4 text-sm text-gray-500">
-                    마감된 투어: {dashboardData.upcomingTours.filter(t => t.status === 'full').length}개
+                    마감된 투어: {dashboardData.upcomingTours.filter((t: any) => t.status === 'full').length}개
                   </div>
                 </div>
                 
