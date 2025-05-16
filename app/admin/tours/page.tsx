@@ -43,7 +43,7 @@ const TourListPage: React.FC = () => {
         <h1 className="text-2xl font-bold dark:text-white">투어 관리</h1>
         <div className="flex gap-2">
           <Link href="/admin/boarding-places" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700" aria-label="탑승지 관리">탑승지 관리</Link>
-          <Link href="/admin/tours/new" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700" aria-label="투어 생성">+ 투어 생성</Link>
+        <Link href="/admin/tours/new" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700" aria-label="투어 생성">+ 투어 생성</Link>
         </div>
       </div>
       {loading ? (
