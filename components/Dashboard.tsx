@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Database, FileText, TrendingUp, Bell, Menu, X, ChevronRight, ChevronDown, LogOut, Settings, Home, User, Map, Phone, CreditCard, Mail, Send, Briefcase, MessageSquare, BarChart2 } from 'lucide-react';
 
