@@ -110,6 +110,8 @@ const Dashboard = () => {
     { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
   ];
   
+  // TODO: 알림톡 보내기, 전체회원 관리, 매출 매입 정산서 관리 등은 추후 개발 예정. 해당 메뉴 클릭 시 라우트만 연결되어 있고, 실제 페이지/기능은 아직 구현되지 않음.
+  
   // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount);
@@ -413,7 +415,7 @@ const Dashboard = () => {
                   </div>
                   <div className="p-4">
                     <div className="divide-y divide-gray-200">
-                      {dashboardData.recentParticipants.map(participant => (
+                      {dashboardData.recentParticipants.map((participant: any) => (
                         <div key={participant.id} className="py-3 flex items-center justify-between">
                           <div className="flex items-center">
                             <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium">
