@@ -6,7 +6,7 @@ const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [activeNav, setActiveNav] = useState('dashboard');
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState(false);
   
