@@ -4,7 +4,7 @@ import { Calendar, Clock, Users, Database, FileText, TrendingUp, Bell, Menu, X, 
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
   const [activeNav, setActiveNav] = useState('dashboard');
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
