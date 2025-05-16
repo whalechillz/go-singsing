@@ -22,7 +22,7 @@ export default function AdminNavbar() {
           <span>싱싱골프투어</span>
         </a>
         {/* 데스크탑 메뉴 */}
-        <ul className="hidden md:flex gap-2 ml-8">
+        <ul className="hidden md:flex flex-row gap-2 ml-8">
           {navLinks.map((link) => (
             <li key={link.href}>
               <a
