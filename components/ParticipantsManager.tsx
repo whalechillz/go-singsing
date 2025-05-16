@@ -44,6 +44,7 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
   const [sortAsc, setSortAsc] = useState<boolean>(true);
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
+  const [selectedFileName, setSelectedFileName] = useState<string>("");
 
   const fetchParticipants = async () => {
     setLoading(true);
@@ -156,6 +157,7 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
 
   const handleUploadExcel = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    setSelectedFileName(file ? file.name : "");
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -212,7 +214,7 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
         {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
       </form>
-      <div className="flex flex-col md:flex-row gap-2 mb-2">
+      <div className="flex flex-col md:flex-row gap-2 mb-2 items-center">
         <input
           type="text"
           value={search}
@@ -232,11 +234,14 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
           <option value="대기">대기</option>
           <option value="취소">취소</option>
         </select>
-        <button type="button" onClick={handleDownloadExcel} className="bg-green-700 text-white px-3 py-1 rounded">엑셀 다운로드</button>
-        <label className="bg-blue-700 text-white px-3 py-1 rounded cursor-pointer">
+        <button type="button" onClick={handleDownloadExcel} className="bg-green-700 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-400">엑셀 다운로드</button>
+        <label className="relative bg-blue-700 text-white px-3 py-1 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400">
           엑셀 업로드
-          <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" />
+          <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" aria-label="엑셀 업로드" />
         </label>
+        <div className="ml-2 text-xs text-gray-700 bg-white px-2 py-0.5 rounded border border-gray-200 min-w-[120px] text-center" aria-live="polite">
+          {selectedFileName || "선택된 파일 없음"}
+        </div>
       </div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
       {loading ? (
