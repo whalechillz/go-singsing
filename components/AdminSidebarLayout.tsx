@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from 'react';
 import { FileText, Briefcase, MessageSquare, User, CreditCard, BarChart2, Settings, LogOut, ChevronRight, ChevronDown, Menu } from 'lucide-react';
 
