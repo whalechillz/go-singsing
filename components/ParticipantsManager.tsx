@@ -214,6 +214,7 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
         {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
       </form>
+      {/* 1. 검색/필터 블럭 */}
       <div className="flex flex-col md:flex-row gap-2 mb-2 items-center">
         <input
           type="text"
@@ -234,12 +235,18 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
           <option value="대기">대기</option>
           <option value="취소">취소</option>
         </select>
-        <button type="button" onClick={handleDownloadExcel} className="bg-green-700 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-400">엑셀 다운로드</button>
+      </div>
+      {/* 2. 엑셀 다운로드 블럭 */}
+      <div className="mb-2">
+        <button type="button" onClick={handleDownloadExcel} className="bg-green-700 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-400 w-full md:w-auto">엑셀 다운로드</button>
+      </div>
+      {/* 3. 엑셀 업로드+파일명 안내 블럭 */}
+      <div className="flex items-center gap-2 mb-4">
         <label className="relative bg-blue-700 text-white px-3 py-1 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400">
           엑셀 업로드
           <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" aria-label="엑셀 업로드" />
         </label>
-        <div className="ml-2 text-xs text-gray-700 bg-white px-2 py-0.5 rounded border border-gray-200 min-w-[120px] text-center" aria-live="polite">
+        <div className="text-xs text-gray-900 bg-white font-bold px-2 py-0.5 rounded border border-gray-200 min-w-[120px] text-center" aria-live="polite">
           {selectedFileName || "선택된 파일 없음"}
         </div>
       </div>
