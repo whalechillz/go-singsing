@@ -55,7 +55,7 @@ const RoundingTimetableDoc = () => {
         {/* 일자별 시간표 */}
         {Object.entries(grouped).map(([date, courses], dayIndex) => (
           <div key={date} className="mb-8">
-            <div className="bg-blue-700 text-white px-4 py-2 rounded-t-lg font-medium">
+            <div className="bg-blue-50 text-blue-800 font-bold text-lg px-4 py-3 rounded-lg mb-4 border border-blue-100">
               {formatDate(date)} - {["첫째날", "둘째날", "셋째날", "넷째날"][dayIndex] || `${dayIndex+1}일차`}
             </div>
             {Object.entries(courses).map(([course, groups], courseIndex) => (
