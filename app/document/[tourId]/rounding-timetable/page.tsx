@@ -18,6 +18,12 @@ const RoundingTimetableDoc = () => {
     return `${date.getMonth() + 1}월 ${date.getDate()}일 (${dayOfWeek})`;
   };
 
+  // 시간 포맷 함수 추가
+  const formatTimeHHMM = (time: string) => {
+    if (!time) return "";
+    return time.length >= 5 ? time.slice(0, 5) : time;
+  };
+
   useEffect(() => {
     // 투어 정보
     supabase.from("singsing_tours").select("*").eq("id", tourId).single().then(({ data }) => setTour(data));
@@ -72,7 +78,7 @@ const RoundingTimetableDoc = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {groups.map((g, groupIndex) => (
                       <tr key={g.id || groupIndex} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">{g.tee_time}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">{formatTimeHHMM(g.tee_time)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${g.type === '여성팀' ? 'bg-pink-100 text-pink-800' : 'bg-blue-100 text-blue-800'}`}>{g.type || '-'}</span>
                         </td>
