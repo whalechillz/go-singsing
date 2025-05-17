@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Save, ArrowLeft } from 'lucide-react';
@@ -48,6 +48,10 @@ export default function EditDocumentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 라운딩 시간표 하단 입력 상태
+  const [rtNotices, setRtNotices] = useState<any[]>([]);
+  const [rtContacts, setRtContacts] = useState<any[]>([]);
+  const [rtFooter, setRtFooter] = useState<string>("");
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -102,14 +106,52 @@ export default function EditDocumentPage() {
     fetchTours();
   }, [id, router]);
 
-  const handleSave = async () => {
-    if (!selectedTour || !selectedType || !content) {
+  // 라운딩 시간표 하단 데이터 불러오기
+  useEffect(() => {
+    if (selectedType === 'rounding-timetable' && selectedTour) {
+      supabase.from('rounding_timetable_notices').select('*').eq('tour_id', selectedTour).order('order', { ascending: true }).then(({ data }) => setRtNotices(data || []));
+      supabase.from('rounding_timetable_contacts').select('*').eq('tour_id', selectedTour).then(({ data }) => setRtContacts(data || []));
+      supabase.from('rounding_timetable_footers').select('*').eq('tour_id', selectedTour).single().then(({ data }) => setRtFooter(data?.footer || ""));
+    }
+  }, [selectedType, selectedTour]);
+
+  // 라운딩 시간표 하단 입력 핸들러
+  const handleRtNoticeChange = (i: number, value: string) => setRtNotices(n => n.map((item, idx) => idx === i ? { ...item, notice: value } : item));
+  const handleRtNoticeAdd = () => setRtNotices(n => [...n, { notice: '', order: n.length }]);
+  const handleRtNoticeDelete = (i: number) => setRtNotices(n => n.filter((_, idx) => idx !== i).map((item, idx) => ({ ...item, order: idx })));
+
+  const handleRtContactChange = (i: number, key: string, value: string) => setRtContacts(c => c.map((item, idx) => idx === i ? { ...item, [key]: value } : item));
+  const handleRtContactAdd = () => setRtContacts(c => [...c, { name: '', phone: '', role: '' }]);
+  const handleRtContactDelete = (i: number) => setRtContacts(c => c.filter((_, idx) => idx !== i));
+
+  // 저장 로직 확장
+  const handleSave = useCallback(async () => {
+    if (!selectedTour || !selectedType || (selectedType !== 'rounding-timetable' && !content)) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
-
     try {
       setIsSaving(true);
+      if (selectedType === 'rounding-timetable') {
+        // notices
+        await supabase.from('rounding_timetable_notices').delete().eq('tour_id', selectedTour);
+        if (rtNotices.length > 0) {
+          await supabase.from('rounding_timetable_notices').insert(rtNotices.map((n, i) => ({ ...n, tour_id: selectedTour, order: i })));
+        }
+        // contacts
+        await supabase.from('rounding_timetable_contacts').delete().eq('tour_id', selectedTour);
+        if (rtContacts.length > 0) {
+          await supabase.from('rounding_timetable_contacts').insert(rtContacts.map(c => ({ ...c, tour_id: selectedTour })));
+        }
+        // footer
+        await supabase.from('rounding_timetable_footers').delete().eq('tour_id', selectedTour);
+        if (rtFooter) {
+          await supabase.from('rounding_timetable_footers').insert([{ tour_id: selectedTour, footer: rtFooter }]);
+        }
+        router.push('/admin/documents');
+        return;
+      }
+      // 기존 문서 저장 로직
       const { error } = await supabase
         .from('documents')
         .update({
@@ -119,7 +161,6 @@ export default function EditDocumentPage() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
-
       if (error) throw error;
       router.push('/admin/documents');
     } catch (err) {
@@ -127,7 +168,7 @@ export default function EditDocumentPage() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [selectedTour, selectedType, content, id, router, rtNotices, rtContacts, rtFooter]);
 
   if (isLoading) {
     return (
@@ -216,22 +257,59 @@ export default function EditDocumentPage() {
             </>
           )}
 
-          {/* 내용 작성 */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              문서 내용
-            </label>
-            <div className="border rounded-lg min-h-[24rem] bg-white">
-              <EditorContent editor={editor} className="prose max-w-none min-h-[22rem] p-4 outline-none" />
+          {/* 라운딩 시간표 하단 입력 UI */}
+          {selectedType === "rounding-timetable" && selectedTour && (
+            <div className="mb-8">
+              <h3 className="font-bold mb-2">라운딩 주의사항</h3>
+              {rtNotices.map((n, i) => (
+                <div key={n.id || i} className="flex gap-2 mb-1">
+                  <input
+                    className="flex-1 border rounded px-2 py-1"
+                    value={n.notice}
+                    onChange={e => handleRtNoticeChange(i, e.target.value)}
+                  />
+                  <button onClick={() => handleRtNoticeDelete(i)} className="text-red-500">삭제</button>
+                </div>
+              ))}
+              <button onClick={handleRtNoticeAdd} className="text-blue-600 text-sm mt-1">+ 추가</button>
+              <h3 className="font-bold mt-6 mb-2">비상 연락처</h3>
+              {rtContacts.map((c, i) => (
+                <div key={c.id || i} className="flex gap-2 mb-1">
+                  <input className="border rounded px-2 py-1 w-32" placeholder="이름" value={c.name} onChange={e => handleRtContactChange(i, 'name', e.target.value)} />
+                  <input className="border rounded px-2 py-1 w-32" placeholder="역할" value={c.role} onChange={e => handleRtContactChange(i, 'role', e.target.value)} />
+                  <input className="border rounded px-2 py-1 w-40" placeholder="전화번호" value={c.phone} onChange={e => handleRtContactChange(i, 'phone', e.target.value)} />
+                  <button onClick={() => handleRtContactDelete(i)} className="text-red-500">삭제</button>
+                </div>
+              ))}
+              <button onClick={handleRtContactAdd} className="text-blue-600 text-sm mt-1">+ 추가</button>
+              <h3 className="font-bold mt-6 mb-2">푸터</h3>
+              <input
+                className="border rounded px-2 py-1 w-full"
+                value={rtFooter}
+                onChange={e => setRtFooter(e.target.value)}
+                placeholder="푸터 내용 입력"
+              />
             </div>
-          </div>
+          )}
+
+          {/* 내용 작성: boarding-guide/room-assignment 등 기타 문서 유형 */}
+          {selectedType !== "boarding-guide" && selectedType !== "rounding-timetable" && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                문서 내용
+              </label>
+              <div className="border rounded-lg min-h-[24rem] bg-white">
+                <EditorContent editor={editor} className="prose max-w-none min-h-[22rem] p-4 outline-none" />
+              </div>
+            </div>
+          )}
 
           {/* 저장 버튼 */}
           <div className="flex justify-end">
             <button
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleSave}
-              disabled={isSaving || !selectedTour || !selectedType || !content}
+              disabled={isSaving || !selectedTour || !selectedType || (selectedType !== 'rounding-timetable' && !content)}
             >
               {isSaving ? (
                 <>
