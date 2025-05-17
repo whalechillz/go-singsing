@@ -133,15 +133,15 @@ export default function EditDocumentPage() {
     try {
       setIsSaving(true);
       if (selectedType === 'rounding-timetable') {
-        // notices (단일 row)
+        // notices
         await supabase.from('rounding_timetable_notices').delete().eq('tour_id', selectedTour);
-        if (rtNotices[0]?.notice) {
-          await supabase.from('rounding_timetable_notices').insert([{ notice: rtNotices[0].notice, tour_id: selectedTour, order: 0 }]);
+        if (rtNotices.length > 0) {
+          await supabase.from('rounding_timetable_notices').insert(rtNotices.map((n, i) => ({ ...n, tour_id: selectedTour, order: i })));
         }
-        // contacts (단일 row)
+        // contacts
         await supabase.from('rounding_timetable_contacts').delete().eq('tour_id', selectedTour);
-        if (rtContacts[0]?.name) {
-          await supabase.from('rounding_timetable_contacts').insert([{ name: rtContacts[0].name, tour_id: selectedTour }]);
+        if (rtContacts.length > 0) {
+          await supabase.from('rounding_timetable_contacts').insert(rtContacts.map(c => ({ ...c, tour_id: selectedTour })));
         }
         // footer
         await supabase.from('rounding_timetable_footers').delete().eq('tour_id', selectedTour);
@@ -261,20 +261,28 @@ export default function EditDocumentPage() {
           {selectedType === "rounding-timetable" && selectedTour && (
             <div className="mb-8">
               <h3 className="font-bold mb-2">라운딩 주의사항</h3>
-              <textarea
-                className="w-full border rounded px-2 py-1 resize-y min-h-[80px]"
-                value={rtNotices[0]?.notice || ''}
-                onChange={e => setRtNotices([{ notice: e.target.value, order: 0 }])}
-                rows={5}
-                placeholder="여러 줄 입력 가능, 줄바꿈 그대로 반영됨"
-              />
+              {rtNotices.map((n, i) => (
+                <div key={n.id || i} className="flex gap-2 mb-1">
+                  <textarea
+                    className="flex-1 border rounded px-2 py-1 resize-y min-h-[40px]"
+                    value={n.notice}
+                    onChange={e => handleRtNoticeChange(i, e.target.value)}
+                    rows={2}
+                  />
+                  <button onClick={() => handleRtNoticeDelete(i)} className="text-red-500">삭제</button>
+                </div>
+              ))}
+              <button onClick={handleRtNoticeAdd} className="text-blue-600 text-sm mt-1">+ 추가</button>
               <h3 className="font-bold mt-6 mb-2">비상 연락처</h3>
-              <input
-                className="border rounded px-2 py-1 w-full"
-                placeholder="예: 김성팔 (기사님): 010-5254-9876"
-                value={rtContacts[0]?.name || ''}
-                onChange={e => setRtContacts([{ name: e.target.value }])}
-              />
+              {rtContacts.map((c, i) => (
+                <div key={c.id || i} className="flex gap-2 mb-1">
+                  <input className="border rounded px-2 py-1 w-32" placeholder="이름" value={c.name} onChange={e => handleRtContactChange(i, 'name', e.target.value)} />
+                  <input className="border rounded px-2 py-1 w-32" placeholder="역할" value={c.role} onChange={e => handleRtContactChange(i, 'role', e.target.value)} />
+                  <input className="border rounded px-2 py-1 w-40" placeholder="전화번호" value={c.phone} onChange={e => handleRtContactChange(i, 'phone', e.target.value)} />
+                  <button onClick={() => handleRtContactDelete(i)} className="text-red-500">삭제</button>
+                </div>
+              ))}
+              <button onClick={handleRtContactAdd} className="text-blue-600 text-sm mt-1">+ 추가</button>
               <h3 className="font-bold mt-6 mb-2">푸터</h3>
               <textarea
                 className="border rounded px-2 py-1 w-full resize-y min-h-[40px]"
