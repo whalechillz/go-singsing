@@ -98,7 +98,14 @@ const RoundingTimetableDoc = () => {
           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r">
             <h3 className="text-sm font-bold text-red-800 mb-2">라운딩 주의사항</h3>
             <ul className="list-disc pl-5 space-y-1 text-sm text-red-700">
-              {notices.map((n) => <li key={n.id}>{n.notice}</li>)}
+              {notices.map((n) =>
+                n.notice
+                  .split('\n')
+                  .filter((line: string) => line.trim() !== '')
+                  .map((line: string, idx: number) => (
+                    <li key={n.id + '-' + idx}>{line}</li>
+                  ))
+              )}
             </ul>
           </div>
         )}
