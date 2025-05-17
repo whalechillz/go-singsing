@@ -126,8 +126,8 @@ const RoundingTimetableDoc = () => {
         )}
         {/* 푸터 */}
         {footer && (
-          <div className="text-center p-4 bg-white rounded-lg shadow mt-6">
-            <div className="whitespace-pre-line">{footer}</div>
+          <div className="text-center p-4 bg-white rounded-lg shadow mt-6 whitespace-pre-line">
+            {footer}
           </div>
         )}
       </div>
