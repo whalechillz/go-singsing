@@ -140,6 +140,13 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     else fetchTeeTimes();
   };
 
+  // 시간 포맷 함수 추가
+  const formatTimeHHMM = (time: string) => {
+    if (!time) return "";
+    // "13:15:00" → "13:15"
+    return time.length >= 5 ? time.slice(0, 5) : time;
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="max-w-3xl mx-auto">
@@ -207,7 +214,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                     <td className="px-2 py-1 whitespace-nowrap">{t.date}</td>
                     <td className="px-2 py-1 whitespace-nowrap">{t.course}</td>
                     <td className="px-2 py-1 text-center">{t.team_no}</td>
-                    <td className="px-2 py-1 text-center text-red-600 font-bold">{t.tee_time}</td>
+                    <td className="px-2 py-1 text-center text-red-600 font-bold">{formatTimeHHMM(t.tee_time)}</td>
                     <td className="px-2 py-1">
                       {t.players.map((p, i, arr) => (
                         <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : ""}>
