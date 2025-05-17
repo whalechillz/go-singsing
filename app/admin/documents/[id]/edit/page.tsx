@@ -263,10 +263,11 @@ export default function EditDocumentPage() {
               <h3 className="font-bold mb-2">라운딩 주의사항</h3>
               {rtNotices.map((n, i) => (
                 <div key={n.id || i} className="flex gap-2 mb-1">
-                  <input
-                    className="flex-1 border rounded px-2 py-1"
+                  <textarea
+                    className="flex-1 border rounded px-2 py-1 resize-y min-h-[40px]"
                     value={n.notice}
                     onChange={e => handleRtNoticeChange(i, e.target.value)}
+                    rows={2}
                   />
                   <button onClick={() => handleRtNoticeDelete(i)} className="text-red-500">삭제</button>
                 </div>
@@ -275,18 +276,19 @@ export default function EditDocumentPage() {
               <h3 className="font-bold mt-6 mb-2">비상 연락처</h3>
               {rtContacts.map((c, i) => (
                 <div key={c.id || i} className="flex gap-2 mb-1">
-                  <input className="border rounded px-2 py-1 w-32" placeholder="이름" value={c.name} onChange={e => handleRtContactChange(i, 'name', e.target.value)} />
-                  <input className="border rounded px-2 py-1 w-32" placeholder="역할" value={c.role} onChange={e => handleRtContactChange(i, 'role', e.target.value)} />
-                  <input className="border rounded px-2 py-1 w-40" placeholder="전화번호" value={c.phone} onChange={e => handleRtContactChange(i, 'phone', e.target.value)} />
+                  <textarea className="border rounded px-2 py-1 w-32 resize-y min-h-[40px]" placeholder="이름" value={c.name} onChange={e => handleRtContactChange(i, 'name', e.target.value)} rows={2} />
+                  <textarea className="border rounded px-2 py-1 w-32 resize-y min-h-[40px]" placeholder="역할" value={c.role} onChange={e => handleRtContactChange(i, 'role', e.target.value)} rows={2} />
+                  <textarea className="border rounded px-2 py-1 w-40 resize-y min-h-[40px]" placeholder="전화번호" value={c.phone} onChange={e => handleRtContactChange(i, 'phone', e.target.value)} rows={2} />
                   <button onClick={() => handleRtContactDelete(i)} className="text-red-500">삭제</button>
                 </div>
               ))}
               <button onClick={handleRtContactAdd} className="text-blue-600 text-sm mt-1">+ 추가</button>
               <h3 className="font-bold mt-6 mb-2">푸터</h3>
-              <input
-                className="border rounded px-2 py-1 w-full"
+              <textarea
+                className="border rounded px-2 py-1 w-full resize-y min-h-[40px]"
                 value={rtFooter}
                 onChange={e => setRtFooter(e.target.value)}
+                rows={2}
                 placeholder="푸터 내용 입력"
               />
             </div>
