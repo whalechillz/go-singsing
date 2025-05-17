@@ -24,6 +24,16 @@ const RoundingTimetableDoc = () => {
     return time.length >= 5 ? time.slice(0, 5) : time;
   };
 
+  // 조 구성 표기 함수
+  const getTeamType = (players: string[]) => {
+    if (!Array.isArray(players) || players.length === 0) return "-";
+    const hasMale = players.some(p => p.includes("(남)"));
+    const hasFemale = players.some(p => !p.includes("(남)"));
+    if (hasMale && hasFemale) return "혼성팀";
+    if (hasMale) return "남성팀";
+    return "여성팀";
+  };
+
   useEffect(() => {
     // 투어 정보
     supabase.from("singsing_tours").select("*").eq("id", tourId).single().then(({ data }) => setTour(data));
@@ -80,7 +90,15 @@ const RoundingTimetableDoc = () => {
                       <tr key={g.id || groupIndex} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">{formatTimeHHMM(g.tee_time)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${g.type === '여성팀' ? 'bg-pink-100 text-pink-800' : 'bg-blue-100 text-blue-800'}`}>{g.type || '-'}</span>
+                          <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            getTeamType(g.players) === '여성팀'
+                              ? 'bg-pink-100 text-pink-800'
+                              : getTeamType(g.players) === '남성팀'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {getTeamType(g.players)}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {Array.isArray(g.players)
