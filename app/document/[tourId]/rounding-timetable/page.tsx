@@ -1,0 +1,122 @@
+"use client";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+
+const RoundingTimetableDoc = () => {
+  const { tourId } = useParams();
+  const [tour, setTour] = useState<any>(null);
+  const [teeTimes, setTeeTimes] = useState<any[]>([]);
+  const [docMeta, setDocMeta] = useState<{ notes?: string; contacts?: string; footer?: string }>({});
+
+  // 날짜 포맷
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+    return `${date.getMonth() + 1}월 ${date.getDate()}일 (${dayOfWeek})`;
+  };
+
+  useEffect(() => {
+    // 투어 정보
+    supabase.from("singsing_tours").select("*").eq("id", tourId).single().then(({ data }) => setTour(data));
+    // 티오프 시간표
+    supabase.from("singsing_tee_times").select("*").eq("tour_id", tourId).then(({ data }) => setTeeTimes(data || []));
+    // 문서 메타(주의사항, 연락처, 푸터)
+    supabase.from("singsing_documents")
+      .select("notes,contacts,footer")
+      .eq("tour_id", tourId)
+      .eq("type", "rounding-timetable")
+      .single()
+      .then(({ data }) => {
+        if (data) setDocMeta(data);
+      });
+  }, [tourId]);
+
+  // 티오프 시간표를 날짜/코스별로 그룹핑
+  const grouped: Record<string, Record<string, any[]>> = {};
+  teeTimes.forEach((t) => {
+    if (!grouped[t.date]) grouped[t.date] = {};
+    if (!grouped[t.date][t.course]) grouped[t.date][t.course] = [];
+    grouped[t.date][t.course].push(t);
+  });
+
+  if (!tour) return <div>불러오는 중...</div>;
+
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* 헤더 */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-blue-800">라운딩 조별 시간표</h1>
+            <p className="text-gray-600 text-sm">{tour.title} / {tour.start_date}~{tour.end_date} / {tour.golf_course}</p>
+          </div>
+          <div className="text-lg font-bold text-blue-800 mt-2 md:mt-0">싱싱골프투어</div>
+        </div>
+        {/* 일자별 시간표 */}
+        {Object.entries(grouped).map(([date, courses], dayIndex) => (
+          <div key={date} className="mb-8">
+            <div className="bg-blue-700 text-white px-4 py-2 rounded-t-lg font-medium">
+              {formatDate(date)} - {["첫째날", "둘째날", "셋째날", "넷째날"][dayIndex] || `${dayIndex+1}일차`}
+            </div>
+            {Object.entries(courses).map(([course, groups], courseIndex) => (
+              <div key={course} className="mb-4 bg-white rounded-lg shadow overflow-hidden">
+                <div className="bg-blue-600 text-white px-4 py-2 font-medium">{course}</div>
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-24">시간</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">조 구성</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">참가자</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {groups.map((g, groupIndex) => (
+                      <tr key={g.id || groupIndex} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">{g.tee_time}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${g.type === '여성팀' ? 'bg-pink-100 text-pink-800' : 'bg-blue-100 text-blue-800'}`}>{g.type || '-'}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {Array.isArray(g.players)
+                            ? g.players.map((player: string, i: number, arr: string[]) => (
+                                <span key={i} className={player.includes('(남)') ? 'text-blue-700 font-medium' : ''}>
+                                  {player}{i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
+                                </span>
+                              ))
+                            : g.players}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        ))}
+        {/* 라운딩 주의사항 */}
+        {docMeta.notes && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r">
+            <h3 className="text-sm font-bold text-red-800 mb-2">라운딩 주의사항</h3>
+            <div className="text-sm text-red-700 whitespace-pre-line">{docMeta.notes}</div>
+          </div>
+        )}
+        {/* 연락처 정보 */}
+        {docMeta.contacts && (
+          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r">
+            <h3 className="text-sm font-bold text-green-800 mb-2">비상 연락처</h3>
+            <div className="text-sm text-green-700 whitespace-pre-line">{docMeta.contacts}</div>
+          </div>
+        )}
+        {/* 푸터 */}
+        {docMeta.footer && (
+          <div className="text-center p-4 bg-white rounded-lg shadow mt-6">
+            <div className="whitespace-pre-line">{docMeta.footer}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default RoundingTimetableDoc; 
