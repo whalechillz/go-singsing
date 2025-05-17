@@ -7,7 +7,9 @@ const RoundingTimetableDoc = () => {
   const { tourId } = useParams();
   const [tour, setTour] = useState<any>(null);
   const [teeTimes, setTeeTimes] = useState<any[]>([]);
-  const [docMeta, setDocMeta] = useState<{ notes?: string; contacts?: string; footer?: string }>({});
+  const [notices, setNotices] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [footer, setFooter] = useState<string>("");
 
   // 날짜 포맷
   const formatDate = (dateString: string) => {
@@ -21,15 +23,12 @@ const RoundingTimetableDoc = () => {
     supabase.from("singsing_tours").select("*").eq("id", tourId).single().then(({ data }) => setTour(data));
     // 티오프 시간표
     supabase.from("singsing_tee_times").select("*").eq("tour_id", tourId).then(({ data }) => setTeeTimes(data || []));
-    // 문서 메타(주의사항, 연락처, 푸터)
-    supabase.from("singsing_documents")
-      .select("notes,contacts,footer")
-      .eq("tour_id", tourId)
-      .eq("type", "rounding-timetable")
-      .single()
-      .then(({ data }) => {
-        if (data) setDocMeta(data);
-      });
+    // 주의사항
+    supabase.from("rounding_timetable_notices").select("*").eq("tour_id", tourId).order("order", { ascending: true }).then(({ data }) => setNotices(data || []));
+    // 연락처
+    supabase.from("rounding_timetable_contacts").select("*").eq("tour_id", tourId).then(({ data }) => setContacts(data || []));
+    // 푸터
+    supabase.from("rounding_timetable_footers").select("*").eq("tour_id", tourId).single().then(({ data }) => setFooter(data?.footer || ""));
   }, [tourId]);
 
   // 티오프 시간표를 날짜/코스별로 그룹핑
@@ -95,23 +94,33 @@ const RoundingTimetableDoc = () => {
           </div>
         ))}
         {/* 라운딩 주의사항 */}
-        {docMeta.notes && (
+        {notices.length > 0 && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r">
             <h3 className="text-sm font-bold text-red-800 mb-2">라운딩 주의사항</h3>
-            <div className="text-sm text-red-700 whitespace-pre-line">{docMeta.notes}</div>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-red-700">
+              {notices.map((n) => <li key={n.id}>{n.notice}</li>)}
+            </ul>
           </div>
         )}
         {/* 연락처 정보 */}
-        {docMeta.contacts && (
+        {contacts.length > 0 && (
           <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r">
             <h3 className="text-sm font-bold text-green-800 mb-2">비상 연락처</h3>
-            <div className="text-sm text-green-700 whitespace-pre-line">{docMeta.contacts}</div>
+            <ul className="text-sm text-green-700">
+              {contacts.map((c) => (
+                <li key={c.id}>
+                  <strong>{c.name}</strong>
+                  {c.role && <> ({c.role})</>}
+                  : {c.phone}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
         {/* 푸터 */}
-        {docMeta.footer && (
+        {footer && (
           <div className="text-center p-4 bg-white rounded-lg shadow mt-6">
-            <div className="whitespace-pre-line">{docMeta.footer}</div>
+            <div className="whitespace-pre-line">{footer}</div>
           </div>
         )}
       </div>
