@@ -73,7 +73,7 @@ const TourDetailPage: React.FC = () => {
             <RoomAssignmentManager tourId={tourId} />
           </>
         )}
-        {activeTab === "schedules" && <ScheduleManager tourId={tourId} />}
+        {activeTab === "schedules" && tour && <ScheduleManager tourId={tourId} tour={tour} />}
         {activeTab === "tee-times" && <TeeTimeManager tourId={tourId} />}
         {activeTab === "pickup-points" && (
           <>
