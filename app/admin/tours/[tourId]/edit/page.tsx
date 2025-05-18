@@ -37,6 +37,7 @@ const TourEditPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchTour = async () => {
@@ -53,10 +54,26 @@ const TourEditPage: React.FC = () => {
       setLoading(false);
     };
     if (tourId) fetchTour();
+
+    supabase.from("tour_products").select("id, name, hotel, included, not_included").then(({ data }) => {
+      setProducts(data || []);
+    });
   }, [tourId]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleGolfCourseChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    const selectedProduct = products.find((p) => p.id === selectedId);
+    setForm({
+      ...form,
+      golf_course: selectedProduct ? selectedProduct.name : "",
+      accommodation: selectedProduct ? selectedProduct.hotel : "",
+      includes: selectedProduct ? selectedProduct.included : "",
+      excludes: selectedProduct ? selectedProduct.not_included : "",
+    });
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -103,7 +120,12 @@ const TourEditPage: React.FC = () => {
         </div>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">골프장</span>
-          <input name="golf_course" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.golf_course} onChange={handleChange} required />
+          <select name="golf_course" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.golf_course} onChange={handleGolfCourseChange} required>
+            <option value="">선택</option>
+            {products.map((product) => (
+              <option key={product.id} value={product.id}>{product.name}</option>
+            ))}
+          </select>
         </label>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">숙소</span>
