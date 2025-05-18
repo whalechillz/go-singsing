@@ -9,7 +9,7 @@ import ScheduleManager from "@/components/ScheduleManager";
 import TeeTimeManager from "@/components/TeeTimeManager";
 import BoardingScheduleManager from "@/components/BoardingScheduleManager";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
-import ProductSchedulePreview from "@/components/ProductSchedulePreview";
+import TourSchedulePreview from "@/components/TourSchedulePreview";
 
 const TABS = [
   { key: "participants", label: "투어별 참가자 관리" },
@@ -69,9 +69,9 @@ const TourDetailPage: React.FC = () => {
         <button
           className="ml-auto bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
           onClick={() => setShowProductPreview(true)}
-          aria-label="상품정보(일정표) 미리보기"
+          aria-label="투어 일정표 미리보기"
         >
-          상품정보(일정표) 미리보기
+          투어 일정표 미리보기
         </button>
       </div>
       <div className="bg-gray-50 dark:bg-gray-800 rounded-b-lg p-6 min-h-[200px]">
@@ -123,7 +123,7 @@ const TourDetailPage: React.FC = () => {
             >
               ×
             </button>
-            <ProductSchedulePreview tourId={tourId} />
+            <TourSchedulePreview tourId={tourId} />
           </div>
         </div>
       )}

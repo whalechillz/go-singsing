@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { fetchTourAndSchedules } from "./actions";
-import ProductInfo from "@/components/ProductInfo";
+import TourScheduleInfo from "@/components/TourScheduleInfo";
 import { Metadata } from "next";
 
 type TourData = {
@@ -74,7 +74,7 @@ export default function ProductInfoPage() {
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
-        <ProductInfo tour={data.tour} schedules={data.schedules || []} />
+        <TourScheduleInfo tour={data.tour} schedules={data.schedules || []} />
       </div>
     </div>
   );
