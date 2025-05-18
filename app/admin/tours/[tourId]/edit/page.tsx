@@ -65,8 +65,8 @@ const TourEditPage: React.FC = () => {
   };
 
   const handleGolfCourseChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
-    const selectedProduct = products.find((p) => p.id === selectedId);
+    const selectedName = e.target.value;
+    const selectedProduct = products.find((p) => p.name === selectedName);
     setForm({
       ...form,
       golf_course: selectedProduct ? selectedProduct.name : "",
@@ -123,7 +123,7 @@ const TourEditPage: React.FC = () => {
           <select name="golf_course" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.golf_course} onChange={handleGolfCourseChange} required>
             <option value="">선택</option>
             {products.map((product) => (
-              <option key={product.id} value={product.id}>{product.name}</option>
+              <option key={product.id} value={product.name}>{product.name}</option>
             ))}
           </select>
         </label>

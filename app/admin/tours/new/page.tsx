@@ -45,8 +45,8 @@ const TourNewPage: React.FC = () => {
   };
 
   const handleGolfCourseChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
-    const selectedProduct = products.find((p) => p.id === selectedId);
+    const selectedName = e.target.value;
+    const selectedProduct = products.find((p) => p.name === selectedName);
     setForm({
       ...form,
       golf_course: selectedProduct ? selectedProduct.name : "",
@@ -99,10 +99,10 @@ const TourNewPage: React.FC = () => {
         </div>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">골프장</span>
-          <select name="golf_course" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={products.find(p => p.name === form.golf_course)?.id || ""} onChange={handleGolfCourseChange} required>
+          <select name="golf_course" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.golf_course} onChange={handleGolfCourseChange} required>
             <option value="">골프장(투어 상품) 선택</option>
             {products.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.name}>{p.name}</option>
             ))}
           </select>
         </label>
