@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import Link from "next/link";
 
 // 상품 타입
 interface TourProduct {
@@ -8,22 +9,18 @@ interface TourProduct {
   name: string;
   golf_course?: string;
   hotel?: string;
-  description?: string;
+  date?: string;
 }
-
-const initialForm = { name: "", golf_course: "", hotel: "", description: "" };
 
 const TourProductsPage = () => {
   const [products, setProducts] = useState<TourProduct[]>([]);
-  const [form, setForm] = useState(initialForm);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const fetchProducts = async () => {
     setLoading(true);
     setError("");
-    const { data, error } = await supabase.from("tour_products").select("*").order("name");
+    const { data, error } = await supabase.from("tour_products").select("*").order("created_at", { ascending: false });
     if (error) setError(error.message);
     else setProducts(data || []);
     setLoading(false);
@@ -31,93 +28,52 @@ const TourProductsPage = () => {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!form.name) {
-      setError("상품명을 입력하세요.");
-      return;
-    }
-    setLoading(true);
-    if (editingId) {
-      const { error } = await supabase.from("tour_products").update(form).eq("id", editingId);
-      if (error) setError(error.message);
-      else {
-        setEditingId(null);
-        setForm(initialForm);
-        fetchProducts();
-      }
-    } else {
-      const { error } = await supabase.from("tour_products").insert([{ ...form }]);
-      if (error) setError(error.message);
-      else {
-        setForm(initialForm);
-        fetchProducts();
-      }
-    }
-    setLoading(false);
-  };
-
-  const handleEdit = (p: TourProduct) => {
-    setEditingId(p.id);
-    setForm({
-      name: p.name || "",
-      golf_course: p.golf_course || "",
-      hotel: p.hotel || "",
-      description: p.description || "",
-    });
-  };
-
   const handleDelete = async (id: string) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     setLoading(true);
     const { error } = await supabase.from("tour_products").delete().eq("id", id);
     if (error) setError(error.message);
-    else fetchProducts();
+    else setProducts((prev) => prev.filter((p) => p.id !== id));
     setLoading(false);
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">여행상품(투어 상품) 관리</h1>
-      <form className="flex flex-col gap-2 mb-6" onSubmit={handleSubmit}>
-        <input name="name" value={form.name} onChange={handleChange} placeholder="상품명" className="border rounded px-2 py-1" required aria-label="상품명" />
-        <input name="golf_course" value={form.golf_course} onChange={handleChange} placeholder="골프장" className="border rounded px-2 py-1" aria-label="골프장" />
-        <input name="hotel" value={form.hotel} onChange={handleChange} placeholder="숙소" className="border rounded px-2 py-1" aria-label="숙소" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="설명" className="border rounded px-2 py-1" aria-label="설명" />
-        <div className="flex gap-2 mt-2">
-          <button type="submit" className="bg-blue-700 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
-          {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm(initialForm); }}>취소</button>}
-        </div>
-        {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
-      </form>
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold dark:text-white">여행상품(투어 상품) 관리</h1>
+        <Link href="/admin/tour-products/new" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700" aria-label="여행상품 등록">+ 여행상품 등록</Link>
+      </div>
       {loading ? (
-        <div className="text-center py-4 text-gray-500">불러오는 중...</div>
+        <div className="text-center py-8 text-gray-500">불러오는 중...</div>
+      ) : error ? (
+        <div className="text-center py-8 text-red-500">{error}</div>
       ) : (
-        <table className="w-full bg-white rounded shadow text-sm">
+        <table className="w-full bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
           <thead>
-            <tr className="bg-gray-100 text-gray-700">
-              <th className="py-2 px-2 text-left">상품명</th>
-              <th className="py-2 px-2 text-left">골프장</th>
-              <th className="py-2 px-2 text-left">숙소</th>
-              <th className="py-2 px-2 text-left">설명</th>
-              <th className="py-2 px-2">관리</th>
+            <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+              <th className="py-2 px-4 text-left">상품명</th>
+              <th className="py-2 px-4 text-left">골프장</th>
+              <th className="py-2 px-4 text-left">숙소</th>
+              <th className="py-2 px-4 text-left">일정</th>
+              <th className="py-2 px-4">관리</th>
             </tr>
           </thead>
           <tbody>
             {products.map((p) => (
-              <tr key={p.id} className="border-t border-gray-200">
-                <td className="py-1 px-2">{p.name}</td>
-                <td className="py-1 px-2">{p.golf_course}</td>
-                <td className="py-1 px-2">{p.hotel}</td>
-                <td className="py-1 px-2">{p.description}</td>
-                <td className="py-1 px-2 flex gap-1">
-                  <button className="text-blue-700 underline" onClick={() => handleEdit(p)} aria-label="수정">수정</button>
-                  <button className="text-red-600 underline" onClick={() => handleDelete(p.id)} aria-label="삭제">삭제</button>
+              <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
+                <td className="py-2 px-4 dark:text-gray-100">
+                  <Link href={`/admin/tour-products/${p.id}`} className="underline text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-100">
+                    {p.name}
+                  </Link>
+                </td>
+                <td className="py-2 px-4 dark:text-gray-100">{p.golf_course}</td>
+                <td className="py-2 px-4 dark:text-gray-100">{p.hotel}</td>
+                <td className="py-2 px-4 dark:text-gray-100">{p.date}</td>
+                <td className="py-2 px-4 flex gap-2">
+                  <Link href={`/admin/tour-products/${p.id}/edit`} className="text-blue-800 dark:text-blue-400 underline hover:text-blue-600 focus:text-blue-600 dark:hover:text-blue-300 dark:focus:text-blue-300" aria-label="수정">수정</Link>
+                  <Link href={`/admin/tour-products/${p.id}`} className="text-blue-700 underline" aria-label="상세">상세</Link>
+                  <Link href={`/admin/tour-products/${p.id}/schedule`} className="text-blue-700 underline" aria-label="일정표">일정표</Link>
+                  <button className="text-red-600 dark:text-red-400 underline hover:text-red-400 focus:text-red-400" aria-label="삭제" onClick={() => handleDelete(p.id)}>삭제</button>
                 </td>
               </tr>
             ))}
