@@ -9,6 +9,7 @@ import ScheduleManager from "@/components/ScheduleManager";
 import TeeTimeManager from "@/components/TeeTimeManager";
 import BoardingScheduleManager from "@/components/BoardingScheduleManager";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
+import ProductSchedulePreview from "@/components/ProductSchedulePreview";
 
 const TABS = [
   { key: "participants", label: "투어별 참가자 관리" },
@@ -35,6 +36,7 @@ const TourDetailPage: React.FC = () => {
   const [tour, setTour] = useState<Tour | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [showProductPreview, setShowProductPreview] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTour = async () => {
@@ -64,6 +66,13 @@ const TourDetailPage: React.FC = () => {
             {tab.label}
           </button>
         ))}
+        <button
+          className="ml-auto bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
+          onClick={() => setShowProductPreview(true)}
+          aria-label="상품정보(일정표) 미리보기"
+        >
+          상품정보(일정표) 미리보기
+        </button>
       </div>
       <div className="bg-gray-50 dark:bg-gray-800 rounded-b-lg p-6 min-h-[200px]">
         {activeTab === "participants" && <ParticipantsManager tourId={tourId} />}
@@ -104,6 +113,20 @@ const TourDetailPage: React.FC = () => {
           </>
         )}
       </div>
+      {showProductPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
+              onClick={() => setShowProductPreview(false)}
+              aria-label="미리보기 닫기"
+            >
+              ×
+            </button>
+            <ProductSchedulePreview tourId={tourId} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

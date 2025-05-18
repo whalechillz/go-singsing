@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Lock, Printer } from 'lucide-react';
+import ProductSchedulePreview from '@/components/ProductSchedulePreview';
 
 // 문서 타입 정의
 interface Document {
@@ -134,9 +135,12 @@ export default function DocumentPage() {
         </div>
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="prose max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: document.content }} />
+            {params.type === 'product-info' ? (
+              <ProductSchedulePreview tourId={params.tourId as string} />
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: document.content }} />
+            )}
           </div>
-
           <div className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-500">
             <p>최종 수정일: {new Date(document.updated_at).toLocaleString('ko-KR')}</p>
           </div>
