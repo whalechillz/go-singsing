@@ -17,7 +17,7 @@ interface Tour {
 
 // 문서 타입별 설정
 const documentTypes = {
-  'product-info': { name: '상품 정보', icon: FileText },
+  'product-info': { name: '상품 정보 (일정표)', icon: FileText },
   'boarding-guide': { name: '탑승지 안내', icon: MapPin },
   'room-assignment': { name: '객실 배정', icon: Users },
   'rounding-timetable': { name: '라운딩 시간표', icon: Calendar },
