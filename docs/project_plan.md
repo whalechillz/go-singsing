@@ -14,6 +14,7 @@
 ## 3단계: 문서관리 > 상품정보(일정표) 자동 생성
 - ✅ 3단계 1차 완료: ProductSchedulePreview 컴포넌트 신규 생성, 투어/상품/일정 통합 fetch 및 미리보기, 프린트 버튼, TourDetailPage에 버튼/모달 추가
 - ✅ 3단계 최종 완료: 상품정보(일정표) 문서도 실시간 연동 방식으로 변경, /document/[tourId]/product-info에서 ProductSchedulePreview로 DB 최신 정보 자동 렌더링. 전체 문서 시스템 실시간 연동 구조로 통일.
+- ✅ 전체 product-info → tour-schedule로 폴더/파일/컴포넌트/라우트/DB type 값 일괄 변경, 네이밍 일관성 확보
 - 커밋 및 배포 완료 (main 브랜치)
 - 확인: `/admin/tours/[투어ID]` > 상단 '상품정보(일정표) 미리보기' 버튼
 

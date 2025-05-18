@@ -199,7 +199,7 @@ const GolfTourPortal = () => {
                     <div className="flex flex-col gap-3">
                       {/* 문서 버튼 목록 */}
                       {[
-                        { id: 'product-info', name: '상품 정보', desc: '일정, 식사, 골프장, 숙박 안내', badge: '고객용', icon: <FileText className="w-5 h-5 text-blue-600 mr-2" /> },
+                        { id: 'tour-schedule', name: '투어 일정표', desc: '일정, 식사, 골프장, 숙박 안내', badge: '고객용', icon: <FileText className="w-5 h-5 text-blue-600 mr-2" /> },
                         { id: 'boarding-guide', name: '탑승지 안내', desc: '탑승지 및 교통 정보', badge: '고객용', icon: <MapPin className="w-5 h-5 text-blue-600 mr-2" /> },
                         { id: 'room-assignment', name: '객실 배정', desc: '객실 배정표', badge: '고객용', icon: <Users className="w-5 h-5 text-blue-600 mr-2" /> },
                         { id: 'rounding-timetable', name: '라운딩 시간표', desc: '라운딩 조 편성', badge: '고객용', icon: <Calendar className="w-5 h-5 text-blue-600 mr-2" /> },

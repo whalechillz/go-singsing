@@ -5,6 +5,7 @@ const navItems = [
   { label: "투어 안내", href: "/" },
   { label: "상품 안내", href: "/product-info" },
   { label: "여행 서류", href: "/document" },
+  { label: "투어 일정표", href: "/tour-schedule" },
   // 필요시 추가
 ];
 

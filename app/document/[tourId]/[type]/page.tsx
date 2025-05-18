@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Lock, Printer } from 'lucide-react';
-import ProductSchedulePreview from '@/components/ProductSchedulePreview';
+import TourSchedulePreview from '@/components/TourSchedulePreview';
 
 // 문서 타입 정의
 interface Document {
@@ -18,7 +18,7 @@ interface Document {
 
 // 문서 타입별 설정
 const documentTypes = {
-  'product-info': { name: '상품 정보 (일정표)', icon: FileText },
+  'tour-schedule': { name: '투어 일정표', icon: FileText },
   'boarding-guide': { name: '탑승지 안내', icon: MapPin },
   'room-assignment': { name: '객실 배정', icon: Users },
   'rounding-timetable': { name: '라운딩 시간표', icon: Calendar },
@@ -135,8 +135,8 @@ export default function DocumentPage() {
         </div>
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="prose max-w-none">
-            {params.type === 'product-info' ? (
-              <ProductSchedulePreview tourId={params.tourId as string} />
+            {params.type === 'tour-schedule' ? (
+              <TourSchedulePreview tourId={params.tourId as string} />
             ) : (
               <div dangerouslySetInnerHTML={{ __html: document.content }} />
             )}
