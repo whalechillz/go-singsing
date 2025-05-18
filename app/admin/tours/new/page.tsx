@@ -1,5 +1,5 @@
 "use client";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -32,9 +32,26 @@ const TourNewPage: React.FC = () => {
   });
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from("tour_products").select("id, name, hotel").then(({ data }) => {
+      setProducts(data || []);
+    });
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleGolfCourseChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    const selectedProduct = products.find((p) => p.id === selectedId);
+    setForm({
+      ...form,
+      golf_course: selectedProduct ? selectedProduct.name : "",
+      accommodation: selectedProduct ? selectedProduct.hotel : "",
+    });
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -58,7 +75,7 @@ const TourNewPage: React.FC = () => {
 
   return (
     <div className="max-w-lg mx-auto bg-white dark:bg-gray-900 rounded-lg shadow p-8">
-      <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">투어 생성</h2>
+      <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">투어 스케쥴 생성</h2>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">제목</span>
@@ -80,7 +97,12 @@ const TourNewPage: React.FC = () => {
         </div>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">골프장</span>
-          <input name="golf_course" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.golf_course} onChange={handleChange} required />
+          <select name="golf_course" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={products.find(p => p.name === form.golf_course)?.id || ""} onChange={handleGolfCourseChange} required>
+            <option value="">골프장(투어 상품) 선택</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
         </label>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">숙소</span>
@@ -96,14 +118,6 @@ const TourNewPage: React.FC = () => {
             <input name="max_participants" type="number" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.max_participants} onChange={handleChange} required />
           </label>
         </div>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">포함사항</span>
-          <textarea name="includes" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.includes} onChange={handleChange} />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">불포함사항</span>
-          <textarea name="excludes" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.excludes} onChange={handleChange} />
-        </label>
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700 mt-4" disabled={loading}>{loading ? "저장 중..." : "저장"}</button>
       </form>
