@@ -17,6 +17,8 @@ type Tour = {
   end_date?: string;
   golf_course?: string;
   accommodation?: string;
+  included?: string;
+  not_included?: string;
 };
 
 type Props = {
@@ -29,8 +31,8 @@ const rows = [
   { label: "일정", get: (p: any, t: any) => t?.start_date && t?.end_date ? `${t.start_date} ~ ${t.end_date}` : "-" },
   { label: "골프장", get: (p: any, t: any) => p?.golf_course || t?.golf_course || "-" },
   { label: "숙소", get: (p: any, t: any) => p?.accommodation || t?.accommodation || "-" },
-  { label: "포함 사항", get: (p: any, t: any) => p?.included || "-" },
-  { label: "불포함 사항", get: (p: any, t: any) => p?.not_included || "-" },
+  { label: "포함 사항", get: (p: any, t: any) => t?.included || "-" },
+  { label: "불포함 사항", get: (p: any, t: any) => t?.not_included || "-" },
 ];
 
 const ProductInfoBox: React.FC<Props> = ({ product, tour }) => {
