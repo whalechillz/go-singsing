@@ -152,39 +152,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
 
   return (
     <div className="mb-8">
-      {/* 객실 타입/수량 추가 폼 */}
-      <h2 className="text-lg font-semibold mb-4 text-gray-900">객실 타입/수량 관리</h2>
-      <div className="flex flex-col md:flex-row gap-2 mb-4">
-        <input type="text" placeholder="객실 타입 (예: 2인실)" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800 text-left" value={newRoomType} onChange={e => setNewRoomType(e.target.value)} />
-        <input type="number" min={1} className="border border-gray-300 rounded px-2 py-1 w-24 text-gray-800 text-center" value={newRoomCount} onChange={e => setNewRoomCount(Number(e.target.value))} />
-        <button className="bg-blue-800 text-white px-4 py-1 rounded font-semibold hover:bg-blue-900 transition-colors text-center" onClick={handleAddRooms}>추가</button>
-      </div>
-      {/* 객실 타입/수량 목록 테이블 */}
-      <div className="overflow-x-auto mb-6">
-        <table className="w-full bg-white rounded shadow text-sm">
-          <thead>
-            <tr className="bg-gray-100 text-gray-700">
-              <th className="py-2 px-2 text-left">객실 타입</th>
-              <th className="py-2 px-2 text-center">정원</th>
-              <th className="py-2 px-2 text-center">객실 수</th>
-              <th className="py-2 px-2 text-right">관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rooms.map(room => (
-              <tr key={room.room_name} className="border-t border-gray-200">
-                <td className="py-1 px-2 text-left">{room.room_type}</td>
-                <td className="py-1 px-2 text-center">{room.capacity}</td>
-                <td className="py-1 px-2 text-center">{room.quantity}</td>
-                <td className="py-1 px-2 text-right">
-                  <button className="text-red-600 underline hover:text-red-800" onClick={() => handleDeleteRoom(room.room_name)} aria-label="객실 삭제">삭제</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {/* 객실별 참가자 그룹핑 */}
       <h2 className="text-lg font-semibold mb-4 text-gray-900">객실별 참가자 그룹핑</h2>
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
