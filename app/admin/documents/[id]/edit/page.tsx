@@ -8,6 +8,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import BoardingGuideForm from "@/components/BoardingGuideForm";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
+import TourSchedulePreview from "@/components/TourSchedulePreview";
 
 // 문서 타입 정의
 interface Document {
@@ -254,6 +255,14 @@ export default function EditDocumentPage() {
               <BoardingGuideForm tourId={selectedTour} />
               <div className="mb-8" />
               <BoardingGuidePreview tourId={selectedTour} />
+            </>
+          )}
+
+          {/* 투어 일정표 미리보기: tour-schedule 유형일 때만 노출 */}
+          {selectedType === "tour-schedule" && selectedTour && (
+            <>
+              <div className="mb-8" />
+              <TourSchedulePreview tourId={selectedTour} />
             </>
           )}
 

@@ -42,4 +42,16 @@
 - 여행상품(투어 상품) 관리 페이지(`/admin/tour-products`)를 투어 관리와 동일한 구조/디자인으로 리팩토링
   - 상단 제목, 우상단 등록 버튼, 리스트 테이블, 관리(수정/삭제/상세/일정표) 버튼, 스타일 완전 통일
   - 커밋 메시지: `refactor: 여행상품(투어 상품) 관리 페이지 투어 관리와 동일한 구조/디자인으로 리팩토링`
-  - main 브랜치로 푸시, Vercel 자동 배포 트리거 
+  - main 브랜치로 푸시, Vercel 자동 배포 트리거
+
+- **투어 일정표 미리보기(프린트 스타일) 연동**
+  - 문서 에디트 페이지(app/admin/documents/[id]/edit/page.tsx)에서 문서 유형이 '투어 일정표'일 때, 하단에 <TourSchedulePreview> 컴포넌트가 실시간으로 렌더링되도록 추가
+  - 기존 BoardingGuidePreview와 동일한 UX로, 입력한 투어/일정 정보가 프린트 스타일로 미리보기 가능
+  - TailwindCSS 기반, 향후 디자인/데이터 확장 가능
+  - 변경 파일: app/admin/documents/[id]/edit/page.tsx
+
+- **남은 작업**
+  - TourSchedulePreview/TourScheduleInfo의 디자인 및 데이터 구조를 첨부 HTML 예시(2025-04-14-순천/tour-schedules.html) 스타일로 고도화
+  - 상품/일정/유의사항/이용안내 등 섹션별 Tailwind 스타일 적용 및 정보 추가
+  - 입력값(문서 내용 등)과 미리보기 데이터 흐름 개선(필요시)
+  - 프린트 최적화 및 반응형 개선 
