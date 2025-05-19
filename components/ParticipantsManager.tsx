@@ -215,8 +215,8 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
         {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-gray-400 transition-colors" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
       </form>
       <div className="flex flex-col md:flex-row gap-2 items-center mb-4">
-        <button type="button" onClick={handleDownloadExcel} className="bg-blue-100 text-blue-700 px-3 py-1 rounded font-medium hover:bg-blue-200 transition-colors">엑셀 다운로드</button>
-        <label className="relative bg-green-600 text-white px-3 py-1 rounded cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-green-400 hover:bg-green-700 transition-colors">
+        <button type="button" onClick={handleDownloadExcel} className="appearance-none bg-blue-100 text-blue-700 px-3 py-1 rounded font-medium hover:bg-blue-200 transition-colors">엑셀 다운로드</button>
+        <label className="appearance-none bg-green-600 text-white px-3 py-1 rounded cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-green-400 hover:bg-green-700 transition-colors shadow-none border-none bg-none">
           엑셀 업로드
           <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" aria-label="엑셀 업로드" />
         </label>
