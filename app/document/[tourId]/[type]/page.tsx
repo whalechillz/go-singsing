@@ -138,7 +138,7 @@ export default function DocumentPage() {
             {params.type === 'tour-schedule' ? (
               <TourSchedulePreview tourId={params.tourId as string} />
             ) : (
-              <div dangerouslySetInnerHTML={{ __html: document.content }} />
+            <div dangerouslySetInnerHTML={{ __html: document.content }} />
             )}
           </div>
           <div className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-500">

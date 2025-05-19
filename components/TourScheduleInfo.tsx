@@ -66,7 +66,11 @@ const TourScheduleInfo: React.FC<Props> = ({ tour, schedules }) => {
                 <div className="text-blue-800 font-bold text-lg">{s.date} {s.title}</div>
                 {s.tee_time && <div className="text-sm text-blue-600 font-semibold">티오프: {s.tee_time}</div>}
               </div>
-              <div className="mb-2 text-gray-800 text-sm">{s.description}</div>
+              <div className="mb-2 text-gray-800 text-sm">
+                {s.description?.split(/\r?\n/).map((line, i) => (
+                  <li key={i} className="list-none mb-0.5">{line}</li>
+                ))}
+              </div>
               <div className="flex gap-4 mb-2">
                 <div className="bg-blue-50 rounded px-3 py-1 text-xs font-semibold text-blue-800">조식: {s.breakfast ? 'O' : 'X'}</div>
                 <div className="bg-blue-50 rounded px-3 py-1 text-xs font-semibold text-blue-800">중식: {s.lunch ? 'O' : 'X'}</div>
