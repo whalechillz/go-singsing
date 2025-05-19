@@ -24,6 +24,7 @@ type Tour = {
   golf_course?: string;
   accommodation?: string;
   reservation_notice?: string;
+  schedule_notice?: string;
   // 기타 필요한 필드
 };
 
