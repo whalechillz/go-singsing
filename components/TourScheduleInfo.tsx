@@ -54,9 +54,6 @@ const TourScheduleInfo: React.FC<Props> = ({ tour, schedules }) => {
   if (!schedules?.length) return null;
   return (
     <div className="mb-8">
-      <div className="section-title text-lg font-bold mb-2 text-blue-900 border-b-2 border-blue-800 pb-1">{tour.title}</div>
-      <div className="text-gray-700 mb-4">{tour.start_date} ~ {tour.end_date}</div>
-      <div className="text-base font-semibold mb-2">일정 안내</div>
       <div className="space-y-6">
         {schedules.map((s, idx) => {
           const menu = getMenu(s.date || "");
