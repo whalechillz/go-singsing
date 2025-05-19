@@ -78,4 +78,7 @@
 - ✅ 완료: 사이드바(가방 아이콘) 하위 메뉴 '투어 관리' → '투어 스케쥴 관리'로 변경
 - 상위 메뉴(가방 아이콘 옆)는 '투어 관리'로 그대로 유지
 - 관련 파일: components/AdminSidebarLayout.tsx, components/AdminNavbar.tsx, components/Dashboard.tsx, app/layout.tsx
-- 커밋 및 배포 예정 
+- 커밋 및 배포 예정
+
+- ✅ 완료: 투어별 참가자 관리 탭에 엑셀 다운로드/업로드 버튼을 추가 버튼과 같은 계층(아래)에 나란히 버튼 UI로 배치, '선택된 파일 없음'은 업로드 버튼 옆에 한 번만 노출되도록 개선
+- 관련 파일: components/ParticipantsManager.tsx 

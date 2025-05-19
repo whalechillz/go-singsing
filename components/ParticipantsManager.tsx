@@ -214,13 +214,13 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-blue-900 transition-colors">{editingId ? "수정" : "추가"}</button>
         {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-gray-400 transition-colors" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
       </form>
-      <div className="w-full flex flex-col md:flex-row gap-2 items-center justify-center mb-2">
-        <button type="button" onClick={handleDownloadExcel} className="bg-blue-100 text-blue-700 px-3 py-1 rounded font-medium toolbar-button hover:bg-blue-200 transition-colors w-full md:w-auto">엑셀 다운로드</button>
-        <label className="relative bg-blue-700 text-white px-3 py-1 rounded cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <div className="flex flex-col md:flex-row gap-2 items-center mb-4">
+        <button type="button" onClick={handleDownloadExcel} className="bg-blue-100 text-blue-700 px-3 py-1 rounded font-medium hover:bg-blue-200 transition-colors">엑셀 다운로드</button>
+        <label className="relative bg-blue-700 text-white px-3 py-1 rounded cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 hover:bg-blue-800 transition-colors">
           엑셀 업로드
           <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" aria-label="엑셀 업로드" />
         </label>
-        <span className="text-xs text-gray-800 dark:text-gray-200 font-bold bg-white border px-3 py-1 rounded min-w-[120px] text-center" aria-live="polite" style={{ opacity: 1, zIndex: 1000 }}>
+        <span className="text-xs text-gray-800 dark:text-gray-200 font-bold bg-white border px-3 py-1 rounded min-w-[120px] text-center" aria-live="polite">
           {selectedFileName || "선택된 파일 없음"}
         </span>
       </div>
