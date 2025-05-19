@@ -81,4 +81,7 @@
 - 커밋 및 배포 예정
 
 - ✅ 완료: 투어별 참가자 관리 탭에 엑셀 다운로드/업로드 버튼을 추가 버튼과 같은 계층(아래)에 나란히 버튼 UI로 배치, '선택된 파일 없음'은 업로드 버튼 옆에 한 번만 노출되도록 개선
-- 관련 파일: components/ParticipantsManager.tsx 
+- 관련 파일: components/ParticipantsManager.tsx
+
+- ✅ 완료: 투어별 객실 배정 UI를 투어별 참가자 관리와 동일하게 폰트, 색상, 버튼, 입력, 테이블, 그룹핑 영역 등 전체적으로 Tailwind 스타일로 통일, 글자 정렬(이름/연락처/상태 등은 text-left, 드롭다운은 text-right)도 명확히 적용
+- 관련 파일: components/RoomAssignmentManager.tsx 
