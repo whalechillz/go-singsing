@@ -71,3 +71,9 @@
 - DB 마이그레이션: singsing_tours 테이블에 reservation_notice 컬럼 추가
 - 관련 코드(app/admin/tours/new/page.tsx, app/admin/tours/[tourId]/edit/page.tsx) 수정 및 커밋/배포 완료
 - 남은 작업 없음 (완료) 
+
+## 5단계: 네비게이션/사이드바 메뉴명 개선
+- ✅ 완료: 사이드바(가방 아이콘) 하위 메뉴 '투어 관리' → '투어 스케쥴 관리'로 변경
+- 상위 메뉴(가방 아이콘 옆)는 '투어 관리'로 그대로 유지
+- 관련 파일: components/AdminSidebarLayout.tsx, components/AdminNavbar.tsx, components/Dashboard.tsx, app/layout.tsx
+- 커밋 및 배포 예정 

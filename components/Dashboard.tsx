@@ -94,7 +94,7 @@ const Dashboard = () => {
     { id: 'tour-status', label: '투어 현황표', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/tours' },
     {
       id: 'tours',
-      label: '투어 관리',
+      label: '투어 스케쥴 관리',
       icon: <Briefcase className="w-5 h-5" />,
       subMenu: [
         { id: 'participants', label: '참가자 관리', href: '/admin/participants' },

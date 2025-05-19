@@ -3,7 +3,7 @@ import "./globals.css";
 import AppHeader, { NavItem } from "@/components/AppHeader";
 
 const navItems: NavItem[] = [
-  { label: "투어 관리", href: "/admin/tours" },
+  { label: "투어 스케쥴 관리", href: "/admin/tours" },
   { label: "참가자 관리", href: "/admin/participants" },
   { label: "객실 배정", href: "/admin/rooms" },
   { label: "티오프", href: "/admin/tee-time" },
