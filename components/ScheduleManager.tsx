@@ -11,6 +11,9 @@ type Schedule = {
   meal_lunch: boolean;
   meal_dinner: boolean;
   tour_id: string;
+  menu_breakfast: string;
+  menu_lunch: string;
+  menu_dinner: string;
 };
 
 type ScheduleForm = {
@@ -20,9 +23,12 @@ type ScheduleForm = {
   meal_breakfast: boolean;
   meal_lunch: boolean;
   meal_dinner: boolean;
+  menu_breakfast: string;
+  menu_lunch: string;
+  menu_dinner: string;
 };
 
-const initialForm: ScheduleForm = { date: "", title: "", description: "", meal_breakfast: false, meal_lunch: false, meal_dinner: false };
+const initialForm: ScheduleForm = { date: "", title: "", description: "", meal_breakfast: false, meal_lunch: false, meal_dinner: false, menu_breakfast: "", menu_lunch: "", menu_dinner: "" };
 
 type Props = { tourId: string; tour: any };
 
@@ -62,8 +68,15 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
       setError("날짜와 제목은 필수입니다.");
       return;
     }
+    const payload = {
+      ...form,
+      tour_id: tourId,
+      menu_breakfast: form.meal_breakfast ? form.menu_breakfast : "",
+      menu_lunch: form.meal_lunch ? form.menu_lunch : "",
+      menu_dinner: form.meal_dinner ? form.menu_dinner : "",
+    };
     if (editingId) {
-      const { error } = await supabase.from("singsing_schedules").update(form).eq("id", editingId);
+      const { error } = await supabase.from("singsing_schedules").update(payload).eq("id", editingId);
       if (error) setError(error.message);
       else {
         setEditingId(null);
@@ -71,7 +84,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
         fetchSchedules();
       }
     } else {
-      const { error } = await supabase.from("singsing_schedules").insert([{ ...form, tour_id: tourId }]);
+      const { error } = await supabase.from("singsing_schedules").insert([payload]);
       if (error) setError(error.message);
       else {
         setForm(initialForm);
@@ -89,6 +102,9 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
       meal_breakfast: !!s.meal_breakfast,
       meal_lunch: !!s.meal_lunch,
       meal_dinner: !!s.meal_dinner,
+      menu_breakfast: s.menu_breakfast || "",
+      menu_lunch: s.menu_lunch || "",
+      menu_dinner: s.menu_dinner || "",
     });
   };
 
@@ -115,12 +131,21 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
         <label className="flex items-center gap-1">
           <input type="checkbox" name="meal_breakfast" checked={form.meal_breakfast} onChange={handleChange} />조식
         </label>
+        {form.meal_breakfast && (
+          <textarea name="menu_breakfast" value={form.menu_breakfast} onChange={handleChange} placeholder="조식 메뉴" className="border rounded px-2 py-1 flex-1 min-h-[32px]" aria-label="조식 메뉴" />
+        )}
         <label className="flex items-center gap-1">
           <input type="checkbox" name="meal_lunch" checked={form.meal_lunch} onChange={handleChange} />중식
         </label>
+        {form.meal_lunch && (
+          <textarea name="menu_lunch" value={form.menu_lunch} onChange={handleChange} placeholder="중식 메뉴" className="border rounded px-2 py-1 flex-1 min-h-[32px]" aria-label="중식 메뉴" />
+        )}
         <label className="flex items-center gap-1">
           <input type="checkbox" name="meal_dinner" checked={form.meal_dinner} onChange={handleChange} />석식
         </label>
+        {form.meal_dinner && (
+          <textarea name="menu_dinner" value={form.menu_dinner} onChange={handleChange} placeholder="석식 메뉴" className="border rounded px-2 py-1 flex-1 min-h-[32px]" aria-label="석식 메뉴" />
+        )}
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
         {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm(initialForm); }}>취소</button>}
       </form>
