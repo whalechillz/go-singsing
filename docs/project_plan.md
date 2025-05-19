@@ -63,13 +63,11 @@
 - main 브랜치 커밋 및 배포 완료
 - 남은 작업 없음 (완료) 
 
-## 2025-05-20
+## 2025-05-20 (2)
 
-- 투어별 일정관리(투어 관리)에서 '기타 안내문구(일정표 하단)' 필드 추가 및 CRUD, DB 반영
-- 여행상품관리(tour_products)에서는 해당 필드 삭제 및 CRUD/DB 반영
-- 상단 상품/예약 안내 + 예약 안내(파란박스) 통합(TourInfoBox.tsx)
-- 하단 이용안내(TourUsageBox.tsx)만 tour_products에서 관리
-- 파일명 리팩토링: TourInfoBox, TourNoticeBox, TourUsageBox 등으로 단순화
-- import 경로 및 사용처 전체 반영
-- main 브랜치 커밋 및 배포 완료
-- 남은 작업: 투어별 일정관리에서 기타 안내문구 입력/수정 UI 및 DB 연동, 여행상품관리에서 관련 필드/코드 완전 삭제 
+- 투어 관리(신규/수정) 폼에서 '기타 안내문구(일정표 하단)' → '예약 안내 사항' 필드로 변경 및 분리
+  - 예약 안내 사항: 여러 줄 입력, DB 컬럼(reservation_notice) 추가 및 연동
+  - 기타 안내문구(일정표 하단): 투어별 일정관리에서만 입력/노출
+- DB 마이그레이션: singsing_tours 테이블에 reservation_notice 컬럼 추가
+- 관련 코드(app/admin/tours/new/page.tsx, app/admin/tours/[tourId]/edit/page.tsx) 수정 및 커밋/배포 완료
+- 남은 작업 없음 (완료) 

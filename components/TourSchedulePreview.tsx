@@ -23,6 +23,7 @@ type Tour = {
   tour_product_id?: string;
   golf_course?: string;
   accommodation?: string;
+  reservation_notice?: string;
   // 기타 필요한 필드
 };
 
@@ -100,7 +101,7 @@ const TourSchedulePreview: React.FC<Props> = ({ tourId }) => {
     <div className="max-w-3xl mx-auto bg-white p-6 rounded shadow print:bg-white print:shadow-none">
       <h2 className="text-2xl font-bold mb-2">투어 일정표</h2>
       {/* 1. 상품/예약 안내 통합 */}
-      <TourInfoBox tour={{ ...tour, notice: dummyNotices }} />
+      <TourInfoBox tour={{ ...tour, notice: tour.reservation_notice?.split('\n').filter(Boolean) || [] }} />
       {/* 2. 일정 안내 */}
       <TourScheduleInfo tour={tour} schedules={schedules} />
       {/* 3. 이용 안내 */}
