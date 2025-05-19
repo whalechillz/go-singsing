@@ -14,6 +14,7 @@ type Schedule = {
   menu_breakfast: string;
   menu_lunch: string;
   menu_dinner: string;
+  schedule_notice?: string;
 };
 
 type ScheduleForm = {
@@ -26,9 +27,10 @@ type ScheduleForm = {
   menu_breakfast: string;
   menu_lunch: string;
   menu_dinner: string;
+  schedule_notice?: string;
 };
 
-const initialForm: ScheduleForm = { date: "", title: "", description: "", meal_breakfast: false, meal_lunch: false, meal_dinner: false, menu_breakfast: "", menu_lunch: "", menu_dinner: "" };
+const initialForm: ScheduleForm = { date: "", title: "", description: "", meal_breakfast: false, meal_lunch: false, meal_dinner: false, menu_breakfast: "", menu_lunch: "", menu_dinner: "", schedule_notice: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다." };
 
 type Props = { tourId: string; tour: any };
 
@@ -74,6 +76,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
       menu_breakfast: form.meal_breakfast ? form.menu_breakfast : "",
       menu_lunch: form.meal_lunch ? form.menu_lunch : "",
       menu_dinner: form.meal_dinner ? form.menu_dinner : "",
+      schedule_notice: form.schedule_notice,
     };
     if (editingId) {
       const { error } = await supabase.from("singsing_schedules").update(payload).eq("id", editingId);
@@ -105,6 +108,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
       menu_breakfast: s.menu_breakfast || "",
       menu_lunch: s.menu_lunch || "",
       menu_dinner: s.menu_dinner || "",
+      schedule_notice: s.schedule_notice || "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
     });
   };
 
@@ -146,6 +150,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
         {form.meal_dinner && (
           <textarea name="menu_dinner" value={form.menu_dinner} onChange={handleChange} placeholder="석식 메뉴" className="border rounded px-2 py-1 flex-1 min-h-[32px]" aria-label="석식 메뉴" />
         )}
+        <textarea name="schedule_notice" value={form.schedule_notice} onChange={handleChange} placeholder="기타 안내문구 (일정표 하단)" className="border rounded px-2 py-1 flex-1 min-h-[32px]" aria-label="기타 안내문구" />
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
         {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm(initialForm); }}>취소</button>}
       </form>

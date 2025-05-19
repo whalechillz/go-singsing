@@ -20,6 +20,7 @@ type Schedule = {
   menu_breakfast?: string;
   menu_lunch?: string;
   menu_dinner?: string;
+  schedule_notice?: string;
 };
 
 type Props = {
@@ -84,6 +85,14 @@ const TourScheduleInfo: React.FC<Props> = ({ tour, schedules }) => {
           </div>
         ))}
       </div>
+      {/* 일정별 기타 안내문구(일정표 하단) */}
+      {schedules.some(s => s.schedule_notice) && (
+        <div className="mt-6 bg-red-50 border-l-4 border-red-200 p-4 text-gray-700 text-sm rounded">
+          {schedules.filter(s => s.schedule_notice).map((s, i) => (
+            <div key={i} className="mb-1">{s.schedule_notice}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
