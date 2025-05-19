@@ -12,9 +12,9 @@ type Schedule = {
   date: string;
   title: string;
   description?: string;
-  breakfast?: boolean;
-  lunch?: boolean;
-  dinner?: boolean;
+  meal_breakfast?: boolean;
+  meal_lunch?: boolean;
+  meal_dinner?: boolean;
   tee_time?: string;
   course?: string;
   menu_breakfast?: string;
@@ -67,9 +67,9 @@ const TourScheduleInfo: React.FC<Props> = ({ tour, schedules }) => {
               ))}
             </div>
             <div className="flex gap-4 mb-2">
-              <div className="bg-blue-50 rounded px-3 py-1 text-xs font-semibold text-blue-800">조식: {s.breakfast ? 'O' : 'X'}</div>
-              <div className="bg-blue-50 rounded px-3 py-1 text-xs font-semibold text-blue-800">중식: {s.lunch ? 'O' : 'X'}</div>
-              <div className="bg-blue-50 rounded px-3 py-1 text-xs font-semibold text-blue-800">석식: {s.dinner ? 'O' : 'X'}</div>
+              <div className="bg-blue-50 rounded px-3 py-1 text-xs font-semibold text-blue-800">조식: {s.meal_breakfast ? 'O' : 'X'}</div>
+              <div className="bg-blue-50 rounded px-3 py-1 text-xs font-semibold text-blue-800">중식: {s.meal_lunch ? 'O' : 'X'}</div>
+              <div className="bg-blue-50 rounded px-3 py-1 text-xs font-semibold text-blue-800">석식: {s.meal_dinner ? 'O' : 'X'}</div>
             </div>
             {(s.menu_breakfast || s.menu_lunch || s.menu_dinner) && (
               <div className="mt-2 bg-gray-50 rounded p-3 text-xs">

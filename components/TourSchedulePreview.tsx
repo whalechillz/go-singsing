@@ -24,6 +24,7 @@ type Tour = {
   golf_course?: string;
   accommodation?: string;
   reservation_notice?: string;
+  schedule_notice?: string;
   // 기타 필요한 필드
 };
 
@@ -106,6 +107,12 @@ const TourSchedulePreview: React.FC<Props> = ({ tourId }) => {
       <TourScheduleInfo tour={tour} schedules={schedules} />
       {/* 3. 이용 안내 */}
       <TourUsageBox usage={dummyUsage} />
+      {/* 일정표 하단 기타 안내문구 */}
+      {tour?.schedule_notice && (
+        <div className="mt-6 bg-red-50 border-l-4 border-red-200 p-4 text-gray-700 text-sm rounded">
+          {tour.schedule_notice}
+        </div>
+      )}
       <div className="mt-6 flex justify-end print:hidden">
         <button className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800" onClick={handlePrint} aria-label="프린트">프린트</button>
       </div>

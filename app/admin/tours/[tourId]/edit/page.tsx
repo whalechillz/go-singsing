@@ -15,6 +15,7 @@ type TourForm = {
   excludes: string;
   driver_name: string;
   reservation_notice?: string;
+  schedule_notice?: string;
 };
 
 type Params = { tourId?: string };
@@ -35,6 +36,7 @@ const TourEditPage: React.FC = () => {
     excludes: "",
     driver_name: "",
     reservation_notice: `티오프 시간: 사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다.\n객실 배정: 예약 접수 순서대로 진행되오니 참고 부탁드립니다.\n식사 서비스: 불참 시에도 별도 환불이 불가하오니 양해 바랍니다.\n리무진 좌석: 가는 날 좌석은 오는 날에도 동일하게 이용해 주세요. 멀미 증상이 있으신 분은 사전 요청 시 앞좌석 배정 가능.`,
+    schedule_notice: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -53,6 +55,7 @@ const TourEditPage: React.FC = () => {
         start_date: data.start_date ? data.start_date.substring(0, 10) : "",
         end_date: data.end_date ? data.end_date.substring(0, 10) : "",
         reservation_notice: data.reservation_notice ?? `티오프 시간: 사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다.\n객실 배정: 예약 접수 순서대로 진행되오니 참고 부탁드립니다.\n식사 서비스: 불참 시에도 별도 환불이 불가하오니 양해 바랍니다.\n리무진 좌석: 가는 날 좌석은 오는 날에도 동일하게 이용해 주세요. 멀미 증상이 있으신 분은 사전 요청 시 앞좌석 배정 가능.`,
+        schedule_notice: data.schedule_notice ?? "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
       });
       setLoading(false);
     };
@@ -87,6 +90,7 @@ const TourEditPage: React.FC = () => {
       max_participants: form.max_participants ? Number(form.max_participants) : null,
       updated_at: new Date().toISOString(),
       reservation_notice: form.reservation_notice,
+      schedule_notice: form.schedule_notice,
     }).eq("id", tourId);
     setSaving(false);
     if (error) {
@@ -154,6 +158,10 @@ const TourEditPage: React.FC = () => {
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">예약 안내 사항</span>
           <textarea name="reservation_notice" value={form.reservation_notice} onChange={handleChange} placeholder="예약 안내 사항" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[64px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="예약 안내 사항" />
+        </label>
+        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+          <span className="font-medium">기타 안내문구 (일정표 하단)</span>
+          <textarea name="schedule_notice" value={form.schedule_notice} onChange={handleChange} placeholder="기타 안내문구 (일정표 하단)" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="기타 안내문구" />
         </label>
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700 mt-4" disabled={saving}>{saving ? "저장 중..." : "저장"}</button>
