@@ -152,13 +152,14 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
 
   return (
     <div className="mb-8">
+      {/* 객실 타입/수량 추가 폼 */}
       <h2 className="text-lg font-semibold mb-4 text-gray-900">객실 타입/수량 관리</h2>
-      {/* 객실 추가 */}
       <div className="flex flex-col md:flex-row gap-2 mb-4">
         <input type="text" placeholder="객실 타입 (예: 2인실)" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800 text-left" value={newRoomType} onChange={e => setNewRoomType(e.target.value)} />
         <input type="number" min={1} className="border border-gray-300 rounded px-2 py-1 w-24 text-gray-800 text-center" value={newRoomCount} onChange={e => setNewRoomCount(Number(e.target.value))} />
         <button className="bg-blue-800 text-white px-4 py-1 rounded font-semibold hover:bg-blue-900 transition-colors text-center" onClick={handleAddRooms}>추가</button>
       </div>
+      {/* 객실 타입/수량 목록 테이블 */}
       <div className="overflow-x-auto mb-6">
         <table className="w-full bg-white rounded shadow text-sm">
           <thead>
@@ -183,6 +184,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
           </tbody>
         </table>
       </div>
+      {/* 객실별 참가자 그룹핑 */}
       <h2 className="text-lg font-semibold mb-4 text-gray-900">객실별 참가자 그룹핑</h2>
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
@@ -191,25 +193,18 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
           {/* 객실별 그룹 */}
           {Object.entries(roomGroups).map(([roomName, members]) => (
             <div key={roomName} className="bg-gray-50 rounded-lg shadow p-4">
-              <div className="flex justify-between items-center mb-2">
-                <div className="font-bold text-blue-800 text-left">{displayRoomName(roomName)}</div>
-                <button className="text-red-500 text-xs" onClick={() => handleDeleteRoom(roomName)} aria-label="객실 삭제" tabIndex={0}>객실 삭제</button>
-              </div>
+              <div className="font-bold text-blue-800 mb-2">{displayRoomName(roomName)}</div>
               {members.length === 0 ? (
                 <div className="text-gray-400 text-sm">배정된 참가자가 없습니다.</div>
               ) : (
-                <ul className="divide-y divide-gray-200">
+                <ul>
                   {members.map(p => (
-                    <li key={p.id} className="flex items-center justify-between py-2">
-                      <div className="flex items-center gap-2 text-left">
-                        <span className="font-semibold text-gray-900">{p.name}</span>
-                        <span className="ml-2 text-gray-500 text-xs">{p.phone}</span>
-                        <span className="ml-2 text-gray-500 text-xs">{p.team_name}</span>
-                        <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${roomTypeColors[p.room_name?.split("-")[0] || "미배정"] || roomTypeColors["미배정"]}`}>{p.room_name || "미배정"}</span>
-                        {assignSuccess === p.id && <span className="ml-1 text-green-600 text-xs">✔</span>}
-                      </div>
+                    <li key={p.id} className="grid grid-cols-5 gap-2 items-center py-2">
+                      <span className="col-span-2 text-left font-semibold text-gray-900">{p.name}</span>
+                      <span className="text-left text-gray-500 text-xs">{p.phone}</span>
+                      <span className="text-left text-gray-500 text-xs">{p.team_name}</span>
                       <select
-                        className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
+                        className="col-span-1 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
                         value={p.room_name || ""}
                         onChange={e => handleAssignRoom(p.id, e.target.value)}
                         aria-label="객실 선택"
@@ -226,23 +221,19 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
             </div>
           ))}
           {/* 미배정 */}
-          <div className="bg-yellow-50 rounded-lg shadow p-4">
-            <div className="font-bold text-yellow-800 mb-2 text-left">미배정</div>
+          <div className="bg-gray-50 rounded-lg shadow p-4">
+            <div className="font-bold text-gray-700 mb-2">미배정</div>
             {unassigned.length === 0 ? (
               <div className="text-gray-400 text-sm">모든 참가자가 객실에 배정되었습니다.</div>
             ) : (
-              <ul className="divide-y divide-gray-200">
+              <ul>
                 {unassigned.map(p => (
-                  <li key={p.id} className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2 text-left">
-                      <span className="font-semibold text-gray-900">{p.name}</span>
-                      <span className="ml-2 text-gray-500 text-xs">{p.phone}</span>
-                      <span className="ml-2 text-gray-500 text-xs">{p.team_name}</span>
-                      <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${roomTypeColors[p.room_name?.split("-")[0] || "미배정"] || roomTypeColors["미배정"]}`}>{p.room_name || "미배정"}</span>
-                      {assignSuccess === p.id && <span className="ml-1 text-green-600 text-xs">✔</span>}
-                    </div>
+                  <li key={p.id} className="grid grid-cols-5 gap-2 items-center py-2">
+                    <span className="col-span-2 text-left font-semibold text-gray-900">{p.name}</span>
+                    <span className="text-left text-gray-500 text-xs">{p.phone}</span>
+                    <span className="text-left text-gray-500 text-xs">{p.team_name}</span>
                     <select
-                      className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
+                      className="col-span-1 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
                       value={p.room_name || ""}
                       onChange={e => handleAssignRoom(p.id, e.target.value)}
                       aria-label="객실 선택"
