@@ -100,7 +100,7 @@ const TourSchedulePreview: React.FC<Props> = ({ tourId }) => {
     <div className="max-w-3xl mx-auto bg-white p-6 rounded shadow print:bg-white print:shadow-none">
       <h2 className="text-2xl font-bold mb-2">투어 일정표</h2>
       {/* 1. 상품 정보 */}
-      <ProductInfoBox product={product} tour={tour} />
+      <ProductInfoBox tour={tour} />
       {/* 2. 예약 안내 */}
       <NoticeBox notices={dummyNotices} />
       {/* 3. 일정 안내 */}
