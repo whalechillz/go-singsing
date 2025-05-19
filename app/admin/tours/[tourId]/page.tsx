@@ -17,6 +17,7 @@ const TABS = [
   { key: "schedules", label: "투어별 일정관리" },
   { key: "tee-times", label: "티오프시간 관리" },
   { key: "pickup-points", label: "탑승 스케쥴 관리" },
+  { key: "schedule-preview", label: "투어 일정표 미리보기" },
 ];
 
 type Tour = {
@@ -36,7 +37,6 @@ const TourDetailPage: React.FC = () => {
   const [tour, setTour] = useState<Tour | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showPreview, setShowPreview] = useState<boolean>(false);
-  const [showProductPreview, setShowProductPreview] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTour = async () => {
@@ -66,13 +66,6 @@ const TourDetailPage: React.FC = () => {
             {tab.label}
           </button>
         ))}
-        <button
-          className="ml-auto bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
-          onClick={() => setShowProductPreview(true)}
-          aria-label="투어 일정표 미리보기"
-        >
-          투어 일정표 미리보기
-        </button>
       </div>
       <div className="bg-gray-50 dark:bg-gray-800 rounded-b-lg p-6 min-h-[200px]">
         {activeTab === "participants" && <ParticipantsManager tourId={tourId} />}
@@ -112,21 +105,8 @@ const TourDetailPage: React.FC = () => {
             )}
           </>
         )}
+        {activeTab === "schedule-preview" && <TourSchedulePreview tourId={tourId} />}
       </div>
-      {showProductPreview && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
-              onClick={() => setShowProductPreview(false)}
-              aria-label="미리보기 닫기"
-            >
-              ×
-            </button>
-            <TourSchedulePreview tourId={tourId} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

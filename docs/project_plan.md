@@ -84,4 +84,7 @@
 - 관련 파일: components/ParticipantsManager.tsx
 
 - ✅ 완료: 투어별 객실 배정 UI를 투어별 참가자 관리와 동일하게 폰트, 색상, 버튼, 입력, 테이블, 그룹핑 영역 등 전체적으로 Tailwind 스타일로 통일, 글자 정렬(이름/연락처/상태 등은 text-left, 드롭다운은 text-right)도 명확히 적용
-- 관련 파일: components/RoomAssignmentManager.tsx 
+- 관련 파일: components/RoomAssignmentManager.tsx
+
+- ✅ 완료: 상단 탭 메뉴에 '투어 일정표 미리보기'를 추가, 기존 모달 버튼/로직 제거, 탭 전환 방식으로 일관되게 동작하도록 개선
+- 관련 파일: app/admin/tours/[tourId]/page.tsx 
