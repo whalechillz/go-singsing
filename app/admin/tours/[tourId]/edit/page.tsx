@@ -14,6 +14,7 @@ type TourForm = {
   includes: string;
   excludes: string;
   driver_name: string;
+  schedule_notice?: string;
 };
 
 type Params = { tourId?: string };
@@ -33,6 +34,7 @@ const TourEditPage: React.FC = () => {
     includes: "",
     excludes: "",
     driver_name: "",
+    schedule_notice: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -50,6 +52,7 @@ const TourEditPage: React.FC = () => {
         max_participants: data.max_participants ?? "",
         start_date: data.start_date ? data.start_date.substring(0, 10) : "",
         end_date: data.end_date ? data.end_date.substring(0, 10) : "",
+        schedule_notice: data.schedule_notice ?? "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
       });
       setLoading(false);
     };
@@ -83,6 +86,7 @@ const TourEditPage: React.FC = () => {
       price: form.price ? Number(form.price) : null,
       max_participants: form.max_participants ? Number(form.max_participants) : null,
       updated_at: new Date().toISOString(),
+      schedule_notice: form.schedule_notice,
     }).eq("id", tourId);
     setSaving(false);
     if (error) {
@@ -146,6 +150,10 @@ const TourEditPage: React.FC = () => {
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">불포함사항</span>
           <textarea name="excludes" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.excludes} onChange={handleChange} />
+        </label>
+        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+          <span className="font-medium">기타 안내문구 (일정표 하단)</span>
+          <textarea name="schedule_notice" value={form.schedule_notice} onChange={handleChange} placeholder="기타 안내문구 (일정표 하단)" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="기타 안내문구" />
         </label>
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700 mt-4" disabled={saving}>{saving ? "저장 중..." : "저장"}</button>

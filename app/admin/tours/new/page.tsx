@@ -14,6 +14,7 @@ type TourForm = {
   includes: string;
   excludes: string;
   driver_name: string;
+  schedule_notice?: string;
 };
 
 const TourNewPage: React.FC = () => {
@@ -29,6 +30,7 @@ const TourNewPage: React.FC = () => {
     includes: "",
     excludes: "",
     driver_name: "",
+    schedule_notice: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
   });
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
@@ -63,6 +65,7 @@ const TourNewPage: React.FC = () => {
         ...form,
         price: form.price ? Number(form.price) : null,
         max_participants: form.max_participants ? Number(form.max_participants) : null,
+        schedule_notice: form.schedule_notice,
       },
     ]);
     setLoading(false);
@@ -118,6 +121,10 @@ const TourNewPage: React.FC = () => {
             <input name="max_participants" type="number" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.max_participants} onChange={handleChange} required />
           </label>
         </div>
+        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+          <span className="font-medium">기타 안내문구 (일정표 하단)</span>
+          <textarea name="schedule_notice" value={form.schedule_notice} onChange={handleChange} placeholder="기타 안내문구 (일정표 하단)" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="기타 안내문구" />
+        </label>
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700 mt-4" disabled={loading}>{loading ? "저장 중..." : "저장"}</button>
       </form>

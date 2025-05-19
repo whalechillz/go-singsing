@@ -7,8 +7,6 @@ const initialForm = {
   name: "",
   golf_course: "",
   hotel: "",
-  reservation_notice: "",
-  schedule_notice: "",
   usage_round: "",
   usage_hotel: "",
   usage_meal: "",
@@ -28,14 +26,12 @@ const TourProductEditPage = () => {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    supabase.from("tour_products").select("id, name, hotel, golf_course, reservation_notice, schedule_notice, usage_round, usage_hotel, usage_meal, usage_locker, usage_bus, usage_tour").eq("id", id).single().then(({ data, error }) => {
+    supabase.from("tour_products").select("id, name, hotel, golf_course, usage_round, usage_hotel, usage_meal, usage_locker, usage_bus, usage_tour").eq("id", id).single().then(({ data, error }) => {
       if (error) setError(error.message);
       else if (data) setForm({
         name: data.name || "",
         golf_course: data.golf_course || "",
         hotel: data.hotel || "",
-        reservation_notice: data.reservation_notice || "",
-        schedule_notice: data.schedule_notice || "",
         usage_round: data.usage_round || "",
         usage_hotel: data.usage_hotel || "",
         usage_meal: data.usage_meal || "",
@@ -82,14 +78,6 @@ const TourProductEditPage = () => {
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">숙소</span>
           <input name="hotel" value={form.hotel} onChange={handleChange} placeholder="숙소" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" required aria-label="숙소" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">예약 안내 사항</span>
-          <textarea name="reservation_notice" value={form.reservation_notice} onChange={handleChange} placeholder="예약 안내 사항 (여러 줄 입력 가능)" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[48px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="예약 안내 사항" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">기타 안내문구 (일정표 하단)</span>
-          <textarea name="schedule_notice" value={form.schedule_notice} onChange={handleChange} placeholder="기타 안내문구 (일정표 하단)" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="기타 안내문구" />
         </label>
         <div className="font-bold mt-4 text-gray-800 dark:text-gray-200">이용 안내</div>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
