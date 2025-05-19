@@ -7,8 +7,6 @@ const initialForm = {
   name: "",
   golf_course: "",
   hotel: "",
-  included: "",
-  not_included: "",
   reservation_notice: "",
   schedule_notice: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
   usage_round: "",
@@ -58,14 +56,6 @@ const TourProductNewPage = () => {
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">숙소</span>
           <input name="hotel" value={form.hotel} onChange={handleChange} placeholder="숙소" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" required aria-label="숙소" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">포함 사항</span>
-          <textarea name="included" value={form.included} onChange={handleChange} placeholder="포함 사항" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[48px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="포함 사항" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">불포함 사항</span>
-          <textarea name="not_included" value={form.not_included} onChange={handleChange} placeholder="불포함 사항" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[48px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="불포함 사항" />
         </label>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">예약 안내 사항</span>

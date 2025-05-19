@@ -55,3 +55,10 @@
   - 상품/일정/유의사항/이용안내 등 섹션별 Tailwind 스타일 적용 및 정보 추가
   - 입력값(문서 내용 등)과 미리보기 데이터 흐름 개선(필요시)
   - 프린트 최적화 및 반응형 개선 
+
+## 2025-05-19
+
+- tour_products 테이블에서 included, not_included 컬럼 완전 삭제 (DB 쿼리 적용)
+- 관련 코드(select, form 등)에서 included, not_included 필드 완전 제거
+- main 브랜치 커밋 및 배포 완료
+- 남은 작업 없음 (완료) 

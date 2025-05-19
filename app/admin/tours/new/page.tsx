@@ -35,7 +35,7 @@ const TourNewPage: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("tour_products").select("id, name, hotel, included, not_included").then(({ data }) => {
+    supabase.from("tour_products").select("id, name, hotel").then(({ data }) => {
       setProducts(data || []);
     });
   }, []);
@@ -51,8 +51,6 @@ const TourNewPage: React.FC = () => {
       ...form,
       golf_course: selectedProduct ? selectedProduct.name : "",
       accommodation: selectedProduct ? selectedProduct.hotel : "",
-      includes: selectedProduct ? selectedProduct.included : "",
-      excludes: selectedProduct ? selectedProduct.not_included : "",
     });
   };
 
