@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import TourScheduleInfo from "./TourScheduleInfo";
-import NoticeBox from "./TourSchedulePreview_NoticeBox";
-import UsageSection from "./TourSchedulePreview_UsageSection";
-import ProductInfoBox from "./TourSchedulePreview_ProductInfoBox";
+import TourNoticeBox from "./TourNoticeBox";
+import TourUsageBox from "./TourUsageBox";
+import TourInfoBox from "./TourInfoBox";
 
 // 상품 타입(예시)
 type Product = {
@@ -99,14 +99,12 @@ const TourSchedulePreview: React.FC<Props> = ({ tourId }) => {
   return (
     <div className="max-w-3xl mx-auto bg-white p-6 rounded shadow print:bg-white print:shadow-none">
       <h2 className="text-2xl font-bold mb-2">투어 일정표</h2>
-      {/* 1. 상품 정보 */}
-      <ProductInfoBox tour={tour} />
-      {/* 2. 예약 안내 */}
-      <NoticeBox notices={dummyNotices} />
-      {/* 3. 일정 안내 */}
+      {/* 1. 상품/예약 안내 통합 */}
+      <TourInfoBox tour={{ ...tour, notice: dummyNotices }} />
+      {/* 2. 일정 안내 */}
       <TourScheduleInfo tour={tour} schedules={schedules} />
-      {/* 4. 이용 안내 */}
-      <UsageSection usage={dummyUsage} />
+      {/* 3. 이용 안내 */}
+      <TourUsageBox usage={dummyUsage} />
       <div className="mt-6 flex justify-end print:hidden">
         <button className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800" onClick={handlePrint} aria-label="프린트">프린트</button>
       </div>
