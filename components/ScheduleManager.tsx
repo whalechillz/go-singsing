@@ -111,7 +111,7 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
         <input name="date" value={form.date} onChange={handleChange} placeholder="날짜 (예: 2025-05-19)" type="date" className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
         <input name="title" value={form.title} onChange={handleChange} placeholder="제목" className="border rounded px-2 py-1 flex-1" required aria-label="제목" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="설명 (여러 줄 입력 가능)" className="border rounded px-2 py-1 flex-1 w-full min-h-[80px] resize-y" aria-label="설명" />
+        <textarea name="description" value={form.description} onChange={handleChange} placeholder="설명 (여러 줄 입력 가능)" className="border rounded px-2 py-1 flex-1 w-full min-h-[80px] resize-y" aria-label="설명" rows={4} />
         <label className="flex items-center gap-1">
           <input type="checkbox" name="meal_breakfast" checked={form.meal_breakfast} onChange={handleChange} />조식
         </label>
@@ -145,7 +145,11 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
               <tr key={s.id} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="py-1 px-2">{s.date}</td>
                 <td className="py-1 px-2">{s.title}</td>
-                <td className="py-1 px-2 w-[320px] whitespace-pre-line">{s.description}</td>
+                <td className="py-1 px-2 w-[320px] whitespace-pre-line">
+                  {s.description.split(/\r?\n/).map((line, i) => (
+                    <div key={i}>{line}</div>
+                  ))}
+                </td>
                 <td className="py-1 px-2 text-center">{s.meal_breakfast ? "O" : "-"}</td>
                 <td className="py-1 px-2 text-center">{s.meal_lunch ? "O" : "-"}</td>
                 <td className="py-1 px-2 text-center">{s.meal_dinner ? "O" : "-"}</td>
