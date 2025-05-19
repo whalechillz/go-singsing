@@ -1,4 +1,4 @@
-ㄴimport React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 type Tour = { id: string; title: string };
 type BoardingPlace = { id: string; name: string };
