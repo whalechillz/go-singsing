@@ -117,12 +117,6 @@ const ScheduleManager: React.FC<Props> = ({ tourId, tour }) => {
 
   return (
     <div>
-      <div className="mb-4 p-4 bg-gray-50 rounded border border-gray-200">
-        <div className="font-bold text-lg mb-1">{tour.title}</div>
-        <div className="text-gray-700 mb-1">{tour.start_date} ~ {tour.end_date} | 기사님: {tour.driver_name}</div>
-        {tour.golf_course && <div className="text-gray-700">골프장: {tour.golf_course}</div>}
-        {tour.accommodation && <div className="text-gray-700">숙소: {tour.accommodation}</div>}
-      </div>
       <h2 className="text-lg font-semibold mb-4">일정 관리</h2>
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
         <input name="date" value={form.date} onChange={handleChange} placeholder="날짜 (예: 2025-05-19)" type="date" className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />

@@ -10,6 +10,8 @@
 - 커밋 및 배포 완료 (main 브랜치)
 - 확인: `/admin/tours/[투어ID]` > '투어별 일정관리' 탭 상단
 - (다음) 일정 추가 시 tour_products에서 식사/숙소 정보 자동 세팅 기능 구현 예정
+- ✅ 완료: 투어별 일정관리(ScheduleManager)에서 중복 투어 정보 박스(제목, 날짜, 기사님, 골프장, 숙소 등) 제거, 상단에서만 노출되도록 개선
+- 관련 파일: components/ScheduleManager.tsx
 
 ## 3단계: 문서관리 > 상품정보(일정표) 자동 생성
 - ✅ 3단계 1차 완료: ProductSchedulePreview 컴포넌트 신규 생성, 투어/상품/일정 통합 fetch 및 미리보기, 프린트 버튼, TourDetailPage에 버튼/모달 추가
