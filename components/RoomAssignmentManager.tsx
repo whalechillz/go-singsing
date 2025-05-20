@@ -111,10 +111,10 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
     }
   });
   participants.forEach(p => {
-    if (p.room_number && roomGroups[p.room_number]) roomGroups[p.room_number].push(p);
+    if (p.singsing_rooms?.room_number && roomGroups[p.singsing_rooms.room_number]) roomGroups[p.singsing_rooms.room_number].push(p);
   });
   // 미배정 참가자
-  const unassigned = participants.filter(p => !p.room_number);
+  const unassigned = participants.filter(p => !p.room_id);
 
   // 객실명 표시 함수
   const displayRoomName = (room: Room | undefined) => {
