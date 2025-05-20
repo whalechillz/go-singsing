@@ -47,6 +47,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   const [newRoomCount, setNewRoomCount] = useState<number>(1);
   const [assigning, setAssigning] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const [unassignedSearch, setUnassignedSearch] = useState("");
 
   // 데이터 fetch
   const fetchData = async () => {
@@ -115,6 +116,8 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   });
   // 미배정 참가자
   const unassigned = participants.filter(p => !p.room_id);
+  // 미배정 참가자 필터링
+  const filteredUnassigned = participants.filter(p => !p.room_id && p.name.includes(unassignedSearch));
 
   // 객실명 표시 함수
   const displayRoomName = (room: Room | undefined) => {
@@ -218,11 +221,18 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
           {/* 미배정 */}
           <div className="bg-gray-50 rounded-lg shadow p-4">
             <div className="font-bold text-gray-700 mb-2">미배정</div>
-            {participants.filter(p => !p.room_id).length === 0 ? (
-              <div className="text-gray-400 text-sm">모든 참가자가 객실에 배정되었습니다.</div>
+            <input
+              type="text"
+              placeholder="이름으로 검색"
+              value={unassignedSearch}
+              onChange={e => setUnassignedSearch(e.target.value)}
+              className="mb-3 w-full max-w-xs border border-gray-300 rounded px-2 py-1 text-sm focus:outline-blue-500"
+            />
+            {filteredUnassigned.length === 0 ? (
+              <div className="text-gray-400 text-sm">검색 결과가 없습니다.</div>
             ) : (
               <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
-                {participants.filter(p => !p.room_id).map(p => (
+                {filteredUnassigned.map(p => (
                   <li
                     key={p.id}
                     className="flex items-center justify-between bg-white rounded-lg shadow px-3 py-2 transition hover:bg-blue-50"
