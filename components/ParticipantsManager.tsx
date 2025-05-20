@@ -359,29 +359,26 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
             {filtered.map((p, idx) => (
               <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="py-1 px-2"><input type="checkbox" checked={selectedIds.includes(p.id)} onChange={e => handleSelectOne(p.id, e.target.checked)} /></td>
-                {showColumns.map(col => {
-                  if (col === "이름") return <td key={col} className="py-1 px-2">{p.name}</td>;
-                  if (col === "연락처") return <td key={col} className="py-1 px-2">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : ""}</td>;
-                  if (col === "팀") return <td key={col} className="py-1 px-2">{p.team_name}</td>;
-                  if (col === "투어") return <td key={col} className="py-1 px-2">{p.tour_id}</td>;
-                  if (col === "객실") return <td key={col} className="py-1 px-2">{p.room_name || "미배정"}</td>;
-                  if (col === "상태") return <td key={col} className="py-1 px-2">
-                    <span className={
-                      p.status === "확정"
-                        ? "bg-green-100 text-green-800 px-2 py-1 rounded"
-                        : p.status === "대기"
-                        ? "bg-yellow-100 text-yellow-800 px-2 py-1 rounded"
-                        : "bg-gray-200 text-gray-700 px-2 py-1 rounded"
-                    }>
-                      {p.status || "확정"}
-                    </span>
-                  </td>;
-                  if (col === "관리") return <td key={col} className="py-1 px-2 flex gap-1">
-                    <button className="text-blue-700 underline" onClick={() => handleEdit(p)}>수정</button>
-                    <button className="text-red-600 underline" onClick={() => handleDelete(p.id)}>삭제</button>
-                  </td>;
-                  return null;
-                })}
+                {showColumns.includes("이름") && <td className="py-1 px-2">{p.name}</td>}
+                {showColumns.includes("연락처") && <td className="py-1 px-2">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : ""}</td>}
+                {showColumns.includes("팀") && <td className="py-1 px-2">{p.team_name}</td>}
+                {showColumns.includes("투어") && <td className="py-1 px-2">{p.tour_id}</td>}
+                {showColumns.includes("객실") && <td className="py-1 px-2">{p.room_name || "미배정"}</td>}
+                {showColumns.includes("상태") && <td className="py-1 px-2">
+                  <span className={
+                    p.status === "확정"
+                      ? "bg-green-100 text-green-800 px-2 py-1 rounded"
+                      : p.status === "대기"
+                      ? "bg-yellow-100 text-yellow-800 px-2 py-1 rounded"
+                      : "bg-gray-200 text-gray-700 px-2 py-1 rounded"
+                  }>
+                    {p.status || "확정"}
+                  </span>
+                </td>}
+                {showColumns.includes("관리") && <td className="py-1 px-2 flex gap-1">
+                  <button className="text-blue-700 underline" onClick={() => handleEdit(p)}>수정</button>
+                  <button className="text-red-600 underline" onClick={() => handleDelete(p.id)}>삭제</button>
+                </td>}
               </tr>
             ))}
           </tbody>
