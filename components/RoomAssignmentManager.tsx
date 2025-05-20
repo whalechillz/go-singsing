@@ -161,36 +161,49 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
         <div className="space-y-8">
-          {/* 객실별 그룹 */}
-          {rooms.map(room => (
-            <div key={room.id} className="bg-gray-50 rounded-lg shadow p-4">
-              <div className="font-bold text-blue-800 mb-2">{displayRoomName(room)}</div>
-              {participants.filter(p => p.room_id === room.id).length === 0 ? (
-                <div className="text-gray-400 text-sm">배정된 참가자가 없습니다.</div>
-              ) : (
+          {rooms.map(room => {
+            const assigned = participants.filter(p => p.room_id === room.id);
+            return (
+              <div key={room.id} className="mb-6 border rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-blue-800 text-base">{room.room_number}호</span>
+                  <span className="text-sm text-gray-500">정원 {room.capacity} / 현재 {assigned.length}</span>
+                </div>
                 <ul>
-                  {participants.filter(p => p.room_id === room.id).map(p => (
-                    <li key={p.id} className="grid grid-cols-5 gap-2 items-center py-2">
-                      <span className="col-span-2 text-left font-semibold text-gray-900">{p.name}</span>
-                      <span className="text-left text-gray-500 text-xs">{p.phone}</span>
-                      <span className="text-left text-gray-500 text-xs">{p.team_name}</span>
-                      <select
-                        className="col-span-1 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
-                        value={p.room_id || ""}
-                        onChange={e => handleAssignRoom(p.id, e.target.value)}
-                        aria-label="객실 선택"
-                        tabIndex={0}
-                        disabled={!!assigning}
-                      >
-                        <option value="">미배정</option>
-                        {rooms.map(r => <option key={r.id} value={r.id}>{`${r.room_number}호`}</option>)}
-                      </select>
-                    </li>
-                  ))}
+                  {assigned.length === 0 ? (
+                    <li className="text-gray-400 text-sm">배정된 참가자가 없습니다.</li>
+                  ) : (
+                    assigned.map(p => (
+                      <li key={p.id} className="flex items-center gap-3 py-1 border-b last:border-b-0">
+                        <span className="font-medium text-gray-900">{p.name}</span>
+                        <span className="text-xs text-gray-500">{p.phone}</span>
+                        <span className="text-xs text-gray-500">{p.team_name}</span>
+                        <select
+                          className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
+                          value={p.room_id || ""}
+                          onChange={e => handleAssignRoom(p.id, e.target.value)}
+                          aria-label="객실 선택"
+                          tabIndex={0}
+                          disabled={!!assigning}
+                        >
+                          <option value="">미배정</option>
+                          {rooms.map(r => {
+                            const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
+                            const isFull = assignedCount >= r.capacity;
+                            return (
+                              <option key={r.id} value={r.id} disabled={isFull && r.id !== p.room_id}>
+                                {`${r.room_number}호${isFull ? ' (정원초과)' : ''}`}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </li>
+                    ))
+                  )}
                 </ul>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
           {/* 미배정 */}
           <div className="bg-gray-50 rounded-lg shadow p-4">
             <div className="font-bold text-gray-700 mb-2">미배정</div>
