@@ -68,7 +68,7 @@ const TourDetailPage: React.FC = () => {
         ))}
       </div>
       <div className="bg-gray-50 dark:bg-gray-800 rounded-b-lg p-6 min-h-[200px]">
-        {activeTab === "participants" && <ParticipantsManager tourId={tourId} />}
+        {activeTab === "participants" && <ParticipantsManager tourId={tourId} showColumns={["이름", "연락처", "팀", "객실", "상태", "관리"]} />}
         {activeTab === "rooms" && (
           <>
             <RoomTypeManager tourId={tourId} />

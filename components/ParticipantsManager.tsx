@@ -3,36 +3,28 @@ import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
 
-type Participant = {
+// 공통 ParticipantsManager Props
+interface ParticipantsManagerProps {
+  tourId?: string; // 있으면 해당 투어만, 없으면 전체
+  showColumns?: string[]; // 표시할 컬럼 커스텀
+  onChange?: () => void; // 외부에서 데이터 변경 감지
+}
+
+interface Participant {
   id: string;
   name: string;
   phone: string;
-  team_name: string;
-  note: string;
+  team_name?: string;
+  note?: string;
   status: string;
   tour_id: string;
-  role?: string;
-  room_name?: string;
-  created_at?: string;
-  singsing_rooms?: {
-    room_type?: string;
-    capacity?: number;
-    quantity?: number;
-  };
-};
+  room_name?: string | null;
+  [key: string]: any;
+}
 
-type ParticipantForm = {
-  name: string;
-  phone: string;
-  team_name: string;
-  note: string;
-  status: string;
-  role: string;
-};
+const DEFAULT_COLUMNS = ["이름", "연락처", "팀", "투어", "객실", "상태", "관리"];
 
-type Props = { tourId: string };
-
-const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
+const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showColumns = DEFAULT_COLUMNS, onChange }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [form, setForm] = useState<ParticipantForm>({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" });
@@ -48,15 +40,16 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
 
   const fetchParticipants = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("singsing_participants").select("*").eq("tour_id", tourId).order("created_at", { ascending: true });
+    setError("");
+    let query = supabase.from("singsing_participants").select("*");
+    if (tourId) query = query.eq("tour_id", tourId);
+    const { data, error } = await query.order("created_at", { ascending: true });
     if (error) setError(error.message);
     else setParticipants((data || []) as Participant[]);
     setLoading(false);
   };
 
-  useEffect(() => {
-    if (tourId) fetchParticipants();
-  }, [tourId]);
+  useEffect(() => { fetchParticipants(); }, [tourId]);
 
   const normalizePhone = (input: string) => {
     let phone = input.replace(/[^0-9]/g, "");
@@ -126,9 +119,10 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
   const filtered = participants
     .filter(p =>
       (!search ||
-        p.name.includes(search) ||
-        p.phone.includes(search) ||
-        (p.team_name || "").includes(search)) &&
+        p.name?.includes(search) ||
+        p.phone?.includes(search) ||
+        p.team_name?.includes(search) ||
+        p.note?.includes(search)) &&
       (!statusFilter || p.status === statusFilter)
     )
     .sort((a, b) => {
@@ -224,6 +218,14 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
           {selectedFileName || "선택된 파일 없음"}
         </span>
       </div>
+      <div className="flex gap-2 mb-4">
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="이름, 연락처, 팀, 메모 검색"
+          className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800"
+        />
+      </div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
@@ -236,26 +238,18 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
         <table className="w-full bg-white dark:bg-gray-900 rounded shadow text-sm">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-              <th className="py-2 px-2">순번</th>
-              <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("name"); setSortAsc(sortKey === "name" ? !sortAsc : true); }}>이름</th>
-              <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("phone"); setSortAsc(sortKey === "phone" ? !sortAsc : true); }}>연락처</th>
-              <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("team_name"); setSortAsc(sortKey === "team_name" ? !sortAsc : true); }}>팀명</th>
-              <th className="py-2 px-2 text-left">직책</th>
-              <th className="py-2 px-2 text-left">메모</th>
-              <th className="py-2 px-2 text-left cursor-pointer" onClick={() => { setSortKey("status"); setSortAsc(sortKey === "status" ? !sortAsc : true); }}>상태</th>
-              <th className="py-2 px-2">관리</th>
+              {showColumns.map(col => <th key={col} className="py-2 px-2">{col}</th>)}
             </tr>
           </thead>
           <tbody>
             {filtered.map((p, idx) => (
               <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
-                <td className="py-1 px-2 text-center">{idx + 1}</td>
-                <td className="py-1 px-2">{p.name}</td>
-                <td className="py-1 px-2">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : ""}</td>
-                <td className="py-1 px-2">{p.team_name}</td>
-                <td className="py-1 px-2">{p.role || "-"}</td>
-                <td className="py-1 px-2">{p.note}</td>
-                <td className="py-1 px-2">
+                {showColumns.includes("이름") && <td className="py-1 px-2">{p.name}</td>}
+                {showColumns.includes("연락처") && <td className="py-1 px-2">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : ""}</td>}
+                {showColumns.includes("팀") && <td className="py-1 px-2">{p.team_name}</td>}
+                {showColumns.includes("투어") && <td className="py-1 px-2">{p.tour_id}</td>}
+                {showColumns.includes("객실") && <td className="py-1 px-2">{p.room_name || "미배정"}</td>}
+                {showColumns.includes("상태") && <td className="py-1 px-2">
                   <span className={
                     p.status === "확정"
                       ? "bg-green-100 text-green-800 px-2 py-1 rounded"
@@ -265,11 +259,11 @@ const ParticipantsManager: React.FC<Props> = ({ tourId }) => {
                   }>
                     {p.status || "확정"}
                   </span>
-                </td>
-                <td className="py-1 px-2 flex gap-1">
+                </td>}
+                {showColumns.includes("관리") && <td className="py-1 px-2 flex gap-1">
                   <button className="text-blue-700 underline" onClick={() => handleEdit(p)}>수정</button>
                   <button className="text-red-600 underline" onClick={() => handleDelete(p.id)}>삭제</button>
-                </td>
+                </td>}
               </tr>
             ))}
           </tbody>
