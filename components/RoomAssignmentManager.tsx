@@ -249,7 +249,15 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                       disabled={!!assigning}
                     >
                       <option value="">미배정</option>
-                      {rooms.map(r => <option key={r.id} value={r.id}>{`${r.room_number}호`}</option>)}
+                      {rooms.map(r => {
+                        const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
+                        const isFull = assignedCount >= r.capacity;
+                        return (
+                          <option key={r.id} value={r.id} disabled={isFull}>
+                            {`${r.room_number}호`}
+                          </option>
+                        );
+                      })}
                     </select>
                   </li>
                 ))}
