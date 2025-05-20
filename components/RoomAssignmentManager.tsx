@@ -91,10 +91,10 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
       capacity: getCapacity(trimmedRoomType),
       quantity: 1,
     }));
-    // Supabase에 upsert (onConflict: room_name)
+    // Supabase에 insert (room_seq, room_number 반드시 포함)
     const { error } = await supabase
       .from("singsing_rooms")
-      .upsert(newRooms, { onConflict: 'room_name' });
+      .insert(newRooms);
     if (error) {
       setError(error.message);
     }
