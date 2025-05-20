@@ -119,8 +119,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   // 객실명 표시 함수
   const displayRoomName = (room: Room | undefined) => {
     if (!room) return "미배정";
-    if (room.room_number) return `${room.room_type} ${room.room_number}호`;
-    return `${room.room_type} ${room.room_seq}번`;
+    return `${room.room_number}호`;
   };
 
   // 객실 배정 변경
@@ -184,7 +183,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                         disabled={!!assigning}
                       >
                         <option value="">미배정</option>
-                        {rooms.map(r => <option key={r.id} value={r.id}>{displayRoomName(r)}</option>)}
+                        {rooms.map(r => <option key={r.id} value={r.id}>{`${r.room_number}호`}</option>)}
                       </select>
                     </li>
                   ))}
@@ -213,7 +212,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                       disabled={!!assigning}
                     >
                       <option value="">미배정</option>
-                      {rooms.map(r => <option key={r.id} value={r.id}>{displayRoomName(r)}</option>)}
+                      {rooms.map(r => <option key={r.id} value={r.id}>{`${r.room_number}호`}</option>)}
                     </select>
                   </li>
                 ))}
