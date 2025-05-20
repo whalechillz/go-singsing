@@ -197,6 +197,18 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
 
   return (
     <div>
+      <div className="flex items-center gap-2 mb-2">
+        <label className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded cursor-pointer hover:bg-blue-200 transition">
+          엑셀 업로드
+          <input
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleUploadExcel}
+            className="hidden"
+          />
+        </label>
+        {selectedFileName && <span className="text-xs text-gray-500">{selectedFileName}</span>}
+      </div>
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
         <input name="name" value={form.name} onChange={handleChange} placeholder="이름" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" required />
         <input name="phone" value={form.phone} onChange={handleChange} placeholder="연락처(숫자만)" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" maxLength={11} />
@@ -219,10 +231,6 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       </form>
       <div className="flex flex-col md:flex-row gap-2 items-center mb-4">
         <button type="button" onClick={handleDownloadExcel} className="appearance-none bg-blue-100 text-blue-700 px-3 py-1 rounded font-medium hover:bg-blue-200 transition-colors">엑셀 다운로드</button>
-        <label className="appearance-none bg-green-600 text-white px-3 py-1 rounded cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-green-400 hover:bg-green-700 transition-colors shadow-none border-none bg-none">
-          엑셀 업로드
-          <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} className="hidden" aria-label="엑셀 업로드" />
-        </label>
         <span className="text-xs text-gray-800 dark:text-gray-200 font-bold bg-white border px-3 py-1 rounded min-w-[120px] text-center" aria-live="polite">
           {selectedFileName || "선택된 파일 없음"}
         </span>
