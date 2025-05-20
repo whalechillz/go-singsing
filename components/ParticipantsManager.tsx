@@ -19,6 +19,10 @@ interface Participant {
   status: string;
   tour_id: string;
   room_name?: string | null;
+  singsing_rooms?: {
+    room_type: string;
+    room_number: string;
+  };
   [key: string]: any;
 }
 
@@ -53,7 +57,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   const fetchParticipants = async () => {
     setLoading(true);
     setError("");
-    let query = supabase.from("singsing_participants").select("*");
+    let query = supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_number)");
     if (tourId) query = query.eq("tour_id", tourId);
     const { data, error } = await query.order("created_at", { ascending: true });
     if (error) setError(error.message);
@@ -363,7 +367,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                 {showColumns.includes("연락처") && <td className="py-1 px-2">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : ""}</td>}
                 {showColumns.includes("팀") && <td className="py-1 px-2">{p.team_name}</td>}
                 {showColumns.includes("투어") && <td className="py-1 px-2">{p.tour_id}</td>}
-                {showColumns.includes("객실") && <td className="py-1 px-2">{p.room_name || "미배정"}</td>}
+                {showColumns.includes("객실") && <td className="py-1 px-2">{p.singsing_rooms?.room_number || "미배정"}</td>}
                 {showColumns.includes("상태") && <td className="py-1 px-2">
                   <span className={
                     p.status === "확정"
