@@ -11,18 +11,19 @@ type Participant = {
   note: string;
   status: string;
   tour_id: string;
-  room_name?: string;
+  room_id?: string | null;
   singsing_rooms?: {
     room_type?: string;
-    capacity?: number;
-    quantity?: number;
+    room_seq?: number;
+    room_number?: string;
   };
 };
 
 type Room = {
   id: string;
   room_type: string;
-  room_name: string;
+  room_seq: number;
+  room_number?: string;
   capacity: number;
   quantity: number;
   tour_id: string;
@@ -52,7 +53,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
     setLoading(true);
     setError("");
     const [{ data: participantsData, error: participantsError }, { data: roomsData, error: roomsError }] = await Promise.all([
-      supabase.from("singsing_participants").select("*").eq("tour_id", tourId).order("created_at", { ascending: true }),
+      supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_seq, room_number)").eq("tour_id", tourId).order("created_at", { ascending: true }),
       supabase.from("singsing_rooms").select("*").eq("tour_id", tourId)
     ]);
     if (participantsError) setError(participantsError.message);
@@ -85,7 +86,8 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
     const newRooms = Array.from({ length: newRoomCount }, (_, i) => ({
       tour_id: tourId,
       room_type: trimmedRoomType,
-      room_name: `${trimmedRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`,
+      room_seq: lastNum + i + 1,
+      room_number: `${trimmedRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`,
       capacity: getCapacity(trimmedRoomType),
       quantity: 1,
     }));
@@ -104,50 +106,52 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   // 객실별로 참가자 그룹핑
   const roomGroups: Record<string, Participant[]> = {};
   rooms.forEach(room => {
-    if (room.room_name) {
-      roomGroups[room.room_name] = [];
+    if (room.room_number) {
+      roomGroups[room.room_number] = [];
     }
   });
   participants.forEach(p => {
-    if (p.room_name && roomGroups[p.room_name]) roomGroups[p.room_name].push(p);
+    if (p.room_number && roomGroups[p.room_number]) roomGroups[p.room_number].push(p);
   });
   // 미배정 참가자
-  const unassigned = participants.filter(p => !p.room_name);
+  const unassigned = participants.filter(p => !p.room_number);
 
   // 객실명 표시 함수
-  const displayRoomName = (roomName: string | undefined) => roomName ? roomName : "미배정";
+  const displayRoomName = (room: Room | undefined) => {
+    if (!room) return "미배정";
+    if (room.room_number) return `${room.room_type} ${room.room_number}호`;
+    return `${room.room_type} ${room.room_seq}번`;
+  };
 
   // 객실 배정 변경
-  const handleAssignRoom = async (participantId: string, roomName: string) => {
+  const handleAssignRoom = async (participantId: string, roomId: string) => {
     setAssigning(participantId);
     setAssignSuccess(null);
-    // 낙관적 UI 업데이트
     setParticipants(prev =>
       prev.map(p =>
         p.id === participantId
-          ? { ...p, room_name: roomName === "" ? undefined : roomName }
+          ? { ...p, room_id: roomId === "" ? null : roomId }
           : p
       )
     );
     const { error } = await supabase
       .from("singsing_participants")
-      .update({ room_name: roomName === "" ? undefined : roomName })
+      .update({ room_id: roomId === "" ? null : roomId })
       .eq("id", participantId);
     setAssigning(null);
     if (!error) {
       setAssignSuccess(participantId);
       setTimeout(() => setAssignSuccess(null), 1200);
-      // 성공 시 fetchData() 호출하지 않음
     } else {
       setError(error.message);
-      fetchData(); // 에러 시에만 fetchData 호출
+      fetchData();
     }
   };
 
   // 객실 삭제
   const handleDeleteRoom = async (roomName: string) => {
-    await supabase.from("singsing_participants").update({ room_name: null }).eq("room_name", roomName);
-    await supabase.from("singsing_rooms").delete().eq("room_name", roomName).eq("tour_id", tourId);
+    await supabase.from("singsing_participants").update({ room_id: null }).eq("room_number", roomName);
+    await supabase.from("singsing_rooms").delete().eq("room_number", roomName).eq("tour_id", tourId);
     fetchData();
   };
 
@@ -159,28 +163,28 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
       ) : (
         <div className="space-y-8">
           {/* 객실별 그룹 */}
-          {Object.entries(roomGroups).map(([roomName, members]) => (
-            <div key={roomName} className="bg-gray-50 rounded-lg shadow p-4">
-              <div className="font-bold text-blue-800 mb-2">{displayRoomName(roomName)}</div>
-              {members.length === 0 ? (
+          {rooms.map(room => (
+            <div key={room.id} className="bg-gray-50 rounded-lg shadow p-4">
+              <div className="font-bold text-blue-800 mb-2">{displayRoomName(room)}</div>
+              {participants.filter(p => p.room_id === room.id).length === 0 ? (
                 <div className="text-gray-400 text-sm">배정된 참가자가 없습니다.</div>
               ) : (
                 <ul>
-                  {members.map(p => (
+                  {participants.filter(p => p.room_id === room.id).map(p => (
                     <li key={p.id} className="grid grid-cols-5 gap-2 items-center py-2">
                       <span className="col-span-2 text-left font-semibold text-gray-900">{p.name}</span>
                       <span className="text-left text-gray-500 text-xs">{p.phone}</span>
                       <span className="text-left text-gray-500 text-xs">{p.team_name}</span>
                       <select
                         className="col-span-1 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
-                        value={p.room_name || ""}
+                        value={p.room_id || ""}
                         onChange={e => handleAssignRoom(p.id, e.target.value)}
                         aria-label="객실 선택"
                         tabIndex={0}
                         disabled={!!assigning}
                       >
                         <option value="">미배정</option>
-                        {rooms.map(r => <option key={r.room_name} value={r.room_name}>{r.room_name}</option>)}
+                        {rooms.map(r => <option key={r.id} value={r.id}>{displayRoomName(r)}</option>)}
                       </select>
                     </li>
                   ))}
@@ -191,25 +195,25 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
           {/* 미배정 */}
           <div className="bg-gray-50 rounded-lg shadow p-4">
             <div className="font-bold text-gray-700 mb-2">미배정</div>
-            {unassigned.length === 0 ? (
+            {participants.filter(p => !p.room_id).length === 0 ? (
               <div className="text-gray-400 text-sm">모든 참가자가 객실에 배정되었습니다.</div>
             ) : (
               <ul>
-                {unassigned.map(p => (
+                {participants.filter(p => !p.room_id).map(p => (
                   <li key={p.id} className="grid grid-cols-5 gap-2 items-center py-2">
                     <span className="col-span-2 text-left font-semibold text-gray-900">{p.name}</span>
                     <span className="text-left text-gray-500 text-xs">{p.phone}</span>
                     <span className="text-left text-gray-500 text-xs">{p.team_name}</span>
                     <select
                       className="col-span-1 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
-                      value={p.room_name || ""}
+                      value={p.room_id || ""}
                       onChange={e => handleAssignRoom(p.id, e.target.value)}
                       aria-label="객실 선택"
                       tabIndex={0}
                       disabled={!!assigning}
                     >
                       <option value="">미배정</option>
-                      {rooms.map(r => <option key={r.room_name} value={r.room_name}>{r.room_name}</option>)}
+                      {rooms.map(r => <option key={r.id} value={r.id}>{displayRoomName(r)}</option>)}
                     </select>
                   </li>
                 ))}
