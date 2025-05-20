@@ -198,7 +198,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <label className="px-3 py-1 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition">
+        <label className="px-4 py-2 bg-blue-700 text-white rounded-lg cursor-pointer font-semibold hover:bg-blue-800 transition">
           엑셀 업로드
           <input
             type="file"
@@ -207,13 +207,13 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
             className="hidden"
           />
         </label>
-        <span className={selectedFileName ? "text-gray-700 text-sm max-w-[180px] truncate" : "text-gray-400 text-sm italic max-w-[180px] truncate"}>
+        <span className={selectedFileName ? "text-gray-800 text-sm max-w-[180px] truncate" : "text-gray-400 text-sm italic max-w-[180px] truncate"}>
           {selectedFileName || "선택된 파일 없음"}
         </span>
         <button
           type="button"
           onClick={handleDownloadExcel}
-          className="ml-4 px-3 py-1 bg-gray-100 text-blue-700 rounded hover:bg-gray-200 transition"
+          className="px-4 py-2 bg-gray-100 text-blue-700 rounded-lg font-semibold hover:bg-gray-200 transition"
         >
           엑셀 다운로드
         </button>
