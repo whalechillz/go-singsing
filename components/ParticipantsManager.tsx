@@ -22,6 +22,15 @@ interface Participant {
   [key: string]: any;
 }
 
+interface ParticipantForm {
+  name: string;
+  phone: string;
+  team_name?: string;
+  note?: string;
+  status: string;
+  role: string;
+}
+
 const DEFAULT_COLUMNS = ["이름", "연락처", "팀", "투어", "객실", "상태", "관리"];
 
 const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showColumns = DEFAULT_COLUMNS, onChange }) => {
