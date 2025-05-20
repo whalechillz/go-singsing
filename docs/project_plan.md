@@ -88,3 +88,58 @@
 
 - ✅ 완료: 상단 탭 메뉴에 '투어 일정표 미리보기'를 추가, 기존 모달 버튼/로직 제거, 탭 전환 방식으로 일관되게 동작하도록 개선
 - 관련 파일: app/admin/tours/[tourId]/page.tsx 
+
+## Project Update
+
+- **Cloned Repository**: Cloned the `tsx-gallery-cursor` repository directly into the `go2.singsinggolf.kr` directory.
+- **Installed Dependencies**: Ran `npm install` to install all necessary packages.
+- **Next Steps**: Configure environment variables and set up GitHub and Vercel for deployment.
+
+- **ParticipantsManager.tsx 개선**: 전화번호 없이도 참가자 등록 가능하도록 required 속성 제거, 커밋/푸시 및 Vercel 자동 배포 트리거 
+
+## 2024-06-XX
+
+- 참가자 이름 옆에 팀명을 작게(파란색, 연한 배경, text-xs)로 표시
+- 전화번호 완전 제거
+- 객실별 인원 표기를 '현재 n / 정원 n' 순서로 바꾸고, 정원 도달 시 색상 강조(빨강, 굵게)
+- 참가자 리스트와 미배정 리스트 모두 넓은 화면에서 한 줄에 2~3명씩 flex-wrap 레이아웃 적용
+- 드롭다운에서 '정원초과' 문구 완전 제거
+- 파일 변경: `components/RoomAssignmentManager.tsx`
+- 목적: 실무적 UI/UX 개선, 가독성 및 배정 편의성 향상 
+
+- **2024-06-XX**
+  - 참가자 관리(ParticipantsManager) 엑셀 업로드/다운로드 UI를 파란색 업로드 버튼, 연한 회색 다운로드 버튼, 파일명 안내는 오른쪽에 연하게(2024-06-XX 이미지 기준)로 되돌림
+  - 파일명 안내는 한 줄에만, 중복 안내 없음
+  - 적용 소스코드:
+
+```jsx
+<div className="flex items-center gap-3 mb-4">
+  <label className="px-3 py-1 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition">
+    엑셀 업로드
+    <input
+      type="file"
+      accept=".xlsx,.xls,.csv"
+      onChange={handleUploadExcel}
+      className="hidden"
+    />
+  </label>
+  <span className={selectedFileName ? "text-gray-700 text-sm max-w-[180px] truncate" : "text-gray-400 text-sm italic max-w-[180px] truncate"}>
+    {selectedFileName || "선택된 파일 없음"}
+  </span>
+  <button
+    type="button"
+    onClick={handleDownloadExcel}
+    className="ml-4 px-3 py-1 bg-gray-100 text-blue-700 rounded hover:bg-gray-200 transition"
+  >
+    엑셀 다운로드
+  </button>
+</div>
+```
+  - 파일: `components/ParticipantsManager.tsx`
+  - 목적: 실제 사용성 및 시인성 개선, 중복 안내 제거, 고급 UI/UX 반영
+
+- **2024-06-XX**
+  - 미배정 참가자 리스트를 카드형 그리드 스타일로 개선 (Tailwind 전역 스타일 적극 활용)
+  - 각 참가자를 bg-white, rounded-lg, shadow, hover:bg-blue-50 등 카드형으로, grid-cols-1~4 반응형으로 배치
+  - 파일 변경: `components/RoomAssignmentManager.tsx`
+  - 목적: 미배정 영역 가독성 및 미관 개선, 반응형 최적화 
