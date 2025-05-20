@@ -187,11 +187,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                     assigned.map(p => (
                       <li key={p.id} className="flex items-center gap-1 flex-1 min-w-[120px]">
                         <div className="flex flex-col items-start min-w-0">
-                          {p.team_name && (
-                            <span className="mb-0.5 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-semibold tracking-tight truncate">
-                              {p.team_name}
-                            </span>
-                          )}
                           <span className="font-medium text-gray-900 truncate">{p.name}</span>
                         </div>
                         <select
@@ -233,11 +228,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                     className="flex items-center justify-between bg-white rounded-lg shadow px-3 py-2 transition hover:bg-blue-50"
                   >
                     <div className="flex flex-col items-start min-w-0">
-                      {p.team_name && (
-                        <span className="mb-0.5 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-semibold tracking-tight truncate">
-                          {p.team_name}
-                        </span>
-                      )}
                       <span className="font-medium text-gray-900 truncate">{p.name}</span>
                     </div>
                     <select
