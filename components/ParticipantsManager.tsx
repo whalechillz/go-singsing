@@ -40,7 +40,9 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
   const [search, setSearch] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [teamFilter, setTeamFilter] = useState("");
+  const [roomFilter, setRoomFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [sortKey, setSortKey] = useState<keyof Participant | "">("created_at");
   const [sortAsc, setSortAsc] = useState<boolean>(true);
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
@@ -133,6 +135,8 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
         p.phone?.includes(search) ||
         p.team_name?.includes(search) ||
         p.note?.includes(search)) &&
+      (!teamFilter || p.team_name === teamFilter) &&
+      (!roomFilter || p.room_name === roomFilter) &&
       (!statusFilter || p.status === statusFilter)
     )
     .sort((a, b) => {
@@ -291,6 +295,27 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
           placeholder="이름, 연락처, 팀, 메모 검색"
           className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800"
         />
+      </div>
+      {/* 다중 필터 UI */}
+      <div className="flex flex-wrap gap-2 mb-2 items-center">
+        <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)} className="border rounded px-2 py-1">
+          <option value="">팀 전체</option>
+          {Array.from(new Set(participants.map(p => p.team_name).filter(Boolean))).map(team => (
+            <option key={team} value={team as string}>{team}</option>
+          ))}
+        </select>
+        <select value={roomFilter} onChange={e => setRoomFilter(e.target.value)} className="border rounded px-2 py-1">
+          <option value="">객실 전체</option>
+          {Array.from(new Set(participants.map(p => p.room_name).filter(Boolean))).map(room => (
+            <option key={room} value={room as string}>{room}</option>
+          ))}
+        </select>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border rounded px-2 py-1">
+          <option value="">상태 전체</option>
+          <option value="확정">확정</option>
+          <option value="대기">대기</option>
+          <option value="취소">취소</option>
+        </select>
       </div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
       {loading ? (
