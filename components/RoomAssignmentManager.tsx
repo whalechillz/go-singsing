@@ -213,15 +213,22 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
             {participants.filter(p => !p.room_id).length === 0 ? (
               <div className="text-gray-400 text-sm">모든 참가자가 객실에 배정되었습니다.</div>
             ) : (
-              <ul className="flex flex-wrap gap-2">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
                 {participants.filter(p => !p.room_id).map(p => (
-                  <li key={p.id} className="flex items-center gap-1 flex-1 min-w-[120px]">
-                    <span className="font-medium text-gray-900">{p.name}</span>
-                    {p.team_name && (
-                      <span className="ml-1 px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-xs font-semibold">{p.team_name}</span>
-                    )}
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between bg-white rounded-lg shadow px-3 py-2 transition hover:bg-blue-50"
+                  >
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="font-medium text-gray-900 truncate">{p.name}</span>
+                      {p.team_name && (
+                        <span className="ml-1 px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-xs font-semibold truncate">
+                          {p.team_name}
+                        </span>
+                      )}
+                    </div>
                     <select
-                      className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right ml-2"
+                      className="ml-2 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
                       value={p.room_id || ""}
                       onChange={e => handleAssignRoom(p.id, e.target.value)}
                       aria-label="객실 선택"
