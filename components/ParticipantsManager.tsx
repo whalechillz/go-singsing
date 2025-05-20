@@ -199,7 +199,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     <div>
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
         <input name="name" value={form.name} onChange={handleChange} placeholder="이름" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" required />
-        <input name="phone" value={form.phone} onChange={handleChange} placeholder="연락처(숫자만)" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" required maxLength={11} />
+        <input name="phone" value={form.phone} onChange={handleChange} placeholder="연락처(숫자만)" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" maxLength={11} />
         <input name="team_name" value={form.team_name} onChange={handleChange} placeholder="팀명" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" />
         <input name="note" value={form.note} onChange={handleChange} placeholder="메모" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" />
         <select name="status" value={form.status} onChange={handleChange} className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" aria-label="상태">
