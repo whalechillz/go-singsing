@@ -46,6 +46,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
   const [selectedFileName, setSelectedFileName] = useState<string>("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const fetchParticipants = async () => {
     setLoading(true);
@@ -195,6 +196,51 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     reader.readAsBinaryString(file);
   };
 
+  // 전체 선택/해제
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? filtered.map(p => p.id) : []);
+  };
+
+  // 개별 선택
+  const handleSelectOne = (id: string, checked: boolean) => {
+    setSelectedIds(prev => checked ? [...prev, id] : prev.filter(x => x !== id));
+  };
+
+  // 일괄 삭제
+  const handleBulkDelete = async () => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    await supabase.from("singsing_participants").delete().in("id", selectedIds);
+    setSelectedIds([]);
+    fetchParticipants();
+  };
+
+  // 일괄 객실 배정
+  const [bulkRoomId, setBulkRoomId] = useState("");
+  const handleBulkAssignRoom = async () => {
+    if (!bulkRoomId) return;
+    await supabase.from("singsing_participants").update({ room_id: bulkRoomId }).in("id", selectedIds);
+    setSelectedIds([]);
+    setBulkRoomId("");
+    fetchParticipants();
+  };
+
+  // 일괄 미배정
+  const handleBulkUnassign = async () => {
+    await supabase.from("singsing_participants").update({ room_id: null }).in("id", selectedIds);
+    setSelectedIds([]);
+    fetchParticipants();
+  };
+
+  // 일괄 상태변경
+  const [bulkStatus, setBulkStatus] = useState("");
+  const handleBulkStatus = async () => {
+    if (!bulkStatus) return;
+    await supabase.from("singsing_participants").update({ status: bulkStatus }).in("id", selectedIds);
+    setSelectedIds([]);
+    setBulkStatus("");
+    fetchParticipants();
+  };
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
@@ -252,18 +298,42 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       ) : (
         <div className="mb-2 text-right text-gray-700 font-semibold">총 {filtered.length}명</div>
       )}
+      {/* 일괄 액션 UI */}
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2 items-center">
+          <span className="text-blue-700 font-semibold">{selectedIds.length}명 선택됨</span>
+          <button type="button" onClick={handleBulkDelete} className="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">일괄 삭제</button>
+          <select value={bulkRoomId} onChange={e => setBulkRoomId(e.target.value)} className="border rounded px-2 py-1">
+            <option value="">객실 일괄 배정</option>
+            {Array.from(new Set(participants.map(p => p.room_name).filter(Boolean))).map(room => (
+              <option key={room} value={room as string}>{room}</option>
+            ))}
+          </select>
+          <button type="button" onClick={handleBulkAssignRoom} className="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">적용</button>
+          <button type="button" onClick={handleBulkUnassign} className="px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">일괄 미배정</button>
+          <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="border rounded px-2 py-1">
+            <option value="">상태 일괄 변경</option>
+            <option value="확정">확정</option>
+            <option value="대기">대기</option>
+            <option value="취소">취소</option>
+          </select>
+          <button type="button" onClick={handleBulkStatus} className="px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200">적용</button>
+        </div>
+      )}
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
         <table className="w-full bg-white dark:bg-gray-900 rounded shadow text-sm">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+              <th className="py-2 px-2"><input type="checkbox" checked={selectedIds.length === filtered.length && filtered.length > 0} onChange={e => handleSelectAll(e.target.checked)} /></th>
               {showColumns.map(col => <th key={col} className="py-2 px-2">{col}</th>)}
             </tr>
           </thead>
           <tbody>
             {filtered.map((p, idx) => (
               <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
+                <td className="py-1 px-2"><input type="checkbox" checked={selectedIds.includes(p.id)} onChange={e => handleSelectOne(p.id, e.target.checked)} /></td>
                 {showColumns.includes("이름") && <td className="py-1 px-2">{p.name}</td>}
                 {showColumns.includes("연락처") && <td className="py-1 px-2">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : ""}</td>}
                 {showColumns.includes("팀") && <td className="py-1 px-2">{p.team_name}</td>}
