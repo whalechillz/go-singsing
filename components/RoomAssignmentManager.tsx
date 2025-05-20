@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { Users, Check, AlertCircle, RefreshCw, X } from "lucide-react";
 
 type Participant = {
   id: string;
