@@ -124,6 +124,15 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
 
   // 객실 배정 변경
   const handleAssignRoom = async (participantId: string, roomId: string) => {
+    if (roomId) {
+      const room = rooms.find(r => r.id === roomId);
+      const assignedCount = participants.filter(p => p.room_id === roomId).length;
+      // 정원 초과 시 배정 불가
+      if (room && assignedCount >= room.capacity) {
+        alert('이 객실은 정원이 가득 찼습니다.');
+        return;
+      }
+    }
     setAssigning(participantId);
     setAssignSuccess(null);
     setParticipants(prev =>
@@ -177,10 +186,14 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                   ) : (
                     assigned.map(p => (
                       <li key={p.id} className="flex items-center gap-1 flex-1 min-w-[120px]">
-                        <span className="font-medium text-gray-900">{p.name}</span>
-                        {p.team_name && (
-                          <span className="ml-1 px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-xs font-semibold">{p.team_name}</span>
-                        )}
+                        <div className="flex flex-col items-start min-w-0">
+                          {p.team_name && (
+                            <span className="mb-0.5 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-semibold tracking-tight truncate">
+                              {p.team_name}
+                            </span>
+                          )}
+                          <span className="font-medium text-gray-900 truncate">{p.name}</span>
+                        </div>
                         <select
                           className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right ml-2"
                           value={p.room_id || ""}
@@ -219,13 +232,13 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                     key={p.id}
                     className="flex items-center justify-between bg-white rounded-lg shadow px-3 py-2 transition hover:bg-blue-50"
                   >
-                    <div className="flex items-center gap-1 min-w-0">
-                      <span className="font-medium text-gray-900 truncate">{p.name}</span>
+                    <div className="flex flex-col items-start min-w-0">
                       {p.team_name && (
-                        <span className="ml-1 px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-xs font-semibold truncate">
+                        <span className="mb-0.5 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-semibold tracking-tight truncate">
                           {p.team_name}
                         </span>
                       )}
+                      <span className="font-medium text-gray-900 truncate">{p.name}</span>
                     </div>
                     <select
                       className="ml-2 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
