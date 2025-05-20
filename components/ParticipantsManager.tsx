@@ -197,8 +197,8 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
-        <label className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded cursor-pointer hover:bg-blue-200 transition">
+      <div className="flex items-center gap-3 mb-4">
+        <label className="px-3 py-1 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition">
           엑셀 업로드
           <input
             type="file"
@@ -207,7 +207,16 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
             className="hidden"
           />
         </label>
-        {selectedFileName && <span className="text-xs text-gray-500">{selectedFileName}</span>}
+        <span className={selectedFileName ? "text-gray-700 text-sm max-w-[180px] truncate" : "text-gray-400 text-sm italic max-w-[180px] truncate"}>
+          {selectedFileName || "선택된 파일 없음"}
+        </span>
+        <button
+          type="button"
+          onClick={handleDownloadExcel}
+          className="ml-4 px-3 py-1 bg-gray-100 text-blue-700 rounded hover:bg-gray-200 transition"
+        >
+          엑셀 다운로드
+        </button>
       </div>
       <form className="flex flex-col md:flex-row gap-2 mb-4" onSubmit={handleSubmit}>
         <input name="name" value={form.name} onChange={handleChange} placeholder="이름" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" required />
@@ -229,12 +238,6 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-blue-900 transition-colors">{editingId ? "수정" : "추가"}</button>
         {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-gray-400 transition-colors" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
       </form>
-      <div className="flex flex-col md:flex-row gap-2 items-center mb-4">
-        <button type="button" onClick={handleDownloadExcel} className="appearance-none bg-blue-100 text-blue-700 px-3 py-1 rounded font-medium hover:bg-blue-200 transition-colors">엑셀 다운로드</button>
-        <span className="text-xs text-gray-800 dark:text-gray-200 font-bold bg-white border px-3 py-1 rounded min-w-[120px] text-center" aria-live="polite">
-          {selectedFileName || "선택된 파일 없음"}
-        </span>
-      </div>
       <div className="flex gap-2 mb-4">
         <input
           value={search}
