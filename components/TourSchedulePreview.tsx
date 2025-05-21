@@ -95,6 +95,18 @@ const TourSchedulePreview: React.FC<Props> = ({ tourId }) => {
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
   if (!tour) return <div className="text-center py-8 text-red-500">투어 정보 없음</div>;
 
+  // usage 배열 동적 생성
+  const usage = product
+    ? [
+        { title: "라운드 규정", items: product.usage_rounding?.split('\n').filter(Boolean) || [] },
+        { title: "숙소 이용", items: product.usage_hotel?.split('\n').filter(Boolean) || [] },
+        { title: "식사 안내", items: product.usage_meal?.split('\n').filter(Boolean) || [] },
+        { title: "락카 이용", items: product.usage_locker?.split('\n').filter(Boolean) || [] },
+        { title: "버스 이용", items: product.usage_bus?.split('\n').filter(Boolean) || [] },
+        { title: "관광지 투어", items: product.usage_tour?.split('\n').filter(Boolean) || [] },
+      ].filter(section => section.items.length > 0)
+    : [];
+
   return (
     <div className="max-w-3xl mx-auto bg-white p-6 rounded shadow print:bg-white print:shadow-none">
       <h2 className="text-2xl font-bold mb-2">투어 일정표</h2>
@@ -103,16 +115,11 @@ const TourSchedulePreview: React.FC<Props> = ({ tourId }) => {
       {/* 2. 일정 안내 */}
       <TourScheduleInfo tour={tour} schedules={schedules} />
       {/* 3. 이용 안내 */}
-      <TourUsageBox usage={
-        product ? [
-          { title: "라운드 규정", items: product.usage_rounding?.split('\n').filter(Boolean) || [] },
-          { title: "숙소 이용", items: product.usage_hotel?.split('\n').filter(Boolean) || [] },
-          { title: "식사 안내", items: product.usage_meal?.split('\n').filter(Boolean) || [] },
-          { title: "락카 이용", items: product.usage_locker?.split('\n').filter(Boolean) || [] },
-          { title: "버스 이용", items: product.usage_bus?.split('\n').filter(Boolean) || [] },
-          { title: "관광지 투어", items: product.usage_tour?.split('\n').filter(Boolean) || [] },
-        ] : []
-      } />
+      {usage.length > 0 ? (
+        <TourUsageBox usage={usage} />
+      ) : (
+        <div className="text-gray-400 text-center py-8">이용안내 정보가 없습니다.</div>
+      )}
       <div className="mt-6 flex justify-end print:hidden">
         <button className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800" onClick={handlePrint} aria-label="프린트">프린트</button>
       </div>
