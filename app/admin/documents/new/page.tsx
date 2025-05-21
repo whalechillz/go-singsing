@@ -70,7 +70,7 @@ export default function NewDocumentPage() {
       const { data: tour } = await supabase.from('singsing_tours').select('*').eq('id', selectedTour).single();
       if (!tour) return;
       // 상품 정보
-      let usage = {};
+      let usage: { usage_hotel?: string; usage_meal?: string; usage_locker?: string } = {};
       if (tour.tour_product_id) {
         const { data: product } = await supabase.from('tour_products').select('usage_hotel, usage_meal, usage_locker').eq('id', tour.tour_product_id).single();
         usage = product || {};
