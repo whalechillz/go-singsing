@@ -15,6 +15,7 @@ type TeeTime = {
 type Participant = {
   id: string;
   name: string;
+  gender?: string;
 };
 
 const initialForm = {
@@ -38,11 +39,13 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   const [showAuto, setShowAuto] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [courses, setCourses] = useState<string[]>([]);
+  const [moveTarget, setMoveTarget] = useState<{ player: string; fromId: string } | null>(null);
+  const [moveToTeam, setMoveToTeam] = useState<string>("");
 
-  // 참가자 자동완성 데이터 불러오기
+  // 참가자 자동완성 데이터 불러오기 (gender 포함)
   useEffect(() => {
     const fetchParticipants = async () => {
-      const { data, error } = await supabase.from("singsing_participants").select("id, name").eq("tour_id", tourId);
+      const { data, error } = await supabase.from("singsing_participants").select("id, name, gender").eq("tour_id", tourId);
       if (!error && data) setParticipants(data);
     };
     if (tourId) fetchParticipants();
@@ -81,6 +84,15 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   useEffect(() => {
     if (tourId) fetchTeeTimes();
   }, [tourId]);
+
+  // 날짜/코스 변경 시 team_no 자동 증가
+  useEffect(() => {
+    if (!form.date || !form.course) return;
+    // 같은 날짜+코스의 기존 티오프 중 가장 큰 team_no 찾기
+    const filtered = teeTimes.filter(t => t.date === form.date && t.course === form.course);
+    const maxTeamNo = filtered.length > 0 ? Math.max(...filtered.map(t => t.team_no)) : 0;
+    setForm(f => ({ ...f, team_no: maxTeamNo + 1 }));
+  }, [form.date, form.course, teeTimes]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -125,12 +137,16 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
         fetchTeeTimes();
       }
     } else {
+      // team_no 자동 증가: 같은 날짜+코스의 기존 티오프 중 가장 큰 team_no + 1
+      const filtered = teeTimes.filter(t => t.date === form.date && t.course === form.course);
+      const maxTeamNo = filtered.length > 0 ? Math.max(...filtered.map(t => t.team_no)) : 0;
+      const nextTeamNo = maxTeamNo + 1;
       const { error } = await supabase.from("singsing_tee_times").insert([
         {
           tour_id: tourId,
           date: form.date,
           course: form.course,
-          team_no: Number(form.team_no),
+          team_no: Number(form.team_no) || nextTeamNo,
           tee_time: form.tee_time,
           players: playersArr,
         },
@@ -168,6 +184,43 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     return time.length >= 5 ? time.slice(0, 5) : time;
   };
 
+  // 4명 자동 배정 핸들러
+  const handleAutoAssignPlayers = () => {
+    // 이미 배정된 참가자(이름) 목록
+    const assigned = teeTimes.flatMap(t => t.players);
+    // 미배정 참가자만 필터
+    const unassigned = participants.filter(p => !assigned.includes(p.name + (p.gender ? `(${p.gender})` : "")));
+    // 4명 추천 (이름+성별)
+    const selected = unassigned.slice(0, 4).map(p => p.name + (p.gender ? `(${p.gender})` : ""));
+    setForm({ ...form, players: selected.join(" · ") });
+  };
+
+  // 참가자 이동 처리
+  const handleMovePlayer = async () => {
+    if (!moveTarget || !moveToTeam) return;
+    // from 조, to 조 찾기
+    const fromTee = teeTimes.find(t => t.id === moveTarget.fromId);
+    const toTee = teeTimes.find(t => t.id === moveToTeam);
+    if (!fromTee || !toTee) return;
+    // from 조에서 참가자 삭제
+    const newFromPlayers = fromTee.players.filter(p => p !== moveTarget.player);
+    // to 조에 참가자 추가
+    const newToPlayers = [...toTee.players, moveTarget.player];
+    // DB 업데이트
+    await supabase.from("singsing_tee_times").update({ players: newFromPlayers }).eq("id", fromTee.id);
+    await supabase.from("singsing_tee_times").update({ players: newToPlayers }).eq("id", toTee.id);
+    setMoveTarget(null);
+    setMoveToTeam("");
+    fetchTeeTimes();
+  };
+
+  // 참가자 입력란에서 X(삭제) 버튼
+  const handleRemovePlayerInput = (idx: number) => {
+    const arr = form.players.split(/,|\n|\s*·\s*/).map(p => p.trim()).filter(Boolean);
+    arr.splice(idx, 1);
+    setForm({ ...form, players: arr.join(" · ") });
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="max-w-3xl mx-auto">
@@ -187,6 +240,14 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
           <input name="team_no" type="number" min={1} value={form.team_no} onChange={handleChange} className="border rounded px-2 py-1 w-20" required aria-label="조 번호" />
           <input name="tee_time" type="time" value={form.tee_time} onChange={handleChange} className="border rounded px-2 py-1 w-28" required aria-label="티오프 시간" />
           <div className="relative flex-1">
+            <div className="flex flex-wrap gap-1 mb-1">
+              {form.players.split(/,|\n|\s*·\s*/).map((p, i, arr) => p && (
+                <span key={i} className="inline-flex items-center bg-gray-100 rounded px-2 py-0.5 text-sm mr-1">
+                  {p}
+                  <button type="button" className="ml-1 text-gray-400 hover:text-red-500" onClick={() => handleRemovePlayerInput(i)} aria-label="삭제">×</button>
+                </span>
+              ))}
+            </div>
             <input
               ref={inputRef}
               name="players"
@@ -200,15 +261,26 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
               onFocus={() => setShowAuto(true)}
               onBlur={() => setTimeout(() => setShowAuto(false), 200)}
             />
+            {/* 자동 배정 버튼 */}
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-green-600 text-white px-3 py-1 rounded text-xs shadow hover:bg-green-700"
+              onClick={handleAutoAssignPlayers}
+              tabIndex={0}
+              aria-label="4명 자동 배정"
+            >
+              자동 배정
+            </button>
+            {/* 자동완성 리스트 */}
             {showAuto && autoList.length > 0 && (
               <ul className="absolute z-10 bg-white border rounded shadow w-full max-h-40 overflow-auto mt-1">
                 {autoList.map((p) => (
                   <li
                     key={p.id}
                     className="px-3 py-2 cursor-pointer hover:bg-blue-100"
-                    onMouseDown={() => handleAutoSelect(p.name)}
+                    onMouseDown={() => handleAutoSelect(p.name + (p.gender ? `(${p.gender})` : ""))}
                   >
-                    {p.name}
+                    {p.name}{p.gender ? <span className="ml-1 text-xs text-gray-500">({p.gender})</span> : null}
                   </li>
                 ))}
               </ul>
@@ -243,7 +315,33 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                     <td className="px-2 py-1">
                       {t.players.map((p, i, arr) => (
                         <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : ""}>
-                          {p}{i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
+                          {p}
+                          <button
+                            type="button"
+                            className="ml-1 text-xs text-green-700 underline"
+                            onClick={() => setMoveTarget({ player: p, fromId: t.id })}
+                            aria-label="이동"
+                          >이동</button>
+                          {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && (
+                            <select
+                              className="ml-1 border rounded px-1 py-0.5 text-xs"
+                              value={moveToTeam}
+                              onChange={e => setMoveToTeam(e.target.value)}
+                            >
+                              <option value="">조 선택</option>
+                              {teeTimes.filter(tt => tt.id !== t.id && tt.date === t.date && tt.course === t.course).map(tt => (
+                                <option key={tt.id} value={tt.id}>{tt.team_no}조</option>
+                              ))}
+                            </select>
+                          )}
+                          {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && moveToTeam && (
+                            <button
+                              type="button"
+                              className="ml-1 text-xs text-blue-700 underline"
+                              onClick={handleMovePlayer}
+                            >이동확정</button>
+                          )}
+                          {i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
                         </span>
                       ))}
                     </td>
