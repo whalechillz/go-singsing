@@ -255,7 +255,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-xl font-bold text-blue-800 mb-4">티오프 시간 관리</h2>
+        <h2 className="mb-4">일정 관리</h2>
         <form className="flex flex-col md:flex-row gap-2 mb-6 relative" onSubmit={handleSubmit} autoComplete="off">
           <input name="date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
           <select name="course" value={form.course} onChange={e => setForm({ ...form, course: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="코스">
