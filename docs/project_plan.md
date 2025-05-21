@@ -143,3 +143,35 @@
   - 각 참가자를 bg-white, rounded-lg, shadow, hover:bg-blue-50 등 카드형으로, grid-cols-1~4 반응형으로 배치
   - 파일 변경: `components/RoomAssignmentManager.tsx`
   - 목적: 미배정 영역 가독성 및 미관 개선, 반응형 최적화 
+
+## 2024-06-10
+- 참가자 관리(ParticipantsManager) 성별(gender) 필드 추가 및 UI/로직 개선
+  - 등록/수정 폼에 성별 select box(남/여) 추가
+  - gender 값이 DB에 저장/수정되도록 로직 개선
+  - 참가자 리스트에서 이름 옆에 (남)/(여)로 성별 표시
+  - 관련 파일: components/ParticipantsManager.tsx
+
+## 2024-06-11
+- 여행상품(투어 상품) 관리에 코스 정보(courses) 배열 컬럼 추가 마이그레이션 작성 및 적용 완료
+- Postgres TEXT[] 타입, NOT NULL 아님, 기본값 없음
+- 파일: `supabase/migrations/20240611_add-courses-to-tour-products.sql`
+- 목적: 투어 상품별로 여러 개의 코스명을 등록/수정/조회할 수 있도록 구조 확장
+- **DB 마이그레이션 적용 완료**
+- 남은 작업: 
+  - 투어 상품 생성/수정 UI에서 코스명 여러 개 입력/수정 기능 구현
+  - 티오프 시간 관리에서 코스 목록 연동 및 선택 기능 구현
+
+- 2024-06-11
+  - 투어 상품 생성/수정 UI에 코스명(courses) 배열 입력/수정 기능 구현
+  - 코스명 여러 개 입력, 추가/삭제, 수정 시 기존 값 불러오기, Tailwind 스타일 적용
+  - 변경 파일: `app/admin/tour-products/new/page.tsx`, `app/admin/tour-products/[id]/edit/page.tsx`
+  - 목적: 투어 상품별로 실제 플레이 코스명을 실무적으로 관리할 수 있도록 개선
+  - 남은 작업: 티오프 시간 관리에서 코스 목록 연동 및 선택 기능 구현
+
+- 2024-06-11
+  - 티오프 시간 관리에서 코스 선택 드롭다운이 투어 상품의 courses 배열과 연동되도록 개선
+  - 투어(tourId) → tour_product_id → tour_products.courses 배열 fetch → 드롭다운에 반영
+  - courses가 없으면 기존 샘플 코스명 옵션 유지
+  - 변경 파일: `components/TeeTimeManager.tsx`
+  - 목적: 투어별 실제 코스명만 선택 가능하도록 하여 실무적 관리 및 오류 방지
+  - 남은 작업: 없음(코스 연동 1차 완료)
