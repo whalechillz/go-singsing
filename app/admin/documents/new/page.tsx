@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Save, ArrowLeft } from 'lucide-react';
@@ -34,6 +34,8 @@ export default function NewDocumentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [productUsage, setProductUsage] = useState<{ usage_hotel?: string; usage_meal?: string; usage_locker?: string }>({});
+  const [mealSchedules, setMealSchedules] = useState<any[]>([]);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -59,6 +61,43 @@ export default function NewDocumentPage() {
     };
     fetchTours();
   }, [router]);
+
+  // 투어/상품/일정 fetch 및 안내문 자동 생성
+  useEffect(() => {
+    const fetchProductAndSchedules = async () => {
+      if (!selectedTour || selectedType !== 'room-assignment') return;
+      // 투어 정보
+      const { data: tour } = await supabase.from('singsing_tours').select('*').eq('id', selectedTour).single();
+      if (!tour) return;
+      // 상품 정보
+      let usage = {};
+      if (tour.tour_product_id) {
+        const { data: product } = await supabase.from('tour_products').select('usage_hotel, usage_meal, usage_locker').eq('id', tour.tour_product_id).single();
+        usage = product || {};
+      }
+      setProductUsage(usage);
+      // 일정 정보(조식/중식/석식 OX, 메뉴)
+      const { data: schedules } = await supabase.from('singsing_schedules').select('date, title, meal_breakfast, meal_lunch, meal_dinner, menu_breakfast, menu_lunch, menu_dinner').eq('tour_id', selectedTour).order('date', { ascending: true });
+      setMealSchedules(schedules || []);
+      // 안내문 자동 생성
+      let html = `<h2 class='text-xl font-bold mb-2 text-blue-800'>객실 이용 안내</h2>`;
+      if (usage.usage_hotel) html += `<div class='mb-4 text-gray-800'>${usage.usage_hotel.replace(/\n/g, '<br/>')}</div>`;
+      html += `<h2 class='text-xl font-bold mb-2 text-blue-800'>식사 안내</h2>`;
+      if (usage.usage_meal) html += `<div class='mb-4 text-gray-800'>${usage.usage_meal.replace(/\n/g, '<br/>')}</div>`;
+      if (mealSchedules.length > 0) {
+        html += `<table class='w-full table-auto border mb-4'><thead><tr><th class='border px-2 py-1'>날짜</th><th class='border px-2 py-1'>제목</th><th class='border px-2 py-1'>조식</th><th class='border px-2 py-1'>중식</th><th class='border px-2 py-1'>석식</th></tr></thead><tbody>`;
+        mealSchedules.forEach(s => {
+          html += `<tr><td class='border px-2 py-1'>${s.date || ''}</td><td class='border px-2 py-1'>${s.title || ''}</td><td class='border px-2 py-1'>${s.meal_breakfast ? 'O' : 'X'}${s.menu_breakfast ? ' (' + s.menu_breakfast + ')' : ''}</td><td class='border px-2 py-1'>${s.meal_lunch ? 'O' : 'X'}${s.menu_lunch ? ' (' + s.menu_lunch + ')' : ''}</td><td class='border px-2 py-1'>${s.meal_dinner ? 'O' : 'X'}${s.menu_dinner ? ' (' + s.menu_dinner + ')' : ''}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+      }
+      if (usage.usage_locker) html += `<h2 class='text-xl font-bold mb-2 text-blue-800'>락카 이용 안내</h2><div class='mb-4 text-gray-800'>${usage.usage_locker.replace(/\n/g, '<br/>')}</div>`;
+      setContent(html);
+      if (editor) editor.commands.setContent(html);
+    };
+    fetchProductAndSchedules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTour, selectedType]);
 
   const handleSave = async () => {
     if (!selectedTour || !selectedType || !content) {
