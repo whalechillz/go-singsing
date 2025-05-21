@@ -13,16 +13,40 @@ const initialForm = {
   usage_locker: "",
   usage_bus: "",
   usage_tour: "",
+  courses: [],
 };
 
 const TourProductNewPage = () => {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [courseInput, setCourseInput] = useState("");
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleCourseInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCourseInput(e.target.value);
+  };
+
+  const handleAddCourse = () => {
+    const value = courseInput.trim();
+    if (!value || form.courses.includes(value)) return;
+    setForm({ ...form, courses: [...form.courses, value] });
+    setCourseInput("");
+  };
+
+  const handleCourseInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      handleAddCourse();
+    }
+  };
+
+  const handleRemoveCourse = (idx: number) => {
+    setForm({ ...form, courses: form.courses.filter((_, i) => i !== idx) });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +57,7 @@ const TourProductNewPage = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("tour_products").insert([{ ...form }]);
+    const { error } = await supabase.from("tour_products").insert([{ ...form, courses: form.courses }]);
     setLoading(false);
     if (error) setError(error.message);
     else router.push("/admin/tour-products");
@@ -79,6 +103,27 @@ const TourProductNewPage = () => {
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">관광지 투어</span>
           <textarea name="usage_tour" value={form.usage_tour} onChange={handleChange} placeholder="관광지 투어" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="관광지 투어" />
+        </label>
+        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+          <span className="font-medium">코스명(여러 개)</span>
+          <div className="flex gap-2">
+            <input
+              value={courseInput}
+              onChange={handleCourseInputChange}
+              onKeyDown={handleCourseInputKeyDown}
+              placeholder="코스명 입력 후 Enter"
+              className="border rounded px-2 py-1 flex-1"
+            />
+            <button type="button" onClick={handleAddCourse} className="bg-blue-600 text-white px-3 py-1 rounded">추가</button>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {form.courses.map((c, i) => (
+              <span key={i} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center gap-1">
+                {c}
+                <button type="button" onClick={() => handleRemoveCourse(i)} className="ml-1 text-xs text-red-500">×</button>
+              </span>
+            ))}
+          </div>
         </label>
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700 mt-4" disabled={loading}>{loading ? "저장 중..." : "저장"}</button>

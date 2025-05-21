@@ -23,6 +23,7 @@ interface Participant {
     room_type: string;
     room_number: string;
   };
+  gender?: string;
   [key: string]: any;
 }
 
@@ -33,6 +34,7 @@ interface ParticipantForm {
   note?: string;
   status: string;
   role: string;
+  gender: string;
 }
 
 const DEFAULT_COLUMNS = ["이름", "연락처", "팀", "투어", "객실", "상태", "관리"];
@@ -40,7 +42,7 @@ const DEFAULT_COLUMNS = ["이름", "연락처", "팀", "투어", "객실", "상�
 const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showColumns = DEFAULT_COLUMNS, onChange }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [form, setForm] = useState<ParticipantForm>({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" });
+  const [form, setForm] = useState<ParticipantForm>({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "", gender: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
   const [search, setSearch] = useState<string>("");
@@ -103,7 +105,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       if (error) setError(error.message);
       else {
         setEditingId(null);
-        setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" });
+        setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "", gender: "" });
         setCustomRole("");
         fetchParticipants();
       }
@@ -111,7 +113,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       const { error } = await supabase.from("singsing_participants").insert([payload]);
       if (error) setError(error.message);
       else {
-        setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" });
+        setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "", gender: "" });
         setCustomRole("");
         fetchParticipants();
       }
@@ -120,7 +122,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
 
   const handleEdit = (p: Participant) => {
     setEditingId(p.id);
-    setForm({ name: p.name, phone: p.phone, team_name: p.team_name || "", note: p.note || "", status: p.status || "확정", role: p.role || "" });
+    setForm({ name: p.name, phone: p.phone, team_name: p.team_name || "", note: p.note || "", status: p.status || "확정", role: p.role || "", gender: p.gender || "" });
     if (p.role && !roleOptions.includes(p.role)) setCustomRole(p.role);
     else setCustomRole("");
   };
@@ -277,6 +279,11 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
         <input name="phone" value={form.phone} onChange={handleChange} placeholder="연락처(숫자만)" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" maxLength={11} />
         <input name="team_name" value={form.team_name} onChange={handleChange} placeholder="팀명" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" />
         <input name="note" value={form.note} onChange={handleChange} placeholder="메모" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" />
+        <select name="gender" value={form.gender} onChange={handleChange} className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" aria-label="성별" required>
+          <option value="">성별</option>
+          <option value="남">남</option>
+          <option value="여">여</option>
+        </select>
         <select name="status" value={form.status} onChange={handleChange} className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" aria-label="상태">
           <option value="확정">확정</option>
           <option value="대기">대기</option>
@@ -290,7 +297,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
           <input name="customRole" value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="직접입력" className="border border-gray-300 rounded px-2 py-1 flex-1 text-gray-800" />
         )}
         <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-blue-900 transition-colors">{editingId ? "수정" : "추가"}</button>
-        {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-gray-400 transition-colors" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "" }); }}>취소</button>}
+        {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px] font-semibold hover:bg-gray-400 transition-colors" onClick={() => { setEditingId(null); setForm({ name: "", phone: "", team_name: "", note: "", status: "확정", role: "", gender: "" }); }}>취소</button>}
       </form>
       <div className="flex gap-2 mb-4">
         <input
@@ -363,7 +370,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
             {filtered.map((p, idx) => (
               <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="py-1 px-2"><input type="checkbox" checked={selectedIds.includes(p.id)} onChange={e => handleSelectOne(p.id, e.target.checked)} /></td>
-                {showColumns.includes("이름") && <td className="py-1 px-2">{p.name}</td>}
+                {showColumns.includes("이름") && <td className="py-1 px-2">{p.name}{p.gender ? <span className="ml-1 text-xs text-gray-500">({p.gender})</span> : null}</td>}
                 {showColumns.includes("연락처") && <td className="py-1 px-2">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : ""}</td>}
                 {showColumns.includes("팀") && <td className="py-1 px-2">{p.team_name}</td>}
                 {showColumns.includes("투어") && <td className="py-1 px-2">{p.tour_id}</td>}

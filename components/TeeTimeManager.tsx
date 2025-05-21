@@ -37,6 +37,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   const [autoList, setAutoList] = useState<Participant[]>([]);
   const [showAuto, setShowAuto] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [courses, setCourses] = useState<string[]>([]);
 
   // 참가자 자동완성 데이터 불러오기
   useEffect(() => {
@@ -45,6 +46,26 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
       if (!error && data) setParticipants(data);
     };
     if (tourId) fetchParticipants();
+  }, [tourId]);
+
+  // 투어의 tour_product_id → courses 배열 fetch
+  useEffect(() => {
+    const fetchCourses = async () => {
+      // 1. 투어 정보에서 tour_product_id 조회
+      const { data: tour, error: tourErr } = await supabase.from("singsing_tours").select("tour_product_id").eq("id", tourId).single();
+      if (tourErr || !tour?.tour_product_id) {
+        setCourses([]);
+        return;
+      }
+      // 2. tour_products에서 courses 배열 조회
+      const { data: product, error: prodErr } = await supabase.from("tour_products").select("courses").eq("id", tour.tour_product_id).single();
+      if (!prodErr && product && Array.isArray(product.courses)) {
+        setCourses(product.courses);
+      } else {
+        setCourses([]);
+      }
+    };
+    if (tourId) fetchCourses();
   }, [tourId]);
 
   // DB에서 티오프 시간표 불러오기
@@ -155,9 +176,13 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
           <input name="date" type="date" value={form.date} onChange={handleChange} className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
           <select name="course" value={form.course} onChange={handleChange} className="border rounded px-2 py-1 flex-1" required aria-label="코스">
             <option value="">코스 선택</option>
-            <option value="파인힐스 CC - 파인 코스">파인힐스 CC - 파인 코스</option>
-            <option value="파인힐스 CC - 레이크 코스">파인힐스 CC - 레이크 코스</option>
-            <option value="파인힐스 CC - 힐스 코스">파인힐스 CC - 힐스 코스</option>
+            {courses.length > 0
+              ? courses.map((c) => <option key={c} value={c}>{c}</option>)
+              : [
+                  <option key="파인힐스 CC - 파인 코스" value="파인힐스 CC - 파인 코스">파인힐스 CC - 파인 코스</option>,
+                  <option key="파인힐스 CC - 레이크 코스" value="파인힐스 CC - 레이크 코스">파인힐스 CC - 레이크 코스</option>,
+                  <option key="파인힐스 CC - 힐스 코스" value="파인힐스 CC - 힐스 코스">파인힐스 CC - 힐스 코스</option>,
+                ]}
           </select>
           <input name="team_no" type="number" min={1} value={form.team_no} onChange={handleChange} className="border rounded px-2 py-1 w-20" required aria-label="조 번호" />
           <input name="tee_time" type="time" value={form.tee_time} onChange={handleChange} className="border rounded px-2 py-1 w-28" required aria-label="티오프 시간" />
