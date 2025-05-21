@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandInput, CommandList, CommandItem } from "@/components/ui/command";
 
 type TeeTime = {
   id: string;
@@ -41,6 +43,9 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   const [courses, setCourses] = useState<string[]>([]);
   const [moveTarget, setMoveTarget] = useState<{ player: string; fromId: string } | null>(null);
   const [moveToTeam, setMoveToTeam] = useState<string>("");
+  const [selectedParticipants, setSelectedParticipants] = useState<{ id: string; name: string; gender?: string }[]>([]);
+  const [participantSearch, setParticipantSearch] = useState("");
+  const [allSelected, setAllSelected] = useState(false);
 
   // 참가자 자동완성 데이터 불러오기 (gender 포함)
   useEffect(() => {
@@ -94,33 +99,23 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     setForm(f => ({ ...f, team_no: maxTeamNo + 1 }));
   }, [form.date, form.course, teeTimes]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-    if (name === "players") {
-      const last = value.split(/,|\n|\s*·\s*/).pop()?.trim() || "";
-      if (last.length > 0) {
-        setAutoList(participants.filter(p => p.name.includes(last) && !form.players.includes(p.name)));
-        setShowAuto(true);
-      } else {
-        setShowAuto(false);
-      }
-    }
+  // 참가자 옵션 변환
+  const participantOptions = participants.map(p => ({ id: p.id, name: p.name, gender: p.gender }));
+
+  const handleSelectParticipant = (p: { id: string; name: string; gender?: string }) => {
+    if (selectedParticipants.find(sp => sp.id === p.id)) return;
+    setSelectedParticipants([...selectedParticipants, p]);
   };
 
-  const handleAutoSelect = (name: string) => {
-    let playersArr = form.players.split(/,|\n|\s*·\s*/).map(p => p.trim()).filter(Boolean);
-    if (!playersArr.includes(name)) playersArr.push(name);
-    setForm({ ...form, players: playersArr.join(" · ") + " · " });
-    setShowAuto(false);
-    inputRef.current?.focus();
+  const handleRemoveParticipant = (id: string) => {
+    setSelectedParticipants(selectedParticipants.filter(p => p.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!form.date || !form.course || !form.tee_time || !form.players) return;
-    const playersArr = form.players.split(/,|\n|\s*·\s*/).map(p => p.trim()).filter(Boolean);
+    if (!form.date || !form.course || !form.tee_time || selectedParticipants.length === 0) return;
+    const playersArr = selectedParticipants.map(p => p.name + (p.gender ? `(${p.gender})` : ""));
     if (editingId) {
       const { error } = await supabase.from("singsing_tee_times").update({
         tour_id: tourId,
@@ -134,10 +129,10 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
       else {
         setEditingId(null);
         setForm({ ...initialForm });
+        setSelectedParticipants([]);
         fetchTeeTimes();
       }
     } else {
-      // team_no 자동 증가: 같은 날짜+코스의 기존 티오프 중 가장 큰 team_no + 1
       const filtered = teeTimes.filter(t => t.date === form.date && t.course === form.course);
       const maxTeamNo = filtered.length > 0 ? Math.max(...filtered.map(t => t.team_no)) : 0;
       const nextTeamNo = maxTeamNo + 1;
@@ -154,6 +149,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
       if (error) setError(error.message);
       else {
         setForm({ ...initialForm });
+        setSelectedParticipants([]);
         fetchTeeTimes();
       }
     }
@@ -214,77 +210,118 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     fetchTeeTimes();
   };
 
-  // 참가자 입력란에서 X(삭제) 버튼
-  const handleRemovePlayerInput = (idx: number) => {
-    const arr = form.players.split(/,|\n|\s*·\s*/).map(p => p.trim()).filter(Boolean);
-    arr.splice(idx, 1);
-    setForm({ ...form, players: arr.join(" · ") });
+  // 1. 코스명 가공 함수 추가
+  const formatCourseName = (course: string) => {
+    // 예: "파인힐스 CC - 파인 코스" → "파인힐스(파인)"
+    if (!course) return "";
+    const match = course.match(/(.+?) CC - (.+?) 코스/);
+    if (match) return `${match[1]}(${match[2]})`;
+    return course;
   };
+
+  // 1. 참가자 멀티 셀렉트 개선: 체크박스+전체리스트+검색+접근성
+  const filteredOptions = participantOptions.filter(p =>
+    p.name.includes(participantSearch)
+  );
+
+  // 참가자 멀티 셀렉트: 전체 선택/해제, 성별 그룹핑, 모바일 대응, 상단 고정, UX 강화
+  const groupedOptions = filteredOptions.reduce((acc, p) => {
+    const key = p.gender || "기타";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(p);
+    return acc;
+  }, {} as Record<string, typeof participantOptions>);
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setSelectedParticipants([]);
+      setAllSelected(false);
+    } else {
+      setSelectedParticipants(participantOptions);
+      setAllSelected(true);
+    }
+  };
+  useEffect(() => {
+    setAllSelected(selectedParticipants.length === participantOptions.length && participantOptions.length > 0);
+  }, [selectedParticipants, participantOptions]);
+
+  // 2. 날짜/코스/조별 그룹핑 UI로 표/카드 구조 리팩토링
+  const grouped = teeTimes.reduce((acc, t) => {
+    if (!acc[t.date]) acc[t.date] = {};
+    if (!acc[t.date][t.course]) acc[t.date][t.course] = [];
+    acc[t.date][t.course].push(t);
+    return acc;
+  }, {} as Record<string, Record<string, TeeTime[]>>);
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-xl font-bold text-blue-800 mb-4">티오프 시간 관리</h2>
         <form className="flex flex-col md:flex-row gap-2 mb-6 relative" onSubmit={handleSubmit} autoComplete="off">
-          <input name="date" type="date" value={form.date} onChange={handleChange} className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
-          <select name="course" value={form.course} onChange={handleChange} className="border rounded px-2 py-1 flex-1" required aria-label="코스">
+          <input name="date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
+          <select name="course" value={form.course} onChange={e => setForm({ ...form, course: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="코스">
             <option value="">코스 선택</option>
             {courses.length > 0
-              ? courses.map((c) => <option key={c} value={c}>{c}</option>)
+              ? courses.map((c) => <option key={c} value={c}>{formatCourseName(c)}</option>)
               : [
-                  <option key="파인힐스 CC - 파인 코스" value="파인힐스 CC - 파인 코스">파인힐스 CC - 파인 코스</option>,
-                  <option key="파인힐스 CC - 레이크 코스" value="파인힐스 CC - 레이크 코스">파인힐스 CC - 레이크 코스</option>,
-                  <option key="파인힐스 CC - 힐스 코스" value="파인힐스 CC - 힐스 코스">파인힐스 CC - 힐스 코스</option>,
+                  <option key="파인힐스 CC - 파인 코스" value="파인힐스 CC - 파인 코스">{formatCourseName("파인힐스 CC - 파인 코스")}</option>,
+                  <option key="파인힐스 CC - 레이크 코스" value="파인힐스 CC - 레이크 코스">{formatCourseName("파인힐스 CC - 레이크 코스")}</option>,
+                  <option key="파인힐스 CC - 힐스 코스" value="파인힐스 CC - 힐스 코스">{formatCourseName("파인힐스 CC - 힐스 코스")}</option>,
                 ]}
           </select>
-          <input name="team_no" type="number" min={1} value={form.team_no} onChange={handleChange} className="border rounded px-2 py-1 w-20" required aria-label="조 번호" />
-          <input name="tee_time" type="time" value={form.tee_time} onChange={handleChange} className="border rounded px-2 py-1 w-28" required aria-label="티오프 시간" />
+          <input name="team_no" type="number" min={1} value={form.team_no} onChange={e => setForm({ ...form, team_no: Number(e.target.value) })} className="border rounded px-2 py-1 w-20" required aria-label="조 번호" />
+          <input name="tee_time" type="time" value={form.tee_time} onChange={e => setForm({ ...form, tee_time: e.target.value })} className="border rounded px-2 py-1 w-28" required aria-label="티오프 시간" />
           <div className="relative flex-1">
-            <div className="flex flex-wrap gap-1 mb-1">
-              {form.players.split(/,|\n|\s*·\s*/).map((p, i, arr) => p && (
-                <span key={i} className="inline-flex items-center bg-gray-100 rounded px-2 py-0.5 text-sm mr-1">
-                  {p}
-                  <button type="button" className="ml-1 text-gray-400 hover:text-red-500" onClick={() => handleRemovePlayerInput(i)} aria-label="삭제">×</button>
-                </span>
-              ))}
-            </div>
-            <input
-              ref={inputRef}
-              name="players"
-              value={form.players}
-              onChange={handleChange}
-              placeholder="참가자 (자동완성, ·, ,로 구분)"
-              className="border rounded px-2 py-1 w-full"
-              required
-              aria-label="참가자"
-              autoComplete="off"
-              onFocus={() => setShowAuto(true)}
-              onBlur={() => setTimeout(() => setShowAuto(false), 200)}
-            />
-            {/* 자동 배정 버튼 */}
-            <button
-              type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-green-600 text-white px-3 py-1 rounded text-xs shadow hover:bg-green-700"
-              onClick={handleAutoAssignPlayers}
-              tabIndex={0}
-              aria-label="4명 자동 배정"
-            >
-              자동 배정
-            </button>
-            {/* 자동완성 리스트 */}
-            {showAuto && autoList.length > 0 && (
-              <ul className="absolute z-10 bg-white border rounded shadow w-full max-h-40 overflow-auto mt-1">
-                {autoList.map((p) => (
-                  <li
-                    key={p.id}
-                    className="px-3 py-2 cursor-pointer hover:bg-blue-100"
-                    onMouseDown={() => handleAutoSelect(p.name + (p.gender ? `(${p.gender})` : ""))}
-                  >
-                    {p.name}{p.gender ? <span className="ml-1 text-xs text-gray-500">({p.gender})</span> : null}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="w-full min-h-[40px] border rounded px-2 py-1 flex flex-wrap items-center gap-1 cursor-pointer bg-white">
+                  {selectedParticipants.length === 0 && <span className="text-gray-400">참가자 선택</span>}
+                  {selectedParticipants.map(p => (
+                    <span key={p.id} className="inline-flex items-center bg-blue-100 text-blue-800 rounded px-2 py-0.5 text-sm mr-1">
+                      {p.name}{p.gender ? <span className="ml-1 text-xs text-blue-600">({p.gender})</span> : null}
+                      <button type="button" className="ml-1 text-blue-400 hover:text-red-500" onClick={e => { e.stopPropagation(); handleRemoveParticipant(p.id); }} aria-label="삭제">×</button>
+                    </span>
+                  ))}
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0">
+                <Command>
+                  <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50 sticky top-0 z-10">
+                    <CommandInput placeholder="이름 검색" value={participantSearch} onValueChange={setParticipantSearch} className="w-40" />
+                    <button type="button" className="text-xs px-2 py-1 rounded border ml-2 bg-white hover:bg-blue-50" onClick={handleSelectAll}>{allSelected ? "전체 해제" : "전체 선택"}</button>
+                  </div>
+                  <CommandList className="max-h-60 overflow-y-auto">
+                    {Object.entries(groupedOptions).map(([gender, list]) => (
+                      <div key={gender} className="py-1">
+                        <div className="px-3 py-1 text-xs text-blue-700 bg-blue-50 rounded-t font-semibold sticky top-0 z-10">{gender === "남" ? "남자" : gender === "여" ? "여자" : gender}</div>
+                        {list.length === 0 && <div className="p-2 text-gray-400">검색 결과 없음</div>}
+                        {list.map(p => {
+                          const checked = !!selectedParticipants.find(sp => sp.id === p.id);
+                          return (
+                            <CommandItem
+                              key={p.id}
+                              onSelect={() => handleSelectParticipant(p)}
+                              className={checked ? "bg-blue-50 text-blue-700" : ""}
+                              tabIndex={0}
+                              aria-selected={checked}
+                              role="option"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                readOnly
+                                className="mr-2 accent-blue-600"
+                                tabIndex={-1}
+                              />
+                              {p.name}{p.gender ? <span className="ml-1 text-xs text-blue-600">({p.gender})</span> : null}
+                            </CommandItem>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
           {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm(initialForm); }}>취소</button>}
@@ -294,65 +331,75 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
           <div className="text-center py-4 text-gray-500">불러오는 중...</div>
         ) : (
           <div className="bg-white rounded-lg shadow p-4">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 py-2">날짜</th>
-                  <th className="px-2 py-2">코스</th>
-                  <th className="px-2 py-2">조</th>
-                  <th className="px-2 py-2">티오프</th>
-                  <th className="px-2 py-2">참가자</th>
-                  <th className="px-2 py-2">관리</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teeTimes.map((t) => (
-                  <tr key={t.id} className="border-t">
-                    <td className="px-2 py-1 whitespace-nowrap">{t.date}</td>
-                    <td className="px-2 py-1 whitespace-nowrap">{t.course}</td>
-                    <td className="px-2 py-1 text-center">{t.team_no}</td>
-                    <td className="px-2 py-1 text-center text-red-600 font-bold">{formatTimeHHMM(t.tee_time)}</td>
-                    <td className="px-2 py-1">
-                      {t.players.map((p, i, arr) => (
-                        <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : ""}>
-                          {p}
-                          <button
-                            type="button"
-                            className="ml-1 text-xs text-green-700 underline"
-                            onClick={() => setMoveTarget({ player: p, fromId: t.id })}
-                            aria-label="이동"
-                          >이동</button>
-                          {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && (
-                            <select
-                              className="ml-1 border rounded px-1 py-0.5 text-xs"
-                              value={moveToTeam}
-                              onChange={e => setMoveToTeam(e.target.value)}
-                            >
-                              <option value="">조 선택</option>
-                              {teeTimes.filter(tt => tt.id !== t.id && tt.date === t.date && tt.course === t.course).map(tt => (
-                                <option key={tt.id} value={tt.id}>{tt.team_no}조</option>
-                              ))}
-                            </select>
-                          )}
-                          {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && moveToTeam && (
-                            <button
-                              type="button"
-                              className="ml-1 text-xs text-blue-700 underline"
-                              onClick={handleMovePlayer}
-                            >이동확정</button>
-                          )}
-                          {i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
-                        </span>
+            {Object.keys(grouped).length === 0 && <div className="text-gray-400 text-center py-8">등록된 티오프가 없습니다.</div>}
+            {Object.entries(grouped).map(([date, courses]) => (
+              <div key={date} className="mb-8">
+                <div className="text-lg font-bold text-blue-900 border-b pb-1 mb-2 flex items-center gap-2">
+                  <span className="material-icons text-blue-400">event</span>{date}
+                </div>
+                {Object.entries(courses).length === 0 && <div className="text-gray-400 text-center py-4">코스 없음</div>}
+                {Object.entries(courses).map(([course, teams]) => (
+                  <div key={course} className="mb-4">
+                    <div className="text-base font-semibold text-blue-700 mb-1 flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-blue-50 rounded border border-blue-100">{formatCourseName(course)}</span>
+                      <span className="text-xs text-gray-400">{teams.length}조</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {teams.sort((a, b) => a.team_no - b.team_no).map((t) => (
+                        <div key={t.id} className="border rounded-lg p-3 flex flex-col gap-1 bg-gray-50 shadow-sm hover:shadow-md transition">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="font-bold text-blue-800 text-lg">{t.team_no}조</div>
+                            <div className="text-red-600 font-bold text-base">{formatTimeHHMM(t.tee_time)}</div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 items-center mb-1">
+                            {t.players.length === 0 && <span className="text-gray-400">참가자 없음</span>}
+                            {t.players.map((p, i, arr) => (
+                              <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : ""}>
+                                {p}
+                                <button
+                                  type="button"
+                                  className="ml-1 text-xs text-green-700 underline"
+                                  onClick={() => setMoveTarget({ player: p, fromId: t.id })}
+                                  aria-label="이동"
+                                >이동</button>
+                                {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && (
+                                  <select
+                                    className="ml-1 border rounded px-1 py-0.5 text-xs"
+                                    value={moveToTeam}
+                                    onChange={e => setMoveToTeam(e.target.value)}
+                                  >
+                                    <option value="">조 선택</option>
+                                    {teams.filter(tt => tt.id !== t.id).map(tt => (
+                                      <option key={tt.id} value={tt.id}>{tt.team_no}조</option>
+                                    ))}
+                                  </select>
+                                )}
+                                {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && moveToTeam && (
+                                  <button
+                                    type="button"
+                                    className="ml-1 text-xs text-blue-700 underline"
+                                    onClick={handleMovePlayer}
+                                  >이동확정</button>
+                                )}
+                                {i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                            <span>참가자 수: <span className={t.players.length === 4 ? "text-blue-700 font-bold" : t.players.length > 4 ? "text-red-600 font-bold" : ""}>{t.players.length}</span>/4</span>
+                            {t.players.length > 4 && <span className="text-red-600 font-bold">정원 초과</span>}
+                          </div>
+                          <div className="flex gap-2 mt-1">
+                            <button className="text-blue-700 underline" onClick={() => handleEdit(t)} aria-label="수정">수정</button>
+                            <button className="text-red-600 underline" onClick={() => handleDelete(t.id)} aria-label="삭제">삭제</button>
+                          </div>
+                        </div>
                       ))}
-                    </td>
-                    <td className="px-2 py-1 flex gap-1">
-                      <button className="text-blue-700 underline" onClick={() => handleEdit(t)} aria-label="수정">수정</button>
-                      <button className="text-red-600 underline" onClick={() => handleDelete(t.id)} aria-label="삭제">삭제</button>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            ))}
           </div>
         )}
       </div>
