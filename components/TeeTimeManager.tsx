@@ -290,34 +290,41 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                     <button type="button" className="text-xs px-2 py-1 rounded border ml-2 bg-white hover:bg-blue-50" onClick={handleSelectAll}>{allSelected ? "전체 해제" : "전체 선택"}</button>
                   </div>
                   <CommandList className="max-h-60 overflow-y-auto">
-                    {Object.entries(groupedOptions).map(([gender, list]) => (
-                      <div key={gender} className="py-1">
-                        <div className="px-3 py-1 text-xs text-blue-700 bg-blue-50 rounded-t font-semibold sticky top-0 z-10">{gender === "남" ? "남자" : gender === "여" ? "여자" : gender}</div>
-                        {list.length === 0 && <div className="p-2 text-gray-400">검색 결과 없음</div>}
-                        {list.map(p => {
-                          const checked = !!selectedParticipants.find(sp => sp.id === p.id);
-                          return (
-                            <CommandItem
-                              key={p.id}
-                              onSelect={() => handleSelectParticipant(p)}
-                              className={checked ? "bg-blue-50 text-blue-700" : ""}
-                              tabIndex={0}
-                              aria-selected={checked}
-                              role="option"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                readOnly
-                                className="mr-2 accent-blue-600"
-                                tabIndex={-1}
-                              />
-                              {p.name}{p.gender ? <span className="ml-1 text-xs text-blue-600">({p.gender})</span> : null}
-                            </CommandItem>
-                          );
-                        })}
-                      </div>
-                    ))}
+                    {filteredOptions.length === 0 ? (
+                      <div className="p-2 text-gray-400">검색 결과 없음</div>
+                    ) : (
+                      Object.entries(groupedOptions)
+                        .filter(([_, list]) => list.length > 0) // 참가자가 있는 그룹만 렌더링
+                        .map(([gender, list]) => (
+                          <div key={gender} className="py-1">
+                            <div className="px-3 py-1 text-xs text-blue-700 bg-blue-50 rounded-t font-semibold sticky top-0 z-10">
+                              {gender === "남" ? "남자" : gender === "여" ? "여자" : gender}
+                            </div>
+                            {list.map(p => {
+                              const checked = !!selectedParticipants.find(sp => sp.id === p.id);
+                              return (
+                                <CommandItem
+                                  key={p.id}
+                                  onSelect={() => handleSelectParticipant(p)}
+                                  className={checked ? "bg-blue-50 text-blue-700" : ""}
+                                  tabIndex={0}
+                                  aria-selected={checked}
+                                  role="option"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    readOnly
+                                    className="mr-2 accent-blue-600"
+                                    tabIndex={-1}
+                                  />
+                                  {p.name}{p.gender ? <span className="ml-1 text-xs text-blue-600">({p.gender})</span> : null}
+                                </CommandItem>
+                              );
+                            })}
+                          </div>
+                        ))
+                    )}
                   </CommandList>
                 </Command>
               </PopoverContent>
