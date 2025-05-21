@@ -161,7 +161,11 @@ export default function DocumentPage() {
             {params.type === 'tour-schedule' ? (
               <TourSchedulePreview tourId={params.tourId as string} />
             ) : (
-            <div dangerouslySetInnerHTML={{ __html: document.content }} />
+              document.content && document.content.trim() ? (
+                <div dangerouslySetInnerHTML={{ __html: document.content }} />
+              ) : (
+                <div className="text-gray-400 text-center py-12">안내문이 없습니다.</div>
+              )
             )}
           </div>
           <div className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-500">

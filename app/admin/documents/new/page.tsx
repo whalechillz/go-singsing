@@ -83,13 +83,13 @@ export default function NewDocumentPage() {
       const { data: schedules } = await supabase.from('singsing_schedules').select('date, title, meal_breakfast, meal_lunch, meal_dinner, menu_breakfast, menu_lunch, menu_dinner').eq('tour_id', selectedTour).order('date', { ascending: true });
       // 안내문 자동 생성
       let html = `<h2 class='text-xl font-bold mb-2 text-blue-800'>객실 이용 안내</h2>`;
-      if (usage.usage_hotel) {
+      if (usage.usage_hotel && usage.usage_hotel.trim()) {
         html += `<div class='mb-4 text-gray-800'>${usage.usage_hotel.replace(/\n/g, '<br/>')}</div>`;
       } else {
         html += `<div class='mb-4 text-gray-800'>숙소 이용 안내 정보가 없습니다.</div>`;
       }
       html += `<h2 class='text-xl font-bold mb-2 text-blue-800'>식사 안내</h2>`;
-      if (usage.usage_meal) {
+      if (usage.usage_meal && usage.usage_meal.trim()) {
         html += `<div class='mb-4 text-gray-800'>${usage.usage_meal.replace(/\n/g, '<br/>')}</div>`;
       } else {
         html += `<div class='mb-4 text-gray-800'>식사 안내 정보가 없습니다.</div>`;
@@ -103,7 +103,7 @@ export default function NewDocumentPage() {
       } else {
         html += `<div class='mb-4 text-gray-800'>일정별 식사 정보가 없습니다.</div>`;
       }
-      if (usage.usage_locker) {
+      if (usage.usage_locker && usage.usage_locker.trim()) {
         html += `<h2 class='text-xl font-bold mb-2 text-blue-800'>락카 이용 안내</h2><div class='mb-4 text-gray-800'>${usage.usage_locker.replace(/\n/g, '<br/>')}</div>`;
       }
       setContent(html);
