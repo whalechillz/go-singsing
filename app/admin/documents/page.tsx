@@ -24,6 +24,7 @@ interface Document {
 const documentTypes = {
   'tour-schedule': { name: '투어 일정표', icon: FileText },
   'boarding-guide': { name: '탑승지 안내', icon: MapPin },
+  'room-assignment': { name: '객실 배정', icon: Users },
   'rounding-timetable': { name: '라운딩 시간표', icon: Calendar },
   'boarding-guide-staff': { name: '탑승지 배정 (스탭용)', icon: MapPin },
   'room-assignment-staff': { name: '객실 배정 (스탭용)', icon: Users },
