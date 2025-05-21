@@ -16,6 +16,14 @@ interface Document {
   updated_at: string;
 }
 
+interface Tour {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  golf_course?: string;
+}
+
 // 문서 타입별 설정
 const documentTypes = {
   'tour-schedule': { name: '투어 일정표', icon: FileText },
@@ -29,6 +37,7 @@ const documentTypes = {
 export default function DocumentPage() {
   const params = useParams();
   const [document, setDocument] = useState<Document | null>(null);
+  const [tour, setTour] = useState<Tour | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isStaffView, setIsStaffView] = useState(false);
@@ -39,18 +48,25 @@ export default function DocumentPage() {
       setIsStaffView(session?.user?.user_metadata?.is_staff || false);
     };
 
-    const fetchDocument = async () => {
+    const fetchDocumentAndTour = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('tour_id', params.tourId)
-          .eq('type', params.type)
-          .single();
-
-        if (error) throw error;
-        setDocument(data);
+        const [{ data: doc, error: docError }, { data: tourData }] = await Promise.all([
+          supabase
+            .from('documents')
+            .select('*')
+            .eq('tour_id', params.tourId)
+            .eq('type', params.type)
+            .single(),
+          supabase
+            .from('singsing_tours')
+            .select('*')
+            .eq('id', params.tourId)
+            .single(),
+        ]);
+        if (docError) throw docError;
+        setDocument(doc);
+        setTour(tourData || null);
       } catch (err) {
         setError('문서를 불러오는 중 오류가 발생했습니다.');
       } finally {
@@ -59,7 +75,7 @@ export default function DocumentPage() {
     };
 
     checkStaffView();
-    fetchDocument();
+    fetchDocumentAndTour();
   }, [params.tourId, params.type]);
 
   // 스탭 전용 문서 체크
@@ -112,15 +128,20 @@ export default function DocumentPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            {documentType ? (
-              <>
-                {React.createElement(documentType.icon, { className: "w-6 h-6 text-blue-600 mr-2" })}
-                <h1 className="text-2xl font-bold text-gray-800">{documentType.name}</h1>
-              </>
-            ) : (
-              <h1 className="text-2xl font-bold text-gray-800">{params.type ? params.type.toString().replace(/-/g, ' ') : '문서 유형'}</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <div>
+            <div className="flex items-center mb-1">
+              {documentType ? (
+                <>
+                  {React.createElement(documentType.icon, { className: "w-6 h-6 text-blue-600 mr-2" })}
+                  <h1 className="text-2xl font-bold text-gray-800">{documentType.name}</h1>
+                </>
+              ) : (
+                <h1 className="text-2xl font-bold text-gray-800">{params.type ? params.type.toString().replace(/-/g, ' ') : '문서 유형'}</h1>
+              )}
+            </div>
+            {tour && (
+              <p className="text-gray-600 text-sm">{tour.title} / {tour.start_date} ~ {tour.end_date}{tour.golf_course ? ` / ${tour.golf_course}` : ''}</p>
             )}
           </div>
           <button
