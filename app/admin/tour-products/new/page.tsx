@@ -3,7 +3,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
-const initialForm = {
+interface TourProductForm {
+  name: string;
+  golf_course: string;
+  hotel: string;
+  usage_round: string;
+  usage_hotel: string;
+  usage_meal: string;
+  usage_locker: string;
+  usage_bus: string;
+  usage_tour: string;
+  courses: string[];
+}
+
+const initialForm: TourProductForm = {
   name: "",
   golf_course: "",
   hotel: "",
@@ -17,7 +30,7 @@ const initialForm = {
 };
 
 const TourProductNewPage = () => {
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState<TourProductForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [courseInput, setCourseInput] = useState("");
