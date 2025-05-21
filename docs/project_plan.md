@@ -222,3 +222,18 @@
 - 멀티 셀렉트 UX 세부 동작(전체 선택, 그룹핑, 모바일 대응 등) 추가 개선
 - 조 이동/변경 UX 및 데이터 일관성 추가 테스트
 - 실사용자 피드백 반영 및 QA
+
+### [2024-06-XX] 객실배정표(RoomAssignmentManager) 문서 상세 하단 항상 랜더링
+
+- **작업 내역**
+  - room-assignment, room-assignment-staff 문서 상세 페이지(app/document/[tourId]/[type]/page.tsx) 하단에 RoomAssignmentManager를 항상 랜더링하도록 개선
+  - tourId는 params.tourId로 전달, import 추가
+  - 안내문/테이블/기본 메시지가 항상 포함되도록 예외처리
+- **목적**
+  - 객실배정표 등 주요 데이터가 항상 화면에 노출되어 실무적 사용성 및 신뢰성 확보
+- **변경 파일**
+  - app/document/[tourId]/[type]/page.tsx
+  - docs/project_plan.md
+- **남은 작업**
+  - 전체 QA 및 실무 시나리오 테스트
+  - 문서/코드 최종 정리 및 배포

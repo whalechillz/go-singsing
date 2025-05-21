@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Lock, Printer } from 'lucide-react';
 import TourSchedulePreview from '@/components/TourSchedulePreview';
+import RoomAssignmentManager from '@/components/RoomAssignmentManager';
 
 // 문서 타입 정의
 interface Document {
@@ -168,6 +169,11 @@ export default function DocumentPage() {
               )
             )}
           </div>
+          {(params.type === 'room-assignment' || params.type === 'room-assignment-staff') && (
+            <div className="mt-10">
+              <RoomAssignmentManager tourId={params.tourId as string} />
+            </div>
+          )}
           <div className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-500">
             <p>최종 수정일: {new Date(document.updated_at).toLocaleString('ko-KR')}</p>
           </div>
