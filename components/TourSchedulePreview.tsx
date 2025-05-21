@@ -11,8 +11,7 @@ type Product = {
   id: string;
   name: string;
   description?: string;
-  // 기타 필요한 필드
-  usage_rounding?: string;
+  usage_round?: string;
   usage_hotel?: string;
   usage_meal?: string;
   usage_locker?: string;
@@ -98,7 +97,7 @@ const TourSchedulePreview: React.FC<Props> = ({ tourId }) => {
   // usage 배열 동적 생성
   const usage = product
     ? [
-        { title: "라운드 규정", items: product.usage_rounding?.split('\n').filter(Boolean) || [] },
+        { title: "라운드 규정", items: product.usage_round?.split('\n').filter(Boolean) || [] },
         { title: "숙소 이용", items: product.usage_hotel?.split('\n').filter(Boolean) || [] },
         { title: "식사 안내", items: product.usage_meal?.split('\n').filter(Boolean) || [] },
         { title: "락카 이용", items: product.usage_locker?.split('\n').filter(Boolean) || [] },
