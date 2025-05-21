@@ -186,21 +186,21 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                 <ul className="flex flex-wrap gap-2">
                   {assigned.length === 0 ? (
                     <li className="text-gray-400 text-sm">배정된 참가자가 없습니다.</li>
-                  ) : (
+              ) : (
                     assigned.map(p => (
                       <li key={p.id} className="flex items-center gap-1 flex-1 min-w-[120px]">
                         <div className="flex flex-col items-start min-w-0">
                           <span className="font-medium text-gray-900 truncate">{p.name}</span>
                         </div>
-                        <select
+                      <select
                           className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right ml-2"
                           value={p.room_id || ""}
-                          onChange={e => handleAssignRoom(p.id, e.target.value)}
-                          aria-label="객실 선택"
-                          tabIndex={0}
-                          disabled={!!assigning}
-                        >
-                          <option value="">미배정</option>
+                        onChange={e => handleAssignRoom(p.id, e.target.value)}
+                        aria-label="객실 선택"
+                        tabIndex={0}
+                        disabled={!!assigning}
+                      >
+                        <option value="">미배정</option>
                           {rooms.map(r => {
                             const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
                             const isFull = assignedCount >= r.capacity;
@@ -210,12 +210,12 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                               </option>
                             );
                           })}
-                        </select>
-                      </li>
+                      </select>
+                    </li>
                     ))
                   )}
                 </ul>
-              </div>
+            </div>
             );
           })}
           {/* 미배정 */}

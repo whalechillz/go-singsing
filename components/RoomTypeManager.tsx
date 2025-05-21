@@ -71,10 +71,10 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
       });
     }
     const { error } = await supabase.from("singsing_rooms").insert(newRooms);
-    if (error) setError(error.message);
-    else {
+      if (error) setError(error.message);
+      else {
       setRoomRows([{ room_type: "", capacity: "" }]);
-      fetchRooms();
+        fetchRooms();
     }
   };
 
