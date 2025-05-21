@@ -114,11 +114,13 @@ export default function DocumentPage() {
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            {documentType && (
+            {documentType ? (
               <>
                 {React.createElement(documentType.icon, { className: "w-6 h-6 text-blue-600 mr-2" })}
                 <h1 className="text-2xl font-bold text-gray-800">{documentType.name}</h1>
               </>
+            ) : (
+              <h1 className="text-2xl font-bold text-gray-800">{params.type ? params.type.toString().replace(/-/g, ' ') : '문서 유형'}</h1>
             )}
           </div>
           <button
