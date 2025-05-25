@@ -54,10 +54,10 @@ export default function DocumentPage() {
         setIsLoading(true);
         const [{ data: doc, error: docError }, { data: tourData }] = await Promise.all([
           supabase
-            .from('documents')
-            .select('*')
-            .eq('tour_id', params.tourId)
-            .eq('type', params.type)
+          .from('documents')
+          .select('*')
+          .eq('tour_id', params.tourId)
+          .eq('type', params.type)
             .single(),
           supabase
             .from('singsing_tours')
@@ -133,10 +133,10 @@ export default function DocumentPage() {
           <div>
             <div className="flex items-center mb-1">
               {documentType ? (
-                <>
-                  {React.createElement(documentType.icon, { className: "w-6 h-6 text-blue-600 mr-2" })}
-                  <h1 className="text-2xl font-bold text-gray-800">{documentType.name}</h1>
-                </>
+              <>
+                {React.createElement(documentType.icon, { className: "w-6 h-6 text-blue-600 mr-2" })}
+                <h1 className="text-2xl font-bold text-gray-800">{documentType.name}</h1>
+              </>
               ) : (
                 <h1 className="text-2xl font-bold text-gray-800">{params.type ? params.type.toString().replace(/-/g, ' ') : '문서 유형'}</h1>
               )}
@@ -163,7 +163,7 @@ export default function DocumentPage() {
               <TourSchedulePreview tourId={params.tourId as string} />
             ) : (
               document.content && document.content.trim() ? (
-                <div dangerouslySetInnerHTML={{ __html: document.content }} />
+            <div dangerouslySetInnerHTML={{ __html: document.content }} />
               ) : (
                 <div className="text-gray-400 text-center py-12">안내문이 없습니다.</div>
               )

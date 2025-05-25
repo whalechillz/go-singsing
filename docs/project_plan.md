@@ -237,3 +237,13 @@
 - **남은 작업**
   - 전체 QA 및 실무 시나리오 테스트
   - 문서/코드 최종 정리 및 배포
+
+## 2024-06-XX: 의존성 정리 및 DB 구조/연동 개선
+
+- 불필요 패키지(@emnapi/core, @emnapi/runtime, @emnapi/wasi-threads, @napi-rs/wasm-runtime, @tybys/wasm-util) 삭제
+- npm install, npm audit fix로 의존성 및 보안 점검
+- 주요 취약점(xlsx, prismjs 등)은 일부 자동 해결 불가, 추후 major 업데이트 필요
+- DB singsing_tours 테이블에 tour_product_id 컬럼이 실제로 없었던 문제 발견 → 컬럼 추가 및 구조 일치화
+- 투어 생성/수정 시 tour_product_id가 입력/연결되지 않아 상품 기반 안내문이 노출되지 않는 구조적 원인 진단
+- 실무적 조치: 컬럼 추가 후, 각 투어에 상품 id 연결 → 정상 연동 확인
+- Vercel 배포는 변경사항 없을 경우 강제 커밋(문서 등) 또는 대시보드 Redeploy로 트리거 가능

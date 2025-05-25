@@ -16,7 +16,7 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
     {
       id: 'dashboard',
       label: '대시보드',
-      icon: <Home className="w-5 h-5 text-blue-200" />,
+      icon: <Home className="w-5 h-5" />,
       href: '/admin',
     },
     {
@@ -73,7 +73,7 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
                       <span className="text-blue-200">{item.icon}</span>
                       {isSidebarOpen && <span className="ml-4">{item.label}</span>}
                       {isSidebarOpen && (
-                        openSubMenu ? <ChevronDown className="w-4 h-4 ml-auto" /> : <ChevronRight className="w-4 h-4 ml-auto" />
+                        openSubMenu ? <ChevronDown className="w-4 h-4 ml-auto text-blue-200" /> : <ChevronRight className="w-4 h-4 ml-auto text-blue-200" />
                       )}
                     </button>
                     {/* Submenu */}

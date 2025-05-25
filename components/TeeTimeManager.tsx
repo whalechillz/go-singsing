@@ -311,13 +311,13 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                                   aria-selected={checked}
                                   role="option"
                                 >
-                                  <input
+            <input
                                     type="checkbox"
                                     checked={checked}
                                     readOnly
                                     className="mr-2 accent-blue-600"
                                     tabIndex={-1}
-                                  />
+            />
                                   {p.name}{p.gender ? <span className="ml-1 text-xs text-blue-600">({p.gender})</span> : null}
                                 </CommandItem>
                               );
@@ -360,8 +360,8 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                           </div>
                           <div className="flex flex-wrap gap-2 items-center mb-1">
                             {t.players.length === 0 && <span className="text-gray-400">참가자 없음</span>}
-                            {t.players.map((p, i, arr) => (
-                              <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : ""}>
+                      {t.players.map((p, i, arr) => (
+                        <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : ""}>
                                 {p}
                                 <button
                                   type="button"
@@ -389,19 +389,19 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                                   >이동확정</button>
                                 )}
                                 {i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
-                              </span>
-                            ))}
+                        </span>
+                      ))}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                             <span>참가자 수: <span className={t.players.length === 4 ? "text-blue-700 font-bold" : t.players.length > 4 ? "text-red-600 font-bold" : ""}>{t.players.length}</span>/4</span>
                             {t.players.length > 4 && <span className="text-red-600 font-bold">정원 초과</span>}
                           </div>
                           <div className="flex gap-2 mt-1">
-                            <button className="text-blue-700 underline" onClick={() => handleEdit(t)} aria-label="수정">수정</button>
-                            <button className="text-red-600 underline" onClick={() => handleDelete(t.id)} aria-label="삭제">삭제</button>
+                      <button className="text-blue-700 underline" onClick={() => handleEdit(t)} aria-label="수정">수정</button>
+                      <button className="text-red-600 underline" onClick={() => handleDelete(t.id)} aria-label="삭제">삭제</button>
                           </div>
                         </div>
-                      ))}
+                ))}
                     </div>
                   </div>
                 ))}
