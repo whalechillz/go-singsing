@@ -10,7 +10,7 @@ interface AdminSidebarLayoutProps {
 const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeNav, setActiveNav] = useState('dashboard');
-  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ tours: true, members: true });
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ tours: true, 'participants-management': true });
 
   const navItems = [
     {
@@ -33,19 +33,20 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
     { id: 'documents', label: '문서 관리', icon: <FileText className="w-5 h-5" />, href: '/admin/documents' },
     { id: 'notification', label: '알림톡 보내기', icon: <MessageSquare className="w-5 h-5" />, href: '/admin/notification', disabled: true },
     {
-      id: 'members',
-      label: '전체회원 관리',
+      id: 'participants-management',
+      label: '전체 참가자 관리',
       icon: <User className="w-5 h-5" />,
       subMenu: [
-        { id: 'members-list', label: '참가자 목록', href: '/admin/participants' },
+        { id: 'participants-list', label: '참가자 목록', href: '/admin/participants' },
         { id: 'payments', label: '결제 관리', href: '/admin/payments' },
       ]
     },
+    { id: 'members', label: '전체회원 관리', icon: <User className="w-5 h-5" />, href: '/admin/members', disabled: true },
     { id: 'accounting', label: '매출 매입 정산서 관리', icon: <CreditCard className="w-5 h-5" />, href: '/admin/accounting', disabled: true },
     { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics', disabled: true },
     { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings', disabled: true },
   ];
-  // TODO: 알림톡 보내기, 전체회원 관리, 매출 매입 정산서 관리 등은 추후 개발 예정. 해당 메뉴 클릭 시 라우트만 연결되어 있고, 실제 페이지/기능은 아직 구현되지 않음.
+  // TODO: 알림톡 보내기(투어 관련), 전체회원 관리(획보용 알림톡 포함), 매출 매입 정산서 관리 등은 추후 개발 예정. 해당 메뉴 클릭 시 라우트만 연결되어 있고, 실제 페이지/기능은 아직 구현되지 않음.
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const toggleSubMenu = (menuId: string) => {

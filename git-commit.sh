@@ -12,15 +12,13 @@ git add .
 
 # 커밋
 echo "커밋 실행..."
-git commit -m "feat: 결제 관리 기능 기반 구축 및 DB 스키마 업데이트
+git commit -m "fix: TypeScript 타입 에러 수정 및 메뉴 구조 개선
 
-- singsing_payments 테이블 활용 및 타입 정의 추가
-- 참가자 관리에 그룹 결제 기능 복원 (DB 컴럼 확인)
-- 전화번호 선택 입력으로 변경 (대표자 일괄 결제 지원)
-- 탑승지 데이터 DB 직접 로드 방식으로 개선
-- 관리자 메뉴에 결제 관리 항목 추가
-- 결제 관리 페이지 기본 틀 생성
-- 문서 업데이트 (/docs/payment-management.md 추가)"
+- Supabase relation 쿼리에 any 타입 추가로 Vercel 빌드 에러 해결
+- 메뉴 구조 변경: 전체 참가자 관리를 독립 메뉴로 분리
+- 전체회원 관리는 향후 개발로 별도 구분
+- 회원 관리 시스템 설계 문서 추가 (/docs/member-management-design.md)
+- UI/UX 구조 문서 업데이트"
 
 # 푸시
 echo "원격 저장소에 푸시..."
