@@ -19,9 +19,24 @@ const TourListPage: React.FC = () => {
   useEffect(() => {
     const fetchTours = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from("singsing_tours").select("*").order("created_at", { ascending: false });
-      if (error) setError(error.message);
-      else setTours(data as Tour[]);
+      const { data, error } = await supabase
+        .from("singsing_tours")
+        .select("*, singsing_tour_products:tour_product_id(title)")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        setError(error.message);
+      } else if (data) {
+        // 투어명 우선순위: tour_products.title > title
+        const formattedTours = data.map(t => ({
+          id: t.id,
+          title: t.singsing_tour_products?.title || t.title || "투어",
+          start_date: t.start_date,
+          end_date: t.end_date,
+          driver_name: t.driver_name
+        }));
+        setTours(formattedTours as Tour[]);
+      }
       setLoading(false);
     };
     fetchTours();

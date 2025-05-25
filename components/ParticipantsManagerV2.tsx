@@ -114,21 +114,28 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const fetchTours = async () => {
     const { data, error } = await supabase
       .from("singsing_tours")
-      .select("*")
+      .select("*, singsing_tour_products:tour_product_id(title, golf_course, hotel, price)")
       .order("start_date", { ascending: true });
     
     if (!error && data) {
       // 투어 데이터를 Tour 인터페이스에 맞게 변환
-      const formattedTours: Tour[] = data.map(t => ({
-        id: t.id,
-        title: t.tour_name || t.name || "",
-        date: `${new Date(t.start_date).toLocaleDateString('ko-KR')}~${new Date(t.end_date).toLocaleDateString('ko-KR')}`,
-        location: t.location || "",
-        price: t.price || "0",
-        status: t.is_active ? 'active' : 'canceled',
-        isPrivate: t.is_private || false,
-        note: t.note || ""
-      }));
+      const formattedTours: Tour[] = data.map(t => {
+        // 투어명 우선순위: tour_products.title > title > tour_name > name
+        const title = t.singsing_tour_products?.title || t.title || t.tour_name || t.name || "투어";
+        const location = t.singsing_tour_products?.golf_course || t.location || "";
+        const price = t.singsing_tour_products?.price || t.price || "0";
+        
+        return {
+          id: t.id,
+          title: title,
+          date: `${new Date(t.start_date).toLocaleDateString('ko-KR')}~${new Date(t.end_date).toLocaleDateString('ko-KR')}`,
+          location: location,
+          price: price,
+          status: t.is_active !== false ? 'active' : 'canceled',
+          isPrivate: t.is_private || false,
+          note: t.note || ""
+        };
+      });
       setTours(formattedTours);
     }
   };
@@ -385,16 +392,9 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-blue-800 text-white p-4 shadow-md">
-        <div className="container mx-auto max-w-6xl px-4">
-          <h1 className="text-2xl font-bold">싱싱골프투어 참가자 관리</h1>
-        </div>
-      </div>
-
+    <div>
       {/* Main content */}
-      <div className="container mx-auto max-w-6xl px-4 py-6">
+      <div>
         {loading ? (
           <div className="text-center py-10">
             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
