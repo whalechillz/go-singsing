@@ -1,4 +1,4 @@
-import AdminSidebarLayout from "@/components/AdminSidebarLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,14 +6,14 @@ export const metadata: Metadata = {
   description: "싱싱골프투어 관리자 페이지",
 };
 
-export default function AdminLayout({ 
+export default function AdminRootLayout({ 
   children 
 }: { 
   children: React.ReactNode;
 }) {
   return (
-    <AdminSidebarLayout>
+    <AdminLayout>
       {children}
-    </AdminSidebarLayout>
+    </AdminLayout>
   );
 } 
