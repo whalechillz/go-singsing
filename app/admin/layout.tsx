@@ -1,4 +1,4 @@
-import AdminLayout from "@/components/admin/AdminLayout";
+import ModernAdminLayout from "@/components/admin/ModernAdminLayout";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -12,8 +12,8 @@ export default function AdminRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AdminLayout>
+    <ModernAdminLayout>
       {children}
-    </AdminLayout>
+    </ModernAdminLayout>
   );
 } 
