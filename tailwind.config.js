@@ -1,4 +1,7 @@
 /** @type {import('tailwindcss').Config} */
+// 싱싱골프투어 색상 import
+const { tailwindColors } = require('./styles/colors');
+
 module.exports = {
   darkMode: ["class"],
   content: [
@@ -25,6 +28,8 @@ module.exports = {
         ],
       },
       colors: {
+        // 싱싱골프투어 전용 색상
+        ...tailwindColors,
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

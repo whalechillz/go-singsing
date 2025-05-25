@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState } from 'react';
-import { cn } from '@/lib/utils';
 import ModernAdminSidebar from './ModernAdminSidebar';
 import ModernAdminHeader from './ModernAdminHeader';
 
@@ -10,29 +9,24 @@ interface ModernAdminLayoutProps {
 }
 
 export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <ModernAdminSidebar 
-        isCollapsed={isSidebarCollapsed} 
-        onCollapse={setIsSidebarCollapsed}
+        isCollapsed={!isSidebarOpen} 
+        onCollapse={setIsSidebarOpen}
       />
       
-      {/* Main content area */}
-      <div className={cn(
-        "transition-all duration-300 ease-in-out",
-        isSidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
-      )}>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <ModernAdminHeader />
         
-        {/* Page content */}
-        <main className="p-4 md:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl">
-            {children}
-          </div>
+        {/* Main content area */}
+        <main className="flex-1 overflow-auto p-6">
+          {children}
         </main>
       </div>
     </div>
