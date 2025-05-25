@@ -54,8 +54,6 @@ const TourDetailPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow p-8">
-      <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">{tour.title}</h1>
-      <div className="text-gray-700 dark:text-gray-300 mb-6">{tour.start_date} ~ {tour.end_date} | 기사님: {tour.driver_name}</div>
       <div className="flex gap-2 mb-6 flex-wrap">
         {TABS.map((tab) => (
           <button

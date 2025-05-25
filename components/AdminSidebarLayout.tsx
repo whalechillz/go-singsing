@@ -10,7 +10,7 @@ interface AdminSidebarLayoutProps {
 const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeNav, setActiveNav] = useState('dashboard');
-  const [openSubMenu, setOpenSubMenu] = useState(false);
+  const [openSubMenu, setOpenSubMenu] = useState(true); // 기본값을 true로 변경
 
   const navItems = [
     {

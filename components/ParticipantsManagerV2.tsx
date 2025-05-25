@@ -255,7 +255,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         group_size: participant.group_size || 1,
         is_paying_for_group: participant.is_paying_for_group || false,
         companions: participant.companions || [],
-        pickup_location: participant.pickup_location || ""
+        pickup_location: participant.pickup_location || "",
+        tour_id: participant.tour_id || tourId || "" // tourId 추가
       });
       if (participant.role && !roleOptions.includes(participant.role)) {
         setCustomRole(participant.role);
@@ -276,7 +277,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         group_size: 1,
         is_paying_for_group: false,
         companions: [],
-        pickup_location: ""
+        pickup_location: "",
+        tour_id: tourId || "" // 투어별 페이지에서는 tourId 자동 설정
       });
       setCustomRole("");
     }
@@ -330,8 +332,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const getFilteredParticipants = () => {
     let filtered = participants;
 
-    // 투어 필터
-    if (selectedTour) {
+    // 투어 필터 - tourId가 있으면 해당 투어만, 없으면 selectedTour 사용
+    if (tourId) {
+      filtered = filtered.filter(p => p.tour_id === tourId);
+    } else if (selectedTour) {
       filtered = filtered.filter(p => p.tour_id === selectedTour.id);
     }
 
@@ -371,16 +375,31 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
 
   const filteredParticipants = getFilteredParticipants();
 
-  // 통계 계산
+  // 통계 계산 - tourId가 있으면 해당 투어만, 없으면 전체
+  const getParticipantsForStats = () => {
+    if (tourId) {
+      return participants.filter(p => p.tour_id === tourId);
+    }
+    return participants;
+  };
+  
+  const statsParticipants = getParticipantsForStats();
   const stats = {
-    total: participants.length,
-    confirmed: participants.filter(p => p.status === "확정").length,
-    unconfirmed: participants.filter(p => p.status !== "확정").length,
-    vip: participants.filter(p => (p.join_count || 0) >= 5).length,
+    total: statsParticipants.length,
+    confirmed: statsParticipants.filter(p => p.status === "확정").length,
+    unconfirmed: statsParticipants.filter(p => p.status !== "확정").length,
+    vip: statsParticipants.filter(p => (p.join_count || 0) >= 5).length,
     currentFiltered: filteredParticipants.length
   };
 
-  const tabs = [
+  const tabs = tourId ? [
+    // 투어별 페이지에서는 active/canceled 탭 제외
+    { id: 'all', label: '전체', count: stats.total },
+    { id: 'confirmed', label: '확정', count: stats.confirmed },
+    { id: 'unconfirmed', label: '미확정', count: stats.unconfirmed },
+    { id: 'vip', label: 'VIP', count: stats.vip }
+  ] : [
+    // 전체 참가자 관리에서는 모든 탭 표시
     { id: 'all', label: '전체', count: stats.total },
     { id: 'confirmed', label: '확정', count: stats.confirmed },
     { id: 'unconfirmed', label: '미확정', count: stats.unconfirmed },
@@ -388,6 +407,39 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     { id: 'active', label: '운영 중 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'active')).length },
     { id: 'canceled', label: '취소된 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'canceled')).length }
   ];
+
+  // tourId가 있을 때 (투어별 페이지)
+  const renderTourSpecificHeader = () => {
+    const currentTour = tours.find(t => t.id === tourId);
+    if (!currentTour) return null;
+    
+    return (
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <h2 className="text-xl font-bold text-blue-900">{currentTour.title}</h2>
+        <div className="flex flex-wrap gap-4 mt-2">
+          <p className="text-sm text-blue-700">
+            <span className="font-medium">날짜:</span> {currentTour.date}
+          </p>
+          <p className="text-sm text-blue-700">
+            <span className="font-medium">지역:</span> {currentTour.location || '-'}
+          </p>
+          <p className="text-sm text-blue-700">
+            <span className="font-medium">가격:</span> {currentTour.price ? `${Number(currentTour.price).toLocaleString()}원` : '-'}
+          </p>
+          {currentTour.status === 'canceled' && (
+            <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
+              취소됨
+            </span>
+          )}
+          {currentTour.isPrivate && (
+            <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full font-medium">
+              단독투어
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -400,30 +452,35 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
           </div>
         ) : (
           <>
+            {/* 투어별 페이지일 때만 투어 정보 표시 */}
+            {tourId && renderTourSpecificHeader()}
+            
             {/* Controls */}
             <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
               <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4 flex-wrap">
-                  {/* 투어 선택 */}
-                  <div className="relative">
-                    <select
-                      className="bg-white border rounded-lg px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      onChange={(e) => {
-                        const tourId = e.target.value;
-                        const tour = tours.find(t => t.id === tourId);
-                        setSelectedTour(tour || null);
-                      }}
-                      value={selectedTour?.id || ''}
-                    >
-                      <option value="">전체 투어</option>
-                      {tours.map(tour => (
-                        <option key={tour.id} value={tour.id}>
-                          {tour.title} ({tour.date})
-                        </option>
-                      ))}
-                    </select>
-                    <Calendar className="absolute right-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
+                  {/* 투어 선택 - tourId가 없을 때만 (전체 참가자 관리) */}
+                  {!tourId && (
+                    <div className="relative">
+                      <select
+                        className="bg-white border rounded-lg px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        onChange={(e) => {
+                          const tourId = e.target.value;
+                          const tour = tours.find(t => t.id === tourId);
+                          setSelectedTour(tour || null);
+                        }}
+                        value={selectedTour?.id || ''}
+                      >
+                        <option value="">전체 투어</option>
+                        {tours.map(tour => (
+                          <option key={tour.id} value={tour.id}>
+                            {tour.title} ({tour.date})
+                          </option>
+                        ))}
+                      </select>
+                      <Calendar className="absolute right-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                  )}
 
                   {/* 검색 */}
                   <div className="relative">
@@ -641,9 +698,9 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
             {/* 통계 요약 */}
             <div className="mt-6 text-sm text-gray-700 bg-white p-4 rounded-lg shadow-md">
               <div className="font-bold text-gray-900 mb-3 border-b pb-2">
-                참가자 현황 요약 {selectedTour && `(${selectedTour.title})`}
+                참가자 현황 요약 {tourId ? '' : (selectedTour ? `(${selectedTour.title})` : '(전체)')}
               </div>
-              {selectedTour && (
+              {!tourId && selectedTour && (
                 <div className="text-gray-600 text-sm mb-3">투어 기간: {selectedTour.date}</div>
               )}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -664,7 +721,19 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   <span className="text-lg font-bold">{stats.vip}</span>명
                 </div>
               </div>
-              {(selectedTour || search || activeTab !== 'all') && (
+              {/* 현재 필터링된 목록의 통계 - tourId가 있을 때는 필터 시만 표시 */}
+              {!tourId && (selectedTour || search || activeTab !== 'all') && (
+                <div className="mt-4 pt-4 border-t border-gray-200 text-gray-600">
+                  현재 목록 (<span className="font-medium">{stats.currentFiltered}</span>명)
+                  <span className="ml-4">
+                    확정: {filteredParticipants.filter(p => p.status === "확정").length}명
+                  </span>
+                  <span className="ml-4">
+                    미확정: {filteredParticipants.filter(p => p.status !== "확정").length}명
+                  </span>
+                </div>
+              )}
+              {tourId && (search || activeTab !== 'all') && (
                 <div className="mt-4 pt-4 border-t border-gray-200 text-gray-600">
                   현재 목록 (<span className="font-medium">{stats.currentFiltered}</span>명)
                   <span className="ml-4">
