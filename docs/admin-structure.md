@@ -84,6 +84,9 @@
 ## 5. 사용되지 않는 컴포넌트 (삭제됨)
 - `AdminSidebarLayout.tsx` - 구버전 레이아웃
 - `AdminSidebar.tsx` - 구버전 사이드바
+- `AdminLayout.tsx` - 구버전 레이아웃
+- `AdminHeader.tsx` - 구버전 헤더
+- `DashboardContent.tsx` - 구버전 대시보드
 
 ## 6. 개발 우선순위
 1. ✅ 기본 레이아웃 및 메뉴 구조
