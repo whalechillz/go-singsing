@@ -50,8 +50,9 @@
   - `components/ScheduleManager.tsx`  <!-- DB: singsing_schedules -->
 - [티오프시간 관리]
   - `components/TeeTimeManager.tsx`  <!-- DB: singsing_tee_times, singsing_participants -->
-- [탑승 스케쥴 관리]
+- [탑승 스콐쥴 관리]
   - `components/BoardingScheduleManager.tsx`  <!-- DB: singsing_boarding_schedules, singsing_boarding_places -->
+    - (폼 입력) `components/BoardingGuideForm.tsx`  <!-- DB: boarding_guide_routes, boarding_guide_notices, boarding_guide_contacts -->
     - (미리보기 모달) `components/BoardingGuidePreview.tsx`  <!-- DB: singsing_boarding_schedules, singsing_boarding_places, boarding_guide_routes, boarding_guide_notices, boarding_guide_contacts -->
 - [투어 일정표 미리보기]
   - `components/TourSchedulePreview.tsx`  <!-- DB: singsing_tours, tour_products, singsing_schedules -->

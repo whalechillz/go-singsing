@@ -27,7 +27,6 @@ git commit -m "fix: 관리자 시스템 전체 구조 개선 및 빌드 에러 �
 - 구버전 컴포넌트 백업 처리:
   - AdminSidebarLayout.tsx, AdminSidebar.tsx
   - AdminLayout.tsx, AdminHeader.tsx, DashboardContent.tsx
-  - BoardingGuideForm.tsx
 
 - 문서 업데이트:
   - admin-structure.md: 관리자 시스템 구조 문서 작성
