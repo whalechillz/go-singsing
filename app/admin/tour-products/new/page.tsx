@@ -78,7 +78,7 @@ const TourProductNewPage = () => {
 
   return (
     <div className="max-w-lg mx-auto bg-white dark:bg-gray-900 rounded-lg shadow p-8">
-      <h1 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">여행상품(투어 상품) 신규 등록</h1>
+      <h1 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">여행상품 신규 등록</h1>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
           <span className="font-medium">상품명</span>

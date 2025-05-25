@@ -32,7 +32,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
       {/* Sidebar */}
       <ModernAdminSidebar 
         isCollapsed={!isSidebarOpen} 
-        onCollapse={setIsSidebarOpen}
+        onCollapse={(collapsed) => setIsSidebarOpen(!collapsed)}
       />
       
       {/* Main content */}
