@@ -13,16 +13,24 @@ import {
   Settings, 
   LogOut, 
   ChevronRight,
+  ChevronDown,
   Menu,
   Palette,
   Package
 } from 'lucide-react';
+
+interface NavSubItem {
+  id: string;
+  label: string;
+  href: string;
+}
 
 interface NavItem {
   id: string;
   label: string;
   icon: React.ReactNode;
   href?: string;
+  subMenu?: NavSubItem[];
 }
 
 interface ModernAdminSidebarProps {
@@ -34,12 +42,15 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
   const pathname = usePathname();
   const router = useRouter();
   
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ 'participants-management': true });
+  
   // pathname에 따라 activeNav 결정
   const getActiveNav = () => {
     if (pathname === '/admin') return 'dashboard';
     if (pathname.startsWith('/admin/tours')) return 'tours';
     if (pathname.startsWith('/admin/tour-products')) return 'tour-products';
-    if (pathname.startsWith('/admin/participants')) return 'participants';
+    if (pathname.startsWith('/admin/participants')) return 'participants-list';
+    if (pathname.startsWith('/admin/payments')) return 'payments';
     if (pathname.startsWith('/admin/documents')) return 'documents';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     return 'dashboard';
@@ -55,16 +66,28 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
   const navItems: NavItem[] = [
     { id: 'dashboard', label: '대시보드', icon: <Home className="w-5 h-5" />, href: '/admin' },
     { id: 'tour-products', label: '투어 상품 관리', icon: <Package className="w-5 h-5" />, href: '/admin/tour-products' },
-    { id: 'tours', label: '투어 스케줄 관리', icon: <Briefcase className="w-5 h-5" />, href: '/admin/tours' },
-    { id: 'participants', label: '전체 참가자 관리', icon: <Users className="w-5 h-5" />, href: '/admin/participants' },
+    { id: 'tours', label: '투어 스케쥴 관리', icon: <Briefcase className="w-5 h-5" />, href: '/admin/tours' },
+    { 
+      id: 'participants-management', 
+      label: '전체 참가자 관리', 
+      icon: <Users className="w-5 h-5" />,
+      subMenu: [
+        { id: 'participants-list', label: '참가자 목록', href: '/admin/participants' },
+        { id: 'payments', label: '결제 관리', href: '/admin/payments' },
+      ]
+    },
     { id: 'documents', label: '문서 관리', icon: <FileText className="w-5 h-5" />, href: '/admin/documents' },
     { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },
     { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
   ];
 
-  const handleNavClick = (item: NavItem) => {
-    setActiveNav(item.id);
-    if (item.href) {
+  const handleNavClick = (item: NavItem | NavSubItem, parentId?: string) => {
+    if ('subMenu' in item && item.subMenu) {
+      // 서브메뉴가 있는 경우 토글
+      setOpenSubMenus(prev => ({ ...prev, [item.id]: !prev[item.id] }));
+    } else if (item.href) {
+      // href가 있는 경우 네비게이션
+      setActiveNav(item.id);
       router.push(item.href);
     }
   };
@@ -95,25 +118,69 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         <ul>
           {navItems.map(item => (
             <li key={item.id}>
-              <button
-                className={cn(
-                  "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors",
-                  activeNav === item.id ? "bg-blue-900" : "",
-                  isCollapsed ? "justify-center" : ""
-                )}
-                onClick={() => handleNavClick(item)}
-                title={isCollapsed ? item.label : undefined}
-              >
-                <span className="text-blue-200">{item.icon}</span>
-                {!isCollapsed && (
-                  <>
-                    <span className="ml-4">{item.label}</span>
-                    {activeNav === item.id && (
-                      <ChevronRight className="w-4 h-4 ml-auto" />
+              {item.subMenu ? (
+                <>
+                  <button
+                    className={cn(
+                      "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors",
+                      activeNav === item.id ? "bg-blue-900" : "",
+                      isCollapsed ? "justify-center" : ""
                     )}
-                  </>
-                )}
-              </button>
+                    onClick={() => handleNavClick(item)}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    <span className="text-blue-200">{item.icon}</span>
+                    {!isCollapsed && (
+                      <>
+                        <span className="ml-4">{item.label}</span>
+                        {openSubMenus[item.id] ? (
+                          <ChevronDown className="w-4 h-4 ml-auto text-blue-200" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 ml-auto text-blue-200" />
+                        )}
+                      </>
+                    )}
+                  </button>
+                  {/* Submenu */}
+                  {openSubMenus[item.id] && !isCollapsed && (
+                    <ul className="ml-8">
+                      {item.subMenu.map(sub => (
+                        <li key={sub.id}>
+                          <button
+                            className={cn(
+                              "w-full flex items-center py-2 px-4 hover:bg-blue-700 text-sm",
+                              activeNav === sub.id ? "bg-blue-900" : ""
+                            )}
+                            onClick={() => handleNavClick(sub)}
+                          >
+                            <span>{sub.label}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              ) : (
+                <button
+                  className={cn(
+                    "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors",
+                    activeNav === item.id ? "bg-blue-900" : "",
+                    isCollapsed ? "justify-center" : ""
+                  )}
+                  onClick={() => handleNavClick(item)}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <span className="text-blue-200">{item.icon}</span>
+                  {!isCollapsed && (
+                    <>
+                      <span className="ml-4">{item.label}</span>
+                      {activeNav === item.id && (
+                        <ChevronRight className="w-4 h-4 ml-auto" />
+                      )}
+                    </>
+                  )}
+                </button>
+              )}
             </li>
           ))}
         </ul>
