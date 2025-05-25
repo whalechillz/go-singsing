@@ -26,7 +26,7 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
       subMenu: [
         { id: 'tours-main', label: '투어 스케쥴 관리', href: '/admin/tours' },
         { id: 'tour-products', label: '여행상품 관리', href: '/admin/tour-products' },
-        { id: 'participants', label: '전체 참가자 관리', href: '/admin/participants' },
+        { id: 'participants', label: '참가자 관리', href: '/admin/participants' },
         { id: 'boarding-places', label: '탑승지 관리', href: '/admin/boarding-places' },
       ]
     },

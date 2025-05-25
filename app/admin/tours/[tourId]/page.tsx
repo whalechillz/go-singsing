@@ -10,14 +10,15 @@ import TeeTimeManager from "@/components/TeeTimeManager";
 import BoardingScheduleManager from "@/components/BoardingScheduleManager";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 import TourSchedulePreview from "@/components/TourSchedulePreview";
+import { Users, BedDouble, Calendar, Flag, Bus, FileText } from 'lucide-react';
 
 const TABS = [
-  { key: "participants", label: "투어별 참가자 관리" },
-  { key: "rooms", label: "투어별 객실 배정" },
-  { key: "schedules", label: "투어별 일정관리" },
-  { key: "tee-times", label: "티오프시간 관리" },
-  { key: "pickup-points", label: "탑승 스케쥴 관리" },
-  { key: "schedule-preview", label: "투어 일정표 미리보기" },
+  { key: "participants", label: "투어별 참가자 관리", icon: <Users className="w-4 h-4" /> },
+  { key: "rooms", label: "투어별 객실 배정", icon: <BedDouble className="w-4 h-4" /> },
+  { key: "schedules", label: "투어별 일정관리", icon: <Calendar className="w-4 h-4" /> },
+  { key: "tee-times", label: "티오프시간 관리", icon: <Flag className="w-4 h-4" /> },
+  { key: "pickup-points", label: "탑승 스케줄 관리", icon: <Bus className="w-4 h-4" /> },
+  { key: "schedule-preview", label: "투어 일정표 미리보기", icon: <FileText className="w-4 h-4" /> },
 ];
 
 type Tour = {
@@ -55,15 +56,16 @@ const TourDetailPage: React.FC = () => {
     <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow p-8">
       <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">{tour.title}</h1>
       <div className="text-gray-700 dark:text-gray-300 mb-6">{tour.start_date} ~ {tour.end_date} | 기사님: {tour.driver_name}</div>
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         {TABS.map((tab) => (
           <button
             key={tab.key}
-            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${activeTab === tab.key ? "bg-blue-800 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors flex items-center gap-2 ${activeTab === tab.key ? "bg-blue-800 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
             onClick={() => setActiveTab(tab.key)}
             aria-label={tab.label}
           >
-            {tab.label}
+            {tab.icon}
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
@@ -111,4 +113,4 @@ const TourDetailPage: React.FC = () => {
   );
 };
 
-export default TourDetailPage; 
+export default TourDetailPage;
