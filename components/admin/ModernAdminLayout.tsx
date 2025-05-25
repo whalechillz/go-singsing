@@ -16,12 +16,13 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
   // 경로에 따른 페이지 제목 매핑
   const getPageTitle = () => {
     if (pathname === '/admin') return '대시보드';
-    if (pathname.startsWith('/admin/tours')) return '투어 관리';
-    if (pathname.startsWith('/admin/participants')) return '참가자 관리';
+    if (pathname.startsWith('/admin/tour-products')) return '투어 상품 관리';
+    if (pathname.startsWith('/admin/tours')) return '투어 스케줄 관리';
+    if (pathname.startsWith('/admin/participants')) return '전체 참가자 관리';
     if (pathname.startsWith('/admin/documents')) return '문서 관리';
     if (pathname.startsWith('/admin/boarding-places')) return '탑승지 관리';
-    if (pathname.startsWith('/admin/tour-products')) return '여행상품 관리';
-    if (pathname.startsWith('/admin/color-test')) return '색상 테스트';
+    if (pathname.startsWith('/admin/statistics')) return '통계';
+    if (pathname.startsWith('/admin/settings')) return '설정';
     return '대시보드';
   };
 
