@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import ParticipantsManager from "@/components/ParticipantsManager";
+import ParticipantsManagerV2 from "@/components/ParticipantsManagerV2";
 import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 import RoomTypeManager from "@/components/RoomTypeManager";
 import ScheduleManager from "@/components/ScheduleManager";
@@ -68,7 +68,7 @@ const TourDetailPage: React.FC = () => {
         ))}
       </div>
       <div className="bg-gray-50 dark:bg-gray-800 rounded-b-lg p-6 min-h-[200px]">
-        {activeTab === "participants" && <ParticipantsManager tourId={tourId} showColumns={["이름", "연락처", "팀", "객실", "상태", "관리"]} />}
+        {activeTab === "participants" && <ParticipantsManagerV2 tourId={tourId} showColumns={["이름", "연락처", "팀", "탑승지", "객실", "참여횟수", "상태", "관리"]} />}
         {activeTab === "rooms" && (
           <>
             <RoomTypeManager tourId={tourId} />
