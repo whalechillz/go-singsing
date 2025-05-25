@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import { colors } from '@/styles/colors';
+const { colors } = require('@/styles/colors');
 
 export default function ColorPaletteTest() {
   return (

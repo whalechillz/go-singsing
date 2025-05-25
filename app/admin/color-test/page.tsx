@@ -1,9 +1,9 @@
-import ColorPaletteTest from "@/components/ColorPaletteTest";
+import SimpleColorTest from "@/components/SimpleColorTest";
 
 export default function ColorTestPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <ColorPaletteTest />
+      <SimpleColorTest />
     </div>
   );
 }

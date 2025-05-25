@@ -13,7 +13,8 @@ import {
   Settings, 
   LogOut, 
   ChevronRight,
-  Menu
+  Menu,
+  Palette
 } from 'lucide-react';
 
 interface NavItem {
@@ -41,6 +42,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     { id: 'messages', label: '메시지', icon: <MessageSquare className="w-5 h-5" />, href: '/admin/messages' },
     { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },
     { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
+    { id: 'color-test', label: '색상 테스트', icon: <Palette className="w-5 h-5" />, href: '/admin/color-test' },
   ];
 
   const handleNavClick = (item: NavItem) => {
