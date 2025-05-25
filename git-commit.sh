@@ -12,15 +12,16 @@ git add .
 
 # 커밋
 echo "커밋 실행..."
-git commit -m "fix: 실제 사용되는 메뉴 컴포넌트 수정 및 TypeScript 에러 해결
+git commit -m "fix: 관리자 페이지 레이아웃 수정 및 결제 관리 페이지 추가
 
-- ModernAdminSidebar.tsx가 실제 사용되는 컴포넌트임을 확인
-- 전체 참가자 관리를 독립 메뉴로 분리하고 하위 메뉴 추가
-  - 참가자 목록
-  - 결제 관리
-- 서브메뉴 토글 기능 구현
-- TypeScript any 타입 추가로 Vercel 빌드 에러 해결
-- 삼선(햄버거 메뉴) 클릭 시 사이드바 접히는 기능 복구"
+- participants 페이지가 ParticipantsManagerV2 컴포넌트를 사용하도록 수정
+- payments 페이지 추가 (개발 예정 안내 포함)
+- 사용하지 않는 레이아웃 컴포넌트 백업 처리
+  - AdminSidebarLayout.tsx → .backup
+  - AdminSidebar.tsx → .backup
+- ModernAdminLayout에 결제 관리 페이지 제목 추가
+- 관리자 시스템 구조 문서 작성 (docs/admin-structure.md)
+- UI/UX 구조 문서 업데이트"
 
 # 푸시
 echo "원격 저장소에 푸시..."
