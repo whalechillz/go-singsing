@@ -114,23 +114,21 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const fetchTours = async () => {
     const { data, error } = await supabase
       .from("singsing_tours")
-      .select("*, singsing_tour_products:tour_product_id(title, golf_course, hotel, price)")
+      .select("*")
       .order("start_date", { ascending: true });
     
     if (!error && data) {
       // 투어 데이터를 Tour 인터페이스에 맞게 변환
       const formattedTours: Tour[] = data.map(t => {
-        // 투어명 우선순위: tour_products.title > title > tour_name > name
-        const title = t.singsing_tour_products?.title || t.title || t.tour_name || t.name || "투어";
-        const location = t.singsing_tour_products?.golf_course || t.location || "";
-        const price = t.singsing_tour_products?.price || t.price || "0";
+        // 투어명: title 필드 사용
+        const title = t.title || "투어";
         
         return {
           id: t.id,
           title: title,
           date: `${new Date(t.start_date).toLocaleDateString('ko-KR')}~${new Date(t.end_date).toLocaleDateString('ko-KR')}`,
-          location: location,
-          price: price,
+          location: t.location || "",
+          price: t.price || "0",
           status: t.is_active !== false ? 'active' : 'canceled',
           isPrivate: t.is_private || false,
           note: t.note || ""
@@ -403,7 +401,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         ) : (
           <>
             {/* Controls */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
               <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4 flex-wrap">
                   {/* 투어 선택 */}
