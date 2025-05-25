@@ -10,7 +10,7 @@ interface AdminSidebarLayoutProps {
 const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeNav, setActiveNav] = useState('dashboard');
-  const [openSubMenu, setOpenSubMenu] = useState(true); // 기본값을 true로 변경
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ tours: true, members: true });
 
   const navItems = [
     {
@@ -32,7 +32,15 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
     },
     { id: 'documents', label: '문서 관리', icon: <FileText className="w-5 h-5" />, href: '/admin/documents' },
     { id: 'notification', label: '알림톡 보내기', icon: <MessageSquare className="w-5 h-5" />, href: '/admin/notification', disabled: true },
-    { id: 'members', label: '전체회원 관리', icon: <User className="w-5 h-5" />, href: '/admin/members', disabled: true },
+    {
+      id: 'members',
+      label: '전체회원 관리',
+      icon: <User className="w-5 h-5" />,
+      subMenu: [
+        { id: 'members-list', label: '참가자 목록', href: '/admin/participants' },
+        { id: 'payments', label: '결제 관리', href: '/admin/payments' },
+      ]
+    },
     { id: 'accounting', label: '매출 매입 정산서 관리', icon: <CreditCard className="w-5 h-5" />, href: '/admin/accounting', disabled: true },
     { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics', disabled: true },
     { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings', disabled: true },
@@ -40,7 +48,9 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
   // TODO: 알림톡 보내기, 전체회원 관리, 매출 매입 정산서 관리 등은 추후 개발 예정. 해당 메뉴 클릭 시 라우트만 연결되어 있고, 실제 페이지/기능은 아직 구현되지 않음.
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const toggleSubMenu = () => setOpenSubMenu(!openSubMenu);
+  const toggleSubMenu = (menuId: string) => {
+    setOpenSubMenus(prev => ({ ...prev, [menuId]: !prev[menuId] }));
+  };
   const handleNavClick = (href: string, id: string) => {
     setActiveNav(id);
     if (href) window.location.href = href;
@@ -68,16 +78,16 @@ const AdminSidebarLayout: React.FC<AdminSidebarLayoutProps> = ({ children }) => 
                   <>
                     <button
                       className={`w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors ${activeNav === item.id ? 'bg-blue-900' : ''}`}
-                      onClick={toggleSubMenu}
+                      onClick={() => toggleSubMenu(item.id)}
                     >
                       <span className="text-blue-200">{item.icon}</span>
                       {isSidebarOpen && <span className="ml-4">{item.label}</span>}
                       {isSidebarOpen && (
-                        openSubMenu ? <ChevronDown className="w-4 h-4 ml-auto text-blue-200" /> : <ChevronRight className="w-4 h-4 ml-auto text-blue-200" />
+                        openSubMenus[item.id] ? <ChevronDown className="w-4 h-4 ml-auto text-blue-200" /> : <ChevronRight className="w-4 h-4 ml-auto text-blue-200" />
                       )}
                     </button>
                     {/* Submenu */}
-                    {openSubMenu && isSidebarOpen && (
+                    {openSubMenus[item.id] && isSidebarOpen && (
                       <ul className="ml-8">
                         {item.subMenu.map(sub => (
                           <li key={sub.id}>

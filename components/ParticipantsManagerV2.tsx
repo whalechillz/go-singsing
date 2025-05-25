@@ -100,15 +100,40 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
 
-  const pickupLocations = [
-    "군포 차고지",
-    "양재 매헌",
-    "수원월드컵",
-    "평택 동성골프",
-    "평택대학교",
-    "부천체육관",
-    "송탄 우주골프"
-  ];
+  // 탑승지 데이터 가져오기
+  const [boardingPlaces, setBoardingPlaces] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const fetchBoardingPlaces = async () => {
+      if (tourId) {
+        // 투어별 페이지: 해당 투어의 탑승 스케줄에서 가져오기
+        const { data } = await supabase
+          .from("singsing_boarding_schedules")
+          .select("singsing_boarding_places:place_id(name)")
+          .eq("tour_id", tourId);
+        
+        if (data) {
+          const places = data
+            .map(schedule => schedule.singsing_boarding_places?.name)
+            .filter(Boolean)
+            .filter((value, index, self) => self.indexOf(value) === index); // 중복 제거
+          setBoardingPlaces(places);
+        }
+      } else {
+        // 전체 참가자 관리: 모든 탑승지 가져오기
+        const { data } = await supabase
+          .from("singsing_boarding_places")
+          .select("name")
+          .order("name", { ascending: true });
+        
+        if (data) {
+          setBoardingPlaces(data.map(place => place.name));
+        }
+      }
+    };
+    
+    fetchBoardingPlaces();
+  }, [tourId]);
 
   // 투어 데이터 가져오기
   const fetchTours = async () => {
@@ -213,11 +238,22 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     const phone = form.phone ? normalizePhone(form.phone) : "";
     const role = form.role === "기타" ? customRole : form.role;
     
-    const payload = { 
-      ...form, 
-      phone, 
-      role,
+    // DB에 필드가 없을 경우를 대비한 안전한 payload 생성
+    const payload: any = { 
+      name: form.name,
+      phone: phone, 
+      email: form.email,
+      team_name: form.team_name,
+      note: form.note,
+      status: form.status,
+      role: role,
+      gender: form.gender,
+      emergency_contact: form.emergency_contact,
+      join_count: form.join_count,
+      pickup_location: form.pickup_location,
       tour_id: tourId || form.tour_id,
+      group_size: form.group_size,
+      is_paying_for_group: form.is_paying_for_group,
       companions: form.companions?.filter(c => c.trim() !== "") || []
     };
     
@@ -552,18 +588,25 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             {showColumns.includes("이름") && (
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
-                                  <div className="font-medium text-gray-900">{participant.name}</div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{participant.name}</div>
+                                    {participant.companions && participant.companions.length > 0 && (
+                                      <div className="text-xs text-gray-500 mt-1">
+                                        동반자: {participant.companions.filter(c => c).join(', ')}
+                                      </div>
+                                    )}
+                                  </div>
                                   {(participant.group_size || 0) > 1 && (
                                     <span className="ml-2 bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs font-medium">
-                                      +{(participant.group_size || 1) - 1}명
+                                      {participant.group_size}명
+                                    </span>
+                                  )}
+                                  {participant.is_paying_for_group && (
+                                    <span className="ml-2 bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full text-xs font-medium">
+                                      일괄결제
                                     </span>
                                   )}
                                 </div>
-                                {participant.companions && participant.companions.length > 0 && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    동반자: {participant.companions.join(', ')}
-                                  </div>
-                                )}
                               </td>
                             )}
                             
@@ -606,16 +649,9 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             {showColumns.includes("탑승지") && (
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {participant.pickup_location ? (
-                                  <div>
-                                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
-                                      {participant.pickup_location}
-                                    </span>
-                                    {participant.is_paying_for_group && (participant.group_size || 0) > 1 && (
-                                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                        일괄결제
-                                      </span>
-                                    )}
-                                  </div>
+                                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                                    {participant.pickup_location}
+                                  </span>
                                 ) : (
                                   <span className="text-gray-400">-</span>
                                 )}
@@ -786,7 +822,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    전화번호 *
+                    전화번호
                   </label>
                   <input
                     type="text"
@@ -794,9 +830,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                     className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                     value={form.phone}
                     onChange={handleChange}
-                    placeholder="숫자만 입력"
+                    placeholder="숫자만 입력 (선택사항)"
                     maxLength={11}
-                    required
                   />
                 </div>
 
@@ -884,8 +919,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                     onChange={handleChange}
                   >
                     <option value="">탑승지 선택</option>
-                    {pickupLocations.map(loc => (
-                      <option key={loc} value={loc}>{loc}</option>
+                    {boardingPlaces.map(place => (
+                      <option key={place} value={place}>{place}</option>
                     ))}
                   </select>
                 </div>

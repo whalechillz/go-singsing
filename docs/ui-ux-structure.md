@@ -20,7 +20,13 @@
 - [알림톡 보내기]
   - (내용무) (N/A)
 - [전체회원 관리]
-  - (내용무) (N/A)
+  - [참가자 목록]
+    - 파일: `app/admin/participants/page.tsx`
+    - 컴포넌트: `components/ParticipantsManagerV2.tsx`
+  - [결제 관리] (NEW)
+    - 파일: `app/admin/payments/page.tsx` (예상)
+    - 컴포넌트: `components/PaymentManager.tsx` (예상)
+    - DB: `singsing_payments`, `singsing_participants`
 - [매출 매입 정산서 관리]
   - (내용무) (N/A)
 - [통계]
