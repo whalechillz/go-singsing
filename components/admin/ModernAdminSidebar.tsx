@@ -42,13 +42,14 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
   const pathname = usePathname();
   const router = useRouter();
   
-  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ 'participants-management': true });
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ 'participants-management': true, 'tour-management': true });
   
   // pathname에 따라 activeNav 결정
   const getActiveNav = () => {
     if (pathname === '/admin') return 'dashboard';
     if (pathname.startsWith('/admin/tours')) return 'tours';
     if (pathname.startsWith('/admin/tour-products')) return 'tour-products';
+    if (pathname.startsWith('/admin/boarding-places')) return 'boarding-places';
     if (pathname.startsWith('/admin/participants')) return 'participants-list';
     if (pathname.startsWith('/admin/payments')) return 'payments';
     if (pathname.startsWith('/admin/documents')) return 'documents';
@@ -65,8 +66,16 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: '대시보드', icon: <Home className="w-5 h-5" />, href: '/admin' },
-    { id: 'tour-products', label: '투어 상품 관리', icon: <Package className="w-5 h-5" />, href: '/admin/tour-products' },
-    { id: 'tours', label: '투어 스케쥴 관리', icon: <Briefcase className="w-5 h-5" />, href: '/admin/tours' },
+    { 
+      id: 'tour-management', 
+      label: '투어 관리', 
+      icon: <Briefcase className="w-5 h-5" />,
+      subMenu: [
+        { id: 'tours', label: '투어 스케줄 관리', href: '/admin/tours' },
+        { id: 'tour-products', label: '여행상품 관리', href: '/admin/tour-products' },
+        { id: 'boarding-places', label: '탑승지 관리', href: '/admin/boarding-places' },
+      ]
+    },
     { 
       id: 'participants-management', 
       label: '전체 참가자 관리', 

@@ -5,8 +5,10 @@
 ### 메인 사이드바 메뉴
 ```
 - 대시보드 (/admin)
-- 투어 상품 관리 (/admin/tour-products)
-- 투어 스케줄 관리 (/admin/tours)
+- 투어 관리
+  ├── 투어 스케줄 관리 (/admin/tours)
+  ├── 여행상품 관리 (/admin/tour-products)
+  └── 탑승지 관리 (/admin/boarding-places)
 - 전체 참가자 관리
   ├── 참가자 목록 (/admin/participants)
   └── 결제 관리 (/admin/payments)
@@ -47,16 +49,21 @@
 - **파일**: `/app/admin/page.tsx`
 - **컴포넌트**: `Dashboard`
 
-### 투어 상품 관리
-- **목록**: `/admin/tour-products`
-- **생성**: `/admin/tour-products/new`
-- **수정**: `/admin/tour-products/[id]/edit`
-
-### 투어 스케줄 관리
+### 투어 관리
+#### 투어 스케줄 관리
 - **목록**: `/admin/tours`
 - **생성**: `/admin/tours/new`
 - **상세**: `/admin/tours/[tourId]` (탭 구조)
 - **수정**: `/admin/tours/[tourId]/edit`
+
+#### 여행상품 관리
+- **목록**: `/admin/tour-products`
+- **생성**: `/admin/tour-products/new`
+- **수정**: `/admin/tour-products/[id]/edit`
+
+#### 탑승지 관리
+- **경로**: `/admin/boarding-places`
+- **기능**: 탑승지 등록 및 관리 (개발 진행 중)
 
 ### 전체 참가자 관리
 - **참가자 목록**: `/admin/participants`
@@ -87,6 +94,7 @@
 - `AdminLayout.tsx` - 구버전 레이아웃
 - `AdminHeader.tsx` - 구버전 헤더
 - `DashboardContent.tsx` - 구버전 대시보드
+- `BoardingGuideForm.tsx` - 사용되지 않는 컴포넌트
 
 ## 6. 개발 우선순위
 1. ✅ 기본 레이아웃 및 메뉴 구조

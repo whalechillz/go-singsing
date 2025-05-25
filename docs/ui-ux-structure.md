@@ -16,11 +16,15 @@
 - [대시보드]
   - 파일: `app/admin/page.tsx`
   - 컴포넌트: `components/Dashboard.tsx`
-- [투어 상품 관리]
-  - 파일: `app/admin/tour-products/page.tsx`
-- [투어 스케쥴 관리]
-  - 파일: `app/admin/tours/page.tsx`
-  - 하위: 투어 상세/관리 (탭 구조, 아래 3번 참고)
+- [투어 관리]
+  - [투어 스케쥴 관리]
+    - 파일: `app/admin/tours/page.tsx`
+    - 하위: 투어 상세/관리 (탭 구조, 아래 3번 참고)
+  - [여행상품 관리]
+    - 파일: `app/admin/tour-products/page.tsx`
+  - [탑승지 관리]
+    - 파일: `app/admin/boarding-places/page.tsx`
+    - 컴포넌트: `components/BoardingPlaceManager.tsx`  <!-- DB: singsing_boarding_places -->
 - [전체 참가자 관리] (독립 메뉴)
   - [참가자 목록]
     - 파일: `app/admin/participants/page.tsx`
