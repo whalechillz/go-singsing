@@ -1,5 +1,10 @@
-import Dashboard from "@/components/Dashboard";
+import AdminLayout from "@/components/admin/AdminLayout";
+import DashboardContent from "@/components/admin/DashboardContent";
 
-export default function AdminIndex() {
-  return <Dashboard />;
-} 
+export default function AdminPage() {
+  return (
+    <AdminLayout>
+      <DashboardContent />
+    </AdminLayout>
+  );
+}
