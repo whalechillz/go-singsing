@@ -2,23 +2,25 @@
 
 ## 1. 전체 레이아웃/네비게이션 구조
 
-- **공통 레이아웃**
-  - `components/AdminSidebarLayout.tsx` (사이드바 + 상단바 포함 전체 레이아웃)
-  - `components/AdminNavbar.tsx` (상단 네비게이션 바)
+- **관리자 레이아웃** 
+  - 파일: `app/admin/layout.tsx`
+  - 컴포넌트: `components/admin/ModernAdminLayout.tsx`
+  - 하위 컴포넌트:
+    - `components/admin/ModernAdminSidebar.tsx` (좌측 사이드바)
+    - `components/admin/ModernAdminHeader.tsx` (상단 헤더)
 
 ---
 
 ## 2. 좌측 사이드바 메뉴 구조
 
 - [대시보드]
-  - 파일: `app/admin/dashboard/page.tsx` (예상, 실제 파일명 확인 필요)
-- [투어 관리]
+  - 파일: `app/admin/page.tsx`
+  - 컴포넌트: `components/Dashboard.tsx`
+- [투어 상품 관리]
+  - 파일: `app/admin/tour-products/page.tsx`
+- [투어 스케쥴 관리]
   - 파일: `app/admin/tours/page.tsx`
   - 하위: 투어 상세/관리 (탭 구조, 아래 3번 참고)
-- [문서 관리]
-  - 파일: `app/admin/documents/page.tsx`
-- [알림톡 보내기]
-  - (내용무) (N/A)
 - [전체 참가자 관리] (독립 메뉴)
   - [참가자 목록]
     - 파일: `app/admin/participants/page.tsx`
@@ -28,19 +30,12 @@
     - 파일: `app/admin/payments/page.tsx`
     - 컴포넌트: `components/PaymentManager.tsx` (예정)
     - DB: `singsing_payments`, `singsing_participants`
-- [전체회원 관리] (향후 개발)
-  - 모든 잠재 고객 및 회원 통합 관리
-  - 획보용 알림톡 발송 기능 포함
-- [매출 매입 정산서 관리]
-  - (내용무) (N/A)
-- [통계]
-  - (내용무) (N/A)
-- [설정]
-  - (내용무) (N/A)
+- [문서 관리]
+  - 파일: `app/admin/documents/page.tsx`
 
 ---
 
-## 3. 투어 관리 상세(탭) 구조  (연관 DB 테이블 포함)
+## 3. 투어 상세 페이지 탭 구조 (/admin/tours/[tourId])
 
 - [투어별 참가자 관리]
   - `components/ParticipantsManager.tsx`  <!-- DB: singsing_participants -->
@@ -71,12 +66,13 @@
 
 ---
 
-## 5. 관리 팁
+## 5. 문서 참고
 
-- **docs/ui-ux-structure.md** 파일에 트리 구조 + 파일명 + 역할을 주기적으로 업데이트
-- 신규 기능/컴포넌트 추가 시 반드시 이 문서도 함께 관리
-- 대규모 프로젝트는 `/docs/architecture/` 하위에 세분화(예: `ui.md`, `api.md`, `db.md`)
-- 작은/중간 규모는 `docs/ui-ux-structure.md` 하나로 충분
+- **프로젝트 계획**: `/docs/project_plan.md`
+- **관리자 시스템 구조**: `/docs/admin-structure.md`
+- **결제 관리 설계**: `/docs/payment-management.md`
+- **회원 관리 설계**: `/docs/member-management-design.md`
+- **DB 구조**: `/supabase/db_dump.sql`
 
 ---
 

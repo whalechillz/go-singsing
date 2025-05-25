@@ -19,6 +19,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     if (pathname.startsWith('/admin/tour-products')) return '투어 상품 관리';
     if (pathname.startsWith('/admin/tours')) return '투어 스케줄 관리';
     if (pathname.startsWith('/admin/participants')) return '전체 참가자 관리';
+    if (pathname.startsWith('/admin/payments')) return '결제 관리';
     if (pathname.startsWith('/admin/documents')) return '문서 관리';
     if (pathname.startsWith('/admin/boarding-places')) return '탑승지 관리';
     if (pathname.startsWith('/admin/statistics')) return '통계';
