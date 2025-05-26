@@ -46,6 +46,7 @@ interface Participant {
   role?: string;
   created_at?: string;
   payment?: Payment; // 결제 정보 추가
+  is_group_payer?: boolean; // 일괄결제자 여부
   [key: string]: any;
 }
 
@@ -70,7 +71,7 @@ interface ParticipantForm {
 interface Payment {
   id: string;
   participant_id: string;
-  payer_id: string;
+  payer_id: string;  // 결제자 ID
   amount: number;
   payment_status?: string;
   payment_method?: string;
@@ -199,13 +200,16 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     if (tourId) paymentQuery = paymentQuery.eq("tour_id", tourId);
     const { data: paymentsData } = await paymentQuery;
     
-    // 참가자와 결제 정보 매핑
+    // 각 참가자에 대한 결제 정보와 일괄결제자 여부 설정
     if (participantsData && paymentsData) {
       const participantsWithPayment = participantsData.map(participant => {
         const payment = paymentsData.find(p => p.participant_id === participant.id);
+        const isGroupPayer = paymentsData.filter(p => p.payer_id === participant.id).length > 1;
+        
         return {
           ...participant,
-          payment: payment || null
+          payment: payment || null,
+          is_group_payer: isGroupPayer  // 일괄결제자 여부 추가
         };
       });
       setParticipants(participantsWithPayment as Participant[]);
@@ -1136,7 +1140,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                       {participant.group_size}명
                                     </span>
                                   )}
-                                  {participant.is_paying_for_group && (
+                                  {/* 본인이 일괄결제자인 경우에만 표시 */}
+                                  {participant.is_group_payer && (
                                     <span className="ml-2 bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs font-medium">
                                       일괄결제
                                     </span>
@@ -1221,9 +1226,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                       ✅ 결제완료
                                     </span>
-                                    {participant.is_paying_for_group && (
-                                      <span className="text-xs text-blue-600 font-medium">
-                                        (일괄)
+                                    {/* 결제자가 본인이 아닌 경우 표시 */}
+                                    {participant.payment.payer_id !== participant.id && participant.payment.payer_id && (
+                                      <span className="text-xs text-gray-600">
+                                        (결제자: {participants.find(p => p.id === participant.payment?.payer_id)?.name || '-'})
                                       </span>
                                     )}
                                     <span className="text-xs text-gray-600">
