@@ -371,12 +371,23 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       newStatus = "확정";
     }
     
+    // 로컬 상태만 업데이트 (페이지 위치 유지)
+    setParticipants(prev => prev.map(p => 
+      p.id === id ? { ...p, status: newStatus } : p
+    ));
+    
     const { error } = await supabase
       .from("singsing_participants")
       .update({ status: newStatus })
       .eq("id", id);
     
-    if (!error) fetchParticipants();
+    if (error) {
+      // 실패 시 원래 상태로 복구
+      setParticipants(prev => prev.map(p => 
+        p.id === id ? { ...p, status: participant.status } : p
+      ));
+      setError(error.message);
+    }
   };
 
   // 드롭다운으로 상태 변경
@@ -1507,6 +1518,18 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                           />
                         ))}
                       </div>
+                      {form.is_paying_for_group && (
+                        <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                          <p className="text-sm font-medium text-blue-900 mb-1">
+                            💳 일괄결제 안내
+                          </p>
+                          <p className="text-xs text-blue-700">
+                            예약자({form.name})가 위 동반자들의 비용을 함께 결제합니다.
+                            <br />
+                            총 {form.group_size}명의 투어 비용이 예약자에게 청구됩니다.
+                          </p>
+                        </div>
+                      )}
                       <p className="text-xs text-gray-500 mt-2">
                         동반자 정보는 선택사항이며, 이름만 입력하셔도 됩니다.
                       </p>
