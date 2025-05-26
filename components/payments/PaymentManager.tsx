@@ -45,6 +45,7 @@ interface Participant {
   is_paying_for_group?: boolean;
   companions?: string[];
   group_size?: number;
+  tour_id?: string;
 }
 
 interface Tour {
