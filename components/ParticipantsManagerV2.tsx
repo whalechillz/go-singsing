@@ -45,6 +45,7 @@ interface Participant {
   pickup_location?: string;
   role?: string;
   created_at?: string;
+  payment?: Payment; // 결제 정보 추가
   [key: string]: any;
 }
 
@@ -66,7 +67,16 @@ interface ParticipantForm {
   tour_id?: string;
 }
 
-const DEFAULT_COLUMNS = ["선택", "이름", "연락처", "팀", "투어", "탑승지", "객실", "참여횟수", "상태", "관리"];
+interface Payment {
+  id: string;
+  participant_id: string;
+  payer_id: string;
+  amount: number;
+  payment_status?: string;
+  payment_method?: string;
+}
+
+const DEFAULT_COLUMNS = ["선택", "이름", "연락처", "팀", "투어", "탑승지", "객실", "참여횟수", "결제상태", "상태", "관리"];
 
 const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, showColumns = DEFAULT_COLUMNS, onChange }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -172,11 +182,37 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const fetchParticipants = async () => {
     setLoading(true);
     setError("");
+    
+    // 참가자 정보 조회
     let query = supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_number)");
     if (tourId) query = query.eq("tour_id", tourId);
-    const { data, error } = await query.order("created_at", { ascending: true });
-    if (error) setError(error.message);
-    else setParticipants((data || []) as Participant[]);
+    const { data: participantsData, error } = await query.order("created_at", { ascending: true });
+    
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+    
+    // 결제 정보 조회
+    let paymentQuery = supabase.from("singsing_payments").select("*");
+    if (tourId) paymentQuery = paymentQuery.eq("tour_id", tourId);
+    const { data: paymentsData } = await paymentQuery;
+    
+    // 참가자와 결제 정보 매핑
+    if (participantsData && paymentsData) {
+      const participantsWithPayment = participantsData.map(participant => {
+        const payment = paymentsData.find(p => p.participant_id === participant.id);
+        return {
+          ...participant,
+          payment: payment || null
+        };
+      });
+      setParticipants(participantsWithPayment as Participant[]);
+    } else {
+      setParticipants((participantsData || []) as Participant[]);
+    }
+    
     setLoading(false);
   };
 
@@ -759,6 +795,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         const canceledTourIds = tours.filter(t => t.status === 'canceled').map(t => t.id);
         filtered = filtered.filter(p => canceledTourIds.includes(p.tour_id));
         break;
+      case "paid":
+        filtered = filtered.filter(p => p.payment && p.payment.payment_status === 'completed');
+        break;
+      case "unpaid":
+        filtered = filtered.filter(p => !p.payment || p.payment.payment_status !== 'completed');
+        break;
     }
 
     return filtered;
@@ -783,12 +825,18 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     };
     
     const statsParticipants = getParticipantsForStats();
+    const paidCount = statsParticipants.filter(p => p.payment && p.payment.payment_status === 'completed').length;
+    const unpaidCount = statsParticipants.filter(p => !p.payment || p.payment.payment_status !== 'completed').length;
+    
     return {
       total: statsParticipants.length,
       confirmed: statsParticipants.filter(p => p.status === "확정").length,
       unconfirmed: statsParticipants.filter(p => p.status === "미확정").length,
       canceled: statsParticipants.filter(p => p.status === "취소").length,
       vip: statsParticipants.filter(p => (p.join_count || 0) >= 5).length,
+      paid: paidCount,
+      unpaid: unpaidCount,
+      paymentRate: statsParticipants.length > 0 ? Math.round((paidCount / statsParticipants.length) * 100) : 0,
       currentFiltered: filteredParticipants.length
     };
   }, [participants, filteredParticipants, tourId]);
@@ -799,6 +847,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     { id: 'confirmed', label: '확정', count: stats.confirmed },
     { id: 'unconfirmed', label: '미확정', count: stats.unconfirmed },
     { id: 'canceled', label: '취소', count: stats.canceled },
+    { id: 'paid', label: '결제완료', count: stats.paid },
+    { id: 'unpaid', label: '미결제', count: stats.unpaid },
     { id: 'vip', label: 'VIP', count: stats.vip }
   ] : [
     // 전체 참가자 관리에서는 모든 탭 표시
@@ -806,6 +856,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     { id: 'confirmed', label: '확정', count: stats.confirmed },
     { id: 'unconfirmed', label: '미확정', count: stats.unconfirmed },
     { id: 'canceled', label: '취소', count: stats.canceled },
+    { id: 'paid', label: '결제완료', count: stats.paid },
+    { id: 'unpaid', label: '미결제', count: stats.unpaid },
     { id: 'vip', label: 'VIP', count: stats.vip },
     { id: 'active', label: '운영 중 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'active')).length },
     { id: 'tour_canceled', label: '취소된 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'canceled')).length }
@@ -1037,6 +1089,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                           col === "탑승지" ? "min-w-[70px] w-[90px]" :
                           col === "객실" ? "min-w-[60px] w-[80px]" :
                           col === "참여횟수" ? "min-w-[70px] w-[90px]" :
+                          col === "결제상태" ? "min-w-[90px] w-[110px]" :
                           col === "상태" ? "min-w-[90px] w-[110px]" :
                           col === "관리" ? "min-w-[70px] w-[90px]" : ""
                         }`}>
@@ -1163,6 +1216,38 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                               </td>
                             )}
                             
+                            {showColumns.includes("결제상태") && (
+                              <td className="px-3 py-3 whitespace-nowrap">
+                                {participant.payment ? (
+                                  <div className="flex items-center gap-2">
+                                    {participant.payment.payment_status === 'completed' ? (
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        ✅ 결제완료
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        ⏳ 결제대기
+                                      </span>
+                                    )}
+                                    {participant.is_paying_for_group && (
+                                      <span className="text-xs text-blue-600 font-medium">
+                                        (일괄)
+                                      </span>
+                                    )}
+                                    {participant.payment.amount > 0 && (
+                                      <span className="text-xs text-gray-600">
+                                        {participant.payment.amount.toLocaleString()}원
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                    미결제
+                                  </span>
+                                )}
+                              </td>
+                            )}
+                            
                             {showColumns.includes("상태") && (
                               <td className="px-3 py-3 whitespace-nowrap">
                                 <button
@@ -1235,6 +1320,17 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
                     <p className="text-sm text-gray-600 mb-1">VIP (5회 이상):</p>
                     <p className="text-2xl font-bold text-yellow-600">{stats.vip}<span className="text-lg font-medium">명</span></p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">결제완료:</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {stats.paid}<span className="text-lg font-medium">명</span>
+                      <span className="text-sm text-gray-500 ml-1">({stats.paymentRate}%)</span>
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">미결제:</p>
+                    <p className="text-2xl font-bold text-orange-600">{stats.unpaid}<span className="text-lg font-medium">명</span></p>
                   </div>
                 </div>
                 {/* 현재 필터링된 목록의 통계 - tourId가 있을 때는 필터 시만 표시 */}

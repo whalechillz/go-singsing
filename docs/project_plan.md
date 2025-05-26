@@ -283,3 +283,14 @@
 - 엑셀 업로드/다운로드 기능 개선
 - 통계 대시보드 구현
 - 알림톡 연동
+
+- **2024-05-22**
+  - ParticipantsManagerV2.tsx에 결제(Payment) 정보 통합
+    - Payment 인터페이스 및 Participant에 payment 필드 추가
+    - fetchParticipants에서 참가자-결제 매핑
+    - 테이블에 '결제상태' 컬럼 추가(완료/대기/미결제, 금액, 일괄 여부 등 시각화)
+    - 통계(stats)에 결제완료/미결제/결제율 등 추가
+    - 탭/필터에 결제 상태(결제완료/미결제) 추가
+    - 실무적 결제 현황 관리 및 시각적 위계 강화
+  - 변경 파일: components/ParticipantsManagerV2.tsx
+  - 남은 작업: 결제 상세/수정, 결제 내역 다중 처리 등 추가 고도화(요구 시)
