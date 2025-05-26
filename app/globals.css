@@ -103,35 +103,126 @@
   }
 }
 
-/* Status dropdown animation */
-.status-dropdown-animation {
-  @apply transition-all duration-300 ease-in-out;
+/* Table responsive styles */
+.table-container {
+  width: 100%;
+  max-width: 100%;
 }
 
-.status-dropdown-animation:focus {
-  @apply scale-105;
+/* Table scroll container */
+.table-scroll-container {
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
-/* Smooth color transitions for status badges */
-.status-badge-transition {
-  @apply transition-colors duration-200 ease-in-out;
-}
-
-/* Pulse animation for status update */
-@keyframes statusUpdatePulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+/* Fixed header table */
+@supports (position: sticky) {
+  .table-scroll-container thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f9fafb;
   }
 }
 
-.status-updating {
-  animation: statusUpdatePulse 1s ease-in-out;
+/* Responsive table width */
+@media (min-width: 1536px) {
+  /* 2xl screens - use full width */
+  .table-container {
+    max-width: 100% !important;
+  }
+  .compact-table {
+    min-width: 1400px;
+  }
+}
+
+@media (min-width: 1280px) {
+  /* xl screens */
+  .compact-table {
+    min-width: 1200px;
+  }
+}
+
+@media (max-width: 1279px) {
+  /* Below xl screens */
+  .compact-table {
+    min-width: 1000px;
+  }
+}
+
+/* Compact table padding for better space utilization */
+.compact-table th,
+.compact-table td {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Remove horizontal scroll on large screens */
+@media (min-width: 1536px) {
+  .table-scroll-container {
+    overflow-x: visible;
+  }
+}
+
+/* Status dropdown styles */
+.status-dropdown {
+  @apply transition-colors duration-150 ease-in-out;
+}
+
+/* Admin UI Design System */
+/* Primary button */
+.btn-primary {
+  @apply bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm;
+}
+
+/* Secondary button */
+.btn-secondary {
+  @apply bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors;
+}
+
+/* Tertiary button (text only) */
+.btn-tertiary {
+  @apply text-gray-700 px-3 py-1.5 font-medium hover:text-gray-900 transition-colors;
+}
+
+/* Danger button */
+.btn-danger {
+  @apply text-red-600 px-3 py-1.5 font-medium hover:text-red-700 transition-colors;
+}
+
+/* Tab navigation */
+.tab-nav {
+  @apply bg-white rounded-t-lg shadow-sm border-b border-gray-200;
+}
+
+.tab-item {
+  @apply px-5 py-3 font-medium text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap relative;
+}
+
+.tab-item-active {
+  @apply text-blue-600 bg-gray-50;
+}
+
+.tab-item-inactive {
+  @apply text-gray-600 hover:text-gray-800 hover:bg-gray-50;
+}
+
+/* Admin layout */
+.admin-container {
+  @apply max-w-7xl mx-auto;
+}
+
+.admin-card {
+  @apply bg-white rounded-lg shadow-sm;
+}
+
+.admin-card-header {
+  @apply px-6 py-4 border-b border-gray-200;
+}
+
+.admin-card-body {
+  @apply p-6;
 }
 
 @media (max-width: 768px) {

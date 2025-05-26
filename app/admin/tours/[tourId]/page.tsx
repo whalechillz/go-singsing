@@ -53,21 +53,37 @@ const TourDetailPage: React.FC = () => {
   if (!tour) return <div className="text-center py-8 text-red-500">투어 정보를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow p-8">
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors flex items-center gap-2 ${activeTab === tab.key ? "bg-blue-800 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
-            onClick={() => setActiveTab(tab.key)}
-            aria-label={tab.label}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-          </button>
-        ))}
+    <div className="max-w-7xl mx-auto">
+      {/* 탭 버튼들 */}
+      <div className="bg-white rounded-t-lg shadow-sm border-b border-gray-200">
+        <div className="flex gap-0 overflow-x-auto">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              className={`px-5 py-3 font-medium text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap relative
+                ${activeTab === tab.key 
+                  ? "text-blue-600 bg-gray-50" 
+                  : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                }`}
+              onClick={() => setActiveTab(tab.key)}
+              aria-label={tab.label}
+            >
+              <span className={`transition-colors ${
+                activeTab === tab.key ? "text-blue-600" : "text-gray-400"
+              }`}>
+                {tab.icon}
+              </span>
+              <span>{tab.label}</span>
+              {activeTab === tab.key && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-b-lg p-6 min-h-[200px]">
+      
+      {/* 탭 컨텐츠 */}
+      <div className="bg-white rounded-b-lg shadow-sm p-6">
         {activeTab === "participants" && <ParticipantsManagerV2 tourId={tourId} showColumns={["이름", "연락처", "팀", "탑승지", "객실", "참여횟수", "상태", "관리"]} />}
         {activeTab === "rooms" && (
           <>
@@ -82,7 +98,7 @@ const TourDetailPage: React.FC = () => {
             <BoardingScheduleManager tourId={tourId} />
             <div className="mt-6 flex justify-end">
               <button
-                className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800"
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
                 onClick={() => setShowPreview(true)}
                 aria-label="탑승지 안내 미리보기"
               >
