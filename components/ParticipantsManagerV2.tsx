@@ -796,10 +796,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         filtered = filtered.filter(p => canceledTourIds.includes(p.tour_id));
         break;
       case "paid":
-        filtered = filtered.filter(p => p.payment && p.payment.payment_status === 'completed');
+        filtered = filtered.filter(p => p.payment && p.payment.amount > 0);
         break;
       case "unpaid":
-        filtered = filtered.filter(p => !p.payment || p.payment.payment_status !== 'completed');
+        filtered = filtered.filter(p => !p.payment || !p.payment.amount || p.payment.amount === 0);
         break;
     }
 
@@ -825,8 +825,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     };
     
     const statsParticipants = getParticipantsForStats();
-    const paidCount = statsParticipants.filter(p => p.payment && p.payment.payment_status === 'completed').length;
-    const unpaidCount = statsParticipants.filter(p => !p.payment || p.payment.payment_status !== 'completed').length;
+    const paidCount = statsParticipants.filter(p => p.payment && p.payment.amount > 0).length;
+    const unpaidCount = statsParticipants.filter(p => !p.payment || !p.payment.amount || p.payment.amount === 0).length;
     
     return {
       total: statsParticipants.length,
@@ -1216,27 +1216,19 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             
                             {showColumns.includes("결제상태") && (
                               <td className="px-3 py-3 whitespace-nowrap">
-                                {participant.payment ? (
+                                {participant.payment && participant.payment.amount > 0 ? (
                                   <div className="flex items-center gap-2">
-                                    {participant.payment.payment_status === 'completed' ? (
-                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        ✅ 결제완료
-                                      </span>
-                                    ) : (
-                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        ⏳ 결제대기
-                                      </span>
-                                    )}
+                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                      ✅ 결제완료
+                                    </span>
                                     {participant.is_paying_for_group && (
                                       <span className="text-xs text-blue-600 font-medium">
                                         (일괄)
                                       </span>
                                     )}
-                                    {participant.payment.amount > 0 && (
-                                      <span className="text-xs text-gray-600">
-                                        {participant.payment.amount.toLocaleString()}원
-                                      </span>
-                                    )}
+                                    <span className="text-xs text-gray-600">
+                                      {participant.payment.amount.toLocaleString()}원
+                                    </span>
                                   </div>
                                 ) : (
                                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
