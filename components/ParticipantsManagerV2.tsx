@@ -886,31 +886,31 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                 </div>
 
                 {/* 액션 버튼들 */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   {/* 엑셀 템플릿 다운로드 */}
                   <button
-                    className="bg-white text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
+                    className="bg-white text-gray-700 px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
                     onClick={handleTemplateDownload}
                     title="엑셀 템플릿 다운로드"
                   >
                     <FileSpreadsheet className="w-4 h-4" />
-                    <span className="hidden sm:inline">템플릿</span>
+                    <span className="hidden sm:inline text-sm">템플릿</span>
                   </button>
 
                   {/* 엑셀 다운로드 */}
                   <button
-                    className="bg-white text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
+                    className="bg-white text-gray-700 px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
                     onClick={handleExcelDownload}
                     title="엑셀 다운로드"
                   >
                     <Download className="w-4 h-4" />
-                    <span className="hidden sm:inline">다운로드</span>
+                    <span className="hidden sm:inline text-sm">다운로드</span>
                   </button>
 
                   {/* 엑셀 업로드 */}
-                  <label className="bg-white text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <label className="bg-white text-gray-700 px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer">
                     <Upload className="w-4 h-4" />
-                    <span className="hidden sm:inline">{isUploading ? "업로드 중..." : "업로드"}</span>
+                    <span className="hidden sm:inline text-sm">{isUploading ? "업로드 중..." : "업로드"}</span>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -923,11 +923,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
 
                   {/* 참가자 추가 - Primary Action */}
                   <button
-                    className="bg-blue-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
+                    className="bg-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
                     onClick={() => openModal()}
+                    title="참가자 추가"
                   >
                     <UserPlus className="w-5 h-5" />
-                    <span className="font-medium">참가자 추가</span>
+                    <span className="hidden sm:inline font-medium text-sm">참가자 추가</span>
                   </button>
                 </div>
               </div>
@@ -1074,7 +1075,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                     </span>
                                   )}
                                   {participant.is_paying_for_group && (
-                                    <span className="ml-2 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                                    <span className="ml-2 bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs font-medium">
                                       일괄결제
                                     </span>
                                   )}
@@ -1091,7 +1092,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             {showColumns.includes("팀") && (
                               <td className="px-3 py-3 whitespace-nowrap">
                                 {participant.team_name ? (
-                                  <span className="text-gray-700 text-sm">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                                     {participant.team_name}
                                   </span>
                                 ) : (
@@ -1121,7 +1122,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             {showColumns.includes("탑승지") && (
                               <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                                 {participant.pickup_location ? (
-                                  <span className="text-gray-700 text-sm">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     {participant.pickup_location}
                                   </span>
                                 ) : (
@@ -1143,7 +1144,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                     {participant.join_count || 0}회
                                   </span>
                                   {(participant.join_count || 0) >= 5 && (
-                                    <span className="ml-2 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                                    <span className="ml-2 text-yellow-600 font-bold text-sm">
                                       VIP
                                     </span>
                                   )}
@@ -1153,47 +1154,34 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             
                             {showColumns.includes("상태") && (
                               <td className="px-3 py-3 whitespace-nowrap">
-                                <div className="relative z-0">
-                                  <select
-                                    value={participant.status || "확정"}
-                                    onChange={(e) => handleStatusChange(participant.id, e.target.value)}
-                                    className={`
-                                      appearance-none rounded px-3 py-1.5 pr-8 text-sm font-medium cursor-pointer
-                                      transition-colors duration-150 status-dropdown
-                                      ${
-                                        participant.status === "확정"
-                                          ? 'bg-green-100 text-green-800 hover:bg-green-200 focus:bg-green-200'
-                                          : participant.status === "취소"
-                                          ? 'bg-gray-100 text-gray-800 hover:bg-gray-200 focus:bg-gray-200'
-                                          : 'bg-orange-100 text-orange-800 hover:bg-orange-200 focus:bg-orange-200'
-                                      }
-                                      focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-blue-400
-                                    `}
-                                  >
-                                    <option value="확정">✅ 확정</option>
-                                    <option value="미확정">⏳ 미확정</option>
-                                    <option value="취소">❌ 취소</option>
-                                  </select>
-                                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                    <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                  </div>
-                                </div>
+                                <button
+                                  onClick={() => toggleConfirmation(participant.id)}
+                                  className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                                    participant.status === "확정"
+                                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                      : participant.status === "취소"
+                                      ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                      : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                  }`}
+                                >
+                                  {participant.status === "확정" && "✔ 확정"}
+                                  {participant.status === "미확정" && "✖ 미확정"}
+                                  {participant.status === "취소" && "✖ 취소"}
+                                </button>
                               </td>
                             )}
                             
                             {showColumns.includes("관리") && (
                               <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium">
                                 <button
-                                  className="text-gray-500 hover:text-gray-700 mr-2 p-1 hover:bg-gray-100 rounded transition-colors"
+                                  className="text-blue-600 hover:text-blue-800 mr-3 transition-colors"
                                   title="수정"
                                   onClick={() => openModal(participant)}
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
                                 <button
-                                  className="text-gray-500 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
+                                  className="text-red-500 hover:text-red-700 transition-colors"
                                   title="삭제"
                                   onClick={() => handleDelete(participant.id)}
                                 >
@@ -1212,35 +1200,30 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
 
             {/* 통계 요약 */}
             <div className="mt-6 admin-card">
-              <div className="admin-card-header">
-                <h3 className="text-base font-semibold text-gray-900">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   참가자 현황 요약 {tourId ? '' : (selectedTour ? `(${selectedTour.title})` : '(전체)')}
                 </h3>
-                {!tourId && selectedTour && (
-                  <p className="text-sm text-gray-600 mt-1">투어 기간: {selectedTour.date}</p>
-                )}
-              </div>
-              <div className="px-6 py-4">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600">총 참가자</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">총 참가자:</p>
+                    <p className="text-2xl font-bold text-blue-600">{stats.total}<span className="text-lg font-medium">명</span></p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600">확정</p>
-                    <p className="text-2xl font-bold text-green-600 mt-1">{stats.confirmed}</p>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">확정:</p>
+                    <p className="text-2xl font-bold text-green-600">{stats.confirmed}<span className="text-lg font-medium">명</span></p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600">미확정</p>
-                    <p className="text-2xl font-bold text-orange-600 mt-1">{stats.unconfirmed}</p>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">미확정:</p>
+                    <p className="text-2xl font-bold text-red-600">{stats.unconfirmed}<span className="text-lg font-medium">명</span></p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600">취소</p>
-                    <p className="text-2xl font-bold text-gray-500 mt-1">{stats.canceled}</p>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">취소:</p>
+                    <p className="text-2xl font-bold text-gray-500">{stats.canceled}<span className="text-lg font-medium">명</span></p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600">VIP (5회 이상)</p>
-                    <p className="text-2xl font-bold text-blue-600 mt-1">{stats.vip}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
+                    <p className="text-sm text-gray-600 mb-1">VIP (5회 이상):</p>
+                    <p className="text-2xl font-bold text-yellow-600">{stats.vip}<span className="text-lg font-medium">명</span></p>
                   </div>
                 </div>
                 {/* 현재 필터링된 목록의 통계 - tourId가 있을 때는 필터 시만 표시 */}
@@ -1251,7 +1234,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                       <span className="mx-2">|</span>
                       확정: <span className="font-semibold text-green-600">{filteredParticipants.filter(p => p.status === "확정").length}</span>
                       <span className="mx-2">·</span>
-                      미확정: <span className="font-semibold text-orange-600">{filteredParticipants.filter(p => p.status === "미확정").length}</span>
+                      미확정: <span className="font-semibold text-red-600">{filteredParticipants.filter(p => p.status === "미확정").length}</span>
                       <span className="mx-2">·</span>
                       취소: <span className="font-semibold text-gray-500">{filteredParticipants.filter(p => p.status === "취소").length}</span>
                     </p>
