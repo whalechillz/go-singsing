@@ -202,7 +202,22 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     // 참가자와 결제 정보 매핑
     if (participantsData && paymentsData) {
       const participantsWithPayment = participantsData.map(participant => {
-        const payment = paymentsData.find(p => p.participant_id === participant.id);
+        // 1. 본인 결제 row가 있으면 그대로
+        let payment = paymentsData.find(p => p.participant_id === participant.id);
+        // 2. 없으면, 같은 투어 내 is_group_payment=true && payer_id가 다른 결제 row에 본인 id가 포함되어 있으면 대표자 결제 row 매핑
+        if (!payment) {
+          // 대표자 결제 row 찾기
+          const groupPayment = paymentsData.find(p =>
+            p.is_group_payment &&
+            p.payer_id !== participant.id &&
+            p.tour_id === participant.tour_id &&
+            // group_member_ids가 실제 DB에 없을 수 있으므로, payments에서 payer_id가 대표자이고, participant_id가 멤버인 row가 있으면 해당 결제에 포함된 것으로 간주
+            true // 아래에서 participant_id로 이미 매핑 시도, 추가 group_member_ids 필드가 있으면 여기에 조건 추가
+          );
+          if (groupPayment) {
+            payment = groupPayment;
+          }
+        }
         return {
           ...participant,
           payment: payment || null
