@@ -1250,17 +1250,19 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                               <td className="px-3 py-3 whitespace-nowrap">
                                 <button
                                   onClick={() => toggleConfirmation(participant.id)}
-                                  className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                                    participant.status === "확정"
+                                  className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium transition-colors gap-1.5
+                                    ${participant.status === "확정"
                                       ? 'bg-green-100 text-green-800 hover:bg-green-200'
                                       : participant.status === "취소"
                                       ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                      : 'bg-red-100 text-red-800 hover:bg-red-200'
-                                  }`}
+                                      : 'bg-red-100 text-red-800 hover:bg-red-200'}
+                                  `}
                                 >
-                                  {participant.status === "확정" && "✔ 확정"}
-                                  {participant.status === "미확정" && "✖ 미확정"}
-                                  {participant.status === "취소" && "✖ 취소"}
+                                  {participant.status === "확정" && <Check className="w-4 h-4 mr-1" />}
+                                  {participant.status === "미확정" && <X className="w-4 h-4 mr-1" />}
+                                  {participant.status === "확정" && "확정"}
+                                  {participant.status === "미확정" && "미확정"}
+                                  {participant.status === "취소" && "취소"}
                                 </button>
                               </td>
                             )}
