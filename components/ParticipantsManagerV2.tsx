@@ -851,16 +851,14 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     { id: 'unpaid', label: '미결제', count: stats.unpaid },
     { id: 'vip', label: 'VIP', count: stats.vip }
   ] : [
-    // 전체 참가자 관리에서는 모든 탭 표시
+    // 전체 참가자 관리에서도 '운영 중 투어', '취소된 투어' 탭을 제거
     { id: 'all', label: '전체', count: stats.total },
     { id: 'confirmed', label: '확정', count: stats.confirmed },
     { id: 'unconfirmed', label: '미확정', count: stats.unconfirmed },
     { id: 'canceled', label: '취소', count: stats.canceled },
     { id: 'paid', label: '결제완료', count: stats.paid },
     { id: 'unpaid', label: '미결제', count: stats.unpaid },
-    { id: 'vip', label: 'VIP', count: stats.vip },
-    { id: 'active', label: '운영 중 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'active')).length },
-    { id: 'tour_canceled', label: '취소된 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'canceled')).length }
+    { id: 'vip', label: 'VIP', count: stats.vip }
   ];
 
   // tourId가 있을 때 (투어별 페이지)
