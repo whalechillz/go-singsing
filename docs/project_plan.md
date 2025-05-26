@@ -294,3 +294,11 @@
     - 실무적 결제 현황 관리 및 시각적 위계 강화
   - 변경 파일: components/ParticipantsManagerV2.tsx
   - 남은 작업: 결제 상세/수정, 결제 내역 다중 처리 등 추가 고도화(요구 시)
+
+- **2025-05-26**
+  - PaymentManager.tsx에 미결제자 탭 및 미결제자 리스트 기능 추가
+    - 미결제자(unpaidParticipants) 계산 및 실시간 반영
+    - 탭에 '미결제자' 추가, 클릭 시 미결제자만 별도 테이블로 표시
+    - 이름/연락처/팀 등 주요 정보 간결하게 표시, 실무적 안내/관리 용이
+    - 변경 파일: components/payments/PaymentManager.tsx
+    - 남은 작업: 미결제자 안내/엑셀 다운로드 등 부가 기능(요구 시)

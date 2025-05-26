@@ -266,11 +266,17 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
     receiptRequested: payments.filter(p => p.receipt_requested).length
   };
 
+  // 미결제자(unpaidParticipants) 계산
+  const unpaidParticipants = participants.filter(p => 
+    !payments.find(payment => payment.participant_id === p.id)
+  );
+
   const tabs = [
     { id: 'all', label: '전체', count: stats.total },
     { id: 'group', label: '일괄결제', count: stats.groupPayments },
     { id: 'individual', label: '개별결제', count: stats.individualPayments },
-    { id: 'receipt', label: '영수증 요청', count: stats.receiptRequested }
+    { id: 'receipt', label: '영수증 요청', count: stats.receiptRequested },
+    { id: 'unpaid', label: '미결제자', count: unpaidParticipants.length }
   ];
 
   return (
@@ -349,128 +355,158 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
       {/* 결제 목록 */}
       <div className="admin-card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">참가자</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">결제자</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">금액</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">결제방법</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">영수증</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">메모</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">관리</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-500">
-                    로딩 중...
-                  </td>
-                </tr>
-              ) : filteredPayments.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-500">
-                    결제 내역이 없습니다.
-                  </td>
-                </tr>
+          {activeTab === 'unpaid' ? (
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">미결제자 목록</h3>
+              {unpaidParticipants.length === 0 ? (
+                <div className="text-gray-500 text-center py-8">모든 참가자가 결제 완료했습니다.</div>
               ) : (
-                filteredPayments.map(payment => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {payment.participant?.name || '-'}
-                        </div>
-                        {payment.participant?.phone && (
-                          <div className="text-sm text-gray-500">
-                            {payment.participant.phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {payment.is_group_payment ? (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900">
-                            {payment.payer?.name || '-'}
-                          </span>
-                          <span className="bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs">
-                            일괄결제
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-700">
-                          {payment.payer?.name || payment.participant?.name || '-'}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-medium text-gray-900">
-                        {payment.amount.toLocaleString()}원
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-gray-700">
-                        {payment.payment_method === 'deposit' ? '계좌이체' : 
-                         payment.payment_method === 'card' ? '카드' : 
-                         payment.payment_method === 'cash' ? '현금' : '-'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {payment.receipt_requested ? (
-                        <div className="flex items-center gap-1">
-                          <Receipt className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-gray-700">
-                            {payment.receipt_type || '요청'}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-gray-500">
-                        {payment.note || '-'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="text-blue-600 hover:text-blue-800"
-                          onClick={() => {
-                            setEditingPayment(payment);
-                            setForm({
-                              tour_id: payment.tour_id,
-                              participant_id: payment.participant_id,
-                              payer_id: payment.payer_id,
-                              payment_method: payment.payment_method || 'deposit',
-                              amount: payment.amount,
-                              is_group_payment: payment.is_group_payment,
-                              receipt_type: payment.receipt_type || '',
-                              receipt_requested: payment.receipt_requested,
-                              status: 'pending',
-                              note: payment.note || '',
-                              group_member_ids: []
-                            });
-                            setShowModal(true);
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => handleDelete(payment.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">연락처</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">팀</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {unpaidParticipants.map(p => (
+                      <tr key={p.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
+                        <td className="px-4 py-3 text-gray-500">{p.phone ? p.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '-'}</td>
+                        <td className="px-4 py-3 text-gray-500">{p.team_name || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            <>
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">참가자</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">결제자</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">금액</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">결제방법</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">영수증</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">메모</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">관리</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-8 text-gray-500">
+                        로딩 중...
+                      </td>
+                    </tr>
+                  ) : filteredPayments.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-8 text-gray-500">
+                        결제 내역이 없습니다.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredPayments.map(payment => (
+                      <tr key={payment.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {payment.participant?.name || '-'}
+                            </div>
+                            {payment.participant?.phone && (
+                              <div className="text-sm text-gray-500">
+                                {payment.participant.phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          {payment.is_group_payment ? (
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-900">
+                                {payment.payer?.name || '-'}
+                              </span>
+                              <span className="bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs">
+                                일괄결제
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-700">
+                              {payment.payer?.name || payment.participant?.name || '-'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="font-medium text-gray-900">
+                            {payment.amount.toLocaleString()}원
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-gray-700">
+                            {payment.payment_method === 'deposit' ? '계좌이체' : 
+                             payment.payment_method === 'card' ? '카드' : 
+                             payment.payment_method === 'cash' ? '현금' : '-'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {payment.receipt_requested ? (
+                            <div className="flex items-center gap-1">
+                              <Receipt className="w-4 h-4 text-blue-600" />
+                              <span className="text-sm text-gray-700">
+                                {payment.receipt_type || '요청'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-gray-500">
+                            {payment.note || '-'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="text-blue-600 hover:text-blue-800"
+                              onClick={() => {
+                                setEditingPayment(payment);
+                                setForm({
+                                  tour_id: payment.tour_id,
+                                  participant_id: payment.participant_id,
+                                  payer_id: payment.payer_id,
+                                  payment_method: payment.payment_method || 'deposit',
+                                  amount: payment.amount,
+                                  is_group_payment: payment.is_group_payment,
+                                  receipt_type: payment.receipt_type || '',
+                                  receipt_requested: payment.receipt_requested,
+                                  status: 'pending',
+                                  note: payment.note || '',
+                                  group_member_ids: []
+                                });
+                                setShowModal(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleDelete(payment.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </>
+          )}
         </div>
       </div>
 
