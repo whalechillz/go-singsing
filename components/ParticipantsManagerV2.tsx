@@ -2,7 +2,7 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
-import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square } from 'lucide-react';
+import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban } from 'lucide-react';
 
 // 공통 ParticipantsManager Props
 interface ParticipantsManagerProps {
@@ -1260,6 +1260,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                 >
                                   {participant.status === "확정" && <Check className="w-4 h-4 mr-1" />}
                                   {participant.status === "미확정" && <X className="w-4 h-4 mr-1" />}
+                                  {participant.status === "취소" && <Ban className="w-4 h-4 mr-1 text-gray-600" />}
                                   {participant.status === "확정" && "확정"}
                                   {participant.status === "미확정" && "미확정"}
                                   {participant.status === "취소" && "취소"}
