@@ -45,6 +45,7 @@ interface Participant {
   pickup_location?: string;
   role?: string;
   created_at?: string;
+  isUpdating?: boolean; // 애니메이션 상태 관리용
   [key: string]: any;
 }
 
@@ -361,13 +362,45 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     const participant = participants.find(p => p.id === id);
     if (!participant) return;
     
-    const newStatus = participant.status === "확정" ? "대기" : "확정";
+    // 상태 순환: 확정 -> 미확정 -> 취소 -> 확정
+    let newStatus;
+    if (participant.status === "확정") {
+      newStatus = "미확정";
+    } else if (participant.status === "미확정") {
+      newStatus = "취소";
+    } else {
+      newStatus = "확정";
+    }
+    
     const { error } = await supabase
       .from("singsing_participants")
       .update({ status: newStatus })
       .eq("id", id);
     
     if (!error) fetchParticipants();
+  };
+
+  // 드롭다운으로 상태 변경
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    // 애니메이션을 위한 상태 업데이트
+    setParticipants(prev => prev.map(p => 
+      p.id === id ? { ...p, status: newStatus, isUpdating: true } : p
+    ));
+    
+    const { error } = await supabase
+      .from("singsing_participants")
+      .update({ status: newStatus })
+      .eq("id", id);
+    
+    if (!error) {
+      // 성공 시 애니메이션 효과 후 데이터 새로고침
+      setTimeout(() => {
+        fetchParticipants();
+      }, 500);
+    } else {
+      // 실패 시 원래 상태로 복구
+      fetchParticipants();
+    }
   };
 
   // 일괄 편집
@@ -610,6 +643,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
           data.validation.errors.push("성별은 '남' 또는 '여'만 가능합니다");
         }
         
+        // 상태 검증
+        if (data.status && !["확정", "미확정", "취소", ""].includes(data.status)) {
+          data.validation.isValid = false;
+          data.validation.errors.push("상태는 '확정', '미확정', '취소' 중 하나여야 합니다");
+        }
+        
         // 탑승지 검증
         if (data.pickup_location && boardingPlaces.length > 0 && !boardingPlaces.includes(data.pickup_location)) {
           data.validation.isValid = false;
@@ -693,7 +732,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         filtered = filtered.filter(p => p.status === "확정");
         break;
       case "unconfirmed":
-        filtered = filtered.filter(p => p.status !== "확정");
+        filtered = filtered.filter(p => p.status === "미확정");
+        break;
+      case "canceled":
+        filtered = filtered.filter(p => p.status === "취소");
         break;
       case "vip":
         filtered = filtered.filter(p => (p.join_count || 0) >= 5);
@@ -702,7 +744,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         const activeTourIds = tours.filter(t => t.status === 'active').map(t => t.id);
         filtered = filtered.filter(p => activeTourIds.includes(p.tour_id));
         break;
-      case "canceled":
+      case "tour_canceled":
         const canceledTourIds = tours.filter(t => t.status === 'canceled').map(t => t.id);
         filtered = filtered.filter(p => canceledTourIds.includes(p.tour_id));
         break;
@@ -732,7 +774,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const stats = {
     total: statsParticipants.length,
     confirmed: statsParticipants.filter(p => p.status === "확정").length,
-    unconfirmed: statsParticipants.filter(p => p.status !== "확정").length,
+    unconfirmed: statsParticipants.filter(p => p.status === "미확정").length,
+    canceled: statsParticipants.filter(p => p.status === "취소").length,
     vip: statsParticipants.filter(p => (p.join_count || 0) >= 5).length,
     currentFiltered: filteredParticipants.length
   };
@@ -742,15 +785,17 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     { id: 'all', label: '전체', count: stats.total },
     { id: 'confirmed', label: '확정', count: stats.confirmed },
     { id: 'unconfirmed', label: '미확정', count: stats.unconfirmed },
+    { id: 'canceled', label: '취소', count: stats.canceled },
     { id: 'vip', label: 'VIP', count: stats.vip }
   ] : [
     // 전체 참가자 관리에서는 모든 탭 표시
     { id: 'all', label: '전체', count: stats.total },
     { id: 'confirmed', label: '확정', count: stats.confirmed },
     { id: 'unconfirmed', label: '미확정', count: stats.unconfirmed },
+    { id: 'canceled', label: '취소', count: stats.canceled },
     { id: 'vip', label: 'VIP', count: stats.vip },
     { id: 'active', label: '운영 중 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'active')).length },
-    { id: 'canceled', label: '취소된 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'canceled')).length }
+    { id: 'tour_canceled', label: '취소된 투어', count: participants.filter(p => tours.find(t => t.id === p.tour_id && t.status === 'canceled')).length }
   ];
 
   // tourId가 있을 때 (투어별 페이지)
@@ -898,9 +943,15 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   </button>
                   <button
                     className="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
-                    onClick={() => handleBulkStatusChange("대기")}
+                    onClick={() => handleBulkStatusChange("미확정")}
                   >
-                    일괄 대기
+                    일괄 미확정
+                  </button>
+                  <button
+                    className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                    onClick={() => handleBulkStatusChange("취소")}
+                  >
+                    일괄 취소
                   </button>
                   <button
                     className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
@@ -1078,26 +1129,38 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             
                             {showColumns.includes("상태") && (
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <button
-                                  className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors duration-200 ${
-                                    participant.status === "확정"
-                                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                      : 'bg-red-100 text-red-800 hover:bg-red-200'
-                                  }`}
-                                  onClick={() => toggleConfirmation(participant.id)}
-                                >
-                                  {participant.status === "확정" ? (
-                                    <>
-                                      <Check className="w-3 h-3" />
-                                      <span>확정</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <X className="w-3 h-3" />
-                                      <span>미확정</span>
-                                    </>
-                                  )}
-                                </button>
+                                <div className="relative">
+                                  <select
+                                    value={participant.status || "확정"}
+                                    onChange={(e) => handleStatusChange(participant.id, e.target.value)}
+                                    className={`
+                                      appearance-none rounded px-3 py-1.5 pr-8 text-sm font-medium cursor-pointer
+                                      transition-all duration-300 ease-in-out transform
+                                      ${
+                                        participant.isUpdating 
+                                          ? 'scale-105 ring-2 ring-blue-400 ring-opacity-50' 
+                                          : 'scale-100'
+                                      }
+                                      ${
+                                        participant.status === "확정"
+                                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                          : participant.status === "취소"
+                                          ? 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                          : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+                                      }
+                                      focus:outline-none focus:ring-2 focus:ring-blue-500
+                                    `}
+                                  >
+                                    <option value="확정">✅ 확정</option>
+                                    <option value="미확정">⏳ 미확정</option>
+                                    <option value="취소">❌ 취소</option>
+                                  </select>
+                                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                    <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </div>
+                                </div>
                               </td>
                             )}
                             
@@ -1136,7 +1199,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
               {!tourId && selectedTour && (
                 <div className="text-gray-600 text-sm mb-3">투어 기간: {selectedTour.date}</div>
               )}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                   <span className="font-semibold text-blue-800">총 참가자:</span>{' '}
                   <span className="text-lg font-bold">{stats.total}</span>명
@@ -1146,8 +1209,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   <span className="text-lg font-bold">{stats.confirmed}</span>명
                 </div>
                 <div>
-                  <span className="font-semibold text-red-700">미확정:</span>{' '}
+                  <span className="font-semibold text-orange-700">미확정:</span>{' '}
                   <span className="text-lg font-bold">{stats.unconfirmed}</span>명
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700">취소:</span>{' '}
+                  <span className="text-lg font-bold">{stats.canceled}</span>명
                 </div>
                 <div>
                   <span className="font-semibold text-amber-700">VIP (5회 이상):</span>{' '}
@@ -1162,7 +1229,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                     확정: {filteredParticipants.filter(p => p.status === "확정").length}명
                   </span>
                   <span className="ml-4">
-                    미확정: {filteredParticipants.filter(p => p.status !== "확정").length}명
+                    미확정: {filteredParticipants.filter(p => p.status === "미확정").length}명
+                  </span>
+                  <span className="ml-4">
+                    취소: {filteredParticipants.filter(p => p.status === "취소").length}명
                   </span>
                 </div>
               )}
@@ -1173,7 +1243,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                     확정: {filteredParticipants.filter(p => p.status === "확정").length}명
                   </span>
                   <span className="ml-4">
-                    미확정: {filteredParticipants.filter(p => p.status !== "확정").length}명
+                    미확정: {filteredParticipants.filter(p => p.status === "미확정").length}명
+                  </span>
+                  <span className="ml-4">
+                    취소: {filteredParticipants.filter(p => p.status === "취소").length}명
                   </span>
                 </div>
               )}
@@ -1302,6 +1375,22 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                     <option value="">선택</option>
                     <option value="남">남</option>
                     <option value="여">여</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    상태
+                  </label>
+                  <select
+                    name="status"
+                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={form.status || '확정'}
+                    onChange={handleChange}
+                  >
+                    <option value="확정">확정</option>
+                    <option value="미확정">미확정</option>
+                    <option value="취소">취소</option>
                   </select>
                 </div>
 
@@ -1563,6 +1652,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             <span className={`px-2 py-1 rounded text-xs ${
                               data.status === "확정" 
                                 ? 'bg-green-100 text-green-800' 
+                                : data.status === "취소"
+                                ? 'bg-gray-100 text-gray-800'
                                 : 'bg-orange-100 text-orange-800'
                             }`}>
                               {data.status}

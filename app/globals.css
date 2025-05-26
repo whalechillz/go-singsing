@@ -103,6 +103,37 @@
   }
 }
 
+/* Status dropdown animation */
+.status-dropdown-animation {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.status-dropdown-animation:focus {
+  @apply scale-105;
+}
+
+/* Smooth color transitions for status badges */
+.status-badge-transition {
+  @apply transition-colors duration-200 ease-in-out;
+}
+
+/* Pulse animation for status update */
+@keyframes statusUpdatePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.status-updating {
+  animation: statusUpdatePulse 1s ease-in-out;
+}
+
 @media (max-width: 768px) {
   .tabs-container {
     display: flex;
