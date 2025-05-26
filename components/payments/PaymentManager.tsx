@@ -474,6 +474,20 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                               className="text-blue-600 hover:text-blue-800"
                               onClick={() => {
                                 setEditingPayment(payment);
+                                
+                                // 일괄 결제인 경우 그룹 멤버들의 ID 찾기
+                                let groupMemberIds: string[] = [];
+                                if (payment.is_group_payment && payment.payer_id) {
+                                  // 같은 결제자와 투어로 묶인 모든 결제 찾기
+                                  groupMemberIds = payments
+                                    .filter(p => 
+                                      p.payer_id === payment.payer_id && 
+                                      p.tour_id === payment.tour_id &&
+                                      p.is_group_payment
+                                    )
+                                    .map(p => p.participant_id);
+                                }
+                                
                                 setForm({
                                   tour_id: payment.tour_id,
                                   participant_id: payment.participant_id,
@@ -485,7 +499,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                                   receipt_requested: payment.receipt_requested,
                                   status: 'pending',
                                   note: payment.note || '',
-                                  group_member_ids: []
+                                  group_member_ids: groupMemberIds
                                 });
                                 setShowModal(true);
                               }}
@@ -586,31 +600,46 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                 )}
 
                 {/* 결제 유형 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    결제 유형
-                  </label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="payment_type"
-                        checked={!form.is_group_payment}
-                        onChange={() => setForm({ ...form, is_group_payment: false })}
-                      />
-                      <span className="ml-2">개별 결제</span>
+                {!editingPayment && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      결제 유형
                     </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="payment_type"
-                        checked={form.is_group_payment}
-                        onChange={() => setForm({ ...form, is_group_payment: true })}
-                      />
-                      <span className="ml-2">일괄 결제</span>
-                    </label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="payment_type"
+                          checked={!form.is_group_payment}
+                          onChange={() => setForm({ ...form, is_group_payment: false })}
+                        />
+                        <span className="ml-2">개별 결제</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="payment_type"
+                          checked={form.is_group_payment}
+                          onChange={() => setForm({ ...form, is_group_payment: true })}
+                        />
+                        <span className="ml-2">일괄 결제</span>
+                      </label>
+                    </div>
                   </div>
-                </div>
+                )}
+                
+                {/* 수정 모드일 때 결제 유형 표시 */}
+                {editingPayment && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      결제 유형
+                    </label>
+                    <div className="bg-gray-100 rounded-lg px-3 py-2">
+                      {form.is_group_payment ? '일괄 결제' : '개별 결제'}
+                      <span className="text-sm text-gray-500 ml-2">(수정 불가)</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* 개별 결제 */}
                 {!form.is_group_payment && (
@@ -629,7 +658,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                         .filter(p => !form.tour_id || p.tour_id === form.tour_id)
                         .map(participant => (
                           <option key={participant.id} value={participant.id}>
-                            {participant.name} ({participant.phone})
+                            {participant.name} {participant.phone ? `(${participant.phone})` : ''}
                           </option>
                         ))}
                     </select>
@@ -654,7 +683,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                           .filter(p => !form.tour_id || p.tour_id === form.tour_id)
                           .map(participant => (
                             <option key={participant.id} value={participant.id}>
-                              {participant.name} ({participant.phone})
+                              {participant.name} {participant.phone ? `(${participant.phone})` : ''}
                             </option>
                           ))}
                       </select>
@@ -688,7 +717,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                                 }}
                               />
                               <span className="ml-2">
-                                {participant.name} ({participant.phone})
+                                {participant.name} {participant.phone ? `(${participant.phone})` : ''}
                               </span>
                             </label>
                           ))}

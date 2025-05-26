@@ -15,7 +15,7 @@ interface Tour {
   id: string;
   title: string;
   date: string;
-  price: string;
+  price: string | number;
   status: 'active' | 'canceled';
   isPrivate?: boolean;
   note?: string;
@@ -1578,59 +1578,85 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   )}
                 </div>
 
-                <div className="md:col-span-2 flex flex-col gap-3">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="is_paying_for_group"
-                      name="is_paying_for_group"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded"
-                      checked={form.is_paying_for_group || false}
-                      onChange={handleChange}
-                    />
-                    <label htmlFor="is_paying_for_group" className="ml-2 block text-sm text-gray-900">
-                      그룹 일괄 결제 (예약자가 그룹 전체 결제)
-                    </label>
-                  </div>
-                </div>
-
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     동반자 정보
                   </label>
-                  {(form.group_size || 0) > 1 && (
-                    <div className="border rounded-lg p-3 mb-3 bg-gray-50">
-                      <p className="text-sm text-gray-600 mb-2">동반자 이름 (선택사항)</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {Array.from({ length: (form.group_size || 1) - 1 }).map((_, index) => (
-                          <input
-                            key={index}
-                            type="text"
-                            placeholder={`동반자 ${index + 1} 이름`}
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                            value={(form.companions && form.companions[index]) || ''}
-                            onChange={(e) => handleCompanionChange(index, e.target.value)}
-                          />
-                        ))}
+                  {(form.group_size || 0) > 1 ? (
+                    <div className="border rounded-lg p-4 bg-gray-50">
+                      {/* 일괄 결제 옵션 */}
+                      <div className="flex items-center mb-4">
+                        <input
+                          type="checkbox"
+                          id="is_paying_for_group"
+                          name="is_paying_for_group"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded"
+                          checked={form.is_paying_for_group || false}
+                          onChange={handleChange}
+                        />
+                        <label htmlFor="is_paying_for_group" className="ml-2 block text-sm font-medium text-gray-900">
+                          그룹 일괄 결제 (예약자가 그룹 전체 결제)
+                        </label>
                       </div>
+
+                      {/* 동반자 입력 필드 */}
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-2">동반자 이름 (선택사항)</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {Array.from({ length: (form.group_size || 1) - 1 }).map((_, index) => (
+                            <input
+                              key={index}
+                              type="text"
+                              placeholder={`동반자 ${index + 1} 이름`}
+                              className="w-full border border-gray-300 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              value={(form.companions && form.companions[index]) || ''}
+                              onChange={(e) => handleCompanionChange(index, e.target.value)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 일괄 결제 안내 */}
                       {form.is_paying_for_group && (
-                        <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                          <p className="text-sm font-medium text-blue-900 mb-1">
-                            💳 일괄결제 안내
-                          </p>
-                          <p className="text-xs text-blue-700">
-                            예약자({form.name})가 위 동반자들의 비용을 함께 결제합니다.
-                            <br />
-                            총 {form.group_size}명의 투어 비용이 예약자에게 청구됩니다.
-                          </p>
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-start">
+                            <span className="text-blue-600 mt-0.5 mr-2">💳</span>
+                            <div>
+                              <p className="text-sm font-medium text-blue-900 mb-1">
+                                일괄결제 안내
+                              </p>
+                              <p className="text-xs text-blue-700 leading-relaxed">
+                                예약자({form.name || '본인'})가 위 동반자들의 비용을 함께 결제합니다.
+                                <br />
+                                총 {form.group_size}명의 투어 비용 ({(() => {
+                                  const tour = tours.find(t => t.id === (form.tour_id || tourId));
+                                  if (tour && tour.price) {
+                                    const price = typeof tour.price === 'string' ? parseInt(tour.price) : tour.price;
+                                    return `${(price * (form.group_size || 1)).toLocaleString()}원`;
+                                  }
+                                  return '금액 미정';
+                                })()})이 예약자에게 청구됩니다.
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
-                      <p className="text-xs text-gray-500 mt-2">
-                        동반자 정보는 선택사항이며, 이름만 입력하셔도 됩니다.
+                      
+                      <p className="text-xs text-gray-500 mt-3">
+                        * 동반자 이름은 선택사항입니다. 입력하지 않아도 그룹 인원수는 반영됩니다.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <p className="text-sm text-gray-500">
+                        그룹 인원수를 2명 이상으로 설정하면 동반자 정보를 입력할 수 있습니다.
                       </p>
                     </div>
                   )}
 
+                </div>
+
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     참고사항
                   </label>
