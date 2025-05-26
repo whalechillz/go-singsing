@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
-import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye } from 'lucide-react';
+import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square } from 'lucide-react';
 
 // 공통 ParticipantsManager Props
 interface ParticipantsManagerProps {
@@ -15,7 +15,6 @@ interface Tour {
   id: string;
   title: string;
   date: string;
-  location: string;
   price: string;
   status: 'active' | 'canceled';
   isPrivate?: boolean;
@@ -67,7 +66,7 @@ interface ParticipantForm {
   tour_id?: string;
 }
 
-const DEFAULT_COLUMNS = ["이름", "연락처", "팀", "투어", "탑승지", "객실", "참여횟수", "상태", "관리"];
+const DEFAULT_COLUMNS = ["선택", "이름", "연락처", "팀", "투어", "탑승지", "객실", "참여횟수", "상태", "관리"];
 
 const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, showColumns = DEFAULT_COLUMNS, onChange }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -96,6 +95,14 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const [activeTab, setActiveTab] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadPreview, setUploadPreview] = useState<any[]>([]);
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+  const [showBulkEditModal, setShowBulkEditModal] = useState<boolean>(false);
+  const [bulkEditField, setBulkEditField] = useState<string>("");
+  const [bulkEditValue, setBulkEditValue] = useState<string>("");
 
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
@@ -152,7 +159,6 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
           id: t.id,
           title: title,
           date: `${new Date(t.start_date).toLocaleDateString('ko-KR')}~${new Date(t.end_date).toLocaleDateString('ko-KR')}`,
-          location: t.location || "",
           price: t.price || "0",
           status: t.is_active !== false ? 'active' : 'canceled',
           isPrivate: t.is_private || false,
@@ -364,6 +370,302 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     if (!error) fetchParticipants();
   };
 
+  // 일괄 편집
+  const handleBulkEdit = async () => {
+    if (!bulkEditField || bulkEditValue === "") {
+      alert("변경할 항목과 값을 선택해주세요.");
+      return;
+    }
+
+    const updateData: any = {};
+    updateData[bulkEditField] = bulkEditValue;
+
+    const { error } = await supabase
+      .from("singsing_participants")
+      .update(updateData)
+      .in("id", selectedIds);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      alert(`${selectedIds.length}명의 ${bulkEditField === 'pickup_location' ? '탑승지' : 
+             bulkEditField === 'team_name' ? '팀' : 
+             bulkEditField === 'gender' ? '성별' : 
+             bulkEditField}가 변경되었습니다.`);
+      setShowBulkEditModal(false);
+      setBulkEditField("");
+      setBulkEditValue("");
+      setSelectedIds([]);
+      setSelectAll(false);
+      fetchParticipants();
+    }
+  };
+
+  // 체크박스 관련 함수
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredParticipants.map(p => p.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleSelectOne = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(selectedId => selectedId !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  // 일괄 삭제
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      alert("삭제할 참가자를 선택해주세요.");
+      return;
+    }
+    
+    if (!window.confirm(`선택한 ${selectedIds.length}명의 참가자를 삭제하시겠습니까?`)) return;
+    
+    const { error } = await supabase
+      .from("singsing_participants")
+      .delete()
+      .in("id", selectedIds);
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      setSelectedIds([]);
+      setSelectAll(false);
+      fetchParticipants();
+    }
+  };
+
+  // 일괄 상태 변경
+  const handleBulkStatusChange = async (newStatus: string) => {
+    if (selectedIds.length === 0) {
+      alert("상태를 변경할 참가자를 선택해주세요.");
+      return;
+    }
+    
+    const { error } = await supabase
+      .from("singsing_participants")
+      .update({ status: newStatus })
+      .in("id", selectedIds);
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      setSelectedIds([]);
+      setSelectAll(false);
+      fetchParticipants();
+    }
+  };
+
+  // 엑셀 템플릿 다운로드
+  const handleTemplateDownload = () => {
+    const template = [
+      {
+        "이름": "홍길동",
+        "전화번호": "01012345678",
+        "이메일": "hong@example.com",
+        "팀/동호회": "A팀",
+        "성별": "남",
+        "탑승지": boardingPlaces[0] || "서울",
+        "참여횟수": 0,
+        "그룹인원": 1,
+        "동반자": "",
+        "일괄결제": "X",
+        "직책": "회원",
+        "비상연락처": "",
+        "상태": "확정",
+        "참고사항": ""
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(template);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "템플릿");
+
+    // 현재 날짜로 파일명 생성
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `참가자_업로드_템플릿_${today}.xlsx`;
+    
+    XLSX.writeFile(wb, filename);
+  };
+
+  // 엑셀 다운로드
+  const handleExcelDownload = () => {
+    const exportData = filteredParticipants.map(p => {
+      const tour = tours.find(t => t.id === p.tour_id);
+      return {
+        "이름": p.name,
+        "전화번호": p.phone || "",
+        "이메일": p.email || "",
+        "팀/동호회": p.team_name || "",
+        "성별": p.gender || "",
+        "투어": tour?.title || "",
+        "투어기간": tour?.date || "",
+        "탑승지": p.pickup_location || "",
+        "객실": p.singsing_rooms?.room_number || "미배정",
+        "참여횟수": p.join_count || 0,
+        "그룹인원": p.group_size || 1,
+        "동반자": p.companions?.join(", ") || "",
+        "일괄결제": p.is_paying_for_group ? "O" : "X",
+        "직책": p.role || "",
+        "비상연락처": p.emergency_contact || "",
+        "상태": p.status || "",
+        "참고사항": p.note || ""
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "참가자목록");
+
+    // 현재 날짜로 파일명 생성
+    const today = new Date().toISOString().split('T')[0];
+    const filename = tourId ? 
+      `참가자목록_${tours.find(t => t.id === tourId)?.title}_${today}.xlsx` : 
+      `참가자목록_전체_${today}.xlsx`;
+    
+    XLSX.writeFile(wb, filename);
+  };
+
+  // 엑셀 업로드
+  const handleExcelUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setError("");
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json<any>(worksheet);
+
+      // 업로드할 투어 확인
+      const uploadTourId = tourId || selectedTour?.id;
+      if (!uploadTourId) {
+        setError("투어를 먼저 선택해주세요.");
+        setIsUploading(false);
+        return;
+      }
+
+      // 데이터 매핑
+      const mappedData = jsonData.map((row, index) => ({
+        row: index + 2, // 엑셀 행 번호 (헤더 제외)
+        name: row["이름"] || "",
+        phone: normalizePhone(row["전화번호"] || ""),
+        email: row["이메일"] || "",
+        team_name: row["팀/동호회"] || "",
+        gender: row["성별"] || "",
+        pickup_location: row["탑승지"] || "",
+        join_count: parseInt(row["참여횟수"]) || 0,
+        group_size: parseInt(row["그룹인원"]) || 1,
+        companions: row["동반자"] ? row["동반자"].split(",").map((c: string) => c.trim()) : [],
+        is_paying_for_group: row["일괄결제"] === "O",
+        role: row["직책"] || "",
+        emergency_contact: normalizePhone(row["비상연락처"] || ""),
+        status: row["상태"] || "확정",
+        note: row["참고사항"] || "",
+        tour_id: uploadTourId,
+        validation: {
+          isValid: true,
+          errors: [] as string[]
+        }
+      }));
+
+      // 유효성 검사 및 중복 체크
+      const existingParticipants = participants.filter(p => p.tour_id === uploadTourId);
+      
+      mappedData.forEach(data => {
+        // 필수 필드 검증
+        if (!data.name) {
+          data.validation.isValid = false;
+          data.validation.errors.push("이름은 필수입니다");
+        }
+        
+        // 전화번호 형식 검증
+        if (data.phone && !/^0\d{9,10}$/.test(data.phone)) {
+          data.validation.isValid = false;
+          data.validation.errors.push("전화번호 형식이 올바르지 않습니다");
+        }
+        
+        // 중복 체크 (이름 + 전화번호)
+        const isDuplicate = existingParticipants.some(
+          p => p.name === data.name && p.phone === data.phone
+        );
+        if (isDuplicate) {
+          data.validation.isValid = false;
+          data.validation.errors.push("이미 등록된 참가자입니다");
+        }
+        
+        // 성별 검증
+        if (data.gender && !["남", "여", ""].includes(data.gender)) {
+          data.validation.isValid = false;
+          data.validation.errors.push("성별은 '남' 또는 '여'만 가능합니다");
+        }
+        
+        // 탑승지 검증
+        if (data.pickup_location && boardingPlaces.length > 0 && !boardingPlaces.includes(data.pickup_location)) {
+          data.validation.isValid = false;
+          data.validation.errors.push(`탑승지는 다음 중 하나여야 합니다: ${boardingPlaces.join(", ")}`);
+        }
+      });
+
+      const validData = mappedData.filter(d => d.validation.isValid);
+      const invalidData = mappedData.filter(d => !d.validation.isValid);
+
+      if (mappedData.length === 0) {
+        setError("업로드할 참가자 데이터가 없습니다.");
+        setIsUploading(false);
+        return;
+      }
+
+      // 미리보기 모달 표시
+      setUploadPreview(mappedData);
+      setShowUploadModal(true);
+      setIsUploading(false);
+      
+    } catch (error) {
+      setError("엑셀 파일 처리 중 오류가 발생했습니다.");
+      setIsUploading(false);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  // 업로드 확정
+  const handleConfirmUpload = async () => {
+    const validData = uploadPreview
+      .filter(d => d.validation.isValid)
+      .map(({ row, validation, ...data }) => data); // row와 validation 제외
+
+    if (validData.length === 0) {
+      setError("업로드할 유효한 데이터가 없습니다.");
+      return;
+    }
+
+    setIsUploading(true);
+    const { error } = await supabase
+      .from("singsing_participants")
+      .insert(validData);
+
+    if (error) {
+      setError(`업로드 실패: ${error.message}`);
+    } else {
+      alert(`${validData.length}명의 참가자가 추가되었습니다.`);
+      setShowUploadModal(false);
+      setUploadPreview([]);
+      fetchParticipants();
+    }
+    setIsUploading(false);
+  };
+
   // 필터링 로직
   const getFilteredParticipants = () => {
     let filtered = participants;
@@ -411,6 +713,13 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
 
   const filteredParticipants = getFilteredParticipants();
 
+  // 선택된 항목이 현재 보이는 항목에 모두 포함되는지 확인
+  useEffect(() => {
+    const visibleIds = filteredParticipants.map(p => p.id);
+    const allSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.includes(id));
+    setSelectAll(allSelected);
+  }, [selectedIds, filteredParticipants]);
+
   // 통계 계산 - tourId가 있으면 해당 투어만, 없으면 전체
   const getParticipantsForStats = () => {
     if (tourId) {
@@ -455,9 +764,6 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         <div className="flex flex-wrap gap-4 mt-2">
           <p className="text-sm text-blue-700">
             <span className="font-medium">날짜:</span> {currentTour.date}
-          </p>
-          <p className="text-sm text-blue-700">
-            <span className="font-medium">지역:</span> {currentTour.location || '-'}
           </p>
           <p className="text-sm text-blue-700">
             <span className="font-medium">가격:</span> {currentTour.price ? `${Number(currentTour.price).toLocaleString()}원` : '-'}
@@ -531,15 +837,85 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   </div>
                 </div>
 
-                {/* 참가자 추가 버튼 */}
-                <button
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
-                  onClick={() => openModal()}
-                >
-                  <UserPlus className="w-5 h-5" />
-                  <span>참가자 추가</span>
-                </button>
+                {/* 액션 버튼들 */}
+                <div className="flex items-center gap-2">
+                  {/* 엑셀 템플릿 다운로드 */}
+                  <button
+                    className="bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-700 transition-colors"
+                    onClick={handleTemplateDownload}
+                    title="엑셀 템플릿 다운로드"
+                  >
+                    <FileSpreadsheet className="w-5 h-5" />
+                    <span className="hidden sm:inline">템플릿</span>
+                  </button>
+
+                  {/* 엑셀 다운로드 */}
+                  <button
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors"
+                    onClick={handleExcelDownload}
+                    title="엑셀 다운로드"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span className="hidden sm:inline">다운로드</span>
+                  </button>
+
+                  {/* 엑셀 업로드 */}
+                  <label className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors cursor-pointer">
+                    <Upload className="w-5 h-5" />
+                    <span className="hidden sm:inline">{isUploading ? "업로드 중..." : "업로드"}</span>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleExcelUpload}
+                      className="hidden"
+                      disabled={isUploading}
+                    />
+                  </label>
+
+                  {/* 참가자 추가 */}
+                  <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+                    onClick={() => openModal()}
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    <span>참가자 추가</span>
+                  </button>
+                </div>
               </div>
+
+              {/* 일괄 작업 버튼 - 선택된 항목이 있을 때만 표시 */}
+              {selectedIds.length > 0 && (
+                <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg">
+                  <span className="text-sm text-blue-700 font-medium">
+                    {selectedIds.length}명 선택됨
+                  </span>
+                  <button
+                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                    onClick={() => handleBulkStatusChange("확정")}
+                  >
+                    일괄 확정
+                  </button>
+                  <button
+                    className="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
+                    onClick={() => handleBulkStatusChange("대기")}
+                  >
+                    일괄 대기
+                  </button>
+                  <button
+                    className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
+                    onClick={() => setShowBulkEditModal(true)}
+                  >
+                    일괄 편집
+                  </button>
+                  <button
+                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                    onClick={handleBulkDelete}
+                  >
+                    일괄 삭제
+                  </button>
+                </div>
+              )}
 
               {/* 탭 */}
               <div className="flex border-b">
@@ -565,7 +941,17 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      {showColumns.map(col => (
+                      {showColumns.includes("선택") && (
+                        <th className="px-6 py-3 text-left">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                          />
+                        </th>
+                      )}
+                      {showColumns.filter(col => col !== "선택").map(col => (
                         <th key={col} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {col}
                         </th>
@@ -585,6 +971,17 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                         
                         return (
                           <tr key={participant.id} className="hover:bg-gray-50">
+                            {showColumns.includes("선택") && (
+                              <td className="px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                  checked={selectedIds.includes(participant.id)}
+                                  onChange={() => handleSelectOne(participant.id)}
+                                />
+                              </td>
+                            )}
+                            
                             {showColumns.includes("이름") && (
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
@@ -632,7 +1029,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {tour ? (
                                   <div>
-                                    <div className="font-medium text-gray-900">{tour.location}</div>
+                                    <div className="font-medium text-gray-900">{tour.title}</div>
                                     <div className="text-xs text-gray-500">{tour.date}</div>
                                     {tour.status === 'canceled' && (
                                       <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full mt-1 inline-block">
@@ -1065,6 +1462,256 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 업로드 미리보기 모달 */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-xl">
+            <div className="flex justify-between items-center mb-4 border-b pb-3">
+              <h3 className="text-xl font-bold text-gray-900">
+                엑셀 업로드 미리보기
+              </h3>
+              <button 
+                type="button" 
+                className="text-gray-500 hover:text-gray-700" 
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadPreview([]);
+                }}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {error && (
+              <div className="mb-4 bg-red-100 text-red-800 p-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="mb-4">
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-gray-600">
+                  총 {uploadPreview.length}명 중
+                </span>
+                <span className="text-green-600 font-medium">
+                  유효: {uploadPreview.filter(d => d.validation.isValid).length}명
+                </span>
+                <span className="text-red-600 font-medium">
+                  오류: {uploadPreview.filter(d => !d.validation.isValid).length}명
+                </span>
+              </div>
+            </div>
+
+            {/* 오류 데이터 표시 */}
+            {uploadPreview.filter(d => !d.validation.isValid).length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-red-600 mb-2">오류 데이터</h4>
+                <div className="bg-red-50 rounded-lg p-4 max-h-60 overflow-y-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">행</th>
+                        <th className="text-left p-2">이름</th>
+                        <th className="text-left p-2">전화번호</th>
+                        <th className="text-left p-2">오류 내용</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {uploadPreview.filter(d => !d.validation.isValid).map((data, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-2">{data.row}</td>
+                          <td className="p-2">{data.name || "-"}</td>
+                          <td className="p-2">{data.phone || "-"}</td>
+                          <td className="p-2 text-red-600">
+                            {data.validation.errors.join(", ")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 유효 데이터 표시 */}
+            {uploadPreview.filter(d => d.validation.isValid).length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-green-600 mb-2">업로드할 데이터</h4>
+                <div className="bg-green-50 rounded-lg p-4 max-h-60 overflow-y-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">이름</th>
+                        <th className="text-left p-2">전화번호</th>
+                        <th className="text-left p-2">팀</th>
+                        <th className="text-left p-2">탑승지</th>
+                        <th className="text-left p-2">상태</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {uploadPreview.filter(d => d.validation.isValid).map((data, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-2">{data.name}</td>
+                          <td className="p-2">{data.phone || "-"}</td>
+                          <td className="p-2">{data.team_name || "-"}</td>
+                          <td className="p-2">{data.pickup_location || "-"}</td>
+                          <td className="p-2">
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              data.status === "확정" 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              {data.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6 border-t pt-4">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadPreview([]);
+                }}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                onClick={handleConfirmUpload}
+                disabled={uploadPreview.filter(d => d.validation.isValid).length === 0 || isUploading}
+              >
+                {isUploading ? "업로드 중..." : `${uploadPreview.filter(d => d.validation.isValid).length}명 업로드`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 일괄 편집 모달 */}
+      {showBulkEditModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <div className="flex justify-between items-center mb-4 border-b pb-3">
+              <h3 className="text-xl font-bold text-gray-900">
+                일괄 편집 ({selectedIds.length}명)
+              </h3>
+              <button 
+                type="button" 
+                className="text-gray-500 hover:text-gray-700" 
+                onClick={() => {
+                  setShowBulkEditModal(false);
+                  setBulkEditField("");
+                  setBulkEditValue("");
+                }}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  변경할 항목
+                </label>
+                <select
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={bulkEditField}
+                  onChange={(e) => {
+                    setBulkEditField(e.target.value);
+                    setBulkEditValue("");
+                  }}
+                >
+                  <option value="">항목 선택</option>
+                  <option value="team_name">팀/동호회</option>
+                  <option value="pickup_location">탑승지</option>
+                  <option value="gender">성별</option>
+                  <option value="role">직책</option>
+                </select>
+              </div>
+
+              {bulkEditField && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    변경할 값
+                  </label>
+                  {bulkEditField === "pickup_location" ? (
+                    <select
+                      className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      value={bulkEditValue}
+                      onChange={(e) => setBulkEditValue(e.target.value)}
+                    >
+                      <option value="">탑승지 선택</option>
+                      {boardingPlaces.map(place => (
+                        <option key={place} value={place}>{place}</option>
+                      ))}
+                    </select>
+                  ) : bulkEditField === "gender" ? (
+                    <select
+                      className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      value={bulkEditValue}
+                      onChange={(e) => setBulkEditValue(e.target.value)}
+                    >
+                      <option value="">성별 선택</option>
+                      <option value="남">남</option>
+                      <option value="여">여</option>
+                    </select>
+                  ) : bulkEditField === "role" ? (
+                    <select
+                      className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      value={bulkEditValue}
+                      onChange={(e) => setBulkEditValue(e.target.value)}
+                    >
+                      <option value="">직책 선택</option>
+                      {roleOptions.filter(r => r !== "기타").map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      value={bulkEditValue}
+                      onChange={(e) => setBulkEditValue(e.target.value)}
+                      placeholder="값을 입력하세요"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6 border-t pt-4">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                onClick={() => {
+                  setShowBulkEditModal(false);
+                  setBulkEditField("");
+                  setBulkEditValue("");
+                }}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={handleBulkEdit}
+              >
+                변경하기
+              </button>
+            </div>
           </div>
         </div>
       )}
