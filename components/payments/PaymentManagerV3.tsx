@@ -694,7 +694,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                   <p className="text-2xl font-bold text-gray-900">
                     {selectedTourId && tours.find(t => t.id === selectedTourId) 
                       ? Number(tours.find(t => t.id === selectedTourId)?.price || 0).toLocaleString() 
-                      : '---'}원
+                      : stats.totalAmount.toLocaleString()}원
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     총 인원: {filteredParticipants.length}명
@@ -1380,7 +1380,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                     <input
                       type="number"
                       className="w-full border rounded-lg px-3 py-2"
-                      value={form.amount ? formatNumber(form.amount) : ''}
+                      value={form.amount || ''}
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^0-9]/g, '');
                         setForm({ ...form, amount: Number(value) });

@@ -45,7 +45,7 @@ interface Participant {
   pickup_location?: string;
   role?: string;
   created_at?: string;
-  payment?: Payment; // 결제 정보 추가
+  paymentSummary?: PaymentSummary; // 결제 요약 정보
   is_group_payer?: boolean; // 일괄결제자 여부
   [key: string]: any;
 }
@@ -75,6 +75,13 @@ interface Payment {
   amount: number;
   payment_status?: string;
   payment_method?: string;
+}
+
+interface PaymentSummary {
+  totalAmount: number;
+  payments: Payment[];
+  payer_id?: string;
+  payer_name?: string;
 }
 
 const DEFAULT_COLUMNS = ["선택", "이름", "연락처", "팀", "투어", "탑승지", "객실", "참여횟수", "결제상태", "상태", "관리"];
@@ -203,12 +210,32 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     // 각 참가자에 대한 결제 정보와 일괄결제자 여부 설정
     if (participantsData && paymentsData) {
       const participantsWithPayment = participantsData.map(participant => {
-        const payment = paymentsData.find(p => p.participant_id === participant.id);
+        // 해당 참가자의 모든 결제 내역 찾기 (환불 제외)
+        const participantPayments = paymentsData.filter(p => 
+          p.participant_id === participant.id && 
+          p.payment_status !== 'refunded' &&
+          p.payment_status !== 'cancelled'
+        );
+        
+        // 총 결제 금액 계산
+        const totalAmount = participantPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        
+        // 결제자 정보 가져오기 (가장 최근 결제의 결제자)
+        const latestPayment = participantPayments[participantPayments.length - 1];
+        const payerId = latestPayment?.payer_id;
+        const payerName = payerId ? participantsData.find(p => p.id === payerId)?.name : undefined;
+        
+        // 일괄결제자 여부 확인
         const isGroupPayer = paymentsData.filter(p => p.payer_id === participant.id).length > 1;
         
         return {
           ...participant,
-          payment: payment || null,
+          paymentSummary: participantPayments.length > 0 ? {
+            totalAmount,
+            payments: participantPayments,
+            payer_id: payerId,
+            payer_name: payerName
+          } : undefined,
           is_group_payer: isGroupPayer  // 일괄결제자 여부 추가
         };
       });
@@ -849,10 +876,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         filtered = filtered.filter(p => canceledTourIds.includes(p.tour_id));
         break;
       case "paid":
-        filtered = filtered.filter(p => p.payment && p.payment.amount > 0);
+        filtered = filtered.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0);
         break;
       case "unpaid":
-        filtered = filtered.filter(p => !p.payment || !p.payment.amount || p.payment.amount === 0);
+        filtered = filtered.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0);
         break;
     }
 
@@ -878,8 +905,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     };
     
     const statsParticipants = getParticipantsForStats();
-    const paidCount = statsParticipants.filter(p => p.payment && p.payment.amount > 0).length;
-    const unpaidCount = statsParticipants.filter(p => !p.payment || !p.payment.amount || p.payment.amount === 0).length;
+    const paidCount = statsParticipants.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0).length;
+    const unpaidCount = statsParticipants.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0).length;
     
     return {
       total: statsParticipants.length,
@@ -1270,20 +1297,26 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             
                             {showColumns.includes("결제상태") && (
                               <td className="px-3 py-3 whitespace-nowrap">
-                                {participant.payment && participant.payment.amount > 0 ? (
+                                {participant.paymentSummary && participant.paymentSummary.totalAmount > 0 ? (
                                   <div className="flex items-center gap-2">
                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                       ✅ 결제완료
                                     </span>
                                     {/* 결제자가 본인이 아닌 경우 표시 */}
-                                    {participant.payment.payer_id !== participant.id && participant.payment.payer_id && (
+                                    {participant.paymentSummary.payer_id !== participant.id && participant.paymentSummary.payer_id && (
                                       <span className="text-xs text-gray-600">
-                                        (결제자: {participants.find(p => p.id === participant.payment?.payer_id)?.name || '-'})
+                                        (결제자: {participant.paymentSummary.payer_name || '-'})
                                       </span>
                                     )}
                                     <span className="text-xs text-gray-600">
-                                      {participant.payment.amount.toLocaleString()}원
+                                      {participant.paymentSummary.totalAmount.toLocaleString()}원
                                     </span>
+                                    {/* 여러 건 결제인 경우 표시 */}
+                                    {participant.paymentSummary.payments.length > 1 && (
+                                      <span className="text-xs text-gray-500">
+                                        ({participant.paymentSummary.payments.length}건)
+                                      </span>
+                                    )}
                                   </div>
                                 ) : (
                                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
