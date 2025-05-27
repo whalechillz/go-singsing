@@ -690,7 +690,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                             // 결제자부터 시작해서 순차적으로 그룹 인원수만큼 선택
                             const payerIndex = tourParticipants.findIndex(p => p.id === payerId);
                             if (payerIndex !== -1) {
-                              const groupMembers = [];
+                              const groupMembers: string[] = [];
                               for (let i = 0; i < (payer.group_size || 1); i++) {
                                 if (tourParticipants[payerIndex + i]) {
                                   groupMembers.push(tourParticipants[payerIndex + i].id);
