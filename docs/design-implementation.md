@@ -124,6 +124,29 @@ git push origin main
 - [ ] 60대 사용자 테스트 그룹 피드백 반영
 - [ ] 프린트 시 가독성 확인
 
+## 📝 TypeScript 타입 개선 (2025-01-27)
+
+### Tour 인터페이스 업데이트
+```typescript
+// 변경 전
+interface Tour {
+  price: string;
+  // ...
+}
+
+// 변경 후 (백엔드 API에서 숫자로 반환하는 경우 대응)
+interface Tour {
+  price: string | number;
+  // ...
+}
+```
+
+### 그룹 멤버 타입 명시
+```typescript
+// 결제 관리에서 그룹 멤버 처리 시
+const groupMembers: string[] = []; // 명시적 타입 선언
+```
+
 ## 💡 참고사항
 
 - 기존 shadcn/ui 컴포넌트는 최대한 유지

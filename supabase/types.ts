@@ -245,6 +245,9 @@ export interface Database {
           is_group_payment: boolean
           receipt_type: string | null
           receipt_requested: boolean
+          payment_type: string | null
+          payment_status: string | null
+          payment_date: string | null
           note: string | null
           created_at: string
         }
@@ -258,6 +261,9 @@ export interface Database {
           is_group_payment?: boolean
           receipt_type?: string | null
           receipt_requested?: boolean
+          payment_type?: string | null
+          payment_status?: string | null
+          payment_date?: string | null
           note?: string | null
           created_at?: string
         }
@@ -271,6 +277,9 @@ export interface Database {
           is_group_payment?: boolean
           receipt_type?: string | null
           receipt_requested?: boolean
+          payment_type?: string | null
+          payment_status?: string | null
+          payment_date?: string | null
           note?: string | null
           created_at?: string
         }
