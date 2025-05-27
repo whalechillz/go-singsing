@@ -249,7 +249,37 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     
     if (name === "group_size") {
       const size = parseInt(value) || 1;
+      const currentSize = form.group_size || 1;
+      
+      // 그룹 인원수를 줄이는 경우 경고
+      if (size < currentSize && form.companions && form.companions.some(c => c)) {
+        const hasCompanionData = form.companions.slice(size - 1).some(c => c && c.trim() !== '');
+        if (hasCompanionData) {
+          const confirmDelete = window.confirm(
+            `그룹 인원수를 ${currentSize}명에서 ${size}명으로 줄이면 ` +
+            `마지막 ${currentSize - size}명의 동반자 정보가 삭제됩니다. 계속하시겠습니까?`
+          );
+          if (!confirmDelete) {
+            return; // 취소하면 변경하지 않음
+          }
+        }
+      }
+      
       const newCompanions = Array(Math.max(0, size - 1)).fill("");
+      // 기존 동반자 정보 보존
+      if (size > currentSize && form.companions) {
+        form.companions.forEach((companion, index) => {
+          if (index < newCompanions.length) {
+            newCompanions[index] = companion;
+          }
+        });
+      } else if (size < currentSize && form.companions) {
+        // 줄어든 경우 앞쪽만 보존
+        form.companions.slice(0, size - 1).forEach((companion, index) => {
+          newCompanions[index] = companion;
+        });
+      }
+      
       setForm({ ...form, [name]: size, companions: newCompanions });
       return;
     }
@@ -1621,16 +1651,29 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                       {/* 동반자 입력 필드 */}
                       <div className="mb-3">
                         <p className="text-sm text-gray-600 mb-2">동반자 이름 (선택사항)</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                           {Array.from({ length: (form.group_size || 1) - 1 }).map((_, index) => (
-                            <input
-                              key={index}
-                              type="text"
-                              placeholder={`동반자 ${index + 1} 이름`}
-                              className="w-full border border-gray-300 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                              value={(form.companions && form.companions[index]) || ''}
-                              onChange={(e) => handleCompanionChange(index, e.target.value)}
-                            />
+                            <div key={index} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                placeholder={`동반자 ${index + 1} 이름`}
+                                className="flex-1 border border-gray-300 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                value={(form.companions && form.companions[index]) || ''}
+                                onChange={(e) => handleCompanionChange(index, e.target.value)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newCompanions = [...(form.companions || [])];
+                                  newCompanions[index] = '';
+                                  setForm({ ...form, companions: newCompanions });
+                                }}
+                                className="px-3 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="동반자 이름 지우기"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           ))}
                         </div>
                       </div>
