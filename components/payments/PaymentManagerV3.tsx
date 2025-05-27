@@ -104,6 +104,9 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const fetchData = async () => {
     setLoading(true);
     
+    // 현재 선택된 투어 ID 저장
+    const currentTourId = selectedTourId;
+    
     // 투어 정보 가져오기
     const { data: toursData } = await supabase
       .from("singsing_tours")
@@ -171,6 +174,11 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
     }
     
     setLoading(false);
+    
+    // 선택된 투어 유지
+    if (currentTourId) {
+      setSelectedTourId(currentTourId);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -330,7 +338,11 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
     
     setShowModal(false);
     resetForm();
-    fetchData();
+    await fetchData();
+    // 선택된 투어 유지
+    if (selectedTourId) {
+      setSelectedTourId(selectedTourId);
+    }
   };
 
   const handleRefund = async (e: React.FormEvent) => {
@@ -387,11 +399,9 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
 
   // 빠른 금액 설정 버튼
   const quickAmountButtons = [
-    { label: '10만원', amount: 100000 },
-    { label: '20만원', amount: 200000 },
-    { label: '30만원', amount: 300000 },
-    { label: '40만원', amount: 400000 },
-    { label: '50만원', amount: 500000 },
+    { label: '10만원+', action: 'add', amount: 100000 },
+    { label: '5만원', amount: 50000 },
+    { label: '1만원', amount: 10000 },
     { label: '전액', percentage: 100 }
   ];
 
@@ -532,6 +542,11 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
+  
+  // 천단위 콤마 표시 함수
+  const formatNumber = (num: number) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
   return (
@@ -869,6 +884,11 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                           {payment.payment_method === 'card' && '카드'}
                           {payment.payment_method === 'cash' && '현금'}
                         </div>
+                        {payment.payment_status === 'refunded' && payment.note && (
+                          <div className="text-xs text-red-600 mt-1">
+                            {payment.note}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -1303,6 +1323,8 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                               const amount = calculateAmount(Number(tour.price), btn.percentage);
                               setForm({ ...form, amount });
                             }
+                          } else if (btn.action === 'add') {
+                            setForm({ ...form, amount: form.amount + btn.amount });
                           } else if (btn.amount) {
                             setForm({ ...form, amount: btn.amount });
                           }
@@ -1311,6 +1333,17 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                         {btn.label}
                       </button>
                     ))}
+                  </div>
+                  
+                  {/* 초기화 버튼 */}
+                  <div className="mb-3">
+                    <button
+                      type="button"
+                      className="w-full px-3 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 text-sm font-medium"
+                      onClick={() => setForm({ ...form, amount: 0 })}
+                    >
+                      금액 초기화
+                    </button>
                   </div>
 
                   {/* 비율 입력 */}
@@ -1356,8 +1389,16 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                     <input
                       type="number"
                       className="w-full border rounded-lg px-3 py-2"
-                      value={form.amount}
-                      onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })}
+                      value={form.amount ? formatNumber(form.amount) : ''}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '');
+                        setForm({ ...form, amount: Number(value) });
+                      }}
+                      onFocus={(e) => {
+                        if (e.target.value === '0') {
+                          e.target.value = '';
+                        }
+                      }}
                       placeholder="금액을 입력하세요"
                     />
                     {form.tour_id && (() => {
@@ -1500,16 +1541,19 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    환불 사유
+                    환불 사유 및 환불 계좌 정보
                   </label>
                   <textarea
                     className="w-full border rounded-lg px-3 py-2"
                     rows={3}
                     value={form.note}
                     onChange={(e) => setForm({ ...form, note: e.target.value })}
-                    placeholder="환불 사유를 입력하세요"
+                    placeholder="환불 사유를 입력하세요\n예) 개인 사정으로 취소\n환불 계좌: 신한 홍길동 110-123-456789"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    환불 계좌 정보를 함께 입력하면 환불 처리에 도움이 됩니다.
+                  </p>
                 </div>
               </div>
 
