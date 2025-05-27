@@ -173,6 +173,61 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // 결제 금액 검증
+    if (!editingPayment && form.participant_id) {
+      const participant = participants.find(p => p.id === form.participant_id);
+      const tour = tours.find(t => t.id === form.tour_id);
+      if (participant && tour) {
+        const tourPrice = Number(tour.price);
+        const existingPayments = payments.filter(p => 
+          p.participant_id === form.participant_id && 
+          p.payment_status !== 'cancelled' && 
+          p.payment_status !== 'refunded'
+        );
+        const totalPaid = existingPayments.reduce((sum, p) => sum + p.amount, 0);
+        const totalAfterPayment = totalPaid + form.amount;
+        
+        if (totalAfterPayment > tourPrice) {
+          const remaining = tourPrice - totalPaid;
+          alert(`결제 금액이 투어 가격을 초과합니다.\n\n투어 가격: ${tourPrice.toLocaleString()}원\n기납부액: ${totalPaid.toLocaleString()}원\n잔여금액: ${remaining.toLocaleString()}원\n\n최대 ${remaining.toLocaleString()}원까지만 결제 가능합니다.`);
+          return;
+        }
+      }
+    }
+    
+    // 일괄결제인 경우 각 참가자별 검증
+    if (!editingPayment && form.is_group_payment && form.group_member_ids.length > 0) {
+      const tour = tours.find(t => t.id === form.tour_id);
+      if (tour) {
+        const tourPrice = Number(tour.price);
+        let hasExceeded = false;
+        let exceededMembers: string[] = [];
+        
+        for (const memberId of form.group_member_ids) {
+          const existingPayments = payments.filter(p => 
+            p.participant_id === memberId && 
+            p.payment_status !== 'cancelled' && 
+            p.payment_status !== 'refunded'
+          );
+          const totalPaid = existingPayments.reduce((sum, p) => sum + p.amount, 0);
+          const totalAfterPayment = totalPaid + form.amount;
+          
+          if (totalAfterPayment > tourPrice) {
+            hasExceeded = true;
+            const participant = participants.find(p => p.id === memberId);
+            if (participant) {
+              exceededMembers.push(`${participant.name} (잔액: ${(tourPrice - totalPaid).toLocaleString()}원)`);
+            }
+          }
+        }
+        
+        if (hasExceeded) {
+          alert(`다음 참가자들의 결제 금액이 투어 가격을 초과합니다:\n\n${exceededMembers.join('\n')}\n\n결제 금액을 조정해주세요.`);
+          return;
+        }
+      }
+    }
+    
     // 수정 모드일 때
     if (editingPayment) {
       // 일괄결제 수정인 경우
@@ -451,44 +506,113 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
   return (
     <div>
       {/* 상단 요약 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">총 수입</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalAmount.toLocaleString()}원</p>
+      <div>
+        {/* 첫 번째 줄: 상품가, 총수입, 계약금, 잔금 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">상품가</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {selectedTourId && tours.find(t => t.id === selectedTourId) 
+                    ? Number(tours.find(t => t.id === selectedTourId)?.price || 0).toLocaleString() 
+                    : '---'}원
+                </p>
+              </div>
+              <FileText className="w-8 h-8 text-gray-500" />
             </div>
-            <TrendingUp className="w-8 h-8 text-green-500" />
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">총 수입</p>
+                <p className="text-2xl font-bold text-green-600">{stats.totalAmount.toLocaleString()}원</p>
+                {selectedTourId && tours.find(t => t.id === selectedTourId) && (() => {
+                  const tourPrice = Number(tours.find(t => t.id === selectedTourId)?.price || 0);
+                  const participantCount = participants.filter(p => p.tour_id === selectedTourId).length;
+                  const totalExpected = tourPrice * participantCount;
+                  const collectionRate = totalExpected > 0 ? Math.round((stats.totalAmount / totalExpected) * 100) : 0;
+                  return <p className="text-xs text-gray-500 mt-1">수금률: {collectionRate}%</p>;
+                })()}
+              </div>
+              <TrendingUp className="w-8 h-8 text-green-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">계약금</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.depositAmount.toLocaleString()}원</p>
+                <p className="text-xs text-gray-500 mt-1">{payments.filter(p => p.payment_type === 'deposit' && p.payment_status !== 'refunded').length}건</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-blue-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">잔금</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.balanceAmount.toLocaleString()}원</p>
+                <p className="text-xs text-gray-500 mt-1">{payments.filter(p => p.payment_type === 'balance' && p.payment_status !== 'refunded').length}건</p>
+              </div>
+              <Calculator className="w-8 h-8 text-orange-500" />
+            </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">계약금</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.depositAmount.toLocaleString()}원</p>
+        {/* 두 번째 줄: 완납, 미수금, 환불, 미납 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-green-50 rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-700">완납</p>
+                <p className="text-2xl font-bold text-green-900">{fullyPaidCount}명</p>
+                <p className="text-xs text-green-600 mt-1">
+                  {participantPaymentStatus.filter(p => p.isFullyPaid).reduce((sum, p) => sum + p.totalPaid, 0).toLocaleString()}원
+                </p>
+              </div>
+              <Check className="w-8 h-8 text-green-600" />
             </div>
-            <DollarSign className="w-8 h-8 text-blue-500" />
           </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">미수금</p>
-              <p className="text-2xl font-bold text-orange-600">{partiallyPaidCount}명</p>
+          
+          <div className="bg-orange-50 rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-orange-700">미수금</p>
+                <p className="text-2xl font-bold text-orange-900">{partiallyPaidCount}명</p>
+                <p className="text-xs text-orange-600 mt-1">
+                  {participantPaymentStatus.filter(p => p.totalPaid > 0 && !p.isFullyPaid).reduce((sum, p) => sum + p.remainingAmount, 0).toLocaleString()}원
+                </p>
+              </div>
+              <AlertCircle className="w-8 h-8 text-orange-600" />
             </div>
-            <AlertCircle className="w-8 h-8 text-orange-500" />
           </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">환불</p>
-              <p className="text-2xl font-bold text-red-600">{stats.refundedAmount.toLocaleString()}원</p>
+          
+          <div className="bg-red-50 rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-red-700">환불</p>
+                <p className="text-2xl font-bold text-red-900">{stats.refundedCount}건</p>
+                <p className="text-xs text-red-600 mt-1">{stats.refundedAmount.toLocaleString()}원</p>
+              </div>
+              <RefreshCw className="w-8 h-8 text-red-600" />
             </div>
-            <RefreshCw className="w-8 h-8 text-red-500" />
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700">미납</p>
+                <p className="text-2xl font-bold text-gray-900">{unpaidCount}명</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {participantPaymentStatus.filter(p => p.totalPaid === 0).reduce((sum, p) => sum + p.tourPrice, 0).toLocaleString()}원
+                </p>
+              </div>
+              <X className="w-8 h-8 text-gray-600" />
+            </div>
           </div>
         </div>
       </div>
