@@ -675,7 +675,31 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                       <select
                         className="w-full border rounded-lg px-3 py-2"
                         value={form.payer_id}
-                        onChange={(e) => setForm({ ...form, payer_id: e.target.value })}
+                        onChange={(e) => {
+                          const payerId = e.target.value;
+                          setForm({ ...form, payer_id: payerId });
+                          
+                          // 선택한 결제자가 그룹 일괄 결제로 설정되어 있으면 자동으로 그룹 멤버 선택
+                          const payer = participants.find(p => p.id === payerId);
+                          if (payer && payer.is_paying_for_group && payer.group_size && payer.group_size > 1) {
+                            // 같은 투어의 참가자 중에서 결제자를 포함한 그룹 찾기
+                            const tourParticipants = participants.filter(p => 
+                              p.tour_id === payer.tour_id
+                            );
+                            
+                            // 결제자부터 시작해서 순차적으로 그룹 인원수만큼 선택
+                            const payerIndex = tourParticipants.findIndex(p => p.id === payerId);
+                            if (payerIndex !== -1) {
+                              const groupMembers = [];
+                              for (let i = 0; i < (payer.group_size || 1); i++) {
+                                if (tourParticipants[payerIndex + i]) {
+                                  groupMembers.push(tourParticipants[payerIndex + i].id);
+                                }
+                              }
+                              setForm(prev => ({ ...prev, group_member_ids: groupMembers }));
+                            }
+                          }
+                        }}
                         required
                       >
                         <option value="">결제자 선택</option>
@@ -684,6 +708,9 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                           .map(participant => (
                             <option key={participant.id} value={participant.id}>
                               {participant.name} {participant.phone ? `(${participant.phone})` : ''}
+                              {participant.is_paying_for_group && participant.group_size && participant.group_size > 1 && 
+                                ` [그룹 ${participant.group_size}명]`
+                              }
                             </option>
                           ))}
                       </select>
@@ -693,34 +720,90 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         그룹 멤버 선택 *
                       </label>
+                      
+                      {/* 결제자가 일괄 결제로 설정된 경우 안내 표시 */}
+                      {form.payer_id && (() => {
+                        const payer = participants.find(p => p.id === form.payer_id);
+                        if (payer && payer.is_paying_for_group && payer.group_size && payer.group_size > 1) {
+                          return (
+                            <div className="mb-3 p-3 bg-blue-50 rounded-lg text-sm">
+                              <p className="font-medium text-blue-900 mb-1">💡 참가자 관리에서 설정한 그룹 정보</p>
+                              <p className="text-blue-700">
+                                {payer.name}님이 총 {payer.group_size}명의 일괄 결제로 설정되어 있습니다.
+                                {payer.companions && payer.companions.filter(c => c).length > 0 && (
+                                  <>
+                                    <br />
+                                    동반자: {payer.companions.filter(c => c).join(', ')}
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                      
                       <div className="border rounded-lg p-3 max-h-48 overflow-y-auto">
                         {participants
                           .filter(p => !form.tour_id || p.tour_id === form.tour_id)
-                          .map(participant => (
-                            <label key={participant.id} className="flex items-center py-1">
-                              <input
-                                type="checkbox"
-                                value={participant.id}
-                                checked={form.group_member_ids.includes(participant.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setForm({
-                                      ...form,
-                                      group_member_ids: [...form.group_member_ids, participant.id]
-                                    });
-                                  } else {
-                                    setForm({
-                                      ...form,
-                                      group_member_ids: form.group_member_ids.filter(id => id !== participant.id)
-                                    });
-                                  }
-                                }}
-                              />
-                              <span className="ml-2">
-                                {participant.name} {participant.phone ? `(${participant.phone})` : ''}
+                          .map(participant => {
+                            // 참가자가 일괄 결제자인지 확인
+                            const isGroupPayer = participant.is_paying_for_group && participant.group_size && participant.group_size > 1;
+                            
+                            return (
+                              <label key={participant.id} className="flex items-center py-1">
+                                <input
+                                  type="checkbox"
+                                  value={participant.id}
+                                  checked={form.group_member_ids.includes(participant.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setForm({
+                                        ...form,
+                                        group_member_ids: [...form.group_member_ids, participant.id]
+                                      });
+                                    } else {
+                                      setForm({
+                                        ...form,
+                                        group_member_ids: form.group_member_ids.filter(id => id !== participant.id)
+                                      });
+                                    }
+                                  }}
+                                />
+                                <span className="ml-2">
+                                  {participant.name} {participant.phone ? `(${participant.phone})` : ''}
+                                  {isGroupPayer && (
+                                    <span className="ml-2 text-xs text-blue-600">
+                                      [그룹 {participant.group_size}명]
+                                    </span>
+                                  )}
+                                  {participant.id === form.payer_id && (
+                                    <span className="ml-2 text-xs text-green-600 font-medium">
+                                      (결제자)
+                                    </span>
+                                  )}
+                                </span>
+                              </label>
+                            );
+                          })}
+                      </div>
+                      
+                      <div className="mt-2 flex items-center justify-between text-sm">
+                        <span className="text-gray-600">
+                          선택된 인원: <span className="font-medium">{form.group_member_ids.length}명</span>
+                        </span>
+                        {form.payer_id && (() => {
+                          const payer = participants.find(p => p.id === form.payer_id);
+                          const totalAmount = tours.find(t => t.id === form.tour_id)?.price || 0;
+                          if (totalAmount && form.group_member_ids.length > 0) {
+                            return (
+                              <span className="text-gray-700 font-medium">
+                                총 금액: {(totalAmount * form.group_member_ids.length).toLocaleString()}원
                               </span>
-                            </label>
-                          ))}
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                   </>

@@ -323,6 +323,25 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const openModal = (participant?: Participant) => {
     if (participant) {
       setEditingId(participant.id);
+      
+      // 동반자 배열 크기 조정
+      const groupSize = participant.group_size || 1;
+      let companions = participant.companions || [];
+      
+      // 그룹 크기에 맞게 동반자 배열 조정
+      if (groupSize > 1) {
+        const companionCount = groupSize - 1;
+        if (companions.length < companionCount) {
+          // 배열이 작으면 빈 문자열로 채우기
+          companions = [...companions, ...Array(companionCount - companions.length).fill('')];
+        } else if (companions.length > companionCount) {
+          // 배열이 크면 잘라내기
+          companions = companions.slice(0, companionCount);
+        }
+      } else {
+        companions = [];
+      }
+      
       setForm({
         name: participant.name,
         phone: participant.phone,
@@ -334,9 +353,9 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         gender: participant.gender || "",
         emergency_contact: participant.emergency_contact || "",
         join_count: participant.join_count || 0,
-        group_size: participant.group_size || 1,
+        group_size: groupSize,
         is_paying_for_group: participant.is_paying_for_group || false,
-        companions: participant.companions || [],
+        companions: companions,
         pickup_location: participant.pickup_location || "",
         tour_id: participant.tour_id || tourId || "" // tourId 추가
       });
