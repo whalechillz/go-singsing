@@ -2,7 +2,8 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
-import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban } from 'lucide-react';
+import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare } from 'lucide-react';
+import QuickMemo from "@/components/memo/QuickMemo";
 
 // 공통 ParticipantsManager Props
 interface ParticipantsManagerProps {
@@ -47,6 +48,9 @@ interface Participant {
   created_at?: string;
   paymentSummary?: PaymentSummary; // 결제 요약 정보
   is_group_payer?: boolean; // 일괄결제자 여부
+  memo_count?: number; // 메모 개수
+  has_urgent_memo?: boolean; // 긴급 메모 여부
+  has_pending_memo?: boolean; // 처리 대기 메모 여부
   [key: string]: any;
 }
 
@@ -84,7 +88,7 @@ interface PaymentSummary {
   payer_name?: string;
 }
 
-const DEFAULT_COLUMNS = ["선택", "이름", "연락처", "팀", "투어", "탑승지", "객실", "참여횟수", "결제상태", "상태", "관리"];
+const DEFAULT_COLUMNS = ["선택", "이름", "연락처", "팀", "투어", "탑승지", "객실", "참여횟수", "결제상태", "상태", "메모", "관리"];
 
 const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, showColumns = DEFAULT_COLUMNS, onChange }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -207,6 +211,28 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     if (tourId) paymentQuery = paymentQuery.eq("tour_id", tourId);
     const { data: paymentsData } = await paymentQuery;
     
+    // 메모 정보 조회
+    let memoQuery = supabase.from("singsing_memos").select("participant_id, status, priority");
+    if (tourId) memoQuery = memoQuery.eq("tour_id", tourId);
+    const { data: memosData } = await memoQuery;
+    
+    // 참가자별 메모 개수 및 상태 계산
+    const memoStats: Record<string, { total: number; pending: number; urgent: number }> = {};
+    if (memosData) {
+      memosData.forEach(memo => {
+        if (!memoStats[memo.participant_id]) {
+          memoStats[memo.participant_id] = { total: 0, pending: 0, urgent: 0 };
+        }
+        memoStats[memo.participant_id].total++;
+        if (memo.status === 'pending' || memo.status === 'follow_up') {
+          memoStats[memo.participant_id].pending++;
+        }
+        if (memo.priority === 2) {
+          memoStats[memo.participant_id].urgent++;
+        }
+      });
+    }
+    
     // 각 참가자에 대한 결제 정보와 일괄결제자 여부 설정
     if (participantsData && paymentsData) {
       const participantsWithPayment = participantsData.map(participant => {
@@ -235,8 +261,11 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
             payments: participantPayments,
             payer_id: payerId,
             payer_name: payerName
-          } : undefined,
-          is_group_payer: isGroupPayer  // 일괄결제자 여부 추가
+            } : undefined,
+            is_group_payer: isGroupPayer,  // 일괄결제자 여부 추가
+        memo_count: memoStats[participant.id]?.total || 0,
+        has_urgent_memo: (memoStats[participant.id]?.urgent || 0) > 0,
+        has_pending_memo: (memoStats[participant.id]?.pending || 0) > 0
         };
       });
       setParticipants(participantsWithPayment as Participant[]);
@@ -1218,11 +1247,18 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                   )}
                                   {/* 본인이 일괄결제자인 경우에만 표시 */}
                                   {participant.is_group_payer && (
-                                    <span className="ml-2 bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs font-medium">
-                                      일괄결제
-                                    </span>
+                                  <span className="ml-2 bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                                  일괄결제
+                                  </span>
                                   )}
-                                </div>
+                                    {/* 메모 상태 표시 */}
+                  {participant.has_urgent_memo && (
+                    <span className="ml-1" title="긴급 메모">🚨</span>
+                  )}
+                  {!participant.has_urgent_memo && participant.has_pending_memo && (
+                    <span className="ml-1" title="처리 대기 메모">📝</span>
+                  )}
+                </div>
                               </td>
                             )}
                             
@@ -1345,6 +1381,24 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                   {participant.status === "미확정" && "미확정"}
                                   {participant.status === "취소" && "취소"}
                                 </button>
+                              </td>
+                            )}
+                            
+                            {showColumns.includes("메모") && (
+                              <td className="px-3 py-3 whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  <QuickMemo 
+                                    participantId={participant.id}
+                                    tourId={participant.tour_id}
+                                    participantName={participant.name}
+                                    onSave={fetchParticipants}
+                                  />
+                                  {participant.memo_count > 0 && (
+                                    <span className="text-xs text-gray-500">
+                                      ({participant.memo_count})
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                             )}
                             

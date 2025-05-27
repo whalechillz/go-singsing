@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import MemoList from "@/components/memo/MemoList";
 
 // Tour 타입 정의
 interface Tour {
@@ -131,6 +132,21 @@ const GolfTourPortal = () => {
       </div>
       {/* Main content */}
       <div className="container mx-auto max-w-6xl px-4 mt-8">
+        {/* 최근 긴급 메모 위젯 - 스탭 모드에서만 표시 */}
+        {isStaffView && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg flex items-center">
+                🚨 긴급 처리 필요
+              </h3>
+              <a href="/admin/memos" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                전체보기 →
+              </a>
+            </div>
+            <MemoList limit={5} showActions={false} />
+          </div>
+        )}
+        
         {isLoading ? (
           <div className="text-center py-10">
             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
