@@ -690,11 +690,13 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
             <div className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">상품가</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    {selectedTourId ? '상품가' : '예상 매출'}
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {selectedTourId && tours.find(t => t.id === selectedTourId) 
                       ? Number(tours.find(t => t.id === selectedTourId)?.price || 0).toLocaleString() 
-                      : stats.totalAmount.toLocaleString()}원
+                      : totalExpectedRevenue.toLocaleString()}원
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     총 인원: {filteredParticipants.length}명
