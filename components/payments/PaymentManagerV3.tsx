@@ -400,9 +400,8 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
   // 빠른 금액 설정 버튼
   const quickAmountButtons = [
     { label: '10만원+', action: 'add', amount: 100000 },
-    { label: '5만원', amount: 50000 },
-    { label: '1만원', amount: 10000 },
-    { label: '전액', percentage: 100 }
+    { label: '5만원+', action: 'add', amount: 50000 },
+    { label: '1만원+', action: 'add', amount: 10000 }
   ];
 
   const getPaymentStatusBadge = (status?: string) => {
@@ -1307,26 +1306,14 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                   
                   {/* 빠른 금액 버튼 */}
                   <div className="grid grid-cols-3 gap-2 mb-3">
-                    {quickAmountButtons.map(btn => (
+                    {quickAmountButtons.slice(0, 3).map(btn => (
                       <button
                         key={btn.label}
                         type="button"
-                        className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                          form.amount === btn.amount
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                        }`}
+                        className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}
                         onClick={() => {
-                          if (btn.percentage) {
-                            const tour = tours.find(t => t.id === form.tour_id);
-                            if (tour) {
-                              const amount = calculateAmount(Number(tour.price), btn.percentage);
-                              setForm({ ...form, amount });
-                            }
-                          } else if (btn.action === 'add') {
+                          if (btn.action === 'add' && btn.amount) {
                             setForm({ ...form, amount: form.amount + btn.amount });
-                          } else if (btn.amount) {
-                            setForm({ ...form, amount: btn.amount });
                           }
                         }}
                       >
@@ -1335,14 +1322,18 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                     ))}
                   </div>
                   
-                  {/* 초기화 버튼 */}
-                  <div className="mb-3">
+                  {/* 현재 금액 표시 및 초기화 버튼 */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex-1 px-4 py-2 bg-gray-100 rounded-lg text-center">
+                      <span className="text-sm text-gray-600">현재 금액: </span>
+                      <span className="text-lg font-bold text-gray-900">{form.amount.toLocaleString()}원</span>
+                    </div>
                     <button
                       type="button"
-                      className="w-full px-3 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 text-sm font-medium"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 text-sm font-medium"
                       onClick={() => setForm({ ...form, amount: 0 })}
                     >
-                      금액 초기화
+                      초기화
                     </button>
                   </div>
 
@@ -1548,7 +1539,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                     rows={3}
                     value={form.note}
                     onChange={(e) => setForm({ ...form, note: e.target.value })}
-                    placeholder="환불 사유를 입력하세요\n예) 개인 사정으로 취소\n환불 계좌: 신한 홍길동 110-123-456789"
+                    placeholder="환불 사유를 입력하세요&#10;예) 개인 사정으로 취소&#10;환불 계좌: 신한 홍길동 110-123-456789"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
