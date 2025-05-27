@@ -687,17 +687,46 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                               p.tour_id === payer.tour_id
                             );
                             
-                            // 결제자부터 시작해서 순차적으로 그룹 인원수만큼 선택
-                            const payerIndex = tourParticipants.findIndex(p => p.id === payerId);
-                            if (payerIndex !== -1) {
-                              const groupMembers: string[] = [];
-                              for (let i = 0; i < (payer.group_size || 1); i++) {
-                                if (tourParticipants[payerIndex + i]) {
-                                  groupMembers.push(tourParticipants[payerIndex + i].id);
+                            // 결제자 본인과 동반자 이름으로 참가자 찾기
+                            const groupMembers: string[] = [payerId]; // 결제자 본인 추가
+                            
+                            // 동반자 이름으로 참가자 찾기
+                            const notFoundCompanions: string[] = [];
+                            if (payer.companions && payer.companions.length > 0) {
+                              payer.companions.forEach(companionName => {
+                                if (companionName && companionName.trim()) {
+                                  // 동반자 이름으로 참가자 찾기
+                                  const companion = tourParticipants.find(p => 
+                                    p.name === companionName.trim()
+                                  );
+                                  if (companion) {
+                                    groupMembers.push(companion.id);
+                                  } else {
+                                    notFoundCompanions.push(companionName);
+                                  }
+                                }
+                              });
+                            }
+                            
+                            // 찾지 못한 동반자가 있으면 경고
+                            if (notFoundCompanions.length > 0) {
+                              console.warn(`다음 동반자를 찾을 수 없습니다: ${notFoundCompanions.join(', ')}`);
+                            }
+                            
+                            // 동반자 이름으로 못 찾은 경우, 참가자 목록 순서대로 채우기
+                            if (groupMembers.length < (payer.group_size || 1)) {
+                              const payerIndex = tourParticipants.findIndex(p => p.id === payerId);
+                              if (payerIndex !== -1) {
+                                for (let i = 1; groupMembers.length < (payer.group_size || 1) && (payerIndex + i) < tourParticipants.length; i++) {
+                                  const nextParticipant = tourParticipants[payerIndex + i];
+                                  if (nextParticipant && !groupMembers.includes(nextParticipant.id)) {
+                                    groupMembers.push(nextParticipant.id);
+                                  }
                                 }
                               }
-                              setForm(prev => ({ ...prev, group_member_ids: groupMembers }));
                             }
+                            
+                            setForm(prev => ({ ...prev, group_member_ids: groupMembers }));
                           }
                         }}
                         required
