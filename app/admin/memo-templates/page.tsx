@@ -23,6 +23,8 @@ export default function MemoTemplatesPage() {
     title: "",
     content_template: ""
   });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     fetchTemplates();
@@ -43,38 +45,57 @@ export default function MemoTemplatesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setError("");
 
-    if (editingTemplate) {
-      // 수정
-      const { error } = await supabase
-        .from("singsing_memo_templates")
-        .update({
-          category: form.category,
-          title: form.title,
-          content_template: form.content_template
-        })
-        .eq("id", editingTemplate.id);
+    console.log("템플릿 저장 시도:", form);
 
-      if (!error) {
-        setShowModal(false);
-        resetForm();
-        fetchTemplates();
+    try {
+      if (editingTemplate) {
+        // 수정
+        const { error } = await supabase
+          .from("singsing_memo_templates")
+          .update({
+            category: form.category,
+            title: form.title,
+            content_template: form.content_template
+          })
+          .eq("id", editingTemplate.id);
+
+        if (error) {
+          console.error("템플릿 수정 오류:", error);
+          setError(`템플릿 수정 실패: ${error.message}`);
+        } else {
+          setShowModal(false);
+          resetForm();
+          fetchTemplates();
+        }
+      } else {
+        // 추가
+        const { data, error } = await supabase
+          .from("singsing_memo_templates")
+          .insert({
+            category: form.category,
+            title: form.title,
+            content_template: form.content_template
+          })
+          .select();
+
+        if (error) {
+          console.error("템플릿 추가 오류:", error);
+          setError(`템플릿 추가 실패: ${error.message}`);
+        } else {
+          console.log("템플릿 추가 성공:", data);
+          setShowModal(false);
+          resetForm();
+          fetchTemplates();
+        }
       }
-    } else {
-      // 추가
-      const { error } = await supabase
-        .from("singsing_memo_templates")
-        .insert({
-          category: form.category,
-          title: form.title,
-          content_template: form.content_template
-        });
-
-      if (!error) {
-        setShowModal(false);
-        resetForm();
-        fetchTemplates();
-      }
+    } catch (err) {
+      console.error("예상치 못한 오류:", err);
+      setError("템플릿 저장 중 오류가 발생했습니다.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -108,6 +129,7 @@ export default function MemoTemplatesPage() {
       content_template: ""
     });
     setEditingTemplate(null);
+    setError("");
   };
 
   // 기본 템플릿 일괄 추가
@@ -250,6 +272,11 @@ export default function MemoTemplatesPage() {
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   카테고리
@@ -311,9 +338,10 @@ export default function MemoTemplatesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={saving}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {editingTemplate ? "수정" : "추가"}
+                  {saving ? "저장 중..." : (editingTemplate ? "수정" : "추가")}
                 </button>
               </div>
             </form>

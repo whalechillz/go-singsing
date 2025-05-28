@@ -45,8 +45,22 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
   };
 
   const handleTemplateSelect = (template: MemoTemplate) => {
-    setContent(template.content_template);
+    // {}로 표시된 부분을 하이라이트
+    const highlightedContent = template.content_template.replace(
+      /\{([^}]+)\}/g,
+      '[$1]'
+    );
+    setContent(highlightedContent);
     setSelectedTemplate(template.id);
+    
+    // 사용자에게 알림
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        textarea.focus();
+        textarea.select();
+      }
+    }, 100);
   };
 
   const handleSave = async () => {
@@ -142,7 +156,7 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
       {/* 메모 모달 */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-md">
+          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
             {/* 헤더 */}
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="font-semibold text-lg">
@@ -160,7 +174,7 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
             </div>
 
             {/* 본문 */}
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 overflow-y-auto flex-1">
               {/* 에러 메시지 */}
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-lg text-sm">
@@ -172,21 +186,21 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   카테고리
                 </label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {Object.entries(MEMO_CATEGORIES).map(([key, config]) => (
                     <button
                       key={key}
                       onClick={() => setCategory(key as Memo['category'])}
                       className={`
-                        py-2 px-3 rounded-lg text-sm font-medium transition-all
+                        py-2.5 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 border-2
                         ${category === key 
-                          ? `${config.bgColor} ${config.textColor}` 
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? `${config.bgColor} ${config.textColor} border-current` 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-transparent'
                         }
                       `}
                     >
-                      <span className="mr-1">{config.icon}</span>
-                      {config.label}
+                      <span className="text-base">{config.icon}</span>
+                      <span>{config.label}</span>
                     </button>
                   ))}
                 </div>
@@ -222,20 +236,29 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
               {templates.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    빠른 템플릿 ({templates.length}개)
+                    빠른 템플릿 <span className="text-gray-500">({templates.length}개)</span>
                   </label>
-                  <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-1">
+                  <div className="space-y-2">
                     {templates.map((template) => (
                       <button
                         key={template.id}
                         onClick={() => handleTemplateSelect(template)}
-                        className="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent rounded transition-all"
+                        className="w-full text-left px-3 py-2.5 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg transition-all group"
                       >
-                        <div className="font-medium text-gray-900">{template.title}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{template.content_template}</div>
+                        <div className="font-medium text-gray-900 group-hover:text-blue-900">
+                          {template.title}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 group-hover:text-blue-700">
+                          {template.content_template}
+                        </div>
                       </button>
                     ))}
                   </div>
+                  {templates.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-2">
+                      이 카테고리에 등록된 템플릿이 없습니다.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -252,9 +275,16 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
                   rows={4}
                   maxLength={500}
                 />
-                <p className="text-xs text-gray-500 mt-1 text-right">
-                  {content.length}/500
-                </p>
+                <div className="flex justify-between items-center mt-1">
+                  {selectedTemplate && (
+                    <p className="text-xs text-blue-600">
+                      ℹ️ [ ] 안의 내용을 수정해주세요
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 ml-auto">
+                    {content.length}/500
+                  </p>
+                </div>
               </div>
             </div>
 
