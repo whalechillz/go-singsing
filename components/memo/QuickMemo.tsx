@@ -45,20 +45,15 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
   };
 
   const handleTemplateSelect = (template: MemoTemplate) => {
-    // {}로 표시된 부분을 하이라이트
-    const highlightedContent = template.content_template.replace(
-      /\{([^}]+)\}/g,
-      '[$1]'
-    );
-    setContent(highlightedContent);
+    setContent(template.content_template);
     setSelectedTemplate(template.id);
     
-    // 사용자에게 알림
+    // 텍스트 영역 끝으로 커서 이동
     setTimeout(() => {
       const textarea = document.querySelector('textarea');
       if (textarea) {
         textarea.focus();
-        textarea.select();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
       }
     }, 100);
   };
@@ -277,11 +272,6 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
                   maxLength={500}
                 />
                 <div className="flex justify-between items-center mt-1">
-                  {selectedTemplate && (
-                    <p className="text-xs text-blue-600">
-                      ℹ️ [ ] 안의 내용을 수정해주세요
-                    </p>
-                  )}
                   <p className="text-xs text-gray-500 ml-auto">
                     {content.length}/500
                   </p>

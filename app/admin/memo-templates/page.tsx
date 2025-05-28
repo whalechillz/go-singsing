@@ -145,25 +145,29 @@ export default function MemoTemplatesPage() {
   const addDefaultTemplates = async () => {
     const defaultTemplates = [
       // 결제 관련
-      { category: 'payment', title: '결제 확인 요청', content_template: '결제 확인 필요 - 금액: {금액}원, 방법: {카드/현금/계좌이체}' },
-      { category: 'payment', title: '환불 요청', content_template: '환불 요청 - 사유: {사유}, 금액: {금액}원' },
-      { category: 'payment', title: '홀정산 요청', content_template: '홀정산 요청 - {우천취소/일정변경/기타}, 정산금액: {금액}원' },
-      { category: 'payment', title: '부분 정산', content_template: '부분 정산 필요 - 사유: {사유}, 차감액: {금액}원' },
+      { category: 'payment', title: '결제 확인 요청', content_template: '결제 확인 필요 - 금액: 원, 방법: ' },
+      { category: 'payment', title: '환불 요청', content_template: '환불 요청 - 사유: , 금액: 원' },
+      { category: 'payment', title: '홀정산 요청', content_template: '홀정산 요청 - , 정산금액: 원' },
+      { category: 'payment', title: '부분 정산', content_template: '부분 정산 필요 - 사유: , 차감액: 원' },
       
-      // 일정 변경
-      { category: 'boarding', title: '탑승지 변경', content_template: '탑승지 변경: {기존} → {변경}' },
-      { category: 'boarding', title: '객실 변경 요청', content_template: '객실 변경 요청: {기존 객실} → {희망 객실}, 사유: {사유}' },
-      { category: 'boarding', title: '티오프 시간 변경', content_template: '티오프 시간 변경 요청: {기존 시간} → {희망 시간}' },
+      // 일정 변경 (탑승)
+      { category: 'boarding', title: '탑승지 변경', content_template: '탑승지 변경: → ' },
+      { category: 'boarding', title: '탑승 인원 추가', content_template: '탑승 인원 추가: 에서 명' },
       
       // 긴급/중요
-      { category: 'urgent', title: '스탭 전달사항', content_template: '[기사/가이드] 전달사항: {내용}' },
-      { category: 'urgent', title: '내부 인수인계', content_template: '[인수인계] {담당자}님께 전달: {내용}' },
-      { category: 'urgent', title: '고객 컴플레인', content_template: '[컴플레인] {내용} - 조치필요' },
+      { category: 'urgent', title: '스탭 전달사항', content_template: '[기사/가이드] 전달사항: ' },
+      { category: 'urgent', title: '내부 인수인계', content_template: '[인수인계] 님께 전달: ' },
+      { category: 'urgent', title: '고객 컴플레인', content_template: '[컴플레인] - 조치필요' },
+      { category: 'urgent', title: '일정 변경 필요', content_template: '일정 변경 필요: ' },
       
       // 일반 요청
-      { category: 'request', title: '식사 요청사항', content_template: '식사 관련: {알레르기/종교/채식} - {상세내용}' },
-      { category: 'request', title: '특별 요청', content_template: '특별 요청사항: {내용}' },
-      { category: 'general', title: '연락처 변경', content_template: '연락처 변경: {이전} → {변경}' }
+      { category: 'request', title: '식사 요청사항', content_template: '식사 관련: - ' },
+      { category: 'request', title: '특별 요청', content_template: '특별 요청사항: ' },
+      { category: 'request', title: '객실 변경 요청', content_template: '객실 변경 요청: → , 사유: ' },
+      { category: 'request', title: '티오프 시간 변경', content_template: '티오프 시간 변경 요청: → ' },
+      
+      // 일반
+      { category: 'general', title: '연락처 변경', content_template: '연락처 변경: → ' }
     ];
 
     setError("");
@@ -351,11 +355,11 @@ export default function MemoTemplatesPage() {
                   onChange={(e) => setForm({ ...form, content_template: e.target.value })}
                   className="w-full border rounded-lg px-3 py-2"
                   rows={3}
-                  placeholder="예: 탑승지 변경: {기존} → {변경}"
+                  placeholder="예: 탑승지 변경: 서울 → 부산"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {`{}`} 안의 내용은 사용자가 직접 입력할 수 있는 부분입니다.
+                  템플릿을 선택하면 입력란에 자동으로 채워집니다. 필요한 부분을 수정해주세요.
                 </p>
               </div>
 
