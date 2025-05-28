@@ -1393,7 +1393,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                     participantName={participant.name}
                                     onSave={fetchParticipants}
                                   />
-                                  {participant.memo_count > 0 && (
+                                  {(participant.memo_count ?? 0) > 0 && (
                                     <span className="text-xs text-gray-500">
                                       ({participant.memo_count})
                                     </span>
