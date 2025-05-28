@@ -23,6 +23,7 @@ export default function MemoList({
 }: MemoListProps) {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedMemo, setExpandedMemo] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMemos();
@@ -103,11 +104,13 @@ export default function MemoList({
           <div 
             key={memo.id} 
             className={`
-              border rounded-lg p-4 transition-all
+              border rounded-lg p-4 transition-all cursor-pointer
               ${memo.priority === 2 ? 'border-red-400 bg-red-50' : 
                 memo.priority === 1 ? 'border-yellow-400 bg-yellow-50' : 
                 'border-gray-200 bg-white'}
+              ${expandedMemo === memo.id ? 'shadow-lg' : 'hover:shadow-md'}
             `}
+            onClick={() => setExpandedMemo(expandedMemo === memo.id ? null : memo.id)}
           >
             {/* 헤더 */}
             <div className="flex items-start justify-between mb-2">
@@ -132,7 +135,7 @@ export default function MemoList({
               </div>
               
               {showActions && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                   {memo.status !== 'resolved' && (
                     <>
                       {memo.status === 'pending' && (
@@ -166,7 +169,13 @@ export default function MemoList({
 
             {/* 내용 */}
             <div className="text-gray-700 mb-3 whitespace-pre-wrap">
-              {memo.content}
+              {expandedMemo === memo.id ? (
+                memo.content
+              ) : (
+                <div className="line-clamp-2">
+                  {memo.content}
+                </div>
+              )}
             </div>
 
             {/* 메타 정보 */}

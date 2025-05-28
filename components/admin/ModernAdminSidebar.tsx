@@ -42,7 +42,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
   const pathname = usePathname();
   const router = useRouter();
   
-  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ 'participants-management': true, 'tour-management': true });
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ 'participants-management': true, 'tour-management': true, 'memo-management': true });
   
   // pathname에 따라 activeNav 결정
   const getActiveNav = () => {
@@ -53,6 +53,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/participants')) return 'participants-list';
     if (pathname.startsWith('/admin/payments')) return 'payments';
     if (pathname.startsWith('/admin/documents')) return 'documents';
+    if (pathname.startsWith('/admin/memos')) return 'memos';
+    if (pathname.startsWith('/admin/work-memos')) return 'work-memos';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     return 'dashboard';
   };
@@ -86,6 +88,15 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       ]
     },
     { id: 'documents', label: '문서 관리', icon: <FileText className="w-5 h-5" />, href: '/admin/documents' },
+    { 
+      id: 'memo-management', 
+      label: '메모 관리', 
+      icon: <MessageSquare className="w-5 h-5" />,
+      subMenu: [
+        { id: 'memos', label: '참가자 메모', href: '/admin/memos' },
+        { id: 'work-memos', label: '업무 메모', href: '/admin/work-memos' },
+      ]
+    },
     // { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },
     // { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
   ];
