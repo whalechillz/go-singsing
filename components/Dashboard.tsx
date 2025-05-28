@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Database, FileText, TrendingUp, Bell, Menu, X, ChevronRight, ChevronDown, LogOut, Settings, Home, User, Map, Phone, CreditCard, Mail, Send, Briefcase, MessageSquare, BarChart2 } from 'lucide-react';
+import MemoWidget from '@/components/memo/MemoWidget';
 
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -247,6 +248,9 @@ const Dashboard = () => {
               </table>
             </div>
           </div>
+          
+          {/* Memo Widget */}
+          <MemoWidget />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Recent participants */}

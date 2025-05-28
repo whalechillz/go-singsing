@@ -20,6 +20,7 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
   const [templates, setTemplates] = useState<MemoTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -43,11 +44,39 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
   };
 
   const handleSave = async () => {
-    if (!content.trim()) return;
+    if (!content.trim()) {
+      setError('메모 내용을 입력해주세요.');
+      return;
+    }
+    
+    // ID 유효성 검증
+    if (!participantId || !tourId) {
+      setError('참가자 또는 투어 정보가 누락되었습니다.');
+      console.error('ID 누락:', { participantId, tourId });
+      return;
+    }
+    
+    // UUID 형식 검증
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(participantId) || !uuidRegex.test(tourId)) {
+      setError('ID 형식이 올바르지 않습니다.');
+      console.error('UUID 형식 오류:', { participantId, tourId });
+      return;
+    }
     
     setLoading(true);
+    setError('');
     
-    const { error } = await supabase
+    console.log('저장 시도:', {
+      participant_id: participantId,
+      tour_id: tourId,
+      category,
+      priority,
+      content: content.trim(),
+      status: 'pending'
+    });
+
+    const { data, error } = await supabase
       .from('singsing_memos')
       .insert({
         participant_id: participantId,
@@ -57,20 +86,35 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
         content: content.trim(),
         status: 'pending',
         created_by: '관리자' // TODO: 실제 사용자 정보로 변경
-      });
+      })
+      .select();
     
-    if (!error) {
+    if (error) {
+      console.error('메모 저장 오류:', error);
+      console.error('에러 상세:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      setError(`메모 저장에 실패했습니다: ${error.message}${error.hint ? ` (힌트: ${error.hint})` : ''}`);
+    } else {
       // 템플릿 사용 횟수 증가
       if (selectedTemplate) {
-        await supabase
-          .from('singsing_memo_templates')
-          .update({ usage_count: templates.find(t => t.id === selectedTemplate)?.usage_count || 0 + 1 })
-          .eq('id', selectedTemplate);
+        const template = templates.find(t => t.id === selectedTemplate);
+        if (template) {
+          await supabase
+            .from('singsing_memo_templates')
+            .update({ usage_count: (template.usage_count || 0) + 1 })
+            .eq('id', selectedTemplate);
+        }
       }
       
       setContent('');
       setCategory('general');
       setPriority(0);
+      setSelectedTemplate('');
+      setError('');
       setIsOpen(false);
       onSave?.();
     }
@@ -111,6 +155,12 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
 
             {/* 본문 */}
             <div className="p-4 space-y-4">
+              {/* 에러 메시지 */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
               {/* 카테고리 선택 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

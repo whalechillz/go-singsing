@@ -72,8 +72,7 @@
 ## 📝 코드 관리 규칙
 
 ### 커밋 메시지
-```
-feat: 새로운 기능 추가
+```feat: 새로운 기능 추가
 fix: 버그 수정
 refactor: 코드 리팩토링
 style: 스타일 변경
@@ -102,3 +101,10 @@ git push origin main
 ## 📞 연락처
 - 프로젝트 관리자: admin@singsinggolf.kr
 - 개발팀: dev@singsinggolf.kr
+
+- **2025-05-28**
+  - 참가자 메모 카운트(`participant.memo_count`)가 undefined일 때 타입 에러 발생 문제 수정
+    - 파일: `components/ParticipantsManagerV2.tsx`
+    - `(participant.memo_count ?? 0) > 0`로 조건문 변경하여 안전하게 처리
+  - 수정사항 커밋 및 원격 저장소 푸시, Vercel 자동 배포 진행
+  - 남은 작업: 배포 완료 후 정상 동작 확인

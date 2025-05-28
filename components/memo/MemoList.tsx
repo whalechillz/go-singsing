@@ -1,56 +1,65 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Check, Clock, MoreVertical } from "lucide-react";
-import { Memo, MEMO_CATEGORIES, MEMO_STATUS } from "@/@types/memo";
+import { Memo, MEMO_CATEGORIES, MEMO_STATUS, MEMO_PRIORITY } from "@/@types/memo";
+import { Clock, User, CheckCircle, AlertTriangle } from "lucide-react";
 
 interface MemoListProps {
   participantId?: string;
   tourId?: string;
   limit?: number;
+  priority?: number;
+  status?: string;
   showActions?: boolean;
 }
 
-export default function MemoList({ participantId, tourId, limit, showActions = true }: MemoListProps) {
+export default function MemoList({ 
+  participantId, 
+  tourId, 
+  limit = 10,
+  priority,
+  status,
+  showActions = true 
+}: MemoListProps) {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchMemos();
-  }, [participantId, tourId]);
+  }, [participantId, tourId, priority, status]);
 
   const fetchMemos = async () => {
     let query = supabase
       .from('singsing_memos')
       .select(`
         *,
-        participant:singsing_participants!participant_id(name, phone),
-        tour:singsing_tours!tour_id(title, start_date)
+        participant:participant_id(name, phone),
+        tour:tour_id(title, start_date)
       `)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
     if (participantId) query = query.eq('participant_id', participantId);
     if (tourId) query = query.eq('tour_id', tourId);
-    if (limit) query = query.limit(limit);
+    if (priority !== undefined) query = query.eq('priority', priority);
+    if (status) query = query.eq('status', status);
 
     const { data, error } = await query;
     
-    if (data && !error) {
+    if (!error && data) {
       setMemos(data as any);
     }
     setLoading(false);
   };
 
-  const updateMemoStatus = async (memoId: string, status: Memo['status']) => {
-    const updates: any = { status };
-    if (status === 'resolved') {
-      updates.resolved_at = new Date().toISOString();
-      updates.resolved_by = '관리자'; // TODO: 실제 사용자 정보
-    }
-
+  const updateStatus = async (memoId: string, newStatus: Memo['status']) => {
     const { error } = await supabase
       .from('singsing_memos')
-      .update(updates)
+      .update({ 
+        status: newStatus,
+        resolved_at: newStatus === 'resolved' ? new Date().toISOString() : null,
+        resolved_by: '관리자' // TODO: 실제 사용자로 변경
+      })
       .eq('id', memoId);
 
     if (!error) {
@@ -58,113 +67,139 @@ export default function MemoList({ participantId, tourId, limit, showActions = t
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+  const deleteMemo = async (memoId: string) => {
+    if (!window.confirm('메모를 삭제하시겠습니까?')) return;
+    
+    const { error } = await supabase
+      .from('singsing_memos')
+      .delete()
+      .eq('id', memoId);
 
-    if (minutes < 60) return `${minutes}분 전`;
-    if (hours < 24) return `${hours}시간 전`;
-    if (days < 7) return `${days}일 전`;
-    return date.toLocaleDateString('ko-KR');
+    if (!error) {
+      fetchMemos();
+    }
   };
 
   if (loading) {
-    return <div className="animate-pulse bg-gray-100 h-20 rounded"></div>;
+    return <div className="text-center py-4">로딩 중...</div>;
   }
 
   if (memos.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        <p>등록된 메모가 없습니다.</p>
+        메모가 없습니다.
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {memos.map((memo) => {
         const category = MEMO_CATEGORIES[memo.category];
-        const status = MEMO_STATUS[memo.status];
+        const priorityConfig = MEMO_PRIORITY[memo.priority];
+        const statusConfig = MEMO_STATUS[memo.status];
         
         return (
           <div 
-            key={memo.id}
+            key={memo.id} 
             className={`
-              p-3 rounded-lg border transition-all
-              ${memo.priority === 2 ? 'border-red-300 bg-red-50' : 
-                memo.priority === 1 ? 'border-yellow-300 bg-yellow-50' : 
+              border rounded-lg p-4 transition-all
+              ${memo.priority === 2 ? 'border-red-400 bg-red-50' : 
+                memo.priority === 1 ? 'border-yellow-400 bg-yellow-50' : 
                 'border-gray-200 bg-white'}
-              ${memo.status === 'resolved' ? 'opacity-60' : ''}
             `}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1">
-                {/* 헤더 */}
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`
-                    inline-flex items-center px-2 py-1 rounded text-xs font-medium
-                    ${category.bgColor} ${category.textColor}
-                  `}>
-                    {category.icon} {category.label}
+            {/* 헤더 */}
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${category.bgColor} ${category.textColor}`}>
+                  {category.icon} {category.label}
+                </span>
+                {memo.priority > 0 && (
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    memo.priority === 2 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {priorityConfig.label}
                   </span>
-                  
-                  {memo.priority === 2 && (
-                    <span className="text-xs font-medium text-red-600">긴급</span>
-                  )}
-                  
-                  {!participantId && memo.participant && (
-                    <span className="text-xs text-gray-600">
-                      {memo.participant.name}
-                    </span>
-                  )}
-                  
-                  <span className="text-xs text-gray-500">
-                    {formatDate(memo.created_at)}
-                  </span>
-                </div>
-
-                {/* 내용 */}
-                <p className={`text-sm ${memo.status === 'resolved' ? 'line-through' : ''}`}>
-                  {memo.content}
-                </p>
-
-                {/* 상태 */}
-                {memo.status !== 'pending' && (
-                  <div className="mt-1 text-xs text-gray-500">
-                    {memo.status === 'resolved' && memo.resolved_at && (
-                      <span>✓ {formatDate(memo.resolved_at)}에 처리됨</span>
-                    )}
-                  </div>
                 )}
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  memo.status === 'resolved' ? 'bg-green-100 text-green-800' : 
+                  memo.status === 'follow_up' ? 'bg-blue-100 text-blue-800' : 
+                  'bg-orange-100 text-orange-800'
+                }`}>
+                  {statusConfig.label}
+                </span>
               </div>
-
-              {/* 액션 버튼 */}
-              {showActions && memo.status !== 'resolved' && (
+              
+              {showActions && (
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => updateMemoStatus(memo.id, 'resolved')}
-                    className="p-1 text-green-600 hover:bg-green-100 rounded"
-                    title="완료 처리"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  
-                  {memo.status === 'pending' && (
-                    <button
-                      onClick={() => updateMemoStatus(memo.id, 'follow_up')}
-                      className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                      title="후속조치 필요"
-                    >
-                      <Clock className="w-4 h-4" />
-                    </button>
+                  {memo.status !== 'resolved' && (
+                    <>
+                      {memo.status === 'pending' && (
+                        <button
+                          onClick={() => updateStatus(memo.id, 'follow_up')}
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          title="후속조치 필요"
+                        >
+                          <AlertTriangle className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => updateStatus(memo.id, 'resolved')}
+                        className="text-green-600 hover:text-green-800 p-1"
+                        title="완료 처리"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
+                  <button
+                    onClick={() => deleteMemo(memo.id)}
+                    className="text-red-500 hover:text-red-700 p-1"
+                    title="삭제"
+                  >
+                    ×
+                  </button>
                 </div>
               )}
             </div>
+
+            {/* 내용 */}
+            <div className="text-gray-700 mb-3 whitespace-pre-wrap">
+              {memo.content}
+            </div>
+
+            {/* 메타 정보 */}
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center gap-3">
+                {memo.participant && (
+                  <span className="flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    {memo.participant.name}
+                  </span>
+                )}
+                {memo.tour && (
+                  <span>{memo.tour.title}</span>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {new Date(memo.created_at).toLocaleString('ko-KR', {
+                  month: 'numeric',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </div>
+            </div>
+
+            {/* 해결 정보 */}
+            {memo.status === 'resolved' && memo.resolved_at && (
+              <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-500">
+                {new Date(memo.resolved_at).toLocaleString('ko-KR')}에 {memo.resolved_by || '관리자'}님이 처리 완료
+              </div>
+            )}
           </div>
         );
       })}
