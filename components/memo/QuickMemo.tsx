@@ -156,7 +156,7 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
       {/* 메모 모달 */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg w-full max-w-xl lg:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* 헤더 */}
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="font-semibold text-lg">
@@ -186,7 +186,7 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   카테고리
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {Object.entries(MEMO_CATEGORIES).map(([key, config]) => (
                     <button
                       key={key}
@@ -233,29 +233,30 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
               </div>
 
               {/* 템플릿 */}
-              {templates.length > 0 && (
+              {(templates.length > 0 || category) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     빠른 템플릿 <span className="text-gray-500">({templates.length}개)</span>
                   </label>
-                  <div className="space-y-2">
-                    {templates.map((template) => (
-                      <button
-                        key={template.id}
-                        onClick={() => handleTemplateSelect(template)}
-                        className="w-full text-left px-3 py-2.5 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg transition-all group"
-                      >
-                        <div className="font-medium text-gray-900 group-hover:text-blue-900">
-                          {template.title}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1 group-hover:text-blue-700">
-                          {template.content_template}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  {templates.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-2">
+                  {templates.length > 0 ? (
+                    <div className="space-y-1.5 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                      {templates.map((template) => (
+                        <button
+                          key={template.id}
+                          onClick={() => handleTemplateSelect(template)}
+                          className="w-full text-left px-3 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded transition-all group block"
+                        >
+                          <div className="font-medium text-sm text-gray-900 group-hover:text-blue-900">
+                            {template.title}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5 group-hover:text-blue-700 line-clamp-1">
+                            {template.content_template}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-8 border border-dashed border-gray-300 rounded-lg">
                       이 카테고리에 등록된 템플릿이 없습니다.
                     </p>
                   )}

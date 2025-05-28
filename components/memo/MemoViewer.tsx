@@ -9,13 +9,15 @@ interface MemoViewerProps {
   participantName: string;
   tourId: string;
   memoCount: number;
+  onUpdate?: () => void; // 메모가 변경되었을 때 호출
 }
 
 export default function MemoViewer({ 
   participantId, 
   participantName, 
   tourId,
-  memoCount 
+  memoCount,
+  onUpdate
 }: MemoViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -56,6 +58,9 @@ export default function MemoViewer({
                 participantId={participantId}
                 tourId={tourId}
                 showActions={true}
+                onUpdate={() => {
+                  onUpdate?.(); // 상위 컴포넌트로 업데이트 전파
+                }}
               />
             </div>
           </div>

@@ -11,6 +11,7 @@ interface MemoListProps {
   priority?: number;
   status?: string;
   showActions?: boolean;
+  onUpdate?: () => void; // 메모가 변경되었을 때 호출
 }
 
 export default function MemoList({ 
@@ -19,7 +20,8 @@ export default function MemoList({
   limit = 10,
   priority,
   status,
-  showActions = true 
+  showActions = true,
+  onUpdate
 }: MemoListProps) {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +67,7 @@ export default function MemoList({
 
     if (!error) {
       fetchMemos();
+      onUpdate?.(); // 상태 업데이트 후 콜백 호출
     }
   };
 
@@ -78,6 +81,7 @@ export default function MemoList({
 
     if (!error) {
       fetchMemos();
+      onUpdate?.(); // 삭제 후 콜백 호출
     }
   };
 

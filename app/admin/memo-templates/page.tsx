@@ -71,13 +71,22 @@ export default function MemoTemplatesPage() {
           fetchTemplates();
         }
       } else {
-        // 추가
+        // 추가 - UUID 직접 생성
+        const newId = crypto.randomUUID ? crypto.randomUUID() : 
+          'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        
         const { data, error } = await supabase
           .from("singsing_memo_templates")
           .insert({
+            id: newId,
             category: form.category,
             title: form.title,
-            content_template: form.content_template
+            content_template: form.content_template,
+            usage_count: 0
           })
           .select();
 
@@ -157,14 +166,39 @@ export default function MemoTemplatesPage() {
       { category: 'general', title: '연락처 변경', content_template: '연락처 변경: {이전} → {변경}' }
     ];
 
-    for (const template of defaultTemplates) {
-      await supabase
-        .from("singsing_memo_templates")
-        .insert(template);
-    }
+    setError("");
+    setSaving(true);
+    
+    try {
+      for (const template of defaultTemplates) {
+        const newId = crypto.randomUUID ? crypto.randomUUID() : 
+          'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+          
+        const { error } = await supabase
+          .from("singsing_memo_templates")
+          .insert({
+            id: newId,
+            ...template,
+            usage_count: 0
+          });
+          
+        if (error) {
+          console.error(`템플릿 추가 실패 (${template.title}):`, error);
+        }
+      }
 
-    fetchTemplates();
-    alert("기본 템플릿이 추가되었습니다!");
+      fetchTemplates();
+      alert("기본 템플릿이 추가되었습니다!");
+    } catch (err) {
+      console.error("기본 템플릿 추가 중 오류:", err);
+      setError("기본 템플릿 추가에 실패했습니다.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

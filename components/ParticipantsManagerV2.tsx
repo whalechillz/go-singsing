@@ -1402,6 +1402,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                       participantName={participant.name}
                                       tourId={participant.tour_id}
                                       memoCount={participant.memo_count || 0}
+                                      onUpdate={fetchParticipants} // 메모 변경 시 참가자 목록 업데이트
                                     />
                                   )}
                                 </div>
