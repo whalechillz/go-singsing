@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
 import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare } from 'lucide-react';
 import QuickMemo from "@/components/memo/QuickMemo";
+import MemoViewer from "@/components/memo/MemoViewer";
 
 // 공통 ParticipantsManager Props
 interface ParticipantsManagerProps {
@@ -125,6 +126,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const [showBulkEditModal, setShowBulkEditModal] = useState<boolean>(false);
   const [bulkEditField, setBulkEditField] = useState<string>("");
   const [bulkEditValue, setBulkEditValue] = useState<string>("");
+  const [showMemoModal, setShowMemoModal] = useState<string | null>(null);
+  const [selectedParticipantForMemo, setSelectedParticipantForMemo] = useState<{id: string, name: string, tourId: string} | null>(null);
 
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
@@ -1386,7 +1389,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                             
                             {showColumns.includes("메모") && (
                               <td className="px-3 py-3 whitespace-nowrap">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                   <QuickMemo 
                                     participantId={participant.id}
                                     tourId={participant.tour_id}
@@ -1394,9 +1397,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                     onSave={fetchParticipants}
                                   />
                                   {(participant.memo_count ?? 0) > 0 && (
-                                    <span className="text-xs text-gray-500">
-                                      ({participant.memo_count})
-                                    </span>
+                                    <MemoViewer
+                                      participantId={participant.id}
+                                      participantName={participant.name}
+                                      tourId={participant.tour_id}
+                                      memoCount={participant.memo_count || 0}
+                                    />
                                   )}
                                 </div>
                               </td>
