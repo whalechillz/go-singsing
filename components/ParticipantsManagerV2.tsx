@@ -128,9 +128,37 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const [bulkEditValue, setBulkEditValue] = useState<string>("");
   const [showMemoModal, setShowMemoModal] = useState<string | null>(null);
   const [selectedParticipantForMemo, setSelectedParticipantForMemo] = useState<{id: string, name: string, tourId: string} | null>(null);
+  const [scrollToId, setScrollToId] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
+
+  // 스크롤 및 하이라이트 효과
+  useEffect(() => {
+    if (scrollToId) {
+      // 약간의 지연을 주어 DOM이 업데이트된 후 스크롤
+      setTimeout(() => {
+        const element = document.getElementById(`participant-${scrollToId}`);
+        if (element) {
+          // 상단 여백을 고려하여 스크롤
+          const yOffset = -100; // 헤더 높이만큼 여백
+          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          
+          window.scrollTo({ top: y, behavior: 'smooth' });
+          
+          // 하이라이트 효과
+          setHighlightId(scrollToId);
+          
+          // 3초 후 하이라이트 제거
+          setTimeout(() => {
+            setHighlightId(null);
+          }, 3000);
+        }
+        setScrollToId(null);
+      }, 100);
+    }
+  }, [scrollToId, participants]);
 
   // 탑승지 데이터 가져오기
   const [boardingPlaces, setBoardingPlaces] = useState<string[]>([]);
@@ -397,14 +425,20 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       if (error) setError(error.message);
       else {
         closeModal();
-        fetchParticipants();
+        await fetchParticipants();
+        // 수정한 항목으로 스크롤
+        setScrollToId(editingId);
       }
     } else {
-      const { error } = await supabase.from("singsing_participants").insert([payload]);
+      const { data: newParticipant, error } = await supabase.from("singsing_participants").insert([payload]).select().single();
       if (error) setError(error.message);
       else {
         closeModal();
-        fetchParticipants();
+        await fetchParticipants();
+        // 새로 추가한 항목으로 스크롤
+        if (newParticipant) {
+          setScrollToId(newParticipant.id);
+        }
       }
     }
   };
@@ -572,6 +606,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     const updateData: any = {};
     updateData[bulkEditField] = bulkEditValue;
 
+    const firstSelectedId = selectedIds[0]; // 첫 번째 선택된 항목 ID 저장
+
     const { error } = await supabase
       .from("singsing_participants")
       .update(updateData)
@@ -589,7 +625,9 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       setBulkEditValue("");
       setSelectedIds([]);
       setSelectAll(false);
-      fetchParticipants();
+      await fetchParticipants();
+      // 첫 번째 수정된 항목으로 스크롤
+      setScrollToId(firstSelectedId);
     }
   };
 
@@ -641,6 +679,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       return;
     }
     
+    const firstSelectedId = selectedIds[0]; // 첫 번째 선택된 항목 ID 저장
+    
     const { error } = await supabase
       .from("singsing_participants")
       .update({ status: newStatus })
@@ -651,7 +691,9 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     } else {
       setSelectedIds([]);
       setSelectAll(false);
-      fetchParticipants();
+      await fetchParticipants();
+      // 첫 번째 수정된 항목으로 스크롤
+      setScrollToId(firstSelectedId);
     }
   };
 
@@ -849,9 +891,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     }
 
     setIsUploading(true);
-    const { error } = await supabase
+    const { data: insertedData, error } = await supabase
       .from("singsing_participants")
-      .insert(validData);
+      .insert(validData)
+      .select();
 
     if (error) {
       setError(`업로드 실패: ${error.message}`);
@@ -859,7 +902,11 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       alert(`${validData.length}명의 참가자가 추가되었습니다.`);
       setShowUploadModal(false);
       setUploadPreview([]);
-      fetchParticipants();
+      await fetchParticipants();
+      // 첫 번째 추가된 항목으로 스크롤
+      if (insertedData && insertedData.length > 0) {
+        setScrollToId(insertedData[0].id);
+      }
     }
     setIsUploading(false);
   };
@@ -1220,7 +1267,15 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                         const tour = tours.find(t => t.id === participant.tour_id);
                         
                         return (
-                          <tr key={participant.id} className="hover:bg-gray-50">
+                          <tr 
+                            key={participant.id} 
+                            id={`participant-${participant.id}`}
+                            className={`hover:bg-gray-50 transition-all duration-300 ${
+                              highlightId === participant.id 
+                                ? 'bg-blue-50 ring-2 ring-blue-400 ring-opacity-50' 
+                                : ''
+                            }`}
+                          >
                             {showColumns.includes("선택") && (
                               <td className="px-3 py-3">
                                 <input
