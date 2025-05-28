@@ -134,18 +134,78 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
 
+  // 필터링 로직을 먼저 정의
+  const getFilteredParticipants = () => {
+    let filtered = participants;
+
+    // 투어 필터 - tourId가 있으면 해당 투어만, 없으면 selectedTour 사용
+    if (tourId) {
+      filtered = filtered.filter(p => p.tour_id === tourId);
+    } else if (selectedTour) {
+      filtered = filtered.filter(p => p.tour_id === selectedTour.id);
+    }
+
+    // 검색어 필터
+    if (search) {
+      filtered = filtered.filter(p =>
+        p.name?.toLowerCase().includes(search.toLowerCase()) ||
+        p.phone?.includes(search) ||
+        p.team_name?.toLowerCase().includes(search.toLowerCase()) ||
+        (p.companions && p.companions.some(c => c.toLowerCase().includes(search.toLowerCase())))
+      );
+    }
+
+    // 탭 필터
+    switch (activeTab) {
+      case "confirmed":
+        filtered = filtered.filter(p => p.status === "확정");
+        break;
+      case "unconfirmed":
+        filtered = filtered.filter(p => p.status === "미확정");
+        break;
+      case "canceled":
+        filtered = filtered.filter(p => p.status === "취소");
+        break;
+      case "vip":
+        filtered = filtered.filter(p => (p.join_count || 0) >= 5);
+        break;
+      case "active":
+        const activeTourIds = tours.filter(t => t.status === 'active').map(t => t.id);
+        filtered = filtered.filter(p => activeTourIds.includes(p.tour_id));
+        break;
+      case "tour_canceled":
+        const canceledTourIds = tours.filter(t => t.status === 'canceled').map(t => t.id);
+        filtered = filtered.filter(p => canceledTourIds.includes(p.tour_id));
+        break;
+      case "paid":
+        filtered = filtered.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0);
+        break;
+      case "unpaid":
+        filtered = filtered.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0);
+        break;
+    }
+
+    return filtered;
+  };
+
+  const filteredParticipants = getFilteredParticipants();
+
   // 스크롤 및 하이라이트 효과
   useEffect(() => {
-    if (scrollToId) {
-      // 약간의 지연을 주어 DOM이 업데이트된 후 스크롤
-      setTimeout(() => {
+    if (scrollToId && participants.length > 0) {
+      // DOM 업데이트를 위한 충분한 지연 시간
+      const timeoutId = setTimeout(() => {
         const element = document.getElementById(`participant-${scrollToId}`);
+        console.log('스크롤 시도:', { 
+          scrollToId, 
+          element: !!element,
+          filteredCount: filteredParticipants.length,
+          inFiltered: filteredParticipants.some(p => p.id === scrollToId)
+        });
+        
         if (element) {
-          // 상단 여백을 고려하여 스크롤
-          const yOffset = -100; // 헤더 높이만큼 여백
-          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-          
-          window.scrollTo({ top: y, behavior: 'smooth' });
+          // 화면 중앙에 오도록 스크롤
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           
           // 하이라이트 효과
           setHighlightId(scrollToId);
@@ -154,11 +214,22 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
           setTimeout(() => {
             setHighlightId(null);
           }, 3000);
+        } else {
+          console.log('스크롤 대상 요소를 찾을 수 없음:', scrollToId);
+          
+          // 필터링된 목록에 없는 경우 전체 탭으로 전환
+          if (!filteredParticipants.some(p => p.id === scrollToId)) {
+            setActiveTab('all');
+            setSearch('');
+            console.log('필터링된 목록에 없어 전체 탭으로 전환');
+          }
         }
         setScrollToId(null);
-      }, 100);
+      }, 800); // 지연 시간을 더 늘림
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [scrollToId, participants]);
+  }, [scrollToId, filteredParticipants.length]);
 
   // 탑승지 데이터 가져오기
   const [boardingPlaces, setBoardingPlaces] = useState<string[]>([]);
@@ -422,22 +493,30 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     
     if (editingId) {
       const { error } = await supabase.from("singsing_participants").update(payload).eq("id", editingId);
-      if (error) setError(error.message);
-      else {
+      if (error) {
+        setError(error.message);
+      } else {
+        console.log('참가자 정보 수정 성공:', editingId);
         closeModal();
         await fetchParticipants();
         // 수정한 항목으로 스크롤
-        setScrollToId(editingId);
+        setTimeout(() => {
+          setScrollToId(editingId);
+        }, 100);
       }
     } else {
       const { data: newParticipant, error } = await supabase.from("singsing_participants").insert([payload]).select().single();
-      if (error) setError(error.message);
-      else {
+      if (error) {
+        setError(error.message);
+      } else {
+        console.log('새 참가자 추가 성공:', newParticipant?.id);
         closeModal();
         await fetchParticipants();
         // 새로 추가한 항목으로 스크롤
         if (newParticipant) {
-          setScrollToId(newParticipant.id);
+          setTimeout(() => {
+            setScrollToId(newParticipant.id);
+          }, 100);
         }
       }
     }
@@ -911,61 +990,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     setIsUploading(false);
   };
 
-  // 필터링 로직
-  const getFilteredParticipants = () => {
-    let filtered = participants;
 
-    // 투어 필터 - tourId가 있으면 해당 투어만, 없으면 selectedTour 사용
-    if (tourId) {
-      filtered = filtered.filter(p => p.tour_id === tourId);
-    } else if (selectedTour) {
-      filtered = filtered.filter(p => p.tour_id === selectedTour.id);
-    }
-
-    // 검색어 필터
-    if (search) {
-      filtered = filtered.filter(p =>
-        p.name?.toLowerCase().includes(search.toLowerCase()) ||
-        p.phone?.includes(search) ||
-        p.team_name?.toLowerCase().includes(search.toLowerCase()) ||
-        (p.companions && p.companions.some(c => c.toLowerCase().includes(search.toLowerCase())))
-      );
-    }
-
-    // 탭 필터
-    switch (activeTab) {
-      case "confirmed":
-        filtered = filtered.filter(p => p.status === "확정");
-        break;
-      case "unconfirmed":
-        filtered = filtered.filter(p => p.status === "미확정");
-        break;
-      case "canceled":
-        filtered = filtered.filter(p => p.status === "취소");
-        break;
-      case "vip":
-        filtered = filtered.filter(p => (p.join_count || 0) >= 5);
-        break;
-      case "active":
-        const activeTourIds = tours.filter(t => t.status === 'active').map(t => t.id);
-        filtered = filtered.filter(p => activeTourIds.includes(p.tour_id));
-        break;
-      case "tour_canceled":
-        const canceledTourIds = tours.filter(t => t.status === 'canceled').map(t => t.id);
-        filtered = filtered.filter(p => canceledTourIds.includes(p.tour_id));
-        break;
-      case "paid":
-        filtered = filtered.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0);
-        break;
-      case "unpaid":
-        filtered = filtered.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0);
-        break;
-    }
-
-    return filtered;
-  };
-
-  const filteredParticipants = getFilteredParticipants();
 
   // 선택된 항목이 현재 보이는 항목에 모두 포함되는지 확인
   useEffect(() => {
@@ -1270,9 +1295,9 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                           <tr 
                             key={participant.id} 
                             id={`participant-${participant.id}`}
-                            className={`hover:bg-gray-50 transition-all duration-300 ${
+                            className={`hover:bg-gray-50 transition-all duration-500 ${
                               highlightId === participant.id 
-                                ? 'bg-blue-50 ring-2 ring-blue-400 ring-opacity-50' 
+                                ? 'participant-highlight bg-blue-50 ring-2 ring-blue-400 ring-opacity-75' 
                                 : ''
                             }`}
                           >
@@ -1449,7 +1474,13 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                     participantId={participant.id}
                                     tourId={participant.tour_id}
                                     participantName={participant.name}
-                                    onSave={fetchParticipants}
+                                    onSave={async () => {
+                                      await fetchParticipants();
+                                      // 메모 추가 후 해당 참가자로 스크롤
+                                      setTimeout(() => {
+                                        setScrollToId(participant.id);
+                                      }, 100);
+                                    }}
                                   />
                                   {(participant.memo_count ?? 0) > 0 && (
                                     <MemoViewer
@@ -1457,7 +1488,13 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                                       participantName={participant.name}
                                       tourId={participant.tour_id}
                                       memoCount={participant.memo_count || 0}
-                                      onUpdate={fetchParticipants} // 메모 변경 시 참가자 목록 업데이트
+                                      onUpdate={async () => {
+                                        await fetchParticipants();
+                                        // 메모 수정/삭제 후 해당 참가자로 스크롤
+                                        setTimeout(() => {
+                                          setScrollToId(participant.id);
+                                        }, 100);
+                                      }}
                                     />
                                   )}
                                 </div>
