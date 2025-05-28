@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Users, Briefcase, CreditCard, FileText, Phone } from 'lucide-react';
+import MemoWidget from '@/components/memo/MemoWidget';
 
 interface DashboardData {
   upcomingTours: Tour[];
@@ -229,6 +230,9 @@ export default function ModernDashboardContent() {
           </table>
         </div>
       </div>
+      
+      {/* Memo Widget */}
+      <MemoWidget />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent participants */}
