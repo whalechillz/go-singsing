@@ -29,13 +29,19 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
   }, [isOpen, category]);
 
   const fetchTemplates = async () => {
-    const { data } = await supabase
+    console.log('템플릿 조회 시작 - 카테고리:', category);
+    const { data, error } = await supabase
       .from('singsing_memo_templates')
       .select('*')
       .eq('category', category)
       .order('usage_count', { ascending: false });
     
-    if (data) setTemplates(data);
+    if (error) {
+      console.error('템플릿 조회 오류:', error);
+    } else if (data) {
+      console.log(`${category} 카테고리 템플릿 ${data.length}개 조회됨:`, data);
+      setTemplates(data);
+    }
   };
 
   const handleTemplateSelect = (template: MemoTemplate) => {
@@ -216,16 +222,17 @@ export default function QuickMemo({ participantId, tourId, participantName, onCl
               {templates.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    빠른 템플릿
+                    빠른 템플릿 ({templates.length}개)
                   </label>
-                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                  <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-1">
                     {templates.map((template) => (
                       <button
                         key={template.id}
                         onClick={() => handleTemplateSelect(template)}
-                        className="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded transition-colors"
+                        className="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent rounded transition-all"
                       >
-                        {template.title}
+                        <div className="font-medium text-gray-900">{template.title}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{template.content_template}</div>
                       </button>
                     ))}
                   </div>
