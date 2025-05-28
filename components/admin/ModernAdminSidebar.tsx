@@ -55,6 +55,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/documents')) return 'documents';
     if (pathname.startsWith('/admin/memos')) return 'memos';
     if (pathname.startsWith('/admin/work-memos')) return 'work-memos';
+    if (pathname.startsWith('/admin/memo-templates')) return 'memo-templates';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     return 'dashboard';
   };
@@ -95,6 +96,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       subMenu: [
         { id: 'memos', label: '참가자 메모', href: '/admin/memos' },
         { id: 'work-memos', label: '업무 메모', href: '/admin/work-memos' },
+        { id: 'memo-templates', label: '메모 템플릿', href: '/admin/memo-templates' },
       ]
     },
     // { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },

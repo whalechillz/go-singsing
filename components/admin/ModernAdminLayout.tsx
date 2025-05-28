@@ -24,6 +24,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     if (pathname.startsWith('/admin/boarding-places')) return '탑승지 관리';
     if (pathname.startsWith('/admin/memos')) return '참가자 메모';
     if (pathname.startsWith('/admin/work-memos')) return '업무 메모';
+    if (pathname.startsWith('/admin/memo-templates')) return '메모 템플릿';
     if (pathname.startsWith('/admin/statistics')) return '통계';
     if (pathname.startsWith('/admin/settings')) return '설정';
     return '대시보드';
