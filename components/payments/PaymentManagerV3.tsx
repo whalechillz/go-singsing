@@ -1,4 +1,5 @@
 "use client";
+import RefundModal from './RefundModal';
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { 
@@ -46,6 +47,12 @@ interface Payment {
   participant?: Participant;
   payer?: Participant;
   group_members?: Participant[];
+  // 환불 관련 필드
+  refund_account?: string;
+  refund_date?: string;
+  refund_reason?: string;
+  refund_items?: any;
+  refund_type?: string;
 }
 
 interface Participant {
@@ -78,6 +85,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [refundingPayment, setRefundingPayment] = useState<Payment | null>(null);
+  const [selectedPaymentForRefund, setSelectedPaymentForRefund] = useState<Payment | null>(null);
   const [selectedTourId, setSelectedTourId] = useState(tourId || "");
   const [amountInputMode, setAmountInputMode] = useState<'preset' | 'custom'>('preset');
   const [customPercentage, setCustomPercentage] = useState(30);
@@ -468,7 +476,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
       case "pending":
         return payment.payment_status === 'pending';
       case "refunded":
-        return payment.payment_status === 'refunded';
+        return payment.payment_status === 'refunded' || payment.amount < 0;
       default:
         return true;
     }
@@ -481,13 +489,13 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
     
   const stats = {
     total: filteredPaymentsForStats.length,
-    totalAmount: filteredPaymentsForStats.filter(p => p.payment_status !== 'refunded').reduce((sum, p) => sum + p.amount, 0),
-    depositAmount: filteredPaymentsForStats.filter(p => p.payment_type === 'deposit' && p.payment_status !== 'refunded').reduce((sum, p) => sum + p.amount, 0),
-    balanceAmount: filteredPaymentsForStats.filter(p => p.payment_type === 'balance' && p.payment_status !== 'refunded').reduce((sum, p) => sum + p.amount, 0),
-    completedCount: filteredPaymentsForStats.filter(p => p.payment_status === 'completed').length,
+    totalAmount: filteredPaymentsForStats.filter(p => p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + p.amount, 0),
+    depositAmount: filteredPaymentsForStats.filter(p => p.payment_type === 'deposit' && p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + p.amount, 0),
+    balanceAmount: filteredPaymentsForStats.filter(p => p.payment_type === 'balance' && p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + p.amount, 0),
+    completedCount: filteredPaymentsForStats.filter(p => p.payment_status === 'completed' && p.amount > 0).length,
     pendingCount: filteredPaymentsForStats.filter(p => p.payment_status === 'pending').length,
-    refundedCount: filteredPaymentsForStats.filter(p => p.payment_status === 'refunded').length,
-    refundedAmount: filteredPaymentsForStats.filter(p => p.payment_status === 'refunded').reduce((sum, p) => sum + p.amount, 0)
+    refundedCount: filteredPaymentsForStats.filter(p => p.payment_status === 'refunded' || p.amount < 0).length,
+    refundedAmount: filteredPaymentsForStats.filter(p => p.payment_status === 'refunded' || p.amount < 0).reduce((sum, p) => sum + Math.abs(p.amount), 0)
   };
 
   // 참가자별 결제 현황 계산 (선택된 투어로 필터링)
@@ -530,8 +538,8 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
 
   const tabs = [
     { id: 'all', label: '전체', count: stats.total },
-    { id: 'deposit', label: '계약금', count: filteredPaymentsForStats.filter(p => p.payment_type === 'deposit').length },
-    { id: 'balance', label: '잔금', count: filteredPaymentsForStats.filter(p => p.payment_type === 'balance').length },
+    { id: 'deposit', label: '계약금', count: filteredPaymentsForStats.filter(p => p.payment_type === 'deposit' && p.amount > 0).length },
+    { id: 'balance', label: '잔금', count: filteredPaymentsForStats.filter(p => p.payment_type === 'balance' && p.amount > 0).length },
     { id: 'completed', label: '완료', count: stats.completedCount },
     { id: 'pending', label: '대기', count: stats.pendingCount },
     { id: 'refunded', label: '환불', count: stats.refundedCount },
@@ -890,18 +898,32 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                             {payment.note}
                           </div>
                         )}
+                        {payment.amount < 0 && payment.refund_reason && (
+                          <div className="text-xs text-red-600 mt-1">
+                            환불사유: {payment.refund_reason === 'hole_out' ? '홀아웃' : 
+                                     payment.refund_reason === 'weather' ? '기상악화' :
+                                     payment.refund_reason === 'daily_cancellation' ? '일별 취소' :
+                                     payment.refund_reason}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-medium text-gray-900">
-                        {payment.amount.toLocaleString()}원
+                      <span className={`font-medium ${payment.amount < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                        {payment.amount < 0 ? '-' : ''}{Math.abs(payment.amount).toLocaleString()}원
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       {getPaymentTypeBadge(payment.payment_type)}
                     </td>
                     <td className="px-4 py-3">
-                      {getPaymentStatusBadge(payment.payment_status)}
+                      {payment.amount < 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          <RefreshCw className="w-3 h-3" /> 환불
+                        </span>
+                      ) : (
+                        getPaymentStatusBadge(payment.payment_status)
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm text-gray-500">
@@ -922,7 +944,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        {payment.payment_status !== 'refunded' && (
+                        {payment.payment_status !== 'refunded' && payment.amount > 0 && (
                           <>
                             <button
                               className="text-blue-600 hover:text-blue-800"
@@ -960,13 +982,14 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            {payment.payment_status === 'completed' && (
+                            {payment.payment_status === 'completed' && payment.amount > 0 && (
                               <button
-                                className="text-orange-600 hover:text-orange-800"
+                                className="text-red-600 hover:text-red-800"
                                 onClick={() => {
-                                  setRefundingPayment(payment);
+                                  setSelectedPaymentForRefund(payment);
                                   setShowRefundModal(true);
                                 }}
+                                title="환불 처리"
                               >
                                 <RefreshCw className="w-4 h-4" />
                               </button>
@@ -1502,72 +1525,19 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
       )}
 
       {/* 환불 모달 */}
-      {showRefundModal && refundingPayment && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-red-600">환불 처리</h3>
-              <button onClick={() => setShowRefundModal(false)}>
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleRefund}>
-              <div className="space-y-4">
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <p className="text-sm text-red-800">
-                    <strong>주의:</strong> 환불 처리는 취소할 수 없습니다.
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">참가자</p>
-                  <p className="font-medium">{refundingPayment.participant?.name}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">환불 금액</p>
-                  <p className="font-medium text-red-600">
-                    {refundingPayment.amount.toLocaleString()}원
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    환불 사유 및 환불 계좌 정보
-                  </label>
-                  <textarea
-                    className="w-full border rounded-lg px-3 py-2"
-                    rows={3}
-                    value={form.note}
-                    onChange={(e) => setForm({ ...form, note: e.target.value })}
-                    placeholder="환불 사유를 입력하세요&#10;예) 개인 사정으로 취소&#10;환불 계좌: 신한 홍길동 110-123-456789"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    환불 계좌 정보를 함께 입력하면 환불 처리에 도움이 됩니다.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-white text-gray-700 border rounded-lg hover:bg-gray-50"
-                  onClick={() => setShowRefundModal(false)}
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  환불 처리
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {showRefundModal && selectedPaymentForRefund && (
+        <RefundModal
+          payment={selectedPaymentForRefund}
+          participant={participants.find(p => p.id === selectedPaymentForRefund.participant_id)!}
+          tour={tours.find(t => t.id === selectedPaymentForRefund.tour_id)!}
+          onClose={() => {
+            setShowRefundModal(false);
+            setSelectedPaymentForRefund(null);
+          }}
+          onSuccess={() => {
+            fetchData(); // 결제 목록 새로고침
+          }}
+        />
       )}
     </div>
   );
