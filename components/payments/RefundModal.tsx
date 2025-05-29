@@ -189,9 +189,9 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b bg-gray-50">
           <h3 className="text-lg font-semibold">
             환불 처리 - {participant.name}
           </h3>
@@ -201,7 +201,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
         </div>
         
         {/* 본문 */}
-        <div className="p-6 space-y-6 overflow-y-auto">
+        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2">
               <AlertCircle className="w-5 h-5" />
@@ -463,7 +463,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
         </div>
         
         {/* 푸터 */}
-        <div className="flex justify-end gap-3 p-4 border-t bg-gray-50">
+        <div className="flex-shrink-0 flex justify-end gap-3 p-4 border-t bg-gray-50">
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
