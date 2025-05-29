@@ -13,16 +13,24 @@ interface RefundModalProps {
   onSuccess: () => void;
 }
 
+interface RefundDetailsType {
+  holesPlayed: 9 | 12 | 15 | 18;
+  daysRefunded: number;
+  cancelledDates: string[];
+  customRate: number | null;
+  useCustomRate: boolean;
+}
+
 export default function RefundModal({ payment, participant, tour, onClose, onSuccess }: RefundModalProps) {
   const [refundType, setRefundType] = useState<string>('');
   const [refundReason, setRefundReason] = useState<string>('');
   const [refundAccount, setRefundAccount] = useState<string>('');
-  const [refundDetails, setRefundDetails] = useState<any>({
+  const [refundDetails, setRefundDetails] = useState<RefundDetailsType>({
     holesPlayed: 18,
     daysRefunded: 1,
     cancelledDates: [],
-    customRate: null,  // 커스텀 환불률
-    useCustomRate: false  // 커스텀 환불률 사용 여부
+    customRate: null,
+    useCustomRate: false
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -58,7 +66,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
       switch (refundType) {
         case REFUND_TYPES.HOLE_OUT:
           baseAmount = dailyTotal;
-          const holePolicy = REFUND_POLICIES.holeOut[refundDetails.holesPlayed];
+          const holePolicy = REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut];
           refundRate = holePolicy?.rate || 0;
           break;
           
@@ -214,7 +222,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
               </label>
               <select
                 value={refundDetails.holesPlayed}
-                onChange={(e) => setRefundDetails({...refundDetails, holesPlayed: parseInt(e.target.value)})}
+                onChange={(e) => setRefundDetails({...refundDetails, holesPlayed: parseInt(e.target.value) as 9 | 12 | 15 | 18})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value={9}>9홀 (50% 환불)</option>
@@ -287,9 +295,9 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
                 <span className="text-sm text-gray-600">%</span>
                 <span className="text-xs text-gray-500">
                   (기본: {refundType === REFUND_TYPES.HOLE_OUT ? 
-                    (REFUND_POLICIES.holeOut[refundDetails.holesPlayed]?.rate || 0) * 100 :
+                    (REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut]?.rate || 0) * 100 :
                     refundType === REFUND_TYPES.DAILY_CANCELLATION ?
-                    (REFUND_POLICIES.dailyCancellation[refundReason]?.rate || 0) * 100 :
+                    (REFUND_POLICIES.dailyCancellation[refundReason as keyof typeof REFUND_POLICIES.dailyCancellation]?.rate || 0) * 100 :
                     80}%)
                 </span>
               </div>
@@ -329,7 +337,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>환불률</span>
-                  <span>{(REFUND_POLICIES.holeOut[refundDetails.holesPlayed]?.rate || 0) * 100}%</span>
+                  <span>{(REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut]?.rate || 0) * 100}%</span>
                 </div>
               </>
             )}
@@ -346,7 +354,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>환불률</span>
-                  <span>{(REFUND_POLICIES.dailyCancellation[refundReason]?.rate || 0) * 100}%</span>
+                  <span>{(REFUND_POLICIES.dailyCancellation[refundReason as keyof typeof REFUND_POLICIES.dailyCancellation]?.rate || 0) * 100}%</span>
                 </div>
               </>
             )}
