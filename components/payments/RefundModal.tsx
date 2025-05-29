@@ -14,11 +14,13 @@ interface RefundModalProps {
 }
 
 interface RefundDetailsType {
-  holesPlayed: 9 | 12 | 15 | 18;
+  holesPlayed: 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
   daysRefunded: number;
   cancelledDates: string[];
   customRate: number | null;
+  customAmount: number | null; // 커스텀 금액 직접 입력
   useCustomRate: boolean;
+  usePercentageMode: boolean; // 비율 방식 사용 여부
 }
 
 export default function RefundModal({ payment, participant, tour, onClose, onSuccess }: RefundModalProps) {
@@ -26,11 +28,13 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
   const [refundReason, setRefundReason] = useState<string>('');
   const [refundAccount, setRefundAccount] = useState<string>('');
   const [refundDetails, setRefundDetails] = useState<RefundDetailsType>({
-    holesPlayed: 18,
+    holesPlayed: 9,
     daysRefunded: 1,
     cancelledDates: [],
     customRate: null,
-    useCustomRate: false
+    customAmount: null,
+    useCustomRate: false,
+    usePercentageMode: false // 기본은 정액 방식
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,6 +47,11 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
   // 환불 금액 계산
   const calculateRefundAmount = () => {
     if (!refundType) return 0;
+    
+    // 커스텀 금액 직접 입력시
+    if (refundDetails.useCustomRate && refundDetails.customAmount !== null) {
+      return refundDetails.customAmount;
+    }
     
     let baseAmount = 0;
     let refundRate = 0;
@@ -65,9 +74,17 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
       // 기본 정책 사용
       switch (refundType) {
         case REFUND_TYPES.HOLE_OUT:
-          baseAmount = dailyTotal;
-          const holePolicy = REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut];
-          refundRate = holePolicy?.rate || 0;
+          // 정액 방식 (순천 파인힐스 기준)
+          if (!refundDetails.usePercentageMode) {
+            const holePolicy = REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut];
+            return holePolicy?.total || 0;
+          } 
+          // 비율 방식
+          else {
+            baseAmount = dailyTotal;
+            const percentagePolicy = REFUND_POLICIES.holeOutPercentage[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOutPercentage];
+            refundRate = percentagePolicy?.rate || 0;
+          }
           break;
           
         case REFUND_TYPES.DAILY_CANCELLATION:
@@ -211,21 +228,60 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
           
           {/* 홀아웃 상세 */}
           {refundType === REFUND_TYPES.HOLE_OUT && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                플레이한 홀 수
-              </label>
-              <select
-                value={refundDetails.holesPlayed}
-                onChange={(e) => setRefundDetails({...refundDetails, holesPlayed: parseInt(e.target.value) as 9 | 12 | 15 | 18})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value={9}>9홀 (50% 환불)</option>
-                <option value={12}>12홀 (30% 환불)</option>
-                <option value={15}>15홀 (20% 환불)</option>
-                <option value={18}>18홀 완주 (환불 없음)</option>
-              </select>
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  환불 방식
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="refundMode"
+                      checked={!refundDetails.usePercentageMode}
+                      onChange={() => setRefundDetails({...refundDetails, usePercentageMode: false})}
+                    />
+                    <span className="ml-2">정액 환불 (순천 파인힐스 기준)</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="refundMode"
+                      checked={refundDetails.usePercentageMode}
+                      onChange={() => setRefundDetails({...refundDetails, usePercentageMode: true})}
+                    />
+                    <span className="ml-2">비율 환불</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  플레이한 홀 수
+                </label>
+                <select
+                  value={refundDetails.holesPlayed}
+                  onChange={(e) => setRefundDetails({...refundDetails, holesPlayed: parseInt(e.target.value) as any})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {!refundDetails.usePercentageMode ? (
+                    // 정액 방식 옵션
+                    Object.entries(REFUND_POLICIES.holeOut).map(([hole, policy]) => (
+                      <option key={hole} value={hole}>
+                        {policy.description}
+                      </option>
+                    ))
+                  ) : (
+                    // 비율 방식 옵션
+                    Object.entries(REFUND_POLICIES.holeOutPercentage).map(([hole, policy]) => (
+                      <option key={hole} value={hole}>
+                        {policy.description}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </>
           )}
           
           {/* 일별 취소 상세 */}
@@ -264,7 +320,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
             </>
           )}
           
-          {/* 커스텀 환불률 */}
+          {/* 커스텀 환불 설정 */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <label className="flex items-center gap-2 mb-3">
               <input
@@ -273,28 +329,38 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
                 onChange={(e) => setRefundDetails({...refundDetails, useCustomRate: e.target.checked})}
                 className="w-4 h-4 text-blue-600 rounded"
               />
-              <span className="text-sm font-medium text-gray-700">환불률 직접 설정</span>
+              <span className="text-sm font-medium text-gray-700">환불 금액 직접 설정</span>
             </label>
             
             {refundDetails.useCustomRate && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={refundDetails.customRate || ''}
-                  onChange={(e) => setRefundDetails({...refundDetails, customRate: parseFloat(e.target.value)})}
-                  placeholder="환불률 %"
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-600">%</span>
-                <span className="text-xs text-gray-500">
-                  (기본: {refundType === REFUND_TYPES.HOLE_OUT ? 
-                    (REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut]?.rate || 0) * 100 :
-                    refundType === REFUND_TYPES.DAILY_CANCELLATION ?
-                    (REFUND_POLICIES.dailyCancellation[refundReason as keyof typeof REFUND_POLICIES.dailyCancellation]?.rate || 0) * 100 :
-                    80}%)
-                </span>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">환불 금액 직접 입력</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="1000000"
+                      value={refundDetails.customAmount || ''}
+                      onChange={(e) => setRefundDetails({...refundDetails, customAmount: parseInt(e.target.value) || null})}
+                      placeholder="예: 64000"
+                      className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-600">원</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    예시: 8홀 아웃 = 64,000원 (그린피 50,000 + 카트비 14,000)
+                  </p>
+                </div>
+                
+                <div className="text-xs text-gray-500 border-t pt-2">
+                  <span className="font-medium">참고:</span>
+                  <div className="mt-1 space-y-0.5">
+                    <div>7홀: 71,000원 (그린피 55,000 + 카트비 16,000)</div>
+                    <div>8홀: 64,000원 (그린피 50,000 + 카트비 14,000)</div>
+                    <div>9홀: 57,500원 (그린피 45,000 + 카트비 12,500)</div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -322,18 +388,35 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
             
             {refundType === REFUND_TYPES.HOLE_OUT && (
               <>
-                <div className="flex justify-between text-sm">
-                  <span>1일 그린피</span>
-                  <span>{dailyGreenFee.toLocaleString()}원</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>1일 카트비</span>
-                  <span>{dailyCartFee.toLocaleString()}원</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>환불률</span>
-                  <span>{(REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut]?.rate || 0) * 100}%</span>
-                </div>
+                {!refundDetails.usePercentageMode ? (
+                  // 정액 방식
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span>환불 그린피</span>
+                      <span>{(REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut]?.greenFee || 0).toLocaleString()}원</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>환불 카트비</span>
+                      <span>{(REFUND_POLICIES.holeOut[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOut]?.cartFee || 0).toLocaleString()}원</span>
+                    </div>
+                  </>
+                ) : (
+                  // 비율 방식
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span>1일 그린피</span>
+                      <span>{dailyGreenFee.toLocaleString()}원</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>1일 카트비</span>
+                      <span>{dailyCartFee.toLocaleString()}원</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>환불률</span>
+                      <span>{(REFUND_POLICIES.holeOutPercentage[refundDetails.holesPlayed as keyof typeof REFUND_POLICIES.holeOutPercentage]?.rate || 0) * 100}%</span>
+                    </div>
+                  </>
+                )}
               </>
             )}
             

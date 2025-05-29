@@ -1,7 +1,83 @@
 // 환불 정책 설정
 export const REFUND_POLICIES = {
-  // 홀아웃 환불 비율
+  // 홀아웃 환불 - 정액 방식 (순천 파인힐스 기준)
   holeOut: {
+    7: { 
+      greenFee: 55000, 
+      cartFee: 16000, 
+      total: 71000,
+      description: "7홀 아웃 (그린피 55,000원 + 카트비 16,000원)"
+    },
+    8: { 
+      greenFee: 50000, 
+      cartFee: 14000, 
+      total: 64000,
+      description: "8홀 아웃 (그린피 50,000원 + 카트비 14,000원)"
+    },
+    9: { 
+      greenFee: 45000, 
+      cartFee: 12500, 
+      total: 57500,
+      description: "9홀 아웃 (그린피 45,000원 + 카트비 12,500원)"
+    },
+    10: { 
+      greenFee: 40000, 
+      cartFee: 11000, 
+      total: 51000,
+      description: "10홀 아웃 (그린피 40,000원 + 카트비 11,000원)"
+    },
+    11: { 
+      greenFee: 35000, 
+      cartFee: 9500, 
+      total: 44500,
+      description: "11홀 아웃 (그린피 35,000원 + 카트비 9,500원)"
+    },
+    12: { 
+      greenFee: 30000, 
+      cartFee: 8000, 
+      total: 38000,
+      description: "12홀 아웃 (그린피 30,000원 + 카트비 8,000원)"
+    },
+    13: { 
+      greenFee: 25000, 
+      cartFee: 6500, 
+      total: 31500,
+      description: "13홀 아웃 (그린피 25,000원 + 카트비 6,500원)"
+    },
+    14: { 
+      greenFee: 20000, 
+      cartFee: 5000, 
+      total: 25000,
+      description: "14홀 아웃 (그린피 20,000원 + 카트비 5,000원)"
+    },
+    15: { 
+      greenFee: 15000, 
+      cartFee: 3500, 
+      total: 18500,
+      description: "15홀 아웃 (그린피 15,000원 + 카트비 3,500원)"
+    },
+    16: { 
+      greenFee: 10000, 
+      cartFee: 2000, 
+      total: 12000,
+      description: "16홀 아웃 (그린피 10,000원 + 카트비 2,000원)"
+    },
+    17: { 
+      greenFee: 5000, 
+      cartFee: 1000, 
+      total: 6000,
+      description: "17홀 아웃 (그린피 5,000원 + 카트비 1,000원)"
+    },
+    18: { 
+      greenFee: 0, 
+      cartFee: 0, 
+      total: 0,
+      description: "18홀 완주 (환불 없음)"
+    }
+  },
+  
+  // 홀아웃 환불 비율 방식 (기존 방식 - 선택적 사용)
+  holeOutPercentage: {
     9: { rate: 0.5, description: "9홀 플레이 (50% 환불)" },
     12: { rate: 0.3, description: "12홀 플레이 (30% 환불)" },
     15: { rate: 0.2, description: "15홀 플레이 (20% 환불)" },
@@ -71,9 +147,17 @@ export function calculateRefund(
 ): number {
   switch (refundType) {
     case 'HOLE_OUT':
-      const holesPlayed = details.holesPlayed || 18;
-      const policy = REFUND_POLICIES.holeOut[holesPlayed as keyof typeof REFUND_POLICIES.holeOut];
-      return originalAmount * (policy?.rate || 0);
+      const holesPlayed = details.holesPlayed || 9;
+      // 정액 방식
+      if (!details.usePercentageMode) {
+        const policy = REFUND_POLICIES.holeOut[holesPlayed as keyof typeof REFUND_POLICIES.holeOut];
+        return policy?.total || 0;
+      }
+      // 비율 방식
+      else {
+        const percentagePolicy = REFUND_POLICIES.holeOutPercentage[holesPlayed as keyof typeof REFUND_POLICIES.holeOutPercentage];
+        return originalAmount * (percentagePolicy?.rate || 0);
+      }
       
     case 'DAILY_CANCELLATION':
       const reason = details.reason || 'other';
