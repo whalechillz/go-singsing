@@ -99,6 +99,18 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
     
     try {
       // 환불 내역 저장 (음수 금액으로)
+      // 환불 상세 정보를 note에 포함
+      const refundTypeText = refundType === REFUND_TYPES.HOLE_OUT ? '홀아웃' : 
+                           refundType === REFUND_TYPES.DAILY_CANCELLATION ? '일별 취소' : '전체 취소';
+      const refundInfo = {
+        type: refundTypeText,
+        reason: refundReason,
+        account: refundAccount,
+        originalAmount: payment.amount,
+        refundAmount: refundAmount,
+        refundRate: Math.round((refundAmount / payment.amount) * 100) + '%'
+      };
+      
       const refundData = {
         participant_id: participant.id,
         tour_id: tour.id,
@@ -106,27 +118,12 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
         amount: -refundAmount, // 음수로 저장
         payment_method: '환불',
         payment_status: 'refunded',
-        payment_type: 'refund',
-        refund_type: refundType,
-        refund_reason: refundReason,
-        refund_account: refundAccount,
-        refund_date: new Date().toISOString().split('T')[0],
-        refund_items: {
-          originalAmount: payment.amount,
-          refundRate: refundAmount / (refundType === REFUND_TYPES.HOLE_OUT ? dailyTotal : 
-                       refundType === REFUND_TYPES.DAILY_CANCELLATION ? dailyTotal * refundDetails.daysRefunded : 
-                       payment.amount),
-          details: refundDetails,
-          breakdown: {
-            greenFee: refundType === REFUND_TYPES.HOLE_OUT || refundType === REFUND_TYPES.DAILY_CANCELLATION ? dailyGreenFee : 0,
-            cartFee: refundType === REFUND_TYPES.HOLE_OUT || refundType === REFUND_TYPES.DAILY_CANCELLATION ? dailyCartFee : 0
-          }
-        },
-        refund_processed_by: '관리자', // TODO: 실제 사용자 정보
-        original_payment_id: payment.id,
-        note: `${participant.name}님 ${refundType === REFUND_TYPES.HOLE_OUT ? '홀아웃' : 
-               refundType === REFUND_TYPES.DAILY_CANCELLATION ? '일별 취소' : '전체 취소'} 환불`,
-        created_at: new Date().toISOString()
+        payment_type: payment.payment_type || 'deposit', // 원본 결제의 payment_type 사용
+        payment_date: new Date().toISOString().split('T')[0],
+        receipt_type: '',
+        receipt_requested: false,
+        is_group_payment: false,
+        note: `${participant.name}님 ${refundTypeText} 환불 | 환불계좌: ${refundAccount} | 사유: ${refundReason || '-'} | 환불률: ${Math.round((refundAmount / payment.amount) * 100)}%`
       };
       
       const { error: insertError } = await supabase
