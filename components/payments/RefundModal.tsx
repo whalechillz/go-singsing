@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { REFUND_POLICIES, REFUND_TYPES, REFUND_REASONS, calculateRefund } from '@/constants/refundPolicies';
-import { sendSlackNotification, createRefundNotification, needsApproval } from '@/lib/slackNotifications';
+// import { sendSlackNotification, createRefundNotification, needsApproval } from '@/lib/slackNotifications';
 import { X, Calculator, AlertCircle } from 'lucide-react';
 
 interface RefundModalProps {
@@ -72,7 +72,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
           
         case REFUND_TYPES.DAILY_CANCELLATION:
           baseAmount = dailyTotal * refundDetails.daysRefunded;
-          const reasonPolicy = REFUND_POLICIES.dailyCancellation[refundReason];
+          const reasonPolicy = REFUND_POLICIES.dailyCancellation[refundReason as keyof typeof REFUND_POLICIES.dailyCancellation];
           refundRate = reasonPolicy?.rate || 0;
           break;
           
@@ -136,30 +136,28 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
       if (insertError) throw insertError;
       
       // 환불 금액에 따른 처리
-      const requiresApproval = needsApproval(refundAmount);
+      const requiresApproval = refundAmount >= 1000000; // 100만원 이상은 승인 필요
       
       if (requiresApproval) {
-        // 승인 필요 - 슬랙 알림
-        const { message, details } = createRefundNotification(
-          participant.name,
-          refundAmount,
-          refundReason || refundType,
-          true
-        );
-        
-        await sendSlackNotification('approval', message, details);
+        // 승인 필요 - 슬랙 알림 (추후 구현)
+        // const { message, details } = createRefundNotification(
+        //   participant.name,
+        //   refundAmount,
+        //   refundReason || refundType,
+        //   true
+        // );
+        // await sendSlackNotification('approval', message, details);
         
         alert(`환불 승인 요청이 접수되었습니다.\n환불 금액: ${refundAmount.toLocaleString()}원\n\n⚠️ 100만원 이상은 상급자 승인이 필요합니다.`);
       } else {
-        // 즉시 처리 - 슬랙 알림
-        const { message, details } = createRefundNotification(
-          participant.name,
-          refundAmount,
-          refundReason || refundType,
-          false
-        );
-        
-        await sendSlackNotification('refund', message, details);
+        // 즉시 처리 - 슬랙 알림 (추후 구현)
+        // const { message, details } = createRefundNotification(
+        //   participant.name,
+        //   refundAmount,
+        //   refundReason || refundType,
+        //   false
+        // );
+        // await sendSlackNotification('refund', message, details);
         
         alert(`환불 처리가 완료되었습니다.\n환불 금액: ${refundAmount.toLocaleString()}원`);
       }
@@ -364,7 +362,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
                 <span>총 환불 금액</span>
                 <span className="text-red-600">{refundAmount.toLocaleString()}원</span>
               </div>
-              {needsApproval(refundAmount) && (
+              {refundAmount >= 1000000 && (
                 <div className="mt-2 text-sm text-orange-600 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   100만원 이상은 상급자 승인이 필요합니다

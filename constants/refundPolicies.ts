@@ -72,12 +72,12 @@ export function calculateRefund(
   switch (refundType) {
     case 'HOLE_OUT':
       const holesPlayed = details.holesPlayed || 18;
-      const policy = REFUND_POLICIES.holeOut[holesPlayed];
+      const policy = REFUND_POLICIES.holeOut[holesPlayed as keyof typeof REFUND_POLICIES.holeOut];
       return originalAmount * (policy?.rate || 0);
       
     case 'DAILY_CANCELLATION':
       const reason = details.reason || 'other';
-      const policy2 = REFUND_POLICIES.dailyCancellation[reason];
+      const policy2 = REFUND_POLICIES.dailyCancellation[reason as keyof typeof REFUND_POLICIES.dailyCancellation];
       const daysRefunded = details.daysRefunded || 1;
       const dailyAmount = originalAmount / (details.totalDays || 1);
       return dailyAmount * daysRefunded * (policy2?.rate || 0);
