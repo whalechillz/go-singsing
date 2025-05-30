@@ -2,23 +2,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Users, UserPlus, Edit, Trash2, Mail, Phone } from "lucide-react";
 
 type Participant = {
@@ -58,9 +41,9 @@ export default function TourParticipantsPage() {
     try {
       setLoading(true);
       
-      // 투어 정보 가져오기 (schedules가 실제 투어)
+      // 투어 정보 가져오기 (singsing_tours가 실제 투어)
       const { data: tourData, error: tourError } = await supabase
-        .from("singsing_schedules")
+        .from("singsing_tours")
         .select("*")
         .eq("id", tourId)
         .single();
@@ -121,13 +104,13 @@ export default function TourParticipantsPage() {
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-500">결제완료</Badge>;
+        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">결제완료</span>;
       case 'partial':
-        return <Badge className="bg-yellow-500">부분결제</Badge>;
+        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">부분결제</span>;
       case 'pending':
-        return <Badge variant="outline">대기중</Badge>;
+        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">대기중</span>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{status}</span>;
     }
   };
 
@@ -143,132 +126,125 @@ export default function TourParticipantsPage() {
           <h1 className="text-3xl font-bold">{tour.title}</h1>
           <p className="text-gray-500">참가자 관리</p>
         </div>
-        <Button>
-          <UserPlus className="w-4 h-4 mr-2" />
+        <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2">
+          <UserPlus className="w-4 h-4" />
           참가자 추가
-        </Button>
+        </button>
       </div>
 
       {/* 요약 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              총 참가자
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {tour.current_participants || 0} / {tour.max_participants || 40}명
+        <div className="bg-white rounded-lg border p-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">총 참가자</p>
+              <p className="text-2xl font-bold">
+                {tour.current_participants || 0} / {tour.max_participants || 40}명
+              </p>
+              <p className="text-xs text-gray-500">
+                {((tour.current_participants || 0) / (tour.max_participants || 40) * 100).toFixed(0)}% 예약됨
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {((tour.current_participants || 0) / (tour.max_participants || 40) * 100).toFixed(0)}% 예약됨
-            </p>
-          </CardContent>
-        </Card>
+            <Users className="h-8 w-8 text-gray-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              결제 완료
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {participants.filter(p => p.payment_status === 'completed').length}명
+        <div className="bg-white rounded-lg border p-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">결제 완료</p>
+              <p className="text-2xl font-bold">
+                {participants.filter(p => p.payment_status === 'completed').length}명
+              </p>
+              <p className="text-xs text-gray-500">
+                전체의 {((participants.filter(p => p.payment_status === 'completed').length / participants.length) * 100).toFixed(0)}%
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              전체의 {((participants.filter(p => p.payment_status === 'completed').length / participants.length) * 100).toFixed(0)}%
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              그룹/팀 현황
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {new Set(participants.map(p => p.group_name).filter(Boolean)).size}개 그룹
+        <div className="bg-white rounded-lg border p-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">그룹/팀 현황</p>
+              <p className="text-2xl font-bold">
+                {new Set(participants.map(p => p.group_name).filter(Boolean)).size}개 그룹
+              </p>
+              <p className="text-xs text-gray-500">
+                {new Set(participants.map(p => p.team_number).filter(Boolean)).size}개 팀
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {new Set(participants.map(p => p.team_number).filter(Boolean)).size}개 팀
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* 참가자 테이블 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>참가자 목록</CardTitle>
-          <CardDescription>
+      <div className="bg-white rounded-lg border">
+        <div className="p-6">
+          <h2 className="text-lg font-semibold">참가자 목록</h2>
+          <p className="text-sm text-gray-500 mt-1">
             총 {participants.length}명의 참가자가 등록되어 있습니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>이름</TableHead>
-                <TableHead>연락처</TableHead>
-                <TableHead>이메일</TableHead>
-                <TableHead>그룹</TableHead>
-                <TableHead>팀</TableHead>
-                <TableHead>성별</TableHead>
-                <TableHead>결제상태</TableHead>
-                <TableHead>등록일</TableHead>
-                <TableHead>액션</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-t border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">연락처</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이메일</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">그룹</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팀</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">성별</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">결제상태</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">등록일</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
               {participants.map((participant) => (
-                <TableRow key={participant.id}>
-                  <TableCell className="font-medium">{participant.name}</TableCell>
-                  <TableCell>
+                <tr key={participant.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{participant.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Phone className="w-3 h-3" />
                       {participant.phone}
                     </div>
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {participant.email && (
                       <div className="flex items-center gap-1">
                         <Mail className="w-3 h-3" />
                         {participant.email}
                       </div>
                     )}
-                  </TableCell>
-                  <TableCell>{participant.group_name || '-'}</TableCell>
-                  <TableCell>{participant.team_number || '-'}</TableCell>
-                  <TableCell>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{participant.group_name || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{participant.team_number || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {participant.gender === 'male' ? '남' : participant.gender === 'female' ? '여' : '-'}
-                  </TableCell>
-                  <TableCell>{getPaymentStatusBadge(participant.payment_status!)}</TableCell>
-                  <TableCell>{new Date(participant.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{getPaymentStatusBadge(participant.payment_status!)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(participant.created_at).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
+                      <button className="p-1 hover:bg-gray-100 rounded">
                         <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
+                      </button>
+                      <button 
+                        className="p-1 hover:bg-gray-100 rounded"
                         onClick={() => handleDeleteParticipant(participant.id)}
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
+                      </button>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
