@@ -1,43 +1,37 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import TourListSimple from "@/components/admin/tours/TourListSimple";
+import TourListEnhanced from "@/components/admin/tours/TourListEnhanced";
 
 type Tour = {
   id: string;
   title: string;
   start_date: string;
   end_date: string;
-  golf_course?: string;
+  driver_name: string;
+  price: number;
+  max_participants: number;
   current_participants?: number;
-  max_participants?: number;
+  status?: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  golf_course?: string;
+  departure_location?: string;
 };
 
 const TourListPage: React.FC = () => {
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const searchParams = useSearchParams();
-  const productId = searchParams.get('product');
 
   const fetchTours = async () => {
     setLoading(true);
     setError("");
     
     try {
-      // 기본 쿼리 생성
-      let query = supabase
+      // 투어 기본 정보 가져오기
+      const { data: toursData, error: toursError } = await supabase
         .from("singsing_tours")
         .select("*")
         .order("start_date", { ascending: false });
-      
-      // product ID가 있으면 필터링
-      if (productId) {
-        query = query.eq("tour_product_id", productId);
-      }
-      
-      const { data: toursData, error: toursError } = await query;
       
       if (toursError) throw toursError;
       
@@ -51,13 +45,10 @@ const TourListPage: React.FC = () => {
               .eq("tour_id", tour.id);
             
             return {
-              id: tour.id,
-              title: tour.title,
-              start_date: tour.start_date,
-              end_date: tour.end_date,
-              golf_course: tour.golf_course,
+              ...tour,
               current_participants: count || 0,
-              max_participants: tour.max_participants || 40
+              max_participants: tour.max_participants || 40, // 기본값 40명
+              price: tour.price || 0
             };
           })
         );
@@ -73,7 +64,7 @@ const TourListPage: React.FC = () => {
 
   useEffect(() => {
     fetchTours();
-  }, [productId]); // productId가 변경될 때마다 다시 조회
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
@@ -99,6 +90,8 @@ const TourListPage: React.FC = () => {
       if (error) throw error;
       
       setTours((prev) => prev.filter((t) => t.id !== id));
+      
+      // 성공 메시지 표시
       alert("투어가 삭제되었습니다.");
       
     } catch (error: any) {
@@ -106,12 +99,17 @@ const TourListPage: React.FC = () => {
     }
   };
 
+  const handleRefresh = () => {
+    fetchTours();
+  };
+
   return (
-    <TourListSimple
+    <TourListEnhanced
       tours={tours}
       loading={loading}
       error={error}
       onDelete={handleDelete}
+      onRefresh={handleRefresh}
     />
   );
 };
