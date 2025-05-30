@@ -51,6 +51,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'participants'>('date');
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
+  const [dropdownPositions, setDropdownPositions] = useState<Record<string, 'bottom' | 'top'>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 클릭 외부 영역 감지
@@ -301,7 +302,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
       </div>
 
       {/* 투어 목록 */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow">
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -330,7 +331,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
             </Link>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -416,6 +418,17 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            
+                            // 드롭다운 위치 계산
+                            const button = e.currentTarget;
+                            const rect = button.getBoundingClientRect();
+                            const windowHeight = window.innerHeight;
+                            const dropdownHeight = 200; // 대략적인 드롭다운 높이
+                            
+                            // 화면 하단에 공간이 부족하면 위로 표시
+                            const position = rect.bottom + dropdownHeight > windowHeight - 50 ? 'top' : 'bottom';
+                            setDropdownPositions(prev => ({ ...prev, [tour.id]: position }));
+                            
                             setShowDropdown(showDropdown === tour.id ? null : tour.id);
                           }}
                           className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
@@ -424,7 +437,9 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                         </button>
                         
                         {showDropdown === tour.id && (
-                          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                          <div className={`absolute right-0 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 ${
+                            dropdownPositions[tour.id] === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
+                          }`}>
                             <div className="py-1" role="menu">
                               <Link
                                 href={`/admin/tours/${tour.id}`}
@@ -467,6 +482,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
