@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import TourListSimple from "@/components/admin/tours/TourListSimple";
 
@@ -17,17 +18,26 @@ const TourListPage: React.FC = () => {
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const searchParams = useSearchParams();
+  const productId = searchParams.get('product');
 
   const fetchTours = async () => {
     setLoading(true);
     setError("");
     
     try {
-      // 투어 기본 정보 가져오기
-      const { data: toursData, error: toursError } = await supabase
+      // 기본 쿼리 생성
+      let query = supabase
         .from("singsing_tours")
         .select("*")
         .order("start_date", { ascending: false });
+      
+      // product ID가 있으면 필터링
+      if (productId) {
+        query = query.eq("tour_product_id", productId);
+      }
+      
+      const { data: toursData, error: toursError } = await query;
       
       if (toursError) throw toursError;
       
@@ -63,7 +73,7 @@ const TourListPage: React.FC = () => {
 
   useEffect(() => {
     fetchTours();
-  }, []);
+  }, [productId]); // productId가 변경될 때마다 다시 조회
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;

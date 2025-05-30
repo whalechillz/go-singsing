@@ -26,8 +26,7 @@ const ProductListSimple: React.FC<ProductListSimpleProps> = ({
     <div className="max-w-5xl mx-auto p-6">
       {/* 헤더 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold">여행상품 관리</h1>
+        <div className="flex justify-end">
           <Link
             href="/admin/tour-products/new"
             className="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors"
