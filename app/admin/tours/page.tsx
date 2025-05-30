@@ -1,14 +1,16 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import TourListSimple from "@/components/admin/tours/TourListSimple";
 
 type Tour = {
   id: string;
   title: string;
   start_date: string;
   end_date: string;
-  driver_name: string;
+  golf_course?: string;
+  current_participants?: number;
+  max_participants?: number;
 };
 
 const TourListPage: React.FC = () => {
@@ -16,78 +18,97 @@ const TourListPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-  useEffect(() => {
-    const fetchTours = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
+  const fetchTours = async () => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      // 투어 기본 정보와 상품 정보 조인해서 가져오기
+      const { data: toursData, error: toursError } = await supabase
         .from("singsing_tours")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select(`
+          *,
+          tour_products (
+            golf_course
+          )
+        `)
+        .order("start_date", { ascending: false });
       
-      if (error) {
-        setError(error.message);
-      } else if (data) {
-        setTours(data as Tour[]);
+      if (toursError) throw toursError;
+      
+      // 각 투어의 참가자 수 계산
+      if (toursData) {
+        const toursWithParticipants = await Promise.all(
+          toursData.map(async (tour) => {
+            const { count } = await supabase
+              .from("singsing_participants")
+              .select("*", { count: 'exact', head: true })
+              .eq("tour_id", tour.id);
+            
+            return {
+              id: tour.id,
+              title: tour.title,
+              start_date: tour.start_date,
+              end_date: tour.end_date,
+              golf_course: tour.tour_products?.golf_course || tour.golf_course,
+              current_participants: count || 0,
+              max_participants: tour.max_participants || 40
+            };
+          })
+        );
+        
+        setTours(toursWithParticipants);
       }
+    } catch (error: any) {
+      setError(error.message || "투어 목록을 불러오는데 실패했습니다.");
+    } finally {
       setLoading(false);
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchTours();
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    const { error } = await supabase.from("singsing_tours").delete().eq("id", id);
-    if (error) {
+    if (!window.confirm("정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
+    
+    try {
+      // 관련 참가자가 있는지 확인
+      const { count } = await supabase
+        .from("singsing_participants")
+        .select("*", { count: 'exact', head: true })
+        .eq("tour_id", id);
+      
+      if (count && count > 0) {
+        if (!window.confirm(`이 투어에는 ${count}명의 참가자가 등록되어 있습니다. 정말 삭제하시겠습니까?`)) {
+          return;
+        }
+      }
+      
+      const { error } = await supabase
+        .from("singsing_tours")
+        .delete()
+        .eq("id", id);
+        
+      if (error) throw error;
+      
+      setTours((prev) => prev.filter((t) => t.id !== id));
+      alert("투어가 삭제되었습니다.");
+      
+    } catch (error: any) {
       alert("삭제 실패: " + error.message);
-      return;
     }
-    setTours((prev) => prev.filter((t) => t.id !== id));
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold dark:text-white">투어 스케쥴 관리</h1>
-        <div className="flex gap-2">
-          {/* <Link href="/admin/boarding-places" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700" aria-label="탑승지 관리">탑승지 관리</Link> */}
-          <Link href="/admin/tours/new" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700" aria-label="투어 생성">+ 투어 생성</Link>
-        </div>
-      </div>
-      {loading ? (
-        <div className="text-center py-8 text-gray-500">불러오는 중...</div>
-      ) : error ? (
-        <div className="text-center py-8 text-red-500">{error}</div>
-      ) : (
-        <table className="w-full bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
-          <thead>
-            <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-              <th className="py-2 px-4 text-left">제목</th>
-              <th className="py-2 px-4 text-left">날짜</th>
-              <th className="py-2 px-4 text-left">기사님</th>
-              <th className="py-2 px-4">관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tours.map((tour) => (
-              <tr key={tour.id} className="border-t border-gray-200 dark:border-gray-700">
-                <td className="py-2 px-4 dark:text-gray-100">
-                  <Link href={`/admin/tours/${tour.id}`} className="underline text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-100">
-                    {tour.title}
-                  </Link>
-                </td>
-                <td className="py-2 px-4 dark:text-gray-100">{tour.start_date} ~ {tour.end_date}</td>
-                <td className="py-2 px-4 dark:text-gray-100">{tour.driver_name}</td>
-                <td className="py-2 px-4 flex gap-2">
-                  <Link href={`/admin/tours/${tour.id}/edit`} className="text-blue-800 dark:text-blue-400 underline hover:text-blue-600 focus:text-blue-600 dark:hover:text-blue-300 dark:focus:text-blue-300" aria-label="수정">수정</Link>
-                  <button className="text-red-600 dark:text-red-400 underline hover:text-red-400 focus:text-red-400" aria-label="삭제" onClick={() => handleDelete(tour.id)}>삭제</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+    <TourListSimple
+      tours={tours}
+      loading={loading}
+      error={error}
+      onDelete={handleDelete}
+    />
   );
 };
 
-export default TourListPage; 
+export default TourListPage;

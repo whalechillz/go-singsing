@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -30,34 +30,50 @@ const initialForm: TourProductForm = {
 };
 
 const TourProductEditPage = () => {
-  const router = useRouter();
-  const params = useParams();
-  const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
   const [form, setForm] = useState<TourProductForm>(initialForm);
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState("");
   const [courseInput, setCourseInput] = useState("");
+  const router = useRouter();
+  const params = useParams();
+  const productId = params.id as string;
 
   useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    supabase.from("tour_products").select("id, name, hotel, golf_course, usage_round, usage_hotel, usage_meal, usage_locker, usage_bus, usage_tour, courses").eq("id", id).single().then(({ data, error }) => {
-      if (error) setError(error.message);
-      else if (data) setForm({
-        name: data.name || "",
-        golf_course: data.golf_course || "",
-        hotel: data.hotel || "",
-        usage_round: data.usage_round || "",
-        usage_hotel: data.usage_hotel || "",
-        usage_meal: data.usage_meal || "",
-        usage_locker: data.usage_locker || "",
-        usage_bus: data.usage_bus || "",
-        usage_tour: data.usage_tour || "",
-        courses: Array.isArray(data.courses) ? data.courses : [],
-      });
-      setLoading(false);
-    });
-  }, [id]);
+    fetchProduct();
+  }, [productId]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoadingData(true);
+      const { data, error } = await supabase
+        .from("tour_products")
+        .select("*")
+        .eq("id", productId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setForm({
+          name: data.name || "",
+          golf_course: data.golf_course || "",
+          hotel: data.hotel || "",
+          usage_round: data.usage_round || "",
+          usage_hotel: data.usage_hotel || "",
+          usage_meal: data.usage_meal || "",
+          usage_locker: data.usage_locker || "",
+          usage_bus: data.usage_bus || "",
+          usage_tour: data.usage_tour || "",
+          courses: data.courses || [],
+        });
+      }
+    } catch (error: any) {
+      setError(error.message || "상품 정보를 불러오는데 실패했습니다.");
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -93,81 +109,233 @@ const TourProductEditPage = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("tour_products").update({ ...form, courses: form.courses }).eq("id", id);
+    const { error } = await supabase
+      .from("tour_products")
+      .update({ ...form, courses: form.courses })
+      .eq("id", productId);
     setLoading(false);
     if (error) setError(error.message);
-    else router.push("/admin/tour-products");
+    else {
+      alert("상품이 수정되었습니다.");
+      router.push("/admin/tour-products");
+    }
   };
 
-  if (loading) return <div className="text-center py-8 text-gray-500">불러오는 중...</div>;
+  if (loadingData) {
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
+          <p className="mt-2 text-gray-500">상품 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-lg mx-auto bg-white dark:bg-gray-900 rounded-lg shadow p-8">
-      <h1 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">여행상품 수정</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">상품명</span>
-          <input name="name" value={form.name} onChange={handleChange} placeholder="상품명" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" required aria-label="상품명" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">골프장</span>
-          <input name="golf_course" value={form.golf_course} onChange={handleChange} placeholder="골프장" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" required aria-label="골프장" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">숙소</span>
-          <input name="hotel" value={form.hotel} onChange={handleChange} placeholder="숙소" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" required aria-label="숙소" />
-        </label>
-        <div className="font-bold mt-4 text-gray-800 dark:text-gray-200">이용 안내</div>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">라운딩 규정</span>
-          <textarea name="usage_round" value={form.usage_round} onChange={handleChange} placeholder="라운딩 규정" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="라운딩 규정" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">숙소 이용</span>
-          <textarea name="usage_hotel" value={form.usage_hotel} onChange={handleChange} placeholder="숙소 이용" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="숙소 이용" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">식사 안내</span>
-          <textarea name="usage_meal" value={form.usage_meal} onChange={handleChange} placeholder="식사 안내" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="식사 안내" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">락카 이용</span>
-          <textarea name="usage_locker" value={form.usage_locker} onChange={handleChange} placeholder="락카 이용" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="락카 이용" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">버스 이용</span>
-          <textarea name="usage_bus" value={form.usage_bus} onChange={handleChange} placeholder="버스 이용" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="버스 이용" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">관광지 투어</span>
-          <textarea name="usage_tour" value={form.usage_tour} onChange={handleChange} placeholder="관광지 투어" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[32px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" aria-label="관광지 투어" />
-        </label>
-        <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-          <span className="font-medium">코스명(여러 개)</span>
-          <div className="flex gap-2">
-            <input
-              value={courseInput}
-              onChange={handleCourseInputChange}
-              onKeyDown={handleCourseInputKeyDown}
-              placeholder="코스명 입력 후 Enter"
-              className="border rounded px-2 py-1 flex-1"
-            />
-            <button type="button" onClick={handleAddCourse} className="bg-blue-600 text-white px-3 py-1 rounded">추가</button>
+    <div className="max-w-2xl mx-auto p-6">
+      <div className="bg-white rounded-lg shadow-sm p-8">
+        <h1 className="text-xl font-bold mb-6">여행상품 수정</h1>
+        
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* 기본 정보 */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                상품명 <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="상품명"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                골프장 <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="golf_course"
+                value={form.golf_course}
+                onChange={handleChange}
+                placeholder="골프장"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                숙소 <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="hotel"
+                value={form.hotel}
+                onChange={handleChange}
+                placeholder="숙소"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {form.courses.map((c, i) => (
-              <span key={i} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center gap-1">
-                {c}
-                <button type="button" onClick={() => handleRemoveCourse(i)} className="ml-1 text-xs text-red-500">×</button>
-              </span>
-            ))}
+
+          {/* 이용 안내 */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-800">이용 안내</h2>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                라운딩 규정
+              </label>
+              <textarea
+                name="usage_round"
+                value={form.usage_round}
+                onChange={handleChange}
+                placeholder="라운딩 규정"
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                숙소 이용
+              </label>
+              <textarea
+                name="usage_hotel"
+                value={form.usage_hotel}
+                onChange={handleChange}
+                placeholder="숙소 이용"
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                식사 안내
+              </label>
+              <textarea
+                name="usage_meal"
+                value={form.usage_meal}
+                onChange={handleChange}
+                placeholder="식사 안내"
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                락카 이용
+              </label>
+              <textarea
+                name="usage_locker"
+                value={form.usage_locker}
+                onChange={handleChange}
+                placeholder="락카 이용"
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                버스 이용
+              </label>
+              <textarea
+                name="usage_bus"
+                value={form.usage_bus}
+                onChange={handleChange}
+                placeholder="버스 이용"
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                관광지 투어
+              </label>
+              <textarea
+                name="usage_tour"
+                value={form.usage_tour}
+                onChange={handleChange}
+                placeholder="관광지 투어"
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                코스명(여러 개)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  value={courseInput}
+                  onChange={handleCourseInputChange}
+                  onKeyDown={handleCourseInputKeyDown}
+                  placeholder="코스명 입력 후 Enter"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCourse}
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                >
+                  추가
+                </button>
+              </div>
+              {form.courses.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {form.courses.map((c, i) => (
+                    <span key={i} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                      {c}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCourse(i)}
+                        className="ml-2 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </label>
-        {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-        <button type="submit" className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 focus:bg-blue-700 mt-4" disabled={loading}>{loading ? "저장 중..." : "저장"}</button>
-      </form>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded">
+              {error}
+            </div>
+          )}
+
+          <div className="flex justify-center gap-4 pt-4">
+            <button
+              type="button"
+              onClick={() => router.push("/admin/tour-products")}
+              className="px-8 py-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-8 py-3 bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "저장 중..." : "수정"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
 
-export default TourProductEditPage; 
+export default TourProductEditPage;

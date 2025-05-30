@@ -119,14 +119,21 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
       // 환불 상세 정보를 note에 포함
       const refundTypeText = refundType === REFUND_TYPES.HOLE_OUT ? '홀아웃' : 
                            refundType === REFUND_TYPES.DAILY_CANCELLATION ? '일별 취소' : '전체 취소';
-      const refundInfo = {
-        type: refundTypeText,
-        reason: refundReason,
-        account: refundAccount,
-        originalAmount: payment.amount,
-        refundAmount: refundAmount,
-        refundRate: Math.round((refundAmount / payment.amount) * 100) + '%'
-      };
+      
+      // 환불 사유 텍스트 생성
+      let refundReasonText = '';
+      if (refundType === REFUND_TYPES.HOLE_OUT) {
+        refundReasonText = `${refundDetails.holesPlayed}홀 아웃`;
+      } else if (refundType === REFUND_TYPES.DAILY_CANCELLATION) {
+        const reasonMap = {
+          'weather': '기상악화',
+          'course_condition': '코스컨디션',
+          'customer_request': '고객요청'
+        };
+        refundReasonText = reasonMap[refundReason as keyof typeof reasonMap] || refundReason || '-';
+      } else {
+        refundReasonText = '전체취소';
+      }
       
       const refundData = {
         participant_id: participant.id,
@@ -140,7 +147,7 @@ export default function RefundModal({ payment, participant, tour, onClose, onSuc
         receipt_type: '',
         receipt_requested: false,
         is_group_payment: false,
-        note: `${participant.name}님 ${refundTypeText} 환불 | 환불계좌: ${refundAccount} | 사유: ${refundReason || '-'} | 환불률: ${Math.round((refundAmount / payment.amount) * 100)}%`
+        note: `${participant.name}님 ${refundTypeText} 환불 | 환불계좌: ${refundAccount} | 사유: ${refundReasonText} | 환불률: ${Math.round((refundAmount / payment.amount) * 100)}%`
       };
       
       const { error: insertError } = await supabase
