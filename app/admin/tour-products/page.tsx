@@ -37,7 +37,7 @@ const TourProductsPage = () => {
   };
 
   useEffect(() => { 
-    fetchProducts(); 
+    fetchProducts();
   }, []);
 
   const handleDelete = async (id: string) => {

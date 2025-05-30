@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
 import { 
   Search, 
@@ -51,6 +51,21 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'participants'>('date');
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 클릭 외부 영역 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // 투어 상태 계산
   const getTourStatus = (tour: Tour): string => {
@@ -166,8 +181,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
       {/* 헤더 및 통계 */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">투어 스케줄 관리</h1>
-          <p className="text-sm text-gray-500 mt-1">총 {stats.total}개 투어 | 진행중 {stats.ongoing}개</p>
+          <p className="text-sm text-gray-500">총 {stats.total}개 투어 | 진행중 {stats.ongoing}개</p>
         </div>
         <div className="flex gap-2">
           <button 
@@ -398,37 +412,44 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                       {((tour.price || 0) * (tour.current_participants || 0)).toLocaleString()}원
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="relative">
+                      <div className="relative" ref={showDropdown === tour.id ? dropdownRef : null}>
                         <button
-                          onClick={() => setShowDropdown(showDropdown === tour.id ? null : tour.id)}
-                          className="text-gray-400 hover:text-gray-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDropdown(showDropdown === tour.id ? null : tour.id);
+                          }}
+                          className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
                         >
                           <MoreVertical className="w-5 h-5" />
                         </button>
                         
                         {showDropdown === tour.id && (
-                          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                             <div className="py-1" role="menu">
                               <Link
                                 href={`/admin/tours/${tour.id}`}
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setShowDropdown(null)}
                               >
                                 상세보기
                               </Link>
                               <Link
                                 href={`/admin/tours/${tour.id}/edit`}
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setShowDropdown(null)}
                               >
                                 수정
                               </Link>
                               <Link
                                 href={`/admin/tours/${tour.id}/participants`}
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setShowDropdown(null)}
                               >
                                 참가자 관리
                               </Link>
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setShowDropdown(null);
                                   onDelete(tour.id);
                                 }}
