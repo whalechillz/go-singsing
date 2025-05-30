@@ -21,7 +21,7 @@ type Product = {
 
 const ProductToursPage: React.FC = () => {
   const params = useParams();
-  const productId = params.productId as string;
+  const productId = params.id as string;
   
   const [product, setProduct] = useState<Product | null>(null);
   const [tours, setTours] = useState<Tour[]>([]);
