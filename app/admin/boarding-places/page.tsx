@@ -1,7 +1,7 @@
 "use client";
 
-import BoardingPlaceManager from "@/components/BoardingPlaceManager";
+import BoardingPlaceManagerEnhanced from "@/components/BoardingPlaceManagerEnhanced";
 
 export default function BoardingPlacesPage() {
-  return <BoardingPlaceManager />;
+  return <BoardingPlaceManagerEnhanced />;
 }
