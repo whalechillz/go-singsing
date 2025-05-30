@@ -179,11 +179,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* 헤더 및 통계 */}
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-sm text-gray-500">총 {stats.total}개 투어 | 진행중 {stats.ongoing}개</p>
-        </div>
+      {/* 액션 버튼 */}
+      <div className="flex justify-end">
         <div className="flex gap-2">
           <button 
             onClick={onRefresh}
