@@ -82,7 +82,7 @@ const ProductListSimple: React.FC<ProductListSimpleProps> = ({
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600 text-right">
                     <Link
-                      href={`/admin/tours?product=${product.id}`}
+                      href={`/admin/tour-products/${product.id}/tours`}
                       className="text-blue-600 hover:text-blue-800 hover:underline"
                     >
                       일정
