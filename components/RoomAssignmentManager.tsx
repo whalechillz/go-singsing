@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, Check, AlertCircle, RefreshCw, X } from "lucide-react";
+import { Users, Check, AlertCircle, RefreshCw, X, Eye, FileText } from "lucide-react";
 
 type Participant = {
   id: string;
@@ -29,6 +29,12 @@ type Room = {
   tour_id: string;
 };
 
+type Tour = {
+  id: string;
+  tour_title: string;
+  tour_period: string;
+};
+
 type Props = { tourId: string };
 
 const roomTypeColors: Record<string, string> = {
@@ -41,6 +47,7 @@ const roomTypeColors: Record<string, string> = {
 const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [tour, setTour] = useState<Tour | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [newRoomType, setNewRoomType] = useState<string>("");
@@ -48,19 +55,24 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   const [assigning, setAssigning] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
   const [unassignedSearch, setUnassignedSearch] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewType, setPreviewType] = useState<'customer' | 'staff'>('customer');
 
   // 데이터 fetch
   const fetchData = async () => {
     setLoading(true);
     setError("");
-    const [{ data: participantsData, error: participantsError }, { data: roomsData, error: roomsError }] = await Promise.all([
+    const [{ data: participantsData, error: participantsError }, { data: roomsData, error: roomsError }, { data: tourData, error: tourError }] = await Promise.all([
       supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_seq, room_number)").eq("tour_id", tourId).order("created_at", { ascending: true }),
-      supabase.from("singsing_rooms").select("*").eq("tour_id", tourId)
+      supabase.from("singsing_rooms").select("*").eq("tour_id", tourId),
+      supabase.from("singsing_tours").select("*").eq("id", tourId).single()
     ]);
     if (participantsError) setError(participantsError.message);
     else setParticipants((participantsData || []) as Participant[]);
     if (roomsError) setError(roomsError.message);
     else setRooms((roomsData || []) as Room[]);
+    if (tourError) setError(tourError.message);
+    else setTour(tourData as Tour);
     setLoading(false);
   };
 
@@ -166,9 +178,215 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
     fetchData();
   };
 
+  // 미리보기 HTML 생성
+  const generatePreviewHTML = (type: 'customer' | 'staff') => {
+    const assignedParticipants = participants.filter(p => p.room_id);
+    const sortedParticipants = [...assignedParticipants].sort((a, b) => {
+      const roomA = rooms.find(r => r.id === a.room_id);
+      const roomB = rooms.find(r => r.id === b.room_id);
+      if (!roomA || !roomB) return 0;
+      return roomA.room_number!.localeCompare(roomB.room_number!);
+    });
+
+    const tourTitle = tour?.tour_title || "투어명";
+    const tourPeriod = tour?.tour_period || "투어 기간";
+    const isStaff = type === 'staff';
+
+    const participantRows = sortedParticipants.map((p, index) => {
+      const room = rooms.find(r => r.id === p.room_id);
+      const roomParticipants = sortedParticipants.filter(pp => pp.room_id === p.room_id);
+      const isFirstInRoom = roomParticipants.indexOf(p) === 0;
+      const roomRowspan = roomParticipants.length;
+
+      let row = `<tr class="team-row">
+        <td>${index + 1}</td>
+        <td>${p.name}</td>`;
+      
+      if (isStaff) {
+        row += `<td>${p.phone || ''}</td>`;
+      }
+      
+      if (isFirstInRoom) {
+        row += `
+        <td rowspan="${roomRowspan}">${p.team_name || ''}</td>
+        <td rowspan="${roomRowspan}">${roomRowspan}</td>
+        <td rowspan="${roomRowspan}">${room?.room_type || '미배정'}</td>`;
+        if (isStaff) {
+          row += `
+        <td rowspan="${roomRowspan}">${p.note || ''}</td>`;
+        }
+      }
+      
+      row += `
+      </tr>`;
+      return row;
+    }).join('\n');
+
+    return isStaff ? `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>팀명단 / 객실배정 (스탭용)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
+    body { background-color: #FFFFFF; color: #2D3748; line-height: 1.6; padding: 10px; }
+    .container { width: 100%; max-width: 850px; margin: 0 auto; }
+    .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #DEE2E6; }
+    .title-section { flex: 1; }
+    .info-section { text-align: right; padding: 8px 12px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #DEE2E6; margin-left: 15px; }
+    .info-section p { margin: 0; line-height: 1.5; font-size: 14px; }
+    h1 { color: #34699C; font-size: 22px; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; font-weight: 500; color: #4A5568; margin-bottom: 6px; }
+    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid #DEE2E6; padding: 8px 10px; text-align: center; }
+    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; }
+    .team-row { background-color: rgba(123, 196, 162, 0.15); }
+    .staff-note { color: #e53e3e; font-weight: bold; text-align: center; margin-bottom: 15px; padding: 8px; background-color: #fff5f5; border-radius: 4px; border: 1px solid #fed7d7; }
+    @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-container">
+      <div class="title-section">
+        <h1>팀명단 / 객실배정 (스탭용)</h1>
+        <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
+      </div>
+      <div class="info-section">
+        <p>담당: 기사님</p>
+        <p>연락처: 010-0000-0000</p>
+      </div>
+    </div>
+    <p class="staff-note">※ 이 명단은 스탭용으로 고객 연락처 정보가 포함되어 있습니다.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>NO.</th>
+            <th>성명</th>
+            <th>연락처</th>
+            <th>팀명/동호회</th>
+            <th>인원</th>
+            <th>객실</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${participantRows}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>` : `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>팀명단 / 객실배정 (고객용)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
+    body { background-color: #f5f7fa; color: #2D3748; line-height: 1.6; padding: 10px; }
+    .container { width: 100%; max-width: 850px; margin: 0 auto; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 20px; }
+    .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #3182ce; }
+    .title-section { flex: 1; }
+    .info-section { text-align: right; padding: 8px 12px; background-color: #ebf8ff; border-radius: 4px; border: 1px solid #bee3f8; margin-left: 15px; }
+    .info-section p { margin: 0; line-height: 1.5; font-size: 14px; }
+    h1 { color: #2c5282; font-size: 22px; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; font-weight: 500; color: #4A5568; margin-bottom: 6px; }
+    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: center; }
+    th { background-color: #EBF8FF; font-weight: bold; color: #2C5282; }
+    .team-row { background-color: rgba(235, 248, 255, 0.3); }
+    tbody tr:hover { background-color: #F7FAFC; }
+    .notice { padding: 15px; background-color: #FFF5F5; border: 1px solid #FED7D7; border-radius: 6px; font-size: 14px; margin-bottom: 20px; }
+    .notice-title { font-weight: bold; color: #E53E3E; margin-bottom: 8px; }
+    .notice-list { list-style-type: disc; margin-left: 20px; }
+    .notice-list li { margin-bottom: 5px; }
+    .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #E2E8F0; color: #718096; font-size: 13px; }
+    @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-container">
+      <div class="title-section">
+        <h1>팀명단 / 객실배정</h1>
+        <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
+      </div>
+      <div class="info-section">
+        <p>담당: 기사님</p>
+        <p>연락처: 010-0000-0000</p>
+      </div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>NO.</th>
+            <th>성명</th>
+            <th>팀명/동호회</th>
+            <th>인원</th>
+            <th>객실</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${participantRows}
+        </tbody>
+      </table>
+    </div>
+    <div class="notice">
+      <div class="notice-title">객실 이용 안내</div>
+      <ul class="notice-list">
+        <li><strong>체크아웃:</strong> 10시 이전 골프 이용고객(패키지팀)의 경우 퇴실 당일 골프예약시간 이전</li>
+        <li><strong>기본 제공:</strong> 샴푸, 린스, 비누, 바디워시, 로션, 스킨, 드라이기, 커피포트</li>
+        <li><strong>준비 필요:</strong> 칫솔, 치약, 면도기, 휴대폰 충전기</li>
+      </ul>
+    </div>
+    <div class="footer">
+      <p>즐거운 골프 여행 되시길 바랍니다.</p>
+      <p>싱싱골프투어 | 031-215-3990</p>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  // 미리보기 열기
+  const handlePreview = () => {
+    const html = generatePreviewHTML(previewType);
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(html);
+      newWindow.document.close();
+    }
+  };
+
   return (
     <div className="mb-8">
-      <h2 className="text-lg font-semibold mb-4 text-gray-900">객실별 참가자 그룹핑</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">객실별 참가자 그룹핑</h2>
+        <div className="flex gap-2">
+          <select
+            value={previewType}
+            onChange={(e) => setPreviewType(e.target.value as 'customer' | 'staff')}
+            className="border border-gray-300 rounded px-3 py-1.5 bg-white text-gray-900 text-sm"
+          >
+            <option value="customer">고객용</option>
+            <option value="staff">스탭용</option>
+          </select>
+          <button
+            onClick={handlePreview}
+            className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+          >
+            <Eye className="w-4 h-4" />
+            미리보기
+          </button>
+        </div>
+      </div>
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
@@ -271,4 +489,4 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   );
 };
 
-export default RoomAssignmentManager; 
+export default RoomAssignmentManager;

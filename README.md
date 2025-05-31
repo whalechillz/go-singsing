@@ -40,15 +40,46 @@ npm run dev
 ```
 
 ### 2. 배포
-```bash
-# Git 커밋 헬퍼 사용
-./git-commit.sh
 
-# 또는 수동 배포
-git add .
-git commit -m "커밋 메시지"
-git push origin main
+#### 🔥 권장: Git 커밋 스크립트 사용
+프로젝트에는 `git-commit.sh` 스크립트가 포함되어 있어 커밋과 배포를 자동화합니다.
+
+```bash
+# 실행 권한이 없을 경우
+bash git-commit.sh
+
+# 실행 권한이 있을 경우
+./git-commit.sh
 ```
+
+**스크립트 기능:**
+- 변경된 파일 자동 확인
+- 모든 변경사항 자동 스테이징
+- 커밋 메시지 입력 프롬프트
+- 자동 push 및 Vercel 배포 트리거
+- 배포 URL 안내
+
+#### 수동 배포
+```bash
+# 1. 변경사항 확인
+git status
+
+# 2. 파일 추가
+git add .
+
+# 3. 커밋
+git commit -m "커밋 메시지"
+
+# 4. 푸시 (자동 배포 트리거)
+git push origin main
+
+# 5. 강제 배포가 필요한 경우
+vercel --prod
+```
+
+#### 배포 확인
+- Production URL: https://go2.singsinggolf.kr
+- Vercel Dashboard: https://vercel.com/taksoo-kims-projects/tsx-gallery-cursor
 
 ## 📅 개발 히스토리 (2025년 5월)
 
