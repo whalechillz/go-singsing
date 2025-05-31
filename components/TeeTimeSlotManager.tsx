@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, X, Calendar, Clock } from "lucide-react";
+import { GOLF_COURSES } from "@/constants/golf-courses";
 
 type TeeTime = {
   id: string;
@@ -22,8 +23,6 @@ type TeeTimeForm = {
 
 type Props = { tourId: string; onDataChange?: () => void };
 
-const GOLF_COURSES = ["파인", "레이크", "힐스", "마운틴", "밸리"];
-
 const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [teeTimeRows, setTeeTimeRows] = useState<TeeTimeForm[]>([{ 
@@ -41,6 +40,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     tee_time: "", 
     max_players: "4" 
   });
+  const [golfCourses, setGolfCourses] = useState<string[]>(GOLF_COURSES); // 기본값으로 하드코딩된 목록 사용
   
   // 코스 로테이션 설정
   const [showRotation, setShowRotation] = useState(false);
@@ -68,6 +68,26 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     setLoading(false);
   };
 
+  // 골프 코스 목록 가져오기
+  const fetchGolfCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("golf_courses")
+        .select("name")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+      
+      if (error) {
+        console.log("Golf courses fetch error:", error);
+        // 에러 시 하드코딩된 목록 사용
+      } else if (data && data.length > 0) {
+        setGolfCourses(data.map(course => course.name));
+      }
+    } catch (err) {
+      console.log("Failed to fetch golf courses, using default list");
+    }
+  };
+
   // 코스 로테이션 자동 생성
   const generateRotation = () => {
     if (!rotationSettings.startDate || !rotationSettings.startTime) {
@@ -79,7 +99,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     const days = parseInt(rotationSettings.days);
     const groups = parseInt(rotationSettings.groups);
     const interval = parseInt(rotationSettings.interval);
-    const courses = rotationSettings.courses;
+    const courses = rotationSettings.courses.length > 0 ? rotationSettings.courses : golfCourses.slice(0, 3);
     
     for (let day = 0; day < days; day++) {
       const currentDate = new Date(rotationSettings.startDate);
@@ -111,7 +131,10 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   };
 
   useEffect(() => {
-    if (tourId) fetchTeeTimes();
+    if (tourId) {
+      fetchTeeTimes();
+      fetchGolfCourses();
+    }
   }, [tourId]);
 
   const handleRowChange = (idx: number, field: string, value: string) => {
@@ -134,20 +157,31 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       return;
     }
     
-    const newTeeTimes = teeTimeRows.map(row => ({
-      tour_id: tourId,
-      play_date: row.play_date,
-      golf_course: row.golf_course,
-      tee_time: row.tee_time,
-      max_players: Number(row.max_players) || 4,
-    }));
-    
-    const { error } = await supabase.from("singsing_tee_times").insert(newTeeTimes);
-    if (error) setError(error.message);
-    else {
-      setTeeTimeRows([{ play_date: "", golf_course: "", tee_time: "", max_players: "4" }]);
-      await fetchTeeTimes();
-      if (onDataChange) onDataChange();
+    try {
+      const newTeeTimes = teeTimeRows.map(row => ({
+        tour_id: tourId,
+        play_date: row.play_date,
+        golf_course: row.golf_course,
+        tee_time: row.tee_time,
+        max_players: Number(row.max_players) || 4,
+      }));
+      
+      console.log('Inserting tee times:', newTeeTimes);
+      
+      const { data, error } = await supabase.from("singsing_tee_times").insert(newTeeTimes);
+      
+      if (error) {
+        console.error('Insert error:', error);
+        setError(`티타임 추가 오류: ${error.message}\n상세: ${JSON.stringify(error)}`);
+      } else {
+        console.log('Insert success:', data);
+        setTeeTimeRows([{ play_date: "", golf_course: "", tee_time: "", max_players: "4" }]);
+        await fetchTeeTimes();
+        if (onDataChange) onDataChange();
+      }
+    } catch (err: any) {
+      console.error('Unexpected error:', err);
+      setError(`예상치 못한 오류: ${err.message}`);
     }
   };
 
@@ -202,9 +236,20 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     }
   };
 
+  // 날짜 유효성 검사 함수
+  const isValidDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+  
   // 날짜별로 그룹화
   const teeTimesByDate = teeTimes.reduce((acc, teeTime) => {
     const date = teeTime.play_date;
+    // Invalid date 체크
+    if (!date || date === 'Invalid Date' || !isValidDate(date)) {
+      console.warn('Invalid date found:', teeTime);
+      return acc;
+    }
     if (!acc[date]) acc[date] = [];
     acc[date].push(teeTime);
     return acc;
@@ -303,7 +348,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                   className="w-full border rounded px-2 py-1"
                   size={3}
                 >
-                  {GOLF_COURSES.map(course => (
+                  {golfCourses.map(course => (
                     <option key={course} value={course}>{course}</option>
                   ))}
                 </select>
@@ -337,7 +382,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
               required
             >
               <option value="">골프장 선택</option>
-              {GOLF_COURSES.map(course => (
+              {golfCourses.map(course => (
                 <option key={course} value={course}>{course}</option>
               ))}
             </select>
@@ -437,7 +482,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                             onChange={e => setEditForm({...editForm, golf_course: e.target.value})}
                             className="border rounded px-1 py-0.5 text-sm"
                           >
-                            {GOLF_COURSES.map(course => (
+                            {golfCourses.map(course => (
                               <option key={course} value={course}>{course}</option>
                             ))}
                           </select>

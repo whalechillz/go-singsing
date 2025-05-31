@@ -72,15 +72,47 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     setLoading(true);
     setError("");
     try {
-      // 참가자 데이터 가져오기
-      const { data: participantsData, error: participantsError } = await supabase
-        .from("singsing_participants")
-        .select("*")
-        .eq("tour_id", tourId)
-        .order("created_at", { ascending: true });
+      // 참가자 데이터 가져오기 - 모든 커럼 시도
+      let participantsData;
+      let participantsError;
       
-      if (participantsError) throw participantsError;
-      setParticipants((participantsData || []) as Participant[]);
+      try {
+        // 먼저 모든 커럼을 가져오려고 시도
+        const result = await supabase
+          .from("singsing_participants")
+          .select("*")
+          .eq("tour_id", tourId)
+          .order("created_at", { ascending: true });
+          
+        participantsData = result.data;
+        participantsError = result.error;
+      } catch (err) {
+        console.log('Fallback to specific columns due to error:', err);
+        // 에러 발생 시 특정 커럼만 가져오기
+        const result = await supabase
+          .from("singsing_participants")
+          .select("id, name, phone, team_name, note, status, tour_id")
+          .eq("tour_id", tourId)
+          .order("created_at", { ascending: true });
+          
+        participantsData = result.data;
+        participantsError = result.error;
+      }
+      
+      if (participantsError) {
+        console.error('Participants fetch error:', participantsError);
+        throw participantsError;
+      }
+      
+      // tee_time_id가 없을 수 있으므로 기본값 처리
+      console.log('Sample participant data:', participantsData?.[0]);
+      
+      const normalizedParticipants = (participantsData || []).map((p: any) => ({
+        ...p,
+        tee_time_id: p.tee_time_id || null
+      }));
+      
+      setParticipants(normalizedParticipants as Participant[]);
       
       // 티타임 데이터 가져오기 - 두 가지 형식 모두 지원
       const { data: teeTimesData, error: teeTimesError } = await supabase
@@ -433,9 +465,20 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const occupiedSpaces = participants.filter(p => p.tee_time_id).length;
   const availableSpaces = totalCapacity - occupiedSpaces;
 
+  // 날짜 유효성 검사 함수
+  const isValidDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+  
   // 날짜별로 티타임 그룹화
   const teeTimesByDate = teeTimes.reduce((acc, tt) => {
     const date = tt.play_date;
+    // Invalid date 체크
+    if (!date || date === 'Invalid Date' || !isValidDate(date)) {
+      console.warn('Invalid date found in tee time:', tt);
+      return acc;
+    }
     if (!acc[date]) acc[date] = [];
     acc[date].push(tt);
     return acc;
