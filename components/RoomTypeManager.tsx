@@ -32,7 +32,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   const fetchRooms = async () => {
     setLoading(true);
     setError("");
-    const { data, error } = await supabase.from("singsing_rooms").select("*").eq("tour_id", tourId).order("created_at", { ascending: true });
+    const { data, error } = await supabase.from("singsing_rooms").select("*").eq("tour_id", tourId).order("room_seq", { ascending: true });
     if (error) setError(error.message);
     else setRooms((data || []) as Room[]);
     setLoading(false);
@@ -61,16 +61,18 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       setError("모든 행의 객실 타입과 정원을 입력해 주세요.");
       return;
     }
-    // 객실 타입별로 기존 seq 계산
+    // 각 객실에 고유한 seq 할당
+    const maxSeq = Math.max(0, ...rooms.map(r => r.room_seq || 0));
     const newRooms: any[] = [];
+    let currentSeq = maxSeq;
+    
     for (const row of roomRows) {
-      const sameTypeRooms = rooms.filter(r => r.room_type === row.room_type);
-      const nextSeq = sameTypeRooms.length + newRooms.filter(r => r.room_type === row.room_type).length + 1;
+      currentSeq += 1;
       newRooms.push({
         tour_id: tourId,
         room_type: row.room_type,
-        room_seq: nextSeq,
-        room_number: `${row.room_type}-${String(nextSeq).padStart(2, '0')}`,
+        room_seq: currentSeq,
+        room_number: `${row.room_type}-${String(currentSeq).padStart(2, '0')}`,
         capacity: Number(row.capacity),
       });
     }
@@ -93,22 +95,17 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     const currentRoom = rooms.find(r => r.id === id);
     if (!currentRoom) return;
     
-    // 객실 번호 및 seq 재생성 (타입이 변경된 경우)
-    let newRoomNumber = currentRoom.room_number;
-    let newRoomSeq = currentRoom.room_seq;
-    if (currentRoom.room_type !== editForm.room_type) {
-      const sameTypeRooms = rooms.filter(r => r.room_type === editForm.room_type && r.id !== id);
-      newRoomSeq = sameTypeRooms.length + 1;
-      newRoomNumber = `${editForm.room_type}-${String(newRoomSeq).padStart(2, '0')}`;
-    }
+    // 항상 객실 번호를 타입명 기반으로 재생성
+    const newRoomNumber = `${editForm.room_type}-${String(currentRoom.room_seq).padStart(2, '0')}`;
+    
+    // room_seq는 변경하지 않음 (고유 식별을 위해 유지)
     
     const { error } = await supabase
       .from("singsing_rooms")
       .update({ 
         room_type: editForm.room_type, 
         capacity: Number(editForm.capacity),
-        room_number: newRoomNumber,
-        room_seq: newRoomSeq
+        room_number: newRoomNumber
       })
       .eq("id", id);
       

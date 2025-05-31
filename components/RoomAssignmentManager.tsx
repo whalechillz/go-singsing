@@ -63,7 +63,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           .from("singsing_rooms")
           .select("*")
           .eq("tour_id", tourId)
-          .order("room_type")
           .order("room_seq"),
         supabase
           .from("singsing_tours")
@@ -178,7 +177,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         row += `
         <td rowspan="${roomRowspan}">${p.team_name || ''}</td>
         <td rowspan="${roomRowspan}">${roomRowspan}</td>
-        <td rowspan="${roomRowspan}">${room?.room_type || '미배정'}</td>`;
+        <td rowspan="${roomRowspan}">${room?.room_number || '미배정'}</td>`;
         if (isStaff) {
           row += `
         <td rowspan="${roomRowspan}">${p.note || ''}</td>`;
@@ -402,9 +401,10 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                           {rooms.map(r => {
                             const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
                             const isFull = assignedCount >= r.capacity;
+                            const label = `${r.room_number}호 (${assignedCount}/${r.capacity}명)`;
                             return (
                               <option key={r.id} value={r.id} disabled={isFull && r.id !== p.room_id}>
-                                {`${r.room_number}호`}
+                                {label}
                               </option>
                             );
                           })}
@@ -449,9 +449,10 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                       {rooms.map(r => {
                         const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
                         const isFull = assignedCount >= r.capacity;
+                        const label = `${r.room_number}호 (${assignedCount}/${r.capacity}명)`;
                         return (
                           <option key={r.id} value={r.id} disabled={isFull}>
-                            {`${r.room_number}호`}
+                            {label}
                           </option>
                         );
                       })}
