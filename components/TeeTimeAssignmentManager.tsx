@@ -104,15 +104,10 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         throw participantsError;
       }
       
-      // tee_time_id가 없을 수 있으므로 기본값 처리
+      // 정상적으로 tee_time_id 사용
       console.log('Sample participant data:', participantsData?.[0]);
       
-      const normalizedParticipants = (participantsData || []).map((p: any) => ({
-        ...p,
-        tee_time_id: p.tee_time_id || null
-      }));
-      
-      setParticipants(normalizedParticipants as Participant[]);
+      setParticipants((participantsData || []) as Participant[]);
       
       // 티타임 데이터 가져오기 - 두 가지 형식 모두 지원
       const { data: teeTimesData, error: teeTimesError } = await supabase
