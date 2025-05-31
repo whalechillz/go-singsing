@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare } from "lucide-react";
+import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X } from "lucide-react";
 
 type Participant = {
   id: string;
@@ -441,9 +441,14 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 </html>`;
   };
 
-  // 전체 투어 자동 배정 기능 (날짜별 균등 분배)
+  // 전체 선택 취소 기능 추가
+  const handleDeselectAll = () => {
+    setSelectedForBulk([]);
+  };
+
+  // 전체 투어 자동 배정 기능 (각 참가자를 모든 날짜에 배정)
   const handleAutoAssignAll = async () => {
-    if (!window.confirm('모든 미배정 참가자를 전체 티타임에 균등하게 분배하시겠습니까?')) return;
+    if (!window.confirm('모든 미배정 참가자를 전체 투어 일정에 배정하시겠습니까?\n(각 참가자가 모든 날짜에 배정됩니다)')) return;
     
     try {
       const unassigned = participants.filter(p => !p.tee_time_id);
@@ -454,25 +459,15 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       
       // 날짜별로 티타임 그룹화
       const dateGroups = Object.entries(teeTimesByDate).sort(([a], [b]) => a.localeCompare(b));
-      const totalAvailableSlots = teeTimes.reduce((sum, tt) => {
-        const assigned = participants.filter(p => p.tee_time_id === tt.id).length;
-        return sum + (tt.max_players - assigned);
-      }, 0);
+      let totalAssigned = 0;
+      let failedAssignments = [];
       
-      if (totalAvailableSlots < unassigned.length) {
-        alert(`배정 가능한 자리(${totalAvailableSlots})가 참가자 수(${unassigned.length})보다 적습니다.`);
-      }
-      
-      let assignedCount = 0;
-      let participantIndex = 0;
-      
-      // 날짜별로 번갈아가며 배정
-      let hasAvailableSlots = true;
-      while (participantIndex < unassigned.length && hasAvailableSlots) {
-        hasAvailableSlots = false;
+      // 각 참가자를 모든 날짜에 배정
+      for (const participant of unassigned) {
+        let assignedDates = 0;
         
         for (const [date, dayTeeTimes] of dateGroups) {
-          if (participantIndex >= unassigned.length) break;
+          let assigned = false;
           
           // 해당 날짜의 빈 자리 찾기
           for (const teeTime of dayTeeTimes) {
@@ -480,25 +475,116 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
             if (currentAssigned < teeTime.max_players) {
               await supabase
                 .from("singsing_participants")
-                .update({ tee_time_id: teeTime.id })
-                .eq("id", unassigned[participantIndex].id);
+                .insert({
+                  tour_id: tourId,
+                  name: participant.name,
+                  phone: participant.phone,
+                  team_name: participant.team_name,
+                  note: participant.note,
+                  status: participant.status,
+                  tee_time_id: teeTime.id
+                });
               
-              participantIndex++;
-              assignedCount++;
-              hasAvailableSlots = true;
-              break; // 다음 날짜로 이동
+              assigned = true;
+              assignedDates++;
+              break;
             }
           }
+          
+          if (!assigned) {
+            failedAssignments.push(`${participant.name} - ${date}`);
+          }
+        }
+        
+        if (assignedDates > 0) {
+          totalAssigned++;
         }
       }
       
-      alert(`${assignedCount}명을 자동 배정했습니다.`);
+      let message = `${totalAssigned}명을 자동 배정했습니다.`;
+      if (failedAssignments.length > 0) {
+        message += `\n\n다음 배정이 실패했습니다:\n${failedAssignments.slice(0, 5).join('\n')}`;
+        if (failedAssignments.length > 5) {
+          message += `\n... 외 ${failedAssignments.length - 5}건`;
+        }
+      }
+      
+      alert(message);
       await fetchData();
     } catch (error: any) {
       setError(`자동 배정 중 오류: ${error.message}`);
     }
   };
   
+  // 참가자를 전체 투어 일정에 배정 (날짜별로 복제)
+  const handleAssignToAllDates = async () => {
+    if (selectedForBulk.length === 0) {
+      alert('참가자를 선택해주세요.');
+      return;
+    }
+    
+    if (!window.confirm(`선택한 ${selectedForBulk.length}명을 모든 날짜에 배정하시겠습니까?\n(각 날짜별로 참가자 정보가 복제됩니다)`)) return;
+    
+    try {
+      const selectedParticipants = participants.filter(p => selectedForBulk.includes(p.id));
+      const dateGroups = Object.entries(teeTimesByDate).sort(([a], [b]) => a.localeCompare(b));
+      
+      let totalCreated = 0;
+      let failedAssignments = [];
+      
+      for (const participant of selectedParticipants) {
+        // 원본 참가자 삭제
+        await supabase
+          .from("singsing_participants")
+          .delete()
+          .eq("id", participant.id);
+        
+        // 각 날짜별로 참가자 복제 생성
+        for (const [date, dayTeeTimes] of dateGroups) {
+          let assigned = false;
+          
+          for (const teeTime of dayTeeTimes) {
+            const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
+            if (currentAssigned < teeTime.max_players) {
+              const { error } = await supabase
+                .from("singsing_participants")
+                .insert({
+                  tour_id: tourId,
+                  name: participant.name + ` (${new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })})`,
+                  phone: participant.phone,
+                  team_name: participant.team_name,
+                  note: participant.note,
+                  status: participant.status,
+                  tee_time_id: teeTime.id
+                });
+              
+              if (!error) {
+                assigned = true;
+                totalCreated++;
+                break;
+              }
+            }
+          }
+          
+          if (!assigned) {
+            failedAssignments.push(`${participant.name} - ${date}`);
+          }
+        }
+      }
+      
+      let message = `${totalCreated}개의 배정이 생성되었습니다.`;
+      if (failedAssignments.length > 0) {
+        message += `\n\n다음 배정이 실패했습니다:\n${failedAssignments.slice(0, 5).join('\n')}`;
+      }
+      
+      alert(message);
+      setSelectedForBulk([]);
+      await fetchData();
+    } catch (error: any) {
+      setError(`전체 날짜 배정 중 오류: ${error.message}`);
+    }
+  };
+
   // 일괄 배정 기능
   const handleBulkAssign = async () => {
     if (selectedForBulk.length === 0 || !bulkAssignDate) {
@@ -769,20 +855,38 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                     <CheckSquare className="w-4 h-4" />
                     전체선택
                   </button>
+                  {selectedForBulk.length > 0 && (
+                    <button
+                      onClick={handleDeselectAll}
+                      className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                    >
+                      <X className="w-4 h-4" />
+                      선택취소
+                    </button>
+                  )}
+                  <span className="text-gray-400">|</span>
                   <button
                     onClick={handleBulkAssign}
                     disabled={selectedForBulk.length === 0 || !bulkAssignDate}
                     className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300"
                   >
                     <Users className="w-4 h-4" />
-                    선택한 {selectedForBulk.length}명 일괄배정
+                    특정 날짜 배정
+                  </button>
+                  <button
+                    onClick={handleAssignToAllDates}
+                    disabled={selectedForBulk.length === 0}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-300"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    전체 일정 배정
                   </button>
                   <button
                     onClick={handleAutoAssignAll}
                     className="flex items-center gap-1 px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
                   >
                     <Check className="w-4 h-4" />
-                    전체 자동배정
+                    모두 자동배정
                   </button>
                 </div>
               </div>

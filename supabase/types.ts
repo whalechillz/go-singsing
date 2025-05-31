@@ -166,6 +166,26 @@ export interface Database {
           created_at?: string
         }
       }
+      singsing_participant_tee_times: {
+        Row: {
+          id: string
+          participant_id: string
+          tee_time_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          participant_id: string
+          tee_time_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          participant_id?: string
+          tee_time_id?: string
+          created_at?: string
+        }
+      }
       singsing_participants: {
         Row: {
           id: string
