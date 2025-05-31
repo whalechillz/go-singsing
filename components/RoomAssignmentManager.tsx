@@ -333,6 +333,27 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 
   // 미배정 참가자 필터링
   const filteredUnassigned = participants.filter(p => !p.room_id && p.name.includes(unassignedSearch));
+  
+  // 통계 계산
+  const assignedParticipants = participants.filter(p => p.room_id).length;
+  const totalParticipants = participants.length;
+  const unassignedParticipants = totalParticipants - assignedParticipants;
+  
+  const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
+  const occupiedSpaces = participants.filter(p => p.room_id).length;
+  const availableSpaces = totalCapacity - occupiedSpaces;
+  
+  const compRooms = rooms.filter(room => 
+    room.room_type.toLowerCase().includes('가이드') || 
+    room.room_type.toLowerCase().includes('기사') || 
+    room.room_type.toLowerCase().includes('comp') ||
+    room.room_type.toLowerCase().includes('무료')
+  );
+  
+  const occupiedRooms = rooms.filter(room => 
+    participants.some(p => p.room_id === room.id)
+  ).length;
+  const emptyRooms = rooms.length - occupiedRooms;
 
   return (
     <div className="mb-8">
@@ -361,7 +382,42 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
-        <div className="space-y-4">
+        <>
+          {/* 통계 정보 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="text-sm text-blue-600 font-medium">참가자 현황</div>
+              <div className="text-2xl font-bold text-blue-900">{assignedParticipants}/{totalParticipants}</div>
+              <div className="text-xs text-blue-600">배정완료 / 총인원</div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4">
+              <div className="text-sm text-green-600 font-medium">객실 현황</div>
+              <div className="text-2xl font-bold text-green-900">{occupiedSpaces}/{totalCapacity}</div>
+              <div className="text-xs text-green-600">사용중 / 총정원</div>
+            </div>
+            <div className="bg-yellow-50 rounded-lg p-4">
+              <div className="text-sm text-yellow-600 font-medium">빈 객실</div>
+              <div className="text-2xl font-bold text-yellow-900">{emptyRooms}/{rooms.length}</div>
+              <div className="text-xs text-yellow-600">빈 방 / 총객실</div>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4">
+              <div className="text-sm text-purple-600 font-medium">콤프룸</div>
+              <div className="text-2xl font-bold text-purple-900">{compRooms.length}개</div>
+              <div className="text-xs text-purple-600">가이드/기사 객실</div>
+            </div>
+          </div>
+          
+          {/* 미배정 경고 */}
+          {unassignedParticipants > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span className="text-sm text-red-700">
+                미배정 참가자가 {unassignedParticipants}명 있습니다. 남은 자리: {availableSpaces}개
+              </span>
+            </div>
+          )}
+          
+          <div className="space-y-4">
           {/* 객실별 참가자 배정 */}
           {rooms.map(room => {
             const assigned = participants.filter(p => p.room_id === room.id);
@@ -463,6 +519,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
             )}
           </div>
         </div>
+        </>
       )}
       
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
