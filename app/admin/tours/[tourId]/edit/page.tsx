@@ -188,7 +188,7 @@ const TourEditPage: React.FC = () => {
     });
   };
 
-  const handleStaffChange = (index: number, field: keyof StaffMember, value: string) => {
+  const handleStaffChange = (index: number, field: 'name' | 'phone' | 'role', value: string) => {
     const newStaff = [...staff];
     newStaff[index][field] = value;
     setStaff(newStaff);
