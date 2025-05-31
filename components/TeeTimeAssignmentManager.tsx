@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, Check, AlertCircle, Eye, Clock, Calendar } from "lucide-react";
+import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText } from "lucide-react";
 
 type Participant = {
   id: string;
@@ -27,6 +27,30 @@ type Tour = {
   id: string;
   tour_title: string;
   tour_period: string;
+  
+  // 문서 표시 옵션
+  show_staff_info?: boolean;
+  show_footer_message?: boolean;
+  show_company_phones?: boolean;
+  show_golf_phones?: boolean;
+  
+  // 연락처 정보
+  company_phone?: string;
+  company_mobile?: string;
+  golf_reservation_phone?: string;
+  golf_reservation_mobile?: string;
+  
+  // 푸터 및 주의사항
+  footer_message?: string;
+  notices?: string;
+};
+
+type StaffMember = {
+  id: string;
+  name: string;
+  phone?: string;
+  role: string;
+  display_order: number;
 };
 
 type Props = { tourId: string; refreshKey?: number };
@@ -35,6 +59,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [tour, setTour] = useState<Tour | null>(null);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [assigning, setAssigning] = useState<string | null>(null);
@@ -47,7 +72,12 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     setLoading(true);
     setError("");
     try {
-      const [{ data: participantsData, error: participantsError }, { data: teeTimesData, error: teeTimesError }, { data: tourData, error: tourError }] = await Promise.all([
+      const [
+        { data: participantsData, error: participantsError }, 
+        { data: teeTimesData, error: teeTimesError }, 
+        { data: tourData, error: tourError },
+        { data: staffData, error: staffError }
+      ] = await Promise.all([
         supabase
           .from("singsing_participants")
           .select("*")
@@ -63,16 +93,23 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           .from("singsing_tours")
           .select("*")
           .eq("id", tourId)
-          .single()
+          .single(),
+        supabase
+          .from("singsing_tour_staff")
+          .select("*")
+          .eq("tour_id", tourId)
+          .order("display_order")
       ]);
       
       if (participantsError) throw participantsError;
       if (teeTimesError) throw teeTimesError;
       if (tourError && tourError.code !== 'PGRST116') throw tourError;
+      if (staffError && staffError.code !== 'PGRST116') console.log('Staff fetch error:', staffError);
       
       setParticipants((participantsData || []) as Participant[]);
       setTeeTimes((teeTimesData || []) as TeeTime[]);
       setTour(tourData as Tour);
+      setStaffMembers((staffData || []) as StaffMember[]);
     } catch (error: any) {
       console.error('Error fetching data:', error);
       setError(error.message);
@@ -126,6 +163,31 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     const tourTitle = tour?.tour_title || "투어명";
     const tourPeriod = tour?.tour_period || "투어 기간";
     const isStaff = type === 'staff';
+
+    // 스텝진 정보 HTML 생성
+    let staffInfoHTML = '';
+    if (tour?.show_staff_info && staffMembers.length > 0) {
+      staffInfoHTML = staffMembers.map(staff => `
+        <p>${staff.role}: ${staff.name}${staff.phone ? ` / ${staff.phone}` : ''}</p>
+      `).join('');
+    }
+
+    // 연락처 정보 HTML 생성
+    let contactHTML = '';
+    if (tour?.show_company_phones || tour?.show_golf_phones) {
+      const contacts = [];
+      if (tour.show_company_phones) {
+        if (tour.company_phone) contacts.push(`대표: ${tour.company_phone}`);
+        if (tour.company_mobile) contacts.push(`업무: ${tour.company_mobile}`);
+      }
+      if (tour.show_golf_phones) {
+        if (tour.golf_reservation_phone) contacts.push(`골프장: ${tour.golf_reservation_phone}`);
+        if (tour.golf_reservation_mobile) contacts.push(`예약담당: ${tour.golf_reservation_mobile}`);
+      }
+      if (contacts.length > 0) {
+        contactHTML = `<p class="contact-info">${contacts.join(' | ')}</p>`;
+      }
+    }
 
     let tablesHTML = '';
     Object.entries(teeTimesByDate).forEach(([date, times]) => {
@@ -189,6 +251,33 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       tablesHTML += tableHTML;
     });
 
+    // 주의사항 HTML 생성
+    let noticesHTML = '';
+    if (tour?.notices && !isStaff) {
+      const noticeItems = tour.notices.split('\n').filter(n => n.trim()).map(notice => 
+        `<li>${notice.replace(/^[•·\-\*]\s*/, '')}</li>`
+      ).join('');
+      noticesHTML = `
+        <div class="notice">
+          <div class="notice-title">라운딩 이용 안내</div>
+          <ul class="notice-list">
+            ${noticeItems}
+          </ul>
+        </div>`;
+    }
+
+    // 푸터 메시지 HTML 생성
+    let footerHTML = '';
+    if (tour?.show_footer_message && tour?.footer_message) {
+      footerHTML = `
+        <div class="footer">
+          <p>${tour.footer_message}</p>
+          ${contactHTML}
+        </div>`;
+    } else if (contactHTML) {
+      footerHTML = `<div class="footer">${contactHTML}</div>`;
+    }
+
     return isStaff ? `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -213,6 +302,8 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     tr:hover { background-color: #F7FAFC; }
     .empty-slot { color: #999; font-style: italic; }
     .staff-note { color: #e53e3e; font-weight: bold; text-align: center; margin-bottom: 15px; padding: 8px; background-color: #fff5f5; border-radius: 4px; border: 1px solid #fed7d7; }
+    .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #E2E8F0; color: #718096; font-size: 13px; }
+    .contact-info { margin-top: 5px; }
     @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
   </style>
 </head>
@@ -224,12 +315,12 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
       </div>
       <div class="info-section">
-        <p>담당: 기사님</p>
-        <p>연락처: 010-0000-0000</p>
+        ${staffInfoHTML}
       </div>
     </div>
     <p class="staff-note">※ 이 명단은 스탭용으로 고객 연락처 정보가 포함되어 있습니다.</p>
     ${tablesHTML}
+    ${footerHTML}
   </div>
 </body>
 </html>` : `<!DOCTYPE html>
@@ -237,7 +328,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>라운딩 시간표 (고객용)</title>
+  <title>라운딩 시간표</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
     body { background-color: #f5f7fa; color: #2D3748; line-height: 1.6; padding: 20px; }
@@ -260,6 +351,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     .notice-list { list-style-type: disc; margin-left: 20px; }
     .notice-list li { margin-bottom: 5px; }
     .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #E2E8F0; color: #718096; font-size: 13px; }
+    .contact-info { margin-top: 5px; font-weight: 500; }
     @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
   </style>
 </head>
@@ -271,24 +363,12 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
       </div>
       <div class="info-section">
-        <p>담당: 기사님</p>
-        <p>연락처: 010-0000-0000</p>
+        ${staffInfoHTML}
       </div>
     </div>
     ${tablesHTML}
-    <div class="notice">
-      <div class="notice-title">라운딩 이용 안내</div>
-      <ul class="notice-list">
-        <li><strong>집합시간:</strong> 티오프 시간 30분 전 골프장 도착</li>
-        <li><strong>준비사항:</strong> 골프복, 골프화, 모자, 선글라스</li>
-        <li><strong>카트배정:</strong> 4인 1카트 원칙</li>
-        <li><strong>날씨대비:</strong> 우산, 우의 등 개인 준비</li>
-      </ul>
-    </div>
-    <div class="footer">
-      <p>즐거운 라운딩 되시길 바랍니다.</p>
-      <p>싱싱골프투어 | 031-215-3990</p>
-    </div>
+    ${noticesHTML}
+    ${footerHTML}
   </div>
 </body>
 </html>`;
