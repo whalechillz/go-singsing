@@ -62,58 +62,114 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   const fetchData = async () => {
     setLoading(true);
     setError("");
-    const [{ data: participantsData, error: participantsError }, { data: roomsData, error: roomsError }, { data: tourData, error: tourError }] = await Promise.all([
-      supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_seq, room_number)").eq("tour_id", tourId).order("created_at", { ascending: true }),
-      supabase.from("singsing_rooms").select("*").eq("tour_id", tourId),
-      supabase.from("singsing_tours").select("*").eq("id", tourId).single()
-    ]);
-    if (participantsError) setError(participantsError.message);
-    else setParticipants((participantsData || []) as Participant[]);
-    if (roomsError) setError(roomsError.message);
-    else setRooms((roomsData || []) as Room[]);
-    if (tourError) setError(tourError.message);
-    else setTour(tourData as Tour);
-    setLoading(false);
+    try {
+      const [{ data: participantsData, error: participantsError }, { data: roomsData, error: roomsError }, { data: tourData, error: tourError }] = await Promise.all([
+        supabase
+          .from("singsing_participants")
+          .select("*, singsing_rooms:room_id(id, room_type, room_seq, room_number, capacity)")
+          .eq("tour_id", tourId)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("singsing_rooms")
+          .select("*")
+          .eq("tour_id", tourId)
+          .order("room_type")
+          .order("room_seq"),
+        supabase
+          .from("singsing_tours")
+          .select("*")
+          .eq("id", tourId)
+          .single()
+      ]);
+      
+      if (participantsError) throw participantsError;
+      if (roomsError) throw roomsError;
+      if (tourError && tourError.code !== 'PGRST116') throw tourError; // PGRST116 is "no rows found"
+      
+      setParticipants((participantsData || []) as Participant[]);
+      setRooms((roomsData || []) as Room[]);
+      setTour(tourData as Tour);
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { if (tourId) fetchData(); }, [tourId]);
 
-  // 객실 자동 생성
+  // 객실 자동 생성 - 개선된 버전
   const handleAddRooms = async () => {
     const trimmedRoomType = newRoomType.trim();
     if (!trimmedRoomType || newRoomCount < 1) {
       setError("객실 타입을 입력해 주세요.");
       return;
     }
-    // 같은 타입의 마지막 객실 번호 계산
-    const sameTypeRooms = rooms.filter(r => r.room_type === trimmedRoomType);
-    const lastNum = sameTypeRooms.length;
-    // capacity 자동 추출(2, 3, 4, 8인실 등)
-    const getCapacity = (type: string) => {
-      if (type.includes("2인실")) return 2;
-      if (type.includes("3인실")) return 3;
-      if (type.includes("4인실")) return 4;
-      if (type.includes("8인실")) return 8;
-      return 2; // 기본값
-    };
-    const newRooms = Array.from({ length: newRoomCount }, (_, i) => ({
-      tour_id: tourId,
-      room_type: trimmedRoomType,
-      room_seq: lastNum + i + 1,
-      room_number: `${trimmedRoomType}-${String(lastNum + i + 1).padStart(2, '0')}`,
-      capacity: getCapacity(trimmedRoomType),
-      quantity: 1,
-    }));
-    // Supabase에 insert (room_seq, room_number 반드시 포함)
-    const { error } = await supabase
-      .from("singsing_rooms")
-      .insert(newRooms);
-    if (error) {
-      setError(error.message);
+    
+    try {
+      // 먼저 현재 투어의 모든 룸을 다시 조회 (최신 상태 확인)
+      const { data: currentRooms, error: fetchError } = await supabase
+        .from("singsing_rooms")
+        .select("*")
+        .eq("tour_id", tourId)
+        .order("room_seq", { ascending: false });
+        
+      if (fetchError) throw fetchError;
+      
+      // 가장 큰 room_seq 찾기
+      const maxSeq = currentRooms && currentRooms.length > 0 
+        ? Math.max(...currentRooms.map(r => r.room_seq || 0))
+        : 0;
+      
+      // capacity 자동 추출
+      const getCapacity = (type: string) => {
+        const match = type.match(/(\d+)인실/);
+        if (match) return parseInt(match[1]);
+        return 2; // 기본값
+      };
+      
+      const capacity = getCapacity(trimmedRoomType);
+      const roomsToAdd = [];
+      
+      // 새로운 객실 데이터 생성
+      for (let i = 0; i < newRoomCount; i++) {
+        const newSeq = maxSeq + i + 1;
+        roomsToAdd.push({
+          tour_id: tourId,
+          room_type: trimmedRoomType,
+          room_seq: newSeq,
+          room_number: `${trimmedRoomType}-${String(newSeq).padStart(3, '0')}`,
+          capacity: capacity,
+          quantity: 1,
+        });
+      }
+      
+      console.log('Rooms to add:', roomsToAdd);
+      
+      // 일괄 추가
+      const { data, error } = await supabase
+        .from("singsing_rooms")
+        .insert(roomsToAdd)
+        .select();
+      
+      if (error) {
+        console.error('Room add error:', error);
+        throw error;
+      }
+      
+      console.log('Rooms added successfully:', data);
+      
+      // 성공 시 초기화 및 새로고침
+      setNewRoomType("");
+      setNewRoomCount(1);
+      setError(""); // 에러 메시지 클리어
+      await fetchData();
+      
+    } catch (error: any) {
+      console.error('Error in handleAddRooms:', error);
+      setError(`객실 추가 중 오류 발생: ${error.message || '알 수 없는 오류'}`);
     }
-    setNewRoomType("");
-    setNewRoomCount(1);
-    fetchData();
   };
 
   // 객실별로 참가자 그룹핑
