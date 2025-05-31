@@ -6,7 +6,8 @@ import ParticipantsManagerV2 from "@/components/ParticipantsManagerV2";
 import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 import RoomTypeManager from "@/components/RoomTypeManager";
 import ScheduleManager from "@/components/ScheduleManager";
-import TeeTimeManager from "@/components/TeeTimeManager";
+import TeeTimeSlotManager from "@/components/TeeTimeSlotManager";
+import TeeTimeAssignmentManager from "@/components/TeeTimeAssignmentManager";
 import BoardingScheduleManager from "@/components/BoardingScheduleManager";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 import TourSchedulePreview from "@/components/TourSchedulePreview";
@@ -38,6 +39,7 @@ const TourDetailPage: React.FC = () => {
   const [tour, setTour] = useState<Tour | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchTour = async () => {
@@ -92,7 +94,12 @@ const TourDetailPage: React.FC = () => {
           </>
         )}
         {activeTab === "schedules" && tour && <ScheduleManager tourId={tourId} tour={tour} />}
-        {activeTab === "tee-times" && <TeeTimeManager tourId={tourId} />}
+        {activeTab === "tee-times" && (
+          <>
+            <TeeTimeSlotManager tourId={tourId} onDataChange={() => setRefreshKey(prev => prev + 1)} />
+            <TeeTimeAssignmentManager tourId={tourId} refreshKey={refreshKey} />
+          </>
+        )}
         {activeTab === "pickup-points" && (
           <>
             <BoardingScheduleManager tourId={tourId} />
