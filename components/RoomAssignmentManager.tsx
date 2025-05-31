@@ -354,10 +354,16 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
            name === 'comp룸';
   });
   
-  const emptyRooms = rooms.filter(room => 
-    !participants.some(p => p.room_id === room.id)
-  ).length;
-  const occupiedRooms = rooms.length - emptyRooms;
+  // 빈 객실: 참가자가 한 명도 배정되지 않은 객실 (정원 0인 객실 제외)
+  const emptyRooms = rooms.filter(room => {
+    if (room.capacity === 0) return false; // 정원 0인 객실은 제외
+    const assignedToRoom = participants.filter(p => p.room_id === room.id).length;
+    return assignedToRoom === 0;
+  }).length;
+  
+  // 사용 가능한 객실 수 (정원이 1 이상인 객실)
+  const usableRooms = rooms.filter(room => room.capacity > 0).length;
+  const occupiedRooms = usableRooms - emptyRooms;
 
   return (
     <div className="mb-8">
@@ -401,8 +407,8 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
             </div>
             <div className="bg-yellow-50 rounded-lg p-4">
               <div className="text-sm text-yellow-600 font-medium">빈 객실</div>
-              <div className="text-2xl font-bold text-yellow-900">{emptyRooms}/{rooms.length}</div>
-              <div className="text-xs text-yellow-600">빈 방 / 총객실</div>
+              <div className="text-2xl font-bold text-yellow-900">{emptyRooms}/{usableRooms}</div>
+              <div className="text-xs text-yellow-600">빈 방 / 사용가능 객실</div>
             </div>
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="text-sm text-purple-600 font-medium">콤프룸</div>
