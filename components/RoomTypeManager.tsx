@@ -58,10 +58,10 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     setError("");
     // 유효성 검사
     if (roomRows.some(row => !row.room_type || !row.capacity)) {
-      setError("모든 행의 객실 타입과 정원을 입력해 주세요.");
+      setError("모든 행의 객실 이름과 정원을 입력해 주세요.");
       return;
     }
-    // 각 객실에 고유한 seq 할당
+    // 각 객실에 고유한 seq 할당 (항상 최대값 + 1 사용)
     const maxSeq = Math.max(0, ...rooms.map(r => r.room_seq || 0));
     const newRooms: any[] = [];
     let currentSeq = maxSeq;
@@ -80,14 +80,14 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     if (error) setError(error.message);
     else {
       setRoomRows([{ room_type: "", capacity: "" }]);
-      fetchRooms();
+      await fetchRooms();
       if (onDataChange) onDataChange();
     }
   };
 
   const handleUpdate = async (id: string) => {
     if (!editForm.room_type || !editForm.capacity) {
-      setError("객실 타입과 정원을 입력해주세요.");
+      setError("객실 이름과 정원을 입력해주세요.");
       return;
     }
     
@@ -112,7 +112,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     if (error) setError(error.message);
     else {
       setEditingRoom(null);
-      fetchRooms();
+      await fetchRooms();
       if (onDataChange) onDataChange();
     }
   };
@@ -137,7 +137,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       
       if (deleteError) throw deleteError;
       
-      fetchRooms();
+      await fetchRooms();
       if (onDataChange) onDataChange();
     } catch (error: any) {
       setError(`객실 삭제 중 오류 발생: ${error.message}`);
@@ -146,11 +146,11 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
 
   return (
     <div className="mb-8">
-      <h2 className="text-lg font-semibold mb-4">객실 타입/수량 관리</h2>
+      <h2 className="text-lg font-semibold mb-4">객실 관리</h2>
       <div className="flex flex-col gap-2 mb-4">
         {roomRows.map((row, idx) => (
           <div key={idx} className="flex gap-2 items-center">
-            <input name="room_type" value={row.room_type} onChange={e => handleRowChange(idx, "room_type", e.target.value)} placeholder="객실 타입 (예: 2인실)" className="border rounded px-2 py-1 flex-1" required aria-label="객실 타입" />
+            <input name="room_type" value={row.room_type} onChange={e => handleRowChange(idx, "room_type", e.target.value)} placeholder="객실 이름 (예: 2인실, 온돌방)" className="border rounded px-2 py-1 flex-1" required aria-label="객실 이름" />
             <input name="capacity" value={row.capacity} onChange={e => handleRowChange(idx, "capacity", e.target.value)} placeholder="정원" type="number" min="1" className="border rounded px-2 py-1 flex-1" required aria-label="정원" />
             <button type="button" className="text-red-600 hover:text-red-800" onClick={() => handleDeleteRow(idx)} aria-label="행 삭제"><X size={18} /></button>
           </div>
@@ -171,7 +171,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
         <table className="w-full bg-white dark:bg-gray-900 rounded shadow text-sm">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-              <th className="py-2 px-2 text-left">객실 타입</th>
+              <th className="py-2 px-2 text-left">객실 이름</th>
               <th className="py-2 px-2 text-left">정원</th>
               <th className="py-2 px-2 text-left">객실 번호</th>
               <th className="py-2 px-2">관리</th>
