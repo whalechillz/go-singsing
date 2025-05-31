@@ -201,7 +201,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       } else {
         // 배정 추가
         const teeTime = teeTimes.find(t => t.id === teeTimeId);
-        if (teeTime && teeTime.assigned_count >= teeTime.max_players) {
+        if (teeTime && (teeTime.assigned_count || 0) >= teeTime.max_players) {
           alert('이 티타임은 정원이 가득 찼습니다.');
           return;
         }
@@ -249,7 +249,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           
           // 해당 날짜에 빈 자리가 있는 첫 번째 티타임 찾기
           for (const teeTime of dateTeeTimes) {
-            if (teeTime.assigned_count < teeTime.max_players) {
+            if ((teeTime.assigned_count || 0) < teeTime.max_players) {
               assignments.push({
                 participant_id: participantId,
                 tee_time_id: teeTime.id
@@ -302,8 +302,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         for (const [date, dayTeeTimes] of dateGroups) {
           // 가장 여유있는 티타임 찾기
           const availableTeeTimes = dayTeeTimes
-            .filter(tt => tt.assigned_count < tt.max_players)
-            .sort((a, b) => a.assigned_count - b.assigned_count);
+            .filter(tt => (tt.assigned_count || 0) < tt.max_players)
+            .sort((a, b) => (a.assigned_count || 0) - (b.assigned_count || 0));
 
           if (availableTeeTimes.length > 0) {
             assignments.push({
