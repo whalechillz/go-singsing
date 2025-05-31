@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText } from "lucide-react";
+import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare } from "lucide-react";
 
 type Participant = {
   id: string;
@@ -66,6 +66,8 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
   const [unassignedSearch, setUnassignedSearch] = useState("");
   const [previewType, setPreviewType] = useState<'customer' | 'staff'>('customer');
+  const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
+  const [bulkAssignDate, setBulkAssignDate] = useState<string>('');
 
   // 데이터 fetch
   const fetchData = async () => {
@@ -439,6 +441,88 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 </html>`;
   };
 
+  // 전체 투어 자동 배정 기능
+  const handleAutoAssignAll = async () => {
+    if (!window.confirm('모든 미배정 참가자를 전체 티타임에 자동 배정하시겠습니까?')) return;
+    
+    try {
+      const unassigned = participants.filter(p => !p.tee_time_id);
+      if (unassigned.length === 0) {
+        alert('미배정 참가자가 없습니다.');
+        return;
+      }
+      
+      let assignedCount = 0;
+      const sortedTeeTimes = [...teeTimes].sort((a, b) => {
+        if (a.play_date < b.play_date) return -1;
+        if (a.play_date > b.play_date) return 1;
+        if (a.tee_time < b.tee_time) return -1;
+        if (a.tee_time > b.tee_time) return 1;
+        return 0;
+      });
+      
+      for (const participant of unassigned) {
+        for (const teeTime of sortedTeeTimes) {
+          const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
+          if (currentAssigned < teeTime.max_players) {
+            await supabase
+              .from("singsing_participants")
+              .update({ tee_time_id: teeTime.id })
+              .eq("id", participant.id);
+            assignedCount++;
+            break;
+          }
+        }
+      }
+      
+      alert(`${assignedCount}명을 자동 배정했습니다.`);
+      await fetchData();
+    } catch (error: any) {
+      setError(`자동 배정 중 오류: ${error.message}`);
+    }
+  };
+  
+  // 일괄 배정 기능
+  const handleBulkAssign = async () => {
+    if (selectedForBulk.length === 0 || !bulkAssignDate) {
+      alert('참가자와 날짜를 선택해주세요.');
+      return;
+    }
+
+    const dateTeeTimes = teeTimes.filter(tt => tt.play_date === bulkAssignDate);
+    if (dateTeeTimes.length === 0) {
+      alert('선택한 날짜에 티타임이 없습니다.');
+      return;
+    }
+
+    try {
+      let participantIndex = 0;
+      
+      for (const teeTime of dateTeeTimes) {
+        const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
+        const availableSlots = teeTime.max_players - currentAssigned;
+        
+        for (let i = 0; i < availableSlots && participantIndex < selectedForBulk.length; i++) {
+          await supabase
+            .from("singsing_participants")
+            .update({ tee_time_id: teeTime.id })
+            .eq("id", selectedForBulk[participantIndex]);
+          
+          participantIndex++;
+        }
+        
+        if (participantIndex >= selectedForBulk.length) break;
+      }
+      
+      alert(`${participantIndex}명을 ${bulkAssignDate} 티타임에 배정했습니다.`);
+      setSelectedForBulk([]);
+      setBulkAssignDate('');
+      await fetchData();
+    } catch (error: any) {
+      setError(`일괄 배정 중 오류: ${error.message}`);
+    }
+  };
+
   const handlePreview = () => {
     const html = generatePreviewHTML(previewType);
     const newWindow = window.open('', '_blank');
@@ -611,7 +695,48 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 
             {/* 미배정 참가자 */}
             <div className="bg-gray-50 rounded-lg shadow p-4">
-              <div className="font-bold text-gray-700 mb-2">미배정 참가자</div>
+              <div className="flex justify-between items-center mb-4">
+                <div className="font-bold text-gray-700">미배정 참가자</div>
+                
+                {/* 일괄 배정 컨트롤 */}
+                <div className="flex items-center gap-2">
+                  <select
+                    value={bulkAssignDate}
+                    onChange={(e) => setBulkAssignDate(e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  >
+                    <option value="">날짜 선택</option>
+                    {Object.keys(teeTimesByDate).map(date => (
+                      <option key={date} value={date}>
+                        {new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setSelectedForBulk(filteredUnassigned.map(p => p.id))}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  >
+                    <CheckSquare className="w-4 h-4" />
+                    전체선택
+                  </button>
+                  <button
+                    onClick={handleBulkAssign}
+                    disabled={selectedForBulk.length === 0 || !bulkAssignDate}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300"
+                  >
+                    <Users className="w-4 h-4" />
+                    선택한 {selectedForBulk.length}명 일괄배정
+                  </button>
+                  <button
+                    onClick={handleAutoAssignAll}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    <Check className="w-4 h-4" />
+                    전체 자동배정
+                  </button>
+                </div>
+              </div>
+              
               <input
                 type="text"
                 placeholder="이름으로 검색"
@@ -629,9 +754,23 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                       className="bg-white rounded-lg shadow px-3 py-2 transition hover:bg-blue-50"
                     >
                       <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-gray-900">{p.name}</div>
-                          <div className="text-xs text-gray-500">{p.team_name || '개인'}</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedForBulk.includes(p.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedForBulk([...selectedForBulk, p.id]);
+                              } else {
+                                setSelectedForBulk(selectedForBulk.filter(id => id !== p.id));
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          <div>
+                            <div className="font-medium text-gray-900">{p.name}</div>
+                            <div className="text-xs text-gray-500">{p.team_name || '개인'}</div>
+                          </div>
                         </div>
                         <select
                           className="ml-2 border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:outline-blue-500"
