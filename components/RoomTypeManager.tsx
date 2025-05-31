@@ -24,6 +24,8 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
   const [roomRows, setRoomRows] = useState([{ room_type: "", capacity: "" }]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [editingRoom, setEditingRoom] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ room_type: "", capacity: "" });
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -78,11 +80,51 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    const { error } = await supabase.from("singsing_rooms").delete().eq("id", id);
+  const handleUpdate = async (id: string) => {
+    if (!editForm.room_type || !editForm.capacity) {
+      setError("객실 타입과 정원을 입력해주세요.");
+      return;
+    }
+    
+    const { error } = await supabase
+      .from("singsing_rooms")
+      .update({ 
+        room_type: editForm.room_type, 
+        capacity: Number(editForm.capacity) 
+      })
+      .eq("id", id);
+      
     if (error) setError(error.message);
-    else fetchRooms();
+    else {
+      setEditingRoom(null);
+      fetchRooms();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("정말 삭제하시겠습니까? 배정된 참가자들은 미배정 상태가 됩니다.")) return;
+    
+    try {
+      // 먼저 해당 객실에 배정된 참가자들을 미배정으로 변경
+      const { error: updateError } = await supabase
+        .from("singsing_participants")
+        .update({ room_id: null })
+        .eq("room_id", id);
+      
+      if (updateError) throw updateError;
+      
+      // 그 다음 객실 삭제
+      const { error: deleteError } = await supabase
+        .from("singsing_rooms")
+        .delete()
+        .eq("id", id);
+      
+      if (deleteError) throw deleteError;
+      
+      fetchRooms();
+    } catch (error: any) {
+      setError(`객실 삭제 중 오류 발생: ${error.message}`);
+    }
   };
 
   return (
@@ -114,12 +156,63 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
           <tbody>
             {rooms.map((room) => (
               <tr key={room.id} className="border-t border-gray-200 dark:border-gray-700">
-                <td className="py-1 px-2">{room.room_type}</td>
-                <td className="py-1 px-2">{room.capacity}</td>
+                <td className="py-1 px-2">
+                  {editingRoom === room.id ? (
+                    <input
+                      type="text"
+                      value={editForm.room_type}
+                      onChange={e => setEditForm({...editForm, room_type: e.target.value})}
+                      className="border rounded px-1 py-0.5 w-full text-sm"
+                    />
+                  ) : (
+                    room.room_type
+                  )}
+                </td>
+                <td className="py-1 px-2">
+                  {editingRoom === room.id ? (
+                    <input
+                      type="number"
+                      value={editForm.capacity}
+                      onChange={e => setEditForm({...editForm, capacity: e.target.value})}
+                      className="border rounded px-1 py-0.5 w-20 text-sm"
+                      min="1"
+                    />
+                  ) : (
+                    room.capacity
+                  )}
+                </td>
                 <td className="py-1 px-2">
                   <div className="flex justify-center items-center gap-2">
-                    <button className="text-blue-700 underline" onClick={() => {/* 수정 로직 생략 */}} aria-label="수정">수정</button>
-                    <button className="text-red-600 underline" onClick={() => handleDelete(room.id)} aria-label="삭제">삭제</button>
+                    {editingRoom === room.id ? (
+                      <>
+                        <button
+                          className="text-green-600 text-sm underline"
+                          onClick={() => handleUpdate(room.id)}
+                        >
+                          저장
+                        </button>
+                        <button
+                          className="text-gray-600 text-sm underline"
+                          onClick={() => setEditingRoom(null)}
+                        >
+                          취소
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button 
+                          className="text-blue-700 underline" 
+                          onClick={() => {
+                            setEditingRoom(room.id);
+                            setEditForm({ room_type: room.room_type, capacity: room.capacity.toString() });
+                          }} 
+                          aria-label="수정"
+                        >
+                          수정
+                        </button>
+                        <button className="text-red-600 underline" onClick={() => handleDelete(room.id)} aria-label="삭제">삭제</button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>

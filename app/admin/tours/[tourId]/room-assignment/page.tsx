@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import RoomTypeManager from "@/components/RoomTypeManager";
 import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 
 export default function RoomAssignmentPage() {
@@ -10,6 +11,7 @@ export default function RoomAssignmentPage() {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">투어별 객실 배정</h1>
+      <RoomTypeManager tourId={tourId} />
       <RoomAssignmentManager tourId={tourId} />
     </div>
   );
