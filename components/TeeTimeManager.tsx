@@ -414,4 +414,4 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   );
 };
 
-export default TeeTimeManager; 
+export default TeeTimeManager;
