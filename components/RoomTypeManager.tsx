@@ -10,24 +10,28 @@ type Room = {
   room_number: string;
   capacity: number;
   tour_id: string;
+  is_comp?: boolean;
+  comp_note?: string;
 };
 
 type RoomForm = {
   room_type: string;
   capacity: string;
+  is_comp?: boolean;
+  comp_note?: string;
 };
 
-const initialForm: RoomForm = { room_type: "", capacity: "" };
+const initialForm: RoomForm = { room_type: "", capacity: "", is_comp: false, comp_note: "" };
 
 type Props = { tourId: string; onDataChange?: () => void };
 
 const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [roomRows, setRoomRows] = useState([{ room_type: "", capacity: "" }]);
+  const [roomRows, setRoomRows] = useState([{ room_type: "", capacity: "", is_comp: false, comp_note: "" }]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ room_type: "", capacity: "" });
+  const [editForm, setEditForm] = useState({ room_type: "", capacity: "", is_comp: false, comp_note: "" });
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -47,7 +51,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   };
 
   const handleAddRow = () => {
-    setRoomRows(rows => [...rows, { room_type: "", capacity: "" }]);
+    setRoomRows(rows => [...rows, { room_type: "", capacity: "", is_comp: false, comp_note: "" }]);
   };
 
   const handleDeleteRow = (idx: number) => {
@@ -79,7 +83,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     const { error } = await supabase.from("singsing_rooms").insert(newRooms);
     if (error) setError(error.message);
     else {
-      setRoomRows([{ room_type: "", capacity: "" }]);
+      setRoomRows([{ room_type: "", capacity: "", is_comp: false, comp_note: "" }]);
       await fetchRooms();
       if (onDataChange) onDataChange();
     }
@@ -144,9 +148,18 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     }
   };
 
+  // 통계 계산
+  const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
+  const totalRooms = rooms.length;
+  
   return (
     <div className="mb-8">
-      <h2 className="text-lg font-semibold mb-4">객실 관리</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">객실 관리</h2>
+        <div className="text-sm text-gray-600">
+          총 {totalRooms}개 객실 | 총 정원 {totalCapacity}명
+        </div>
+      </div>
       <div className="flex flex-col gap-2 mb-4">
         {roomRows.map((row, idx) => (
           <div key={idx} className="flex gap-2 items-center">
@@ -229,7 +242,12 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                           className="text-blue-700 underline" 
                           onClick={() => {
                             setEditingRoom(room.id);
-                            setEditForm({ room_type: room.room_type, capacity: room.capacity.toString() });
+                            setEditForm({ 
+                              room_type: room.room_type, 
+                              capacity: room.capacity.toString(),
+                              is_comp: room.is_comp || false,
+                              comp_note: room.comp_note || ""
+                            });
                           }} 
                           aria-label="수정"
                         >
