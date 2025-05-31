@@ -1,0 +1,513 @@
+"use client";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { Users, Check, AlertCircle, Eye, Clock, Calendar } from "lucide-react";
+
+type Participant = {
+  id: string;
+  name: string;
+  phone: string;
+  team_name: string;
+  note: string;
+  status: string;
+  tour_id: string;
+  tee_time_id?: string | null;
+};
+
+type TeeTime = {
+  id: string;
+  tour_id: string;
+  play_date: string;
+  golf_course: string;
+  tee_time: string;
+  max_players: number;
+};
+
+type Tour = {
+  id: string;
+  tour_title: string;
+  tour_period: string;
+};
+
+type Props = { tourId: string; refreshKey?: number };
+
+const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
+  const [tour, setTour] = useState<Tour | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [assigning, setAssigning] = useState<string | null>(null);
+  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const [unassignedSearch, setUnassignedSearch] = useState("");
+  const [previewType, setPreviewType] = useState<'customer' | 'staff'>('customer');
+
+  // 데이터 fetch
+  const fetchData = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [{ data: participantsData, error: participantsError }, { data: teeTimesData, error: teeTimesError }, { data: tourData, error: tourError }] = await Promise.all([
+        supabase
+          .from("singsing_participants")
+          .select("*")
+          .eq("tour_id", tourId)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("singsing_tee_times")
+          .select("*")
+          .eq("tour_id", tourId)
+          .order("play_date")
+          .order("tee_time"),
+        supabase
+          .from("singsing_tours")
+          .select("*")
+          .eq("id", tourId)
+          .single()
+      ]);
+      
+      if (participantsError) throw participantsError;
+      if (teeTimesError) throw teeTimesError;
+      if (tourError && tourError.code !== 'PGRST116') throw tourError;
+      
+      setParticipants((participantsData || []) as Participant[]);
+      setTeeTimes((teeTimesData || []) as TeeTime[]);
+      setTour(tourData as Tour);
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { if (tourId) fetchData(); }, [tourId, refreshKey]);
+
+  // 티타임 배정 변경
+  const handleAssignTeeTime = async (participantId: string, teeTimeId: string) => {
+    if (teeTimeId) {
+      const teeTime = teeTimes.find(t => t.id === teeTimeId);
+      const assignedCount = participants.filter(p => p.tee_time_id === teeTimeId).length;
+      if (teeTime && assignedCount >= teeTime.max_players) {
+        alert('이 티타임은 정원이 가득 찼습니다.');
+        return;
+      }
+    }
+    
+    try {
+      setAssigning(participantId);
+      const { error } = await supabase
+        .from("singsing_participants")
+        .update({ tee_time_id: teeTimeId === "" ? null : teeTimeId })
+        .eq("id", participantId);
+      
+      if (error) throw error;
+      
+      await fetchData();
+      setAssignSuccess(participantId);
+      setTimeout(() => setAssignSuccess(null), 1200);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setAssigning(null);
+    }
+  };
+
+  // 미리보기 HTML 생성
+  const generatePreviewHTML = (type: 'customer' | 'staff') => {
+    const assignedParticipants = participants.filter(p => p.tee_time_id);
+    const teeTimesByDate = teeTimes.reduce((acc, tt) => {
+      const date = tt.play_date;
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(tt);
+      return acc;
+    }, {} as Record<string, TeeTime[]>);
+
+    const tourTitle = tour?.tour_title || "투어명";
+    const tourPeriod = tour?.tour_period || "투어 기간";
+    const isStaff = type === 'staff';
+
+    let tablesHTML = '';
+    Object.entries(teeTimesByDate).forEach(([date, times]) => {
+      const dateStr = new Date(date).toLocaleDateString('ko-KR', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        weekday: 'long' 
+      });
+
+      let tableHTML = `
+        <h2 class="date-header">${dateStr}</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>시간</th>
+                <th>골프장</th>
+                <th>NO.</th>
+                <th>성명</th>
+                ${isStaff ? '<th>연락처</th>' : ''}
+                <th>팀명</th>
+                ${isStaff ? '<th>비고</th>' : ''}
+              </tr>
+            </thead>
+            <tbody>`;
+
+      times.forEach(teeTime => {
+        const teeTimeParticipants = assignedParticipants.filter(p => p.tee_time_id === teeTime.id);
+        
+        if (teeTimeParticipants.length === 0) {
+          tableHTML += `
+            <tr>
+              <td>${teeTime.tee_time}</td>
+              <td>${teeTime.golf_course}</td>
+              <td colspan="${isStaff ? 5 : 3}" class="empty-slot">배정된 참가자가 없습니다</td>
+            </tr>`;
+        } else {
+          teeTimeParticipants.forEach((p, index) => {
+            tableHTML += `
+              <tr>
+                ${index === 0 ? `
+                  <td rowspan="${teeTimeParticipants.length}">${teeTime.tee_time}</td>
+                  <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course}</td>
+                ` : ''}
+                <td>${index + 1}</td>
+                <td>${p.name}</td>
+                ${isStaff ? `<td>${p.phone || ''}</td>` : ''}
+                <td>${p.team_name || ''}</td>
+                ${isStaff ? `<td>${p.note || ''}</td>` : ''}
+              </tr>`;
+          });
+        }
+      });
+
+      tableHTML += `
+            </tbody>
+          </table>
+        </div>`;
+      
+      tablesHTML += tableHTML;
+    });
+
+    return isStaff ? `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>라운딩 시간표 (스탭용)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
+    body { background-color: #FFFFFF; color: #2D3748; line-height: 1.6; padding: 20px; }
+    .container { width: 100%; max-width: 900px; margin: 0 auto; }
+    .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #DEE2E6; }
+    .title-section { flex: 1; }
+    .info-section { text-align: right; padding: 8px 12px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #DEE2E6; margin-left: 15px; }
+    .info-section p { margin: 0; line-height: 1.5; font-size: 14px; }
+    h1 { color: #34699C; font-size: 22px; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; font-weight: 500; color: #4A5568; margin-bottom: 6px; }
+    .date-header { color: #2C5282; font-size: 18px; margin: 20px 0 10px 0; padding: 8px; background-color: #EBF8FF; border-radius: 4px; }
+    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 30px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid #DEE2E6; padding: 8px 10px; text-align: center; }
+    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; }
+    tr:hover { background-color: #F7FAFC; }
+    .empty-slot { color: #999; font-style: italic; }
+    .staff-note { color: #e53e3e; font-weight: bold; text-align: center; margin-bottom: 15px; padding: 8px; background-color: #fff5f5; border-radius: 4px; border: 1px solid #fed7d7; }
+    @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-container">
+      <div class="title-section">
+        <h1>라운딩 시간표 (스탭용)</h1>
+        <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
+      </div>
+      <div class="info-section">
+        <p>담당: 기사님</p>
+        <p>연락처: 010-0000-0000</p>
+      </div>
+    </div>
+    <p class="staff-note">※ 이 명단은 스탭용으로 고객 연락처 정보가 포함되어 있습니다.</p>
+    ${tablesHTML}
+  </div>
+</body>
+</html>` : `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>라운딩 시간표 (고객용)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
+    body { background-color: #f5f7fa; color: #2D3748; line-height: 1.6; padding: 20px; }
+    .container { width: 100%; max-width: 900px; margin: 0 auto; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 30px; }
+    .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #3182ce; }
+    .title-section { flex: 1; }
+    .info-section { text-align: right; padding: 8px 12px; background-color: #ebf8ff; border-radius: 4px; border: 1px solid #bee3f8; margin-left: 15px; }
+    .info-section p { margin: 0; line-height: 1.5; font-size: 14px; }
+    h1 { color: #2c5282; font-size: 22px; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; font-weight: 500; color: #4A5568; margin-bottom: 6px; }
+    .date-header { color: #2C5282; font-size: 18px; margin: 25px 0 15px 0; padding: 10px; background-color: #EBF8FF; border-radius: 6px; }
+    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 30px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: center; }
+    th { background-color: #EBF8FF; font-weight: bold; color: #2C5282; }
+    tr:hover { background-color: #F7FAFC; }
+    .empty-slot { color: #999; font-style: italic; }
+    .notice { padding: 15px; background-color: #FFF5F5; border: 1px solid #FED7D7; border-radius: 6px; font-size: 14px; margin-bottom: 20px; }
+    .notice-title { font-weight: bold; color: #E53E3E; margin-bottom: 8px; }
+    .notice-list { list-style-type: disc; margin-left: 20px; }
+    .notice-list li { margin-bottom: 5px; }
+    .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #E2E8F0; color: #718096; font-size: 13px; }
+    @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-container">
+      <div class="title-section">
+        <h1>라운딩 시간표</h1>
+        <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
+      </div>
+      <div class="info-section">
+        <p>담당: 기사님</p>
+        <p>연락처: 010-0000-0000</p>
+      </div>
+    </div>
+    ${tablesHTML}
+    <div class="notice">
+      <div class="notice-title">라운딩 이용 안내</div>
+      <ul class="notice-list">
+        <li><strong>집합시간:</strong> 티오프 시간 30분 전 골프장 도착</li>
+        <li><strong>준비사항:</strong> 골프복, 골프화, 모자, 선글라스</li>
+        <li><strong>카트배정:</strong> 4인 1카트 원칙</li>
+        <li><strong>날씨대비:</strong> 우산, 우의 등 개인 준비</li>
+      </ul>
+    </div>
+    <div class="footer">
+      <p>즐거운 라운딩 되시길 바랍니다.</p>
+      <p>싱싱골프투어 | 031-215-3990</p>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  const handlePreview = () => {
+    const html = generatePreviewHTML(previewType);
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(html);
+      newWindow.document.close();
+    }
+  };
+
+  // 미배정 참가자 필터링
+  const filteredUnassigned = participants.filter(p => !p.tee_time_id && p.name.includes(unassignedSearch));
+  
+  // 통계 계산
+  const assignedParticipants = participants.filter(p => p.tee_time_id).length;
+  const totalParticipants = participants.length;
+  const unassignedParticipants = totalParticipants - assignedParticipants;
+  
+  const totalCapacity = teeTimes.reduce((sum, tt) => sum + tt.max_players, 0);
+  const occupiedSpaces = participants.filter(p => p.tee_time_id).length;
+  const availableSpaces = totalCapacity - occupiedSpaces;
+
+  // 날짜별로 티타임 그룹화
+  const teeTimesByDate = teeTimes.reduce((acc, tt) => {
+    const date = tt.play_date;
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(tt);
+    return acc;
+  }, {} as Record<string, TeeTime[]>);
+
+  return (
+    <div className="mb-8">
+      {/* 헤더 */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">티타임별 참가자 그룹핑</h2>
+        <div className="flex gap-2">
+          <select
+            value={previewType}
+            onChange={(e) => setPreviewType(e.target.value as 'customer' | 'staff')}
+            className="border border-gray-300 rounded px-3 py-1.5 bg-white text-gray-900 text-sm"
+          >
+            <option value="customer">고객용</option>
+            <option value="staff">스탭용</option>
+          </select>
+          <button
+            onClick={handlePreview}
+            className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+          >
+            <Eye className="w-4 h-4" />
+            미리보기
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-4 text-gray-500">불러오는 중...</div>
+      ) : (
+        <>
+          {/* 통계 정보 */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="text-sm text-blue-600 font-medium">참가자 현황</div>
+              <div className="text-2xl font-bold text-blue-900">{assignedParticipants}/{totalParticipants}</div>
+              <div className="text-xs text-blue-600">배정완료 / 총인원</div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4">
+              <div className="text-sm text-green-600 font-medium">티타임 현황</div>
+              <div className="text-2xl font-bold text-green-900">{occupiedSpaces}/{totalCapacity}</div>
+              <div className="text-xs text-green-600">사용중 / 총정원</div>
+            </div>
+            <div className="bg-yellow-50 rounded-lg p-4">
+              <div className="text-sm text-yellow-600 font-medium">남은 자리</div>
+              <div className="text-2xl font-bold text-yellow-900">{availableSpaces}개</div>
+              <div className="text-xs text-yellow-600">예약 가능</div>
+            </div>
+          </div>
+          
+          {/* 미배정 경고 */}
+          {unassignedParticipants > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span className="text-sm text-red-700">
+                미배정 참가자가 {unassignedParticipants}명 있습니다. 남은 자리: {availableSpaces}개
+              </span>
+            </div>
+          )}
+          
+          <div className="space-y-6">
+            {/* 날짜별 티타임 배정 */}
+            {Object.entries(teeTimesByDate).map(([date, times]) => (
+              <div key={date} className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-5 h-5 text-gray-600" />
+                  <h3 className="font-bold text-gray-900 text-lg">
+                    {new Date(date).toLocaleDateString('ko-KR', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      weekday: 'long' 
+                    })}
+                  </h3>
+                </div>
+                
+                <div className="space-y-3">
+                  {times.map(teeTime => {
+                    const assigned = participants.filter(p => p.tee_time_id === teeTime.id);
+                    return (
+                      <div key={teeTime.id} className="bg-white rounded-lg p-3 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-blue-800">
+                              <Clock className="w-4 h-4 inline mr-1" />
+                              {teeTime.tee_time}
+                            </span>
+                            <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                              {teeTime.golf_course}
+                            </span>
+                          </div>
+                          <span className={assigned.length === teeTime.max_players ? "text-red-600 font-bold" : "text-gray-500"}>
+                            {assigned.length} / {teeTime.max_players}명
+                          </span>
+                        </div>
+                        
+                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {assigned.length === 0 ? (
+                            <li className="text-gray-400 text-sm col-span-full">배정된 참가자가 없습니다.</li>
+                          ) : (
+                            assigned.map(p => (
+                              <li key={p.id} className="flex items-center gap-2">
+                                <span className="font-medium text-gray-900">{p.name}</span>
+                                <span className="text-xs text-gray-500">({p.team_name || '개인'})</span>
+                                <select
+                                  className="ml-auto border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:outline-blue-500"
+                                  value={p.tee_time_id || ""}
+                                  onChange={e => handleAssignTeeTime(p.id, e.target.value)}
+                                  disabled={!!assigning}
+                                >
+                                  <option value="">미배정</option>
+                                  {teeTimes.map(t => {
+                                    const assignedCount = participants.filter(pp => pp.tee_time_id === t.id).length;
+                                    const isFull = assignedCount >= t.max_players;
+                                    const label = `${new Date(t.play_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })} ${t.tee_time} ${t.golf_course} (${assignedCount}/${t.max_players})`;
+                                    return (
+                                      <option key={t.id} value={t.id} disabled={isFull && t.id !== p.tee_time_id}>
+                                        {label}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* 미배정 참가자 */}
+            <div className="bg-gray-50 rounded-lg shadow p-4">
+              <div className="font-bold text-gray-700 mb-2">미배정 참가자</div>
+              <input
+                type="text"
+                placeholder="이름으로 검색"
+                value={unassignedSearch}
+                onChange={e => setUnassignedSearch(e.target.value)}
+                className="mb-3 w-full max-w-xs border border-gray-300 rounded px-2 py-1 text-sm focus:outline-blue-500"
+              />
+              {filteredUnassigned.length === 0 ? (
+                <div className="text-gray-400 text-sm">검색 결과가 없습니다.</div>
+              ) : (
+                <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {filteredUnassigned.map(p => (
+                    <li
+                      key={p.id}
+                      className="bg-white rounded-lg shadow px-3 py-2 transition hover:bg-blue-50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-gray-900">{p.name}</div>
+                          <div className="text-xs text-gray-500">{p.team_name || '개인'}</div>
+                        </div>
+                        <select
+                          className="ml-2 border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:outline-blue-500"
+                          value={p.tee_time_id || ""}
+                          onChange={e => handleAssignTeeTime(p.id, e.target.value)}
+                          disabled={!!assigning}
+                        >
+                          <option value="">미배정</option>
+                          {teeTimes.map(t => {
+                            const assignedCount = participants.filter(pp => pp.tee_time_id === t.id).length;
+                            const isFull = assignedCount >= t.max_players;
+                            const label = `${new Date(t.play_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })} ${t.tee_time} ${t.golf_course} (${assignedCount}/${t.max_players})`;
+                            return (
+                              <option key={t.id} value={t.id} disabled={isFull}>
+                                {label}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+      
+      {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+    </div>
+  );
+};
+
+export default TeeTimeAssignmentManager;
