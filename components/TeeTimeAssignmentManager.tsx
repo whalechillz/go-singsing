@@ -441,9 +441,9 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 </html>`;
   };
 
-  // 전체 투어 자동 배정 기능
+  // 전체 투어 자동 배정 기능 (날짜별 균등 분배)
   const handleAutoAssignAll = async () => {
-    if (!window.confirm('모든 미배정 참가자를 전체 티타임에 자동 배정하시겠습니까?')) return;
+    if (!window.confirm('모든 미배정 참가자를 전체 티타임에 균등하게 분배하시겠습니까?')) return;
     
     try {
       const unassigned = participants.filter(p => !p.tee_time_id);
@@ -452,25 +452,42 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         return;
       }
       
-      let assignedCount = 0;
-      const sortedTeeTimes = [...teeTimes].sort((a, b) => {
-        if (a.play_date < b.play_date) return -1;
-        if (a.play_date > b.play_date) return 1;
-        if (a.tee_time < b.tee_time) return -1;
-        if (a.tee_time > b.tee_time) return 1;
-        return 0;
-      });
+      // 날짜별로 티타임 그룹화
+      const dateGroups = Object.entries(teeTimesByDate).sort(([a], [b]) => a.localeCompare(b));
+      const totalAvailableSlots = teeTimes.reduce((sum, tt) => {
+        const assigned = participants.filter(p => p.tee_time_id === tt.id).length;
+        return sum + (tt.max_players - assigned);
+      }, 0);
       
-      for (const participant of unassigned) {
-        for (const teeTime of sortedTeeTimes) {
-          const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
-          if (currentAssigned < teeTime.max_players) {
-            await supabase
-              .from("singsing_participants")
-              .update({ tee_time_id: teeTime.id })
-              .eq("id", participant.id);
-            assignedCount++;
-            break;
+      if (totalAvailableSlots < unassigned.length) {
+        alert(`배정 가능한 자리(${totalAvailableSlots})가 참가자 수(${unassigned.length})보다 적습니다.`);
+      }
+      
+      let assignedCount = 0;
+      let participantIndex = 0;
+      
+      // 날짜별로 번갈아가며 배정
+      let hasAvailableSlots = true;
+      while (participantIndex < unassigned.length && hasAvailableSlots) {
+        hasAvailableSlots = false;
+        
+        for (const [date, dayTeeTimes] of dateGroups) {
+          if (participantIndex >= unassigned.length) break;
+          
+          // 해당 날짜의 빈 자리 찾기
+          for (const teeTime of dayTeeTimes) {
+            const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
+            if (currentAssigned < teeTime.max_players) {
+              await supabase
+                .from("singsing_participants")
+                .update({ tee_time_id: teeTime.id })
+                .eq("id", unassigned[participantIndex].id);
+              
+              participantIndex++;
+              assignedCount++;
+              hasAvailableSlots = true;
+              break; // 다음 날짜로 이동
+            }
           }
         }
       }
@@ -520,6 +537,31 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       await fetchData();
     } catch (error: any) {
       setError(`일괄 배정 중 오류: ${error.message}`);
+    }
+  };
+
+  // 날짜별 배정 초기화 기능
+  const handleResetDateAssignments = async (date: string) => {
+    if (!window.confirm(`${new Date(date).toLocaleDateString('ko-KR')} 티타임의 모든 배정을 취소하시겠습니까?`)) return;
+    
+    try {
+      // 해당 날짜의 티타임 ID들 가져오기
+      const dateTeeTimeIds = teeTimes
+        .filter(tt => tt.play_date === date)
+        .map(tt => tt.id);
+      
+      // 해당 티타임에 배정된 참가자들의 tee_time_id를 null로 업데이트
+      const { error } = await supabase
+        .from("singsing_participants")
+        .update({ tee_time_id: null })
+        .in("tee_time_id", dateTeeTimeIds);
+      
+      if (error) throw error;
+      
+      alert(`${new Date(date).toLocaleDateString('ko-KR')} 티타임 배정이 모두 취소되었습니다.`);
+      await fetchData();
+    } catch (error: any) {
+      setError(`배정 취소 중 오류: ${error.message}`);
     }
   };
 
@@ -624,16 +666,24 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
             {/* 날짜별 티타임 배정 */}
             {Object.entries(teeTimesByDate).map(([date, times]) => (
               <div key={date} className="border rounded-lg p-4 bg-gray-50">
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-5 h-5 text-gray-600" />
-                  <h3 className="font-bold text-gray-900 text-lg">
-                    {new Date(date).toLocaleDateString('ko-KR', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric',
-                      weekday: 'long' 
-                    })}
-                  </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-gray-600" />
+                    <h3 className="font-bold text-gray-900 text-lg">
+                      {new Date(date).toLocaleDateString('ko-KR', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        weekday: 'long' 
+                      })}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => handleResetDateAssignments(date)}
+                    className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                  >
+                    이 날짜 배정 취소
+                  </button>
                 </div>
                 
                 <div className="space-y-3">
@@ -745,7 +795,18 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                 className="mb-3 w-full max-w-xs border border-gray-300 rounded px-2 py-1 text-sm focus:outline-blue-500"
               />
               {filteredUnassigned.length === 0 ? (
-                <div className="text-gray-400 text-sm">검색 결과가 없습니다.</div>
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-2">
+                    {participants.filter(p => !p.tee_time_id).length === 0 
+                      ? "현재 모든 참가자가 티타임에 배정되었습니다."
+                      : "검색 결과가 없습니다."}
+                  </div>
+                  {participants.filter(p => !p.tee_time_id).length === 0 && (
+                    <p className="text-sm text-gray-500">
+                      위의 날짜별 "배정 취소" 버튼으로 배정을 취소할 수 있습니다.
+                    </p>
+                  )}
+                </div>
               ) : (
                 <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {filteredUnassigned.map(p => (
