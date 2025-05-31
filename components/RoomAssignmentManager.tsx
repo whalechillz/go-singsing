@@ -393,7 +393,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                           <span className="font-medium text-gray-900 truncate">{p.name}</span>
                         </div>
                         <select
-                          className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right ml-2"
+                          className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 ml-2"
                           value={p.room_id || ""}
                           onChange={e => handleAssignRoom(p.id, e.target.value)}
                           disabled={!!assigning}
@@ -440,10 +440,10 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
                       <span className="font-medium text-gray-900 truncate">{p.name}</span>
                     </div>
                     <select
-                      className="ml-2 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
-                      value={p.room_id || ""}
-                      onChange={e => handleAssignRoom(p.id, e.target.value)}
-                      disabled={!!assigning}
+                    className="ml-2 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500"
+                    value={p.room_id || ""}
+                    onChange={e => handleAssignRoom(p.id, e.target.value)}
+                    disabled={!!assigning}
                     >
                       <option value="">미배정</option>
                       {rooms.map(r => {

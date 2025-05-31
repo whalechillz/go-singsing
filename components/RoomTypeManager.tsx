@@ -17,9 +17,9 @@ type RoomForm = {
 
 const initialForm: RoomForm = { room_type: "", capacity: "" };
 
-type Props = { tourId: string };
+type Props = { tourId: string; onDataChange?: () => void };
 
-const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
+const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [roomRows, setRoomRows] = useState([{ room_type: "", capacity: "" }]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -77,6 +77,8 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
       else {
       setRoomRows([{ room_type: "", capacity: "" }]);
         fetchRooms();
+      if (props.onDataChange) props.onDataChange();
+      if (props.onDataChange) props.onDataChange();
     }
   };
 
@@ -98,6 +100,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
     else {
       setEditingRoom(null);
       fetchRooms();
+      if (props.onDataChange) props.onDataChange();
     }
   };
 
@@ -138,8 +141,14 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
             <button type="button" className="text-red-600 hover:text-red-800" onClick={() => handleDeleteRow(idx)} aria-label="행 삭제"><X size={18} /></button>
           </div>
         ))}
-        <button type="button" className="flex items-center gap-1 text-blue-700 font-semibold mt-2" onClick={handleAddRow}><Plus size={18} /> 행 추가</button>
-        <button type="button" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[100px] font-semibold hover:bg-blue-900 transition-colors mt-2" onClick={handleBulkAdd}>일괄 추가</button>
+        <div className="flex gap-2 mt-2">
+          <button type="button" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium" onClick={handleAddRow}>
+            <Plus size={16} /> 행 추가
+          </button>
+          <button type="button" className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700 transition-colors" onClick={handleBulkAdd}>
+            일괄 추가
+          </button>
+        </div>
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
       </div>
       {loading ? (
@@ -150,6 +159,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
             <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
               <th className="py-2 px-2 text-left">객실 타입</th>
               <th className="py-2 px-2 text-left">정원</th>
+              <th className="py-2 px-2 text-left">객실 번호</th>
               <th className="py-2 px-2">관리</th>
             </tr>
           </thead>
@@ -181,6 +191,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId }) => {
                     room.capacity
                   )}
                 </td>
+                <td className="py-1 px-2">{room.room_number}</td>
                 <td className="py-1 px-2">
                   <div className="flex justify-center items-center gap-2">
                     {editingRoom === room.id ? (
