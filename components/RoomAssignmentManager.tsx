@@ -343,17 +343,21 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const occupiedSpaces = participants.filter(p => p.room_id).length;
   const availableSpaces = totalCapacity - occupiedSpaces;
   
-  const compRooms = rooms.filter(room => 
-    room.room_type.toLowerCase().includes('가이드') || 
-    room.room_type.toLowerCase().includes('기사') || 
-    room.room_type.toLowerCase().includes('comp') ||
-    room.room_type.toLowerCase().includes('무료')
-  );
+  const compRooms = rooms.filter(room => {
+    const name = room.room_type.toLowerCase();
+    return name.includes('가이드') || 
+           name.includes('기사') || 
+           name.includes('comp') ||
+           name.includes('무료') ||
+           name === '가이드' ||
+           name === '콤프룸' ||
+           name === 'comp룸';
+  });
   
-  const occupiedRooms = rooms.filter(room => 
-    participants.some(p => p.room_id === room.id)
+  const emptyRooms = rooms.filter(room => 
+    !participants.some(p => p.room_id === room.id)
   ).length;
-  const emptyRooms = rooms.length - occupiedRooms;
+  const occupiedRooms = rooms.length - emptyRooms;
 
   return (
     <div className="mb-8">

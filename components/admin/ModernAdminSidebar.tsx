@@ -47,6 +47,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
   // pathname에 따라 activeNav 결정
   const getActiveNav = () => {
     if (pathname === '/admin') return 'dashboard';
+    // 구체적인 경로를 먼저 체크
+    if (pathname.includes('/room-assignment')) return 'room-assignment';
     if (pathname.startsWith('/admin/tours')) return 'tours';
     if (pathname.startsWith('/admin/tour-products')) return 'tour-products';
     if (pathname.startsWith('/admin/boarding-places')) return 'boarding-places';
