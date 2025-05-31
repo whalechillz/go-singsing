@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, Check, AlertCircle, RefreshCw, X, Eye, FileText } from "lucide-react";
+import { Plus, X, Eye, Edit2 } from "lucide-react";
 
 type Participant = {
   id: string;
@@ -37,26 +37,21 @@ type Tour = {
 
 type Props = { tourId: string };
 
-const roomTypeColors: Record<string, string> = {
-  "미배정": "bg-gray-200 text-gray-700",
-  "2인실": "bg-blue-100 text-blue-700",
-  "3인실": "bg-green-100 text-green-700",
-  "4인실": "bg-purple-100 text-purple-700",
-};
-
 const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [tour, setTour] = useState<Tour | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const [newRoomType, setNewRoomType] = useState<string>("");
-  const [newRoomCount, setNewRoomCount] = useState<number>(1);
   const [assigning, setAssigning] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
   const [unassignedSearch, setUnassignedSearch] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
   const [previewType, setPreviewType] = useState<'customer' | 'staff'>('customer');
+  
+  // 객실 타입 관리용 상태
+  const [roomRows, setRoomRows] = useState([{ room_type: "", capacity: "" }]);
+  const [editingRoom, setEditingRoom] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ capacity: "" });
 
   // 데이터 fetch
   const fetchData = async () => {
@@ -84,7 +79,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
       
       if (participantsError) throw participantsError;
       if (roomsError) throw roomsError;
-      if (tourError && tourError.code !== 'PGRST116') throw tourError; // PGRST116 is "no rows found"
+      if (tourError && tourError.code !== 'PGRST116') throw tourError;
       
       setParticipants((participantsData || []) as Participant[]);
       setRooms((roomsData || []) as Room[]);
@@ -99,16 +94,53 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
 
   useEffect(() => { if (tourId) fetchData(); }, [tourId]);
 
-  // 객실 자동 생성 - 개선된 버전
-  const handleAddRooms = async () => {
-    const trimmedRoomType = newRoomType.trim();
-    if (!trimmedRoomType || newRoomCount < 1) {
-      setError("객실 타입을 입력해 주세요.");
+  // 객실 타입별 통계
+  const roomStats = useMemo(() => {
+    const stats: Record<string, { count: number; capacity: number; assigned: number }> = {};
+    
+    rooms.forEach(room => {
+      if (!stats[room.room_type]) {
+        stats[room.room_type] = { count: 0, capacity: 0, assigned: 0 };
+      }
+      stats[room.room_type].count++;
+      stats[room.room_type].capacity += room.capacity;
+    });
+    
+    participants.forEach(p => {
+      if (p.room_id) {
+        const room = rooms.find(r => r.id === p.room_id);
+        if (room && stats[room.room_type]) {
+          stats[room.room_type].assigned++;
+        }
+      }
+    });
+    
+    return stats;
+  }, [rooms, participants]);
+
+  // 객실 타입 추가 행 변경
+  const handleRowChange = (idx: number, field: string, value: string) => {
+    setRoomRows(rows => rows.map((row, i) => i === idx ? { ...row, [field]: value } : row));
+  };
+
+  const handleAddRow = () => {
+    setRoomRows(rows => [...rows, { room_type: "", capacity: "" }]);
+  };
+
+  const handleDeleteRow = (idx: number) => {
+    setRoomRows(rows => rows.filter((_, i) => i !== idx));
+  };
+
+  // 객실 일괄 추가
+  const handleBulkAdd = async () => {
+    setError("");
+    
+    if (roomRows.some(row => !row.room_type || !row.capacity)) {
+      setError("모든 행의 객실 타입과 정원을 입력해 주세요.");
       return;
     }
     
     try {
-      // 먼저 현재 투어의 모든 룸을 다시 조회 (최신 상태 확인)
       const { data: currentRooms, error: fetchError } = await supabase
         .from("singsing_rooms")
         .select("*")
@@ -117,124 +149,102 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
         
       if (fetchError) throw fetchError;
       
-      // 가장 큰 room_seq 찾기
       const maxSeq = currentRooms && currentRooms.length > 0 
         ? Math.max(...currentRooms.map(r => r.room_seq || 0))
         : 0;
       
-      // capacity 자동 추출
-      const getCapacity = (type: string) => {
-        const match = type.match(/(\d+)인실/);
-        if (match) return parseInt(match[1]);
-        return 2; // 기본값
-      };
+      const newRooms: any[] = [];
+      let currentSeq = maxSeq;
       
-      const capacity = getCapacity(trimmedRoomType);
-      const roomsToAdd = [];
-      
-      // 새로운 객실 데이터 생성
-      for (let i = 0; i < newRoomCount; i++) {
-        const newSeq = maxSeq + i + 1;
-        roomsToAdd.push({
+      for (const row of roomRows) {
+        currentSeq++;
+        newRooms.push({
           tour_id: tourId,
-          room_type: trimmedRoomType,
-          room_seq: newSeq,
-          room_number: `${trimmedRoomType}-${String(newSeq).padStart(3, '0')}`,
-          capacity: capacity,
+          room_type: row.room_type,
+          room_seq: currentSeq,
+          room_number: `${row.room_type}-${String(currentSeq).padStart(3, '0')}`,
+          capacity: Number(row.capacity),
           quantity: 1,
         });
       }
       
-      console.log('Rooms to add:', roomsToAdd);
-      
-      // 일괄 추가
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("singsing_rooms")
-        .insert(roomsToAdd)
-        .select();
+        .insert(newRooms);
+        
+      if (error) throw error;
       
-      if (error) {
-        console.error('Room add error:', error);
-        throw error;
-      }
-      
-      console.log('Rooms added successfully:', data);
-      
-      // 성공 시 초기화 및 새로고침
-      setNewRoomType("");
-      setNewRoomCount(1);
-      setError(""); // 에러 메시지 클리어
+      setRoomRows([{ room_type: "", capacity: "" }]);
       await fetchData();
       
     } catch (error: any) {
-      console.error('Error in handleAddRooms:', error);
-      setError(`객실 추가 중 오류 발생: ${error.message || '알 수 없는 오류'}`);
+      setError(`객실 추가 중 오류 발생: ${error.message}`);
     }
   };
 
-  // 객실별로 참가자 그룹핑
-  const roomGroups: Record<string, Participant[]> = {};
-  rooms.forEach(room => {
-    if (room.room_number) {
-      roomGroups[room.room_number] = [];
+  // 객실 타입별 정원 수정
+  const handleEditCapacity = async (roomType: string) => {
+    if (!editForm.capacity) return;
+    
+    try {
+      const { error } = await supabase
+        .from("singsing_rooms")
+        .update({ capacity: Number(editForm.capacity) })
+        .eq("tour_id", tourId)
+        .eq("room_type", roomType);
+        
+      if (error) throw error;
+      
+      setEditingRoom(null);
+      setEditForm({ capacity: "" });
+      await fetchData();
+    } catch (error: any) {
+      setError(`정원 수정 중 오류 발생: ${error.message}`);
     }
-  });
-  participants.forEach(p => {
-    if (p.singsing_rooms?.room_number && roomGroups[p.singsing_rooms.room_number]) roomGroups[p.singsing_rooms.room_number].push(p);
-  });
-  // 미배정 참가자
-  const unassigned = participants.filter(p => !p.room_id);
-  // 미배정 참가자 필터링
-  const filteredUnassigned = participants.filter(p => !p.room_id && p.name.includes(unassignedSearch));
-
-  // 객실명 표시 함수
-  const displayRoomName = (room: Room | undefined) => {
-    if (!room) return "미배정";
-    return `${room.room_number}호`;
   };
 
-  // 객실 배정 변경
-  const handleAssignRoom = async (participantId: string, roomId: string) => {
-    if (roomId) {
-      const room = rooms.find(r => r.id === roomId);
-      const assignedCount = participants.filter(p => p.room_id === roomId).length;
-      // 정원 초과 시 배정 불가
-      if (room && assignedCount >= room.capacity) {
-        alert('이 객실은 정원이 가득 찼습니다.');
-        return;
+  // 객실 타입별 삭제
+  const handleDeleteRoomType = async (roomType: string) => {
+    if (!confirm(`"${roomType}" 타입의 모든 객실을 삭제하시겠습니까? 배정된 참가자들은 미배정 상태가 됩니다.`)) {
+      return;
+    }
+    
+    try {
+      const roomsToDelete = rooms.filter(r => r.room_type === roomType);
+      const roomIds = roomsToDelete.map(r => r.id);
+      
+      // 1. 해당 객실들에 배정된 참가자들을 미배정으로
+      if (roomIds.length > 0) {
+        const { error: updateError } = await supabase
+          .from("singsing_participants")
+          .update({ room_id: null })
+          .in("room_id", roomIds);
+          
+        if (updateError) throw updateError;
       }
-    }
-    setAssigning(participantId);
-    setAssignSuccess(null);
-    setParticipants(prev =>
-      prev.map(p =>
-        p.id === participantId
-          ? { ...p, room_id: roomId === "" ? null : roomId }
-          : p
-      )
-    );
-    const { error } = await supabase
-      .from("singsing_participants")
-      .update({ room_id: roomId === "" ? null : roomId })
-      .eq("id", participantId);
-    setAssigning(null);
-    if (!error) {
-      setAssignSuccess(participantId);
-      setTimeout(() => setAssignSuccess(null), 1200);
-    } else {
-      setError(error.message);
-      fetchData();
+      
+      // 2. 객실 삭제
+      const { error: deleteError } = await supabase
+        .from("singsing_rooms")
+        .delete()
+        .eq("tour_id", tourId)
+        .eq("room_type", roomType);
+        
+      if (deleteError) throw deleteError;
+      
+      await fetchData();
+    } catch (error: any) {
+      setError(`객실 타입 삭제 중 오류 발생: ${error.message}`);
     }
   };
 
-  // 객실 삭제
+  // 개별 객실 삭제
   const handleDeleteRoom = async (roomId: string) => {
     if (!confirm('이 객실을 삭제하시겠습니까? 배정된 참가자들은 미배정 상태가 됩니다.')) {
       return;
     }
     
     try {
-      // 1. 먼저 해당 룸에 배정된 모든 참가자의 room_id를 null로 업데이트
       const { error: updateError } = await supabase
         .from("singsing_participants")
         .update({ room_id: null })
@@ -242,7 +252,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
       
       if (updateError) throw updateError;
       
-      // 2. 그 다음 룸을 삭제
       const { error: deleteError } = await supabase
         .from("singsing_rooms")
         .delete()
@@ -250,10 +259,39 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
       
       if (deleteError) throw deleteError;
       
-      // 3. 데이터 새로고침
-      fetchData();
+      await fetchData();
     } catch (error: any) {
       setError(`객실 삭제 중 오류 발생: ${error.message}`);
+    }
+  };
+
+  // 객실 배정 변경
+  const handleAssignRoom = async (participantId: string, roomId: string) => {
+    if (roomId) {
+      const room = rooms.find(r => r.id === roomId);
+      const assignedCount = participants.filter(p => p.room_id === roomId).length;
+      if (room && assignedCount >= room.capacity) {
+        alert('이 객실은 정원이 가득 찼습니다.');
+        return;
+      }
+    }
+    
+    try {
+      setAssigning(participantId);
+      const { error } = await supabase
+        .from("singsing_participants")
+        .update({ room_id: roomId === "" ? null : roomId })
+        .eq("id", participantId);
+      
+      if (error) throw error;
+      
+      await fetchData();
+      setAssignSuccess(participantId);
+      setTimeout(() => setAssignSuccess(null), 1200);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setAssigning(null);
     }
   };
 
@@ -434,7 +472,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
 </html>`;
   };
 
-  // 미리보기 열기
   const handlePreview = () => {
     const html = generatePreviewHTML(previewType);
     const newWindow = window.open('', '_blank');
@@ -444,10 +481,14 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
     }
   };
 
+  // 미배정 참가자 필터링
+  const filteredUnassigned = participants.filter(p => !p.room_id && p.name.includes(unassignedSearch));
+
   return (
-    <div className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">객실별 참가자 그룹핑</h2>
+    <div className="space-y-6">
+      {/* 헤더 */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">객실 관리 및 배정</h2>
         <div className="flex gap-2">
           <select
             value={previewType}
@@ -466,144 +507,244 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
           </button>
         </div>
       </div>
+
       {loading ? (
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
-        <div className="space-y-8">
-          {/* 객실 추가 UI */}
+        <>
+          {/* 상단: 객실 타입 관리 */}
           <div className="bg-white rounded-lg shadow-sm border p-4">
-            <h3 className="font-medium text-gray-900 mb-3">객실 추가</h3>
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">객실 타입</label>
-                <input
-                  type="text"
-                  value={newRoomType}
-                  onChange={(e) => setNewRoomType(e.target.value)}
-                  placeholder="예: 2인실, 4인실"
-                  className="w-full border border-gray-300 rounded px-3 py-1.5 focus:outline-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">수량</label>
-                <input
-                  type="number"
-                  value={newRoomCount}
-                  onChange={(e) => setNewRoomCount(Number(e.target.value))}
-                  min="1"
-                  className="w-20 border border-gray-300 rounded px-3 py-1.5 focus:outline-blue-500"
-                />
-              </div>
-              <button
-                onClick={handleAddRooms}
-                className="px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
-                추가
-              </button>
-            </div>
-          </div>
-          {rooms.map(room => {
-            const assigned = participants.filter(p => p.room_id === room.id);
-            return (
-              <div key={room.id} className="mb-6 border rounded-lg p-4 bg-gray-50">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-blue-800 text-base">{room.room_number}호</span>
-                  <div className="flex items-center gap-4">
-                    <span className={assigned.length === room.capacity ? "text-red-600 font-bold" : "text-gray-500"}>
-                      현재 {assigned.length} / 정원 {room.capacity}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteRoom(room.id)}
-                      className="text-red-600 hover:text-red-800 transition-colors"
-                      title="객실 삭제"
+            <h3 className="font-medium text-gray-900 mb-4">객실 타입 관리</h3>
+            
+            {/* 객실 추가 폼 */}
+            <div className="mb-4">
+              <div className="flex flex-col gap-2 mb-4">
+                {roomRows.map((row, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input 
+                      value={row.room_type} 
+                      onChange={e => handleRowChange(idx, "room_type", e.target.value)} 
+                      placeholder="객실 타입 (예: 2인실)" 
+                      className="border rounded px-2 py-1 flex-1" 
+                    />
+                    <input 
+                      value={row.capacity} 
+                      onChange={e => handleRowChange(idx, "capacity", e.target.value)} 
+                      placeholder="정원" 
+                      type="number" 
+                      min="1" 
+                      className="border rounded px-2 py-1 w-24" 
+                    />
+                    <button 
+                      type="button" 
+                      className="text-red-600 hover:text-red-800" 
+                      onClick={() => handleDeleteRow(idx)}
                     >
-                      <X className="w-4 h-4" />
+                      <X size={18} />
                     </button>
                   </div>
+                ))}
+                <div className="flex gap-2 mt-2">
+                  <button 
+                    type="button" 
+                    className="flex items-center gap-1 text-blue-700 font-semibold" 
+                    onClick={handleAddRow}
+                  >
+                    <Plus size={18} /> 행 추가
+                  </button>
+                  <button 
+                    type="button" 
+                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition-colors" 
+                    onClick={handleBulkAdd}
+                  >
+                    일괄 추가
+                  </button>
                 </div>
-                <ul className="flex flex-wrap gap-2">
-                  {assigned.length === 0 ? (
-                    <li className="text-gray-400 text-sm">배정된 참가자가 없습니다.</li>
-              ) : (
-                    assigned.map(p => (
-                      <li key={p.id} className="flex items-center gap-1 flex-1 min-w-[120px]">
-                        <div className="flex flex-col items-start min-w-0">
-                          <span className="font-medium text-gray-900 truncate">{p.name}</span>
+              </div>
+            </div>
+
+            {/* 객실 타입별 현황 */}
+            <table className="w-full bg-white rounded text-sm">
+              <thead>
+                <tr className="bg-gray-100 text-gray-700">
+                  <th className="py-2 px-2 text-left">객실 타입</th>
+                  <th className="py-2 px-2 text-center">객실 수</th>
+                  <th className="py-2 px-2 text-center">정원</th>
+                  <th className="py-2 px-2 text-center">배정/총원</th>
+                  <th className="py-2 px-2 text-center">관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(roomStats).map(([roomType, stats]) => (
+                  <tr key={roomType} className="border-t border-gray-200">
+                    <td className="py-2 px-2">{roomType}</td>
+                    <td className="py-2 px-2 text-center">{stats.count}개</td>
+                    <td className="py-2 px-2 text-center">
+                      {editingRoom === roomType ? (
+                        <div className="flex items-center gap-1 justify-center">
+                          <input
+                            type="number"
+                            value={editForm.capacity}
+                            onChange={(e) => setEditForm({ capacity: e.target.value })}
+                            className="w-16 border rounded px-1 text-center"
+                            min="1"
+                          />
+                          <button
+                            onClick={() => handleEditCapacity(roomType)}
+                            className="text-green-600 hover:text-green-800"
+                          >
+                            저장
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingRoom(null);
+                              setEditForm({ capacity: "" });
+                            }}
+                            className="text-gray-600 hover:text-gray-800"
+                          >
+                            취소
+                          </button>
                         </div>
+                      ) : (
+                        <span>{rooms.find(r => r.room_type === roomType)?.capacity || 0}명</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-center">
+                      <span className={stats.assigned === stats.capacity ? "text-red-600 font-bold" : ""}>
+                        {stats.assigned}/{stats.capacity}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <div className="flex justify-center items-center gap-2">
+                        <button 
+                          className="text-blue-700 hover:text-blue-900" 
+                          onClick={() => {
+                            setEditingRoom(roomType);
+                            const room = rooms.find(r => r.room_type === roomType);
+                            setEditForm({ capacity: room?.capacity.toString() || "" });
+                          }}
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button 
+                          className="text-red-600 hover:text-red-800" 
+                          onClick={() => handleDeleteRoomType(roomType)}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 하단: 객실별 참가자 배정 */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">객실별 참가자 배정</h3>
+            
+            {rooms.map(room => {
+              const assigned = participants.filter(p => p.room_id === room.id);
+              return (
+                <div key={room.id} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-blue-800 text-base">{room.room_number}호</span>
+                    <div className="flex items-center gap-4">
+                      <span className={assigned.length === room.capacity ? "text-red-600 font-bold" : "text-gray-500"}>
+                        현재 {assigned.length} / 정원 {room.capacity}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteRoom(room.id)}
+                        className="text-red-600 hover:text-red-800 transition-colors"
+                        title="객실 삭제"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <ul className="flex flex-wrap gap-2">
+                    {assigned.length === 0 ? (
+                      <li className="text-gray-400 text-sm">배정된 참가자가 없습니다.</li>
+                    ) : (
+                      assigned.map(p => (
+                        <li key={p.id} className="flex items-center gap-1 flex-1 min-w-[120px]">
+                          <div className="flex flex-col items-start min-w-0">
+                            <span className="font-medium text-gray-900 truncate">{p.name}</span>
+                          </div>
+                          <select
+                            className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right ml-2"
+                            value={p.room_id || ""}
+                            onChange={e => handleAssignRoom(p.id, e.target.value)}
+                            disabled={!!assigning}
+                          >
+                            <option value="">미배정</option>
+                            {rooms.map(r => {
+                              const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
+                              const isFull = assignedCount >= r.capacity;
+                              return (
+                                <option key={r.id} value={r.id} disabled={isFull && r.id !== p.room_id}>
+                                  {`${r.room_number}호`}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+              );
+            })}
+
+            {/* 미배정 참가자 */}
+            <div className="bg-gray-50 rounded-lg shadow p-4">
+              <div className="font-bold text-gray-700 mb-2">미배정</div>
+              <input
+                type="text"
+                placeholder="이름으로 검색"
+                value={unassignedSearch}
+                onChange={e => setUnassignedSearch(e.target.value)}
+                className="mb-3 w-full max-w-xs border border-gray-300 rounded px-2 py-1 text-sm focus:outline-blue-500"
+              />
+              {filteredUnassigned.length === 0 ? (
+                <div className="text-gray-400 text-sm">검색 결과가 없습니다.</div>
+              ) : (
+                <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
+                  {filteredUnassigned.map(p => (
+                    <li
+                      key={p.id}
+                      className="flex items-center justify-between bg-white rounded-lg shadow px-3 py-2 transition hover:bg-blue-50"
+                    >
+                      <div className="flex flex-col items-start min-w-0">
+                        <span className="font-medium text-gray-900 truncate">{p.name}</span>
+                      </div>
                       <select
-                          className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right ml-2"
-                          value={p.room_id || ""}
+                        className="ml-2 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
+                        value={p.room_id || ""}
                         onChange={e => handleAssignRoom(p.id, e.target.value)}
-                        aria-label="객실 선택"
-                        tabIndex={0}
                         disabled={!!assigning}
                       >
                         <option value="">미배정</option>
-                          {rooms.map(r => {
-                            const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
-                            const isFull = assignedCount >= r.capacity;
-                            return (
-                              <option key={r.id} value={r.id} disabled={isFull && r.id !== p.room_id}>
-                                {`${r.room_number}호`}
-                              </option>
-                            );
-                          })}
+                        {rooms.map(r => {
+                          const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
+                          const isFull = assignedCount >= r.capacity;
+                          return (
+                            <option key={r.id} value={r.id} disabled={isFull}>
+                              {`${r.room_number}호`}
+                            </option>
+                          );
+                        })}
                       </select>
                     </li>
-                    ))
-                  )}
+                  ))}
                 </ul>
+              )}
             </div>
-            );
-          })}
-          {/* 미배정 */}
-          <div className="bg-gray-50 rounded-lg shadow p-4">
-            <div className="font-bold text-gray-700 mb-2">미배정</div>
-            <input
-              type="text"
-              placeholder="이름으로 검색"
-              value={unassignedSearch}
-              onChange={e => setUnassignedSearch(e.target.value)}
-              className="mb-3 w-full max-w-xs border border-gray-300 rounded px-2 py-1 text-sm focus:outline-blue-500"
-            />
-            {filteredUnassigned.length === 0 ? (
-              <div className="text-gray-400 text-sm">검색 결과가 없습니다.</div>
-            ) : (
-              <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
-                {filteredUnassigned.map(p => (
-                  <li
-                    key={p.id}
-                    className="flex items-center justify-between bg-white rounded-lg shadow px-3 py-2 transition hover:bg-blue-50"
-                  >
-                    <div className="flex flex-col items-start min-w-0">
-                      <span className="font-medium text-gray-900 truncate">{p.name}</span>
-                    </div>
-                    <select
-                      className="ml-2 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 text-right"
-                      value={p.room_id || ""}
-                      onChange={e => handleAssignRoom(p.id, e.target.value)}
-                      aria-label="객실 선택"
-                      tabIndex={0}
-                      disabled={!!assigning}
-                    >
-                      <option value="">미배정</option>
-                      {rooms.map(r => {
-                        const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
-                        const isFull = assignedCount >= r.capacity;
-                        return (
-                          <option key={r.id} value={r.id} disabled={isFull}>
-                            {`${r.room_number}호`}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
-        </div>
+        </>
       )}
+      
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
     </div>
   );
