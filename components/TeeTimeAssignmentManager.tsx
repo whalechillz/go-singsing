@@ -72,44 +72,82 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     setLoading(true);
     setError("");
     try {
-      const [
-        { data: participantsData, error: participantsError }, 
-        { data: teeTimesData, error: teeTimesError }, 
-        { data: tourData, error: tourError },
-        { data: staffData, error: staffError }
-      ] = await Promise.all([
-        supabase
-          .from("singsing_participants")
-          .select("*")
-          .eq("tour_id", tourId)
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("singsing_tee_times")
-          .select("*")
-          .eq("tour_id", tourId)
-          .order("play_date")
-          .order("tee_time"),
-        supabase
-          .from("singsing_tours")
-          .select("*")
-          .eq("id", tourId)
-          .single(),
-        supabase
-          .from("singsing_tour_staff")
-          .select("*")
-          .eq("tour_id", tourId)
-          .order("display_order")
-      ]);
+      // 참가자 데이터 가져오기
+      const { data: participantsData, error: participantsError } = await supabase
+        .from("singsing_participants")
+        .select("*")
+        .eq("tour_id", tourId)
+        .order("created_at", { ascending: true });
       
       if (participantsError) throw participantsError;
-      if (teeTimesError) throw teeTimesError;
-      if (tourError && tourError.code !== 'PGRST116') throw tourError;
-      if (staffError && staffError.code !== 'PGRST116') console.log('Staff fetch error:', staffError);
-      
       setParticipants((participantsData || []) as Participant[]);
-      setTeeTimes((teeTimesData || []) as TeeTime[]);
-      setTour(tourData as Tour);
-      setStaffMembers((staffData || []) as StaffMember[]);
+      
+      // 티타임 데이터 가져오기 - 두 가지 형식 모두 지원
+      const { data: teeTimesData, error: teeTimesError } = await supabase
+        .from("singsing_tee_times")
+        .select("*")
+        .eq("tour_id", tourId);
+        
+      if (teeTimesError) throw teeTimesError;
+      
+      // 티타임 데이터 정규화
+      const normalizedTeeTimes = (teeTimesData || []).map((tt: any) => ({
+        id: tt.id,
+        tour_id: tt.tour_id,
+        play_date: tt.play_date || tt.date,
+        golf_course: tt.golf_course || tt.course,
+        tee_time: tt.tee_time,
+        max_players: tt.max_players || 4
+      }));
+      
+      setTeeTimes(normalizedTeeTimes.sort((a: TeeTime, b: TeeTime) => {
+        if (a.play_date < b.play_date) return -1;
+        if (a.play_date > b.play_date) return 1;
+        if (a.tee_time < b.tee_time) return -1;
+        if (a.tee_time > b.tee_time) return 1;
+        return 0;
+      }));
+      
+      // 투어 데이터 가져오기
+      const { data: tourData, error: tourError } = await supabase
+        .from("singsing_tours")
+        .select("*")
+        .eq("id", tourId)
+        .single();
+        
+      if (tourError && tourError.code !== 'PGRST116') throw tourError;
+      
+      if (tourData) {
+        setTour({
+          id: tourData.id,
+          tour_title: tourData.title || tourData.tour_title || '',
+          tour_period: tourData.tour_period || `${tourData.start_date} ~ ${tourData.end_date}`,
+          show_staff_info: tourData.show_staff_info ?? true,
+          show_footer_message: tourData.show_footer_message ?? true,
+          show_company_phones: tourData.show_company_phones ?? true,
+          show_golf_phones: tourData.show_golf_phones ?? true,
+          company_phone: tourData.company_phone || '031-215-3990',
+          company_mobile: tourData.company_mobile || '010-3332-9020',
+          golf_reservation_phone: tourData.golf_reservation_phone || '',
+          golf_reservation_mobile: tourData.golf_reservation_mobile || '',
+          footer_message: tourData.footer_message || '♡ 즐거운 하루 되시길 바랍니다. ♡',
+          notices: tourData.notices || '• 집합시간: 티오프 시간 30분 전 골프장 도착\n• 준비사항: 골프복, 골프화, 모자, 선글라스\n• 카트배정: 4인 1카트 원칙\n• 날씨대비: 우산, 우의 등 개인 준비'
+        });
+      }
+      
+      // 스텝진 데이터 가져오기
+      const { data: staffData, error: staffError } = await supabase
+        .from("singsing_tour_staff")
+        .select("*")
+        .eq("tour_id", tourId)
+        .order("display_order");
+        
+      if (!staffError && staffData) {
+        setStaffMembers(staffData);
+      } else {
+        console.log('Staff fetch info:', staffError);
+        setStaffMembers([]);
+      }
     } catch (error: any) {
       console.error('Error fetching data:', error);
       setError(error.message);
