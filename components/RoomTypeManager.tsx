@@ -6,6 +6,8 @@ import { Plus, X } from "lucide-react";
 type Room = {
   id: string;
   room_type: string;
+  room_seq: number;
+  room_number: string;
   capacity: number;
   tour_id: string;
 };
@@ -73,12 +75,11 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       });
     }
     const { error } = await supabase.from("singsing_rooms").insert(newRooms);
-      if (error) setError(error.message);
-      else {
+    if (error) setError(error.message);
+    else {
       setRoomRows([{ room_type: "", capacity: "" }]);
-        fetchRooms();
-      if (props.onDataChange) props.onDataChange();
-      if (props.onDataChange) props.onDataChange();
+      fetchRooms();
+      if (onDataChange) onDataChange();
     }
   };
 
@@ -88,11 +89,26 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       return;
     }
     
+    // 현재 객실 정보 가져오기
+    const currentRoom = rooms.find(r => r.id === id);
+    if (!currentRoom) return;
+    
+    // 객실 번호 및 seq 재생성 (타입이 변경된 경우)
+    let newRoomNumber = currentRoom.room_number;
+    let newRoomSeq = currentRoom.room_seq;
+    if (currentRoom.room_type !== editForm.room_type) {
+      const sameTypeRooms = rooms.filter(r => r.room_type === editForm.room_type && r.id !== id);
+      newRoomSeq = sameTypeRooms.length + 1;
+      newRoomNumber = `${editForm.room_type}-${String(newRoomSeq).padStart(2, '0')}`;
+    }
+    
     const { error } = await supabase
       .from("singsing_rooms")
       .update({ 
         room_type: editForm.room_type, 
-        capacity: Number(editForm.capacity) 
+        capacity: Number(editForm.capacity),
+        room_number: newRoomNumber,
+        room_seq: newRoomSeq
       })
       .eq("id", id);
       
@@ -100,7 +116,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     else {
       setEditingRoom(null);
       fetchRooms();
-      if (props.onDataChange) props.onDataChange();
+      if (onDataChange) onDataChange();
     }
   };
 
@@ -125,6 +141,7 @@ const RoomTypeManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       if (deleteError) throw deleteError;
       
       fetchRooms();
+      if (onDataChange) onDataChange();
     } catch (error: any) {
       setError(`객실 삭제 중 오류 발생: ${error.message}`);
     }

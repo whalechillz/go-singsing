@@ -35,9 +35,9 @@ type Tour = {
   tour_period: string;
 };
 
-type Props = { tourId: string };
+type Props = { tourId: string; refreshKey?: number };
 
-const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
+const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [tour, setTour] = useState<Tour | null>(null);
@@ -87,7 +87,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
     }
   };
 
-  useEffect(() => { if (tourId) fetchData(); }, [tourId]);
+  useEffect(() => { if (tourId) fetchData(); }, [tourId, refreshKey]);
 
   // 객실 배정 변경
   const handleAssignRoom = async (participantId: string, roomId: string) => {
