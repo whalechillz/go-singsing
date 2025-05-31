@@ -172,10 +172,33 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
   };
 
   // 객실 삭제
-  const handleDeleteRoom = async (roomName: string) => {
-    await supabase.from("singsing_participants").update({ room_id: null }).eq("room_number", roomName);
-    await supabase.from("singsing_rooms").delete().eq("room_number", roomName).eq("tour_id", tourId);
-    fetchData();
+  const handleDeleteRoom = async (roomId: string) => {
+    if (!confirm('이 객실을 삭제하시겠습니까? 배정된 참가자들은 미배정 상태가 됩니다.')) {
+      return;
+    }
+    
+    try {
+      // 1. 먼저 해당 룸에 배정된 모든 참가자의 room_id를 null로 업데이트
+      const { error: updateError } = await supabase
+        .from("singsing_participants")
+        .update({ room_id: null })
+        .eq("room_id", roomId);
+      
+      if (updateError) throw updateError;
+      
+      // 2. 그 다음 룸을 삭제
+      const { error: deleteError } = await supabase
+        .from("singsing_rooms")
+        .delete()
+        .eq("id", roomId);
+      
+      if (deleteError) throw deleteError;
+      
+      // 3. 데이터 새로고침
+      fetchData();
+    } catch (error: any) {
+      setError(`객실 삭제 중 오류 발생: ${error.message}`);
+    }
   };
 
   // 미리보기 HTML 생성
@@ -391,15 +414,56 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId }) => {
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
         <div className="space-y-8">
+          {/* 객실 추가 UI */}
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <h3 className="font-medium text-gray-900 mb-3">객실 추가</h3>
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">객실 타입</label>
+                <input
+                  type="text"
+                  value={newRoomType}
+                  onChange={(e) => setNewRoomType(e.target.value)}
+                  placeholder="예: 2인실, 4인실"
+                  className="w-full border border-gray-300 rounded px-3 py-1.5 focus:outline-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">수량</label>
+                <input
+                  type="number"
+                  value={newRoomCount}
+                  onChange={(e) => setNewRoomCount(Number(e.target.value))}
+                  min="1"
+                  className="w-20 border border-gray-300 rounded px-3 py-1.5 focus:outline-blue-500"
+                />
+              </div>
+              <button
+                onClick={handleAddRooms}
+                className="px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                추가
+              </button>
+            </div>
+          </div>
           {rooms.map(room => {
             const assigned = participants.filter(p => p.room_id === room.id);
             return (
               <div key={room.id} className="mb-6 border rounded-lg p-4 bg-gray-50">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-bold text-blue-800 text-base">{room.room_number}호</span>
-                  <span className={assigned.length === room.capacity ? "text-red-600 font-bold" : "text-gray-500"}>
-                    현재 {assigned.length} / 정원 {room.capacity}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className={assigned.length === room.capacity ? "text-red-600 font-bold" : "text-gray-500"}>
+                      현재 {assigned.length} / 정원 {room.capacity}
+                    </span>
+                    <button
+                      onClick={() => handleDeleteRoom(room.id)}
+                      className="text-red-600 hover:text-red-800 transition-colors"
+                      title="객실 삭제"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 <ul className="flex flex-wrap gap-2">
                   {assigned.length === 0 ? (
