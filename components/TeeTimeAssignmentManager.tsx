@@ -448,23 +448,26 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 
   // 전체 투어 자동 배정 기능 (각 참가자를 모든 날짜에 배정)
   const handleAutoAssignAll = async () => {
-    if (!window.confirm('모든 미배정 참가자를 전체 투어 일정에 배정하시겠습니까?\n(각 참가자가 모든 날짜에 배정됩니다)')) return;
+    const unassigned = participants.filter(p => !p.tee_time_id);
+    if (unassigned.length === 0) {
+      alert('미배정 참가자가 없습니다.');
+      return;
+    }
+    
+    const dateGroups = Object.entries(teeTimesByDate).sort(([a], [b]) => a.localeCompare(b));
+    const totalDays = dateGroups.length;
+    
+    if (!window.confirm(`미배정 참가자 ${unassigned.length}명을 전체 ${totalDays}일 일정에 자동 배정하시겠습니까?\n\n※ 주의: 각 참가자가 모든 날짜에 복제되어 배정됩니다.\n※ 총 ${unassigned.length * totalDays}개의 참가 데이터가 생성될 수 있습니다.`)) return;
     
     try {
-      const unassigned = participants.filter(p => !p.tee_time_id);
-      if (unassigned.length === 0) {
-        alert('미배정 참가자가 없습니다.');
-        return;
-      }
-      
-      // 날짜별로 티타임 그룹화
-      const dateGroups = Object.entries(teeTimesByDate).sort(([a], [b]) => a.localeCompare(b));
       let totalAssigned = 0;
+      let successfulAssignments = [];
       let failedAssignments = [];
       
       // 각 참가자를 모든 날짜에 배정
       for (const participant of unassigned) {
         let assignedDates = 0;
+        let firstDate = true;
         
         for (const [date, dayTeeTimes] of dateGroups) {
           let assigned = false;
@@ -473,39 +476,75 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           for (const teeTime of dayTeeTimes) {
             const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
             if (currentAssigned < teeTime.max_players) {
-              await supabase
-                .from("singsing_participants")
-                .insert({
-                  tour_id: tourId,
-                  name: participant.name,
-                  phone: participant.phone,
-                  team_name: participant.team_name,
-                  note: participant.note,
-                  status: participant.status,
-                  tee_time_id: teeTime.id
-                });
-              
-              assigned = true;
-              assignedDates++;
+              if (firstDate) {
+                // 첫 번째 날짜는 원본 참가자 사용
+                const { error } = await supabase
+                  .from("singsing_participants")
+                  .update({ 
+                    tee_time_id: teeTime.id,
+                    note: participant.note ? `${participant.note} | 전체일정` : '전체일정'
+                  })
+                  .eq("id", participant.id);
+                
+                if (!error) {
+                  assigned = true;
+                  assignedDates++;
+                  firstDate = false;
+                }
+              } else {
+                // 두 번째 날짜부터는 복제 생성
+                const dayLabel = new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+                const { error } = await supabase
+                  .from("singsing_participants")
+                  .insert({
+                    tour_id: tourId,
+                    name: participant.name,
+                    phone: participant.phone,
+                    team_name: participant.team_name,
+                    note: participant.note ? `${participant.note} | ${dayLabel}` : dayLabel,
+                    status: participant.status,
+                    tee_time_id: teeTime.id
+                  });
+                
+                if (!error) {
+                  assigned = true;
+                  assignedDates++;
+                }
+              }
               break;
             }
           }
           
           if (!assigned) {
-            failedAssignments.push(`${participant.name} - ${date}`);
+            failedAssignments.push(`${participant.name} - ${new Date(date).toLocaleDateString('ko-KR')}`);
           }
         }
         
-        if (assignedDates > 0) {
+        if (assignedDates === totalDays) {
+          successfulAssignments.push(`${participant.name}: 모든 날짜 배정 완료`);
+          totalAssigned++;
+        } else if (assignedDates > 0) {
+          successfulAssignments.push(`${participant.name}: ${assignedDates}/${totalDays}일 배정`);
           totalAssigned++;
         }
       }
       
-      let message = `${totalAssigned}명을 자동 배정했습니다.`;
+      let message = `자동 배정 완료\n\n`;
+      message += `✓ 성공: ${totalAssigned}/${unassigned.length}명\n`;
+      message += `✓ 일정: ${totalDays}일\n\n`;
+      
+      if (successfulAssignments.length > 0) {
+        message += `배정 상황:\n${successfulAssignments.slice(0, 5).join('\n')}`;
+        if (successfulAssignments.length > 5) {
+          message += `\n... 외 ${successfulAssignments.length - 5}명`;
+        }
+        message += '\n\n';
+      }
+      
       if (failedAssignments.length > 0) {
-        message += `\n\n다음 배정이 실패했습니다:\n${failedAssignments.slice(0, 5).join('\n')}`;
-        if (failedAssignments.length > 5) {
-          message += `\n... 외 ${failedAssignments.length - 5}건`;
+        message += `⚠️ 일부 날짜 배정 실패:\n${failedAssignments.slice(0, 3).join('\n')}`;
+        if (failedAssignments.length > 3) {
+          message += `\n... 외 ${failedAssignments.length - 3}건`;
         }
       }
       
@@ -523,58 +562,91 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       return;
     }
     
-    if (!window.confirm(`선택한 ${selectedForBulk.length}명을 모든 날짜에 배정하시겠습니까?\n(각 날짜별로 참가자 정보가 복제됩니다)`)) return;
+    if (!window.confirm(`선택한 ${selectedForBulk.length}명을 모든 날짜에 배정하시겠습니까?\n\n※ 주의: 각 날짜별로 참가자가 복제됩니다.\n※ 1명이 3일 투어에 참가하면 총 3개의 참가 데이터가 생성됩니다.`)) return;
     
     try {
       const selectedParticipants = participants.filter(p => selectedForBulk.includes(p.id));
       const dateGroups = Object.entries(teeTimesByDate).sort(([a], [b]) => a.localeCompare(b));
       
-      let totalCreated = 0;
+      let totalAssigned = 0;
+      let totalDays = dateGroups.length;
+      let successfulAssignments = [];
       let failedAssignments = [];
       
       for (const participant of selectedParticipants) {
-        // 원본 참가자 삭제
-        await supabase
-          .from("singsing_participants")
-          .delete()
-          .eq("id", participant.id);
+        let assignedDates = 0;
+        let firstDate = true;
         
-        // 각 날짜별로 참가자 복제 생성
+        // 각 날짜별로 배정
         for (const [date, dayTeeTimes] of dateGroups) {
           let assigned = false;
           
+          // 해당 날짜의 빈 자리 찾기
           for (const teeTime of dayTeeTimes) {
             const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
             if (currentAssigned < teeTime.max_players) {
-              const { error } = await supabase
-                .from("singsing_participants")
-                .insert({
-                  tour_id: tourId,
-                  name: participant.name + ` (${new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })})`,
-                  phone: participant.phone,
-                  team_name: participant.team_name,
-                  note: participant.note,
-                  status: participant.status,
-                  tee_time_id: teeTime.id
-                });
-              
-              if (!error) {
-                assigned = true;
-                totalCreated++;
-                break;
+              if (firstDate) {
+                // 첫 번째 날짜는 원본 참가자 사용
+                const { error } = await supabase
+                  .from("singsing_participants")
+                  .update({ 
+                    tee_time_id: teeTime.id,
+                    note: participant.note ? `${participant.note} | 전체일정` : '전체일정'
+                  })
+                  .eq("id", participant.id);
+                
+                if (!error) {
+                  assigned = true;
+                  assignedDates++;
+                  firstDate = false;
+                }
+              } else {
+                // 두 번째 날짜부터는 복제 생성
+                const dayLabel = new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+                const { error } = await supabase
+                  .from("singsing_participants")
+                  .insert({
+                    tour_id: tourId,
+                    name: participant.name,
+                    phone: participant.phone,
+                    team_name: participant.team_name,
+                    note: participant.note ? `${participant.note} | ${dayLabel}` : dayLabel,
+                    status: participant.status,
+                    tee_time_id: teeTime.id
+                  });
+                
+                if (!error) {
+                  assigned = true;
+                  assignedDates++;
+                }
               }
+              break;
             }
           }
           
           if (!assigned) {
-            failedAssignments.push(`${participant.name} - ${date}`);
+            failedAssignments.push(`${participant.name} - ${new Date(date).toLocaleDateString('ko-KR')}`);
           }
+        }
+        
+        if (assignedDates === totalDays) {
+          successfulAssignments.push(`${participant.name}: 모든 날짜 배정 완료`);
+          totalAssigned++;
+        } else if (assignedDates > 0) {
+          successfulAssignments.push(`${participant.name}: ${assignedDates}/${totalDays}일 배정`);
+          totalAssigned++;
         }
       }
       
-      let message = `${totalCreated}개의 배정이 생성되었습니다.`;
+      let message = `전체 일정 배정 완료\n\n`;
+      message += `✓ 성공: ${totalAssigned}/${selectedForBulk.length}명\n`;
+      message += `✓ 일정: ${totalDays}일\n\n`;
+      
       if (failedAssignments.length > 0) {
-        message += `\n\n다음 배정이 실패했습니다:\n${failedAssignments.slice(0, 5).join('\n')}`;
+        message += `⚠️ 일부 날짜 배정 실패:\n${failedAssignments.slice(0, 3).join('\n')}`;
+        if (failedAssignments.length > 3) {
+          message += `\n... 외 ${failedAssignments.length - 3}건`;
+        }
       }
       
       alert(message);
@@ -871,7 +943,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                     className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300"
                   >
                     <Users className="w-4 h-4" />
-                    특정 날짜 배정
+                    선택한 {selectedForBulk.length}명 특정날짜 배정
                   </button>
                   <button
                     onClick={handleAssignToAllDates}
@@ -879,14 +951,14 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                     className="flex items-center gap-1 px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-300"
                   >
                     <Calendar className="w-4 h-4" />
-                    전체 일정 배정
+                    선택한 {selectedForBulk.length}명 전체일정 배정
                   </button>
                   <button
                     onClick={handleAutoAssignAll}
                     className="flex items-center gap-1 px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
                   >
                     <Check className="w-4 h-4" />
-                    모두 자동배정
+                    미배정자 전체 자동배정
                   </button>
                 </div>
               </div>
