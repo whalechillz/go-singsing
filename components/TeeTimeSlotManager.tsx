@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Plus, X, Calendar, Clock } from "lucide-react";
+import { Plus, X, Calendar, Clock, Trash2 } from "lucide-react";
 
 
 type TeeTime = {
@@ -41,6 +41,8 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     max_players: "4" 
   });
   const [golfCourses, setGolfCourses] = useState<string[]>([]); // DB에서 가져올 때까지 빈 배열
+  const [selectedTimes, setSelectedTimes] = useState<Set<string>>(new Set());
+  const [isSelectMode, setIsSelectMode] = useState(false);
   
   // 코스 로테이션 설정
   const [showRotation, setShowRotation] = useState(false);
@@ -66,6 +68,54 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     if (error) setError(error.message);
     else setTeeTimes((data || []) as TeeTime[]);
     setLoading(false);
+  };
+
+  // 일괄 삭제 처리
+  const handleBulkDelete = async () => {
+    if (selectedTimes.size === 0) {
+      setError("삭제할 티타임을 선택해주세요.");
+      return;
+    }
+    
+    if (!window.confirm(`선택한 ${selectedTimes.size}개의 티타임을 삭제하시겠습니까?\n배정된 참가자들은 미배정 상태가 됩니다.`)) return;
+    
+    try {
+      // 1. 선택된 티타임에 배정된 참가자들을 미배정으로 변경
+      const teeTimeIds = Array.from(selectedTimes);
+      const { error: updateError } = await supabase
+        .from("singsing_participants")
+        .update({ tee_time_id: null })
+        .in("tee_time_id", teeTimeIds);
+      
+      if (updateError) throw updateError;
+      
+      // 2. 티타임 삭제
+      const { error: deleteError } = await supabase
+        .from("singsing_tee_times")
+        .delete()
+        .in("id", teeTimeIds);
+      
+      if (deleteError) throw deleteError;
+      
+      // 상태 초기화
+      setSelectedTimes(new Set());
+      setIsSelectMode(false);
+      await fetchTeeTimes();
+      if (onDataChange) onDataChange();
+    } catch (error: any) {
+      setError(`티타임 일괄 삭제 중 오류 발생: ${error.message}`);
+    }
+  };
+
+  // 체크박스 토글
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedTimes);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedTimes(newSelected);
   };
 
   // 골프 코스 목록 가져오기 - tour_products에서 실제 코스 정보 가져오기
@@ -307,10 +357,45 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     <div className="mb-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">티오프시간 관리</h2>
-        <div className="text-sm text-gray-600">
-          총 {totalSlots}개 티타임 | 총 정원 {totalCapacity}명
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-600">
+            총 {totalSlots}개 티타임 | 총 정원 {totalCapacity}명
+          </div>
+          {teeTimes.length > 0 && (
+            <button
+              type="button"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                isSelectMode 
+                  ? "bg-red-100 text-red-700 hover:bg-red-200" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+              onClick={() => {
+                setIsSelectMode(!isSelectMode);
+                setSelectedTimes(new Set());
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+              {isSelectMode ? "선택 취소" : "일괄 삭제"}
+            </button>
+          )}
         </div>
       </div>
+      
+      {/* 일괄 삭제 버튼 */}
+      {isSelectMode && selectedTimes.size > 0 && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
+          <span className="text-red-700">
+            {selectedTimes.size}개 티타임이 선택됨
+          </span>
+          <button
+            type="button"
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+            onClick={handleBulkDelete}
+          >
+            선택한 항목 삭제
+          </button>
+        </div>
+      )}
       
       {/* 코스 로테이션 설정 */}
       <div className="mb-4">
@@ -495,6 +580,24 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
               <table className="w-full bg-white rounded shadow text-sm">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700">
+                    {isSelectMode && (
+                      <th className="py-2 px-2 text-center">
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={times.every(t => selectedTimes.has(t.id))}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTimes(new Set([...selectedTimes, ...times.map(t => t.id)]));
+                            } else {
+                              const newSelected = new Set(selectedTimes);
+                              times.forEach(t => newSelected.delete(t.id));
+                              setSelectedTimes(newSelected);
+                            }
+                          }}
+                        />
+                      </th>
+                    )}
                     <th className="py-2 px-2 text-left">시간</th>
                     <th className="py-2 px-2 text-left">골프장</th>
                     <th className="py-2 px-2 text-center">정원</th>
@@ -503,7 +606,25 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                 </thead>
                 <tbody>
                   {times.map(teeTime => (
-                    <tr key={teeTime.id} className="border-t border-gray-200">
+                    <tr 
+                      key={teeTime.id} 
+                      className={`border-t border-gray-200 ${isSelectMode ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
+                      onClick={(e) => {
+                        if (isSelectMode && !(e.target as HTMLElement).closest('button, input, select')) {
+                          toggleSelect(teeTime.id);
+                        }
+                      }}
+                    >
+                      {isSelectMode && (
+                        <td className="py-1 px-2 text-center">
+                          <input
+                            type="checkbox"
+                            className="rounded"
+                            checked={selectedTimes.has(teeTime.id)}
+                            onChange={() => toggleSelect(teeTime.id)}
+                          />
+                        </td>
+                      )}
                       <td className="py-1 px-2">
                         {editingTeeTime === teeTime.id ? (
                           <input
@@ -549,9 +670,10 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                         )}
                       </td>
                       <td className="py-1 px-2">
-                        <div className="flex justify-center items-center gap-2">
-                          {editingTeeTime === teeTime.id ? (
-                            <>
+                        {!isSelectMode && (
+                          <div className="flex justify-center items-center gap-2">
+                            {editingTeeTime === teeTime.id ? (
+                              <>
                               <button
                                 className="text-green-600 text-sm underline"
                                 onClick={() => handleUpdate(teeTime.id)}
@@ -564,9 +686,9 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                               >
                                 취소
                               </button>
-                            </>
-                          ) : (
-                            <>
+                              </>
+                            ) : (
+                              <>
                               <button 
                                 className="text-blue-700 underline text-sm" 
                                 onClick={() => {
@@ -587,9 +709,10 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                               >
                                 삭제
                               </button>
-                            </>
-                          )}
-                        </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
