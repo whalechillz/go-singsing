@@ -1,11 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import BoardingScheduleManager from "@/components/BoardingScheduleManager";
+import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 
-export default function BoardingSchedulesPage() {
+export default function BoardingGuidePage() {
   const params = useParams();
   const tourId = params.tourId as string;
   
-  return <BoardingScheduleManager tourId={tourId} />;
+  return <BoardingGuidePreview tourId={tourId} />;
 }
