@@ -199,18 +199,40 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         
         if (error) throw error;
       } else {
-        // 배정 추가
-        const teeTime = teeTimes.find(t => t.id === teeTimeId);
-        if (teeTime && (teeTime.assigned_count || 0) >= teeTime.max_players) {
-          alert('이 티타임은 정원이 가득 찼습니다.');
+        // 배정 추가 전 중복 확인
+        const { data: existing } = await supabase
+          .from("singsing_participant_tee_times")
+          .select("*")
+          .eq("participant_id", participantId)
+          .eq("tee_time_id", teeTimeId)
+          .single();
+        
+        if (existing) {
+          console.log('이미 배정됨:', existing);
+          await fetchData();
           return;
         }
         
+        const teeTime = teeTimes.find(t => t.id === teeTimeId);
+        if (teeTime && (teeTime.assigned_count || 0) >= teeTime.max_players) {
+          alert('이 티타임은 정원이 가듍 찼습니다.');
+          return;
+        }
+        
+        // 삽입
         const { error } = await supabase
           .from("singsing_participant_tee_times")
           .insert({ participant_id: participantId, tee_time_id: teeTimeId });
         
-        if (error) throw error;
+        if (error) {
+          // 중복 키 오류인 경우 무시
+          if (error.code === '23505') {
+            console.log('중복 배정 시도 무시');
+            await fetchData();
+            return;
+          }
+          throw error;
+        }
       }
       
       await fetchData();
@@ -294,9 +316,10 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
       // 일괄 삽입
       if (assignments.length > 0) {
+        // 중복 방지를 위해 upsert 사용
         const { error } = await supabase
           .from("singsing_participant_tee_times")
-          .insert(assignments);
+          .upsert(assignments, { onConflict: 'participant_id,tee_time_id' });
         
         if (error) throw error;
       }
@@ -349,9 +372,10 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       }
 
       if (assignments.length > 0) {
+        // 중복 방지를 위해 upsert 사용
         const { error } = await supabase
           .from("singsing_participant_tee_times")
-          .insert(assignments);
+          .upsert(assignments, { onConflict: 'participant_id,tee_time_id' });
         
         if (error) throw error;
       }
