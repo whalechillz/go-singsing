@@ -234,18 +234,26 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   }, [scrollToId, filteredParticipants.length]);
 
   // 탑승지 데이터 가져오기
-  type BoardingPlace = { name: string; default_depart_time?: string };
+  type BoardingPlace = { id: string; name: string; };
   const [boardingPlaces, setBoardingPlaces] = useState<BoardingPlace[]>([]);
   
   useEffect(() => {
     const fetchBoardingPlaces = async () => {
-      // 투어별/전체 구분 없이 항상 singsing_boarding_places에서 직접 불러오기
-      const { data } = await supabase
-        .from("singsing_boarding_places")
-        .select("id, name, default_depart_time")
-        .order("name", { ascending: true });
-      if (data) {
-        setBoardingPlaces(data);
+      try {
+        // 투어별/전체 구분 없이 항상 singsing_boarding_places에서 직접 불러오기
+        const { data, error } = await supabase
+          .from("singsing_boarding_places")
+          .select("id, name")
+          .order("name", { ascending: true });
+        
+        if (error) {
+          console.error('탑승지 데이터 오류:', error);
+        } else if (data) {
+          console.log('탑승지 데이터:', data);
+          setBoardingPlaces(data);
+        }
+      } catch (err) {
+        console.error('탑승지 로드 에러:', err);
       }
     };
     fetchBoardingPlaces();
@@ -428,9 +436,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     }
     
     if (name === "pickup_location") {
-      // 탑승지 선택 시 출발시간 자동 입력
-      const selected = boardingPlaces.find(p => p.name === value);
-      setForm({ ...form, pickup_location: value, pickup_time: selected?.default_depart_time || "" });
+      // 탑승지 선택 시
+      setForm({ ...form, pickup_location: value });
       return;
     }
     
@@ -1738,7 +1745,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   >
                     <option value="">탑승지 선택</option>
                     {boardingPlaces.map(place => (
-                      <option key={place.name} value={place.name}>{place.name}</option>
+                      <option key={place.id} value={place.name}>{place.name}</option>
                     ))}
                   </select>
                 </div>
@@ -2143,7 +2150,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                     >
                       <option value="">탑승지 선택</option>
                       {boardingPlaces.map(place => (
-                        <option key={place.name} value={place.name}>{place.name}</option>
+                        <option key={place.id} value={place.name}>{place.name}</option>
                       ))}
                     </select>
                   ) : bulkEditField === "gender" ? (

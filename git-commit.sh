@@ -2,13 +2,12 @@
 
 # Git 커밋 및 푸시
 git add -A
-git commit -m "fix: 탑승지 안내 미리보기 새 DB 구조 반영
+git commit -m "fix: 참가자 관리 탑승지 드롭다운 오류 수정
 
-- pickup_location 이름 매칭 지원
-- 고객용/스탭용 뷰 분리
-- 출발/도착 시간 표시
-- parking_info 필드 활용
-- UI/UX 개선"
+- singsing_boarding_places 테이블에서 직접 데이터 가져오기
+- 에러 처리 추가
+- default_depart_time 필드 제거 (DB에 없는 필드)
+- key를 id로 변경하여 React 경고 해결"
 git push origin main
 
 echo "커밋 및 푸시 완료!"
