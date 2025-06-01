@@ -243,12 +243,43 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       let totalAssigned = 0;
       const assignments = [];
 
+      // 기존 배정 정보 가져오기 (중복 방지용)
+      const { data: existingAssignments } = await supabase
+        .from("singsing_participant_tee_times")
+        .select("*")
+        .in("participant_id", selectedForBulk);
+
+      const existingMap = new Map();
+      existingAssignments?.forEach(a => {
+        const key = `${a.participant_id}-${a.tee_time_id}`;
+        existingMap.set(key, true);
+      });
+
       for (const participantId of selectedForBulk) {
+        const participant = participants.find(p => p.id === participantId);
+        
         for (const date of targetDates) {
+          // 이미 해당 날짜에 배정되어 있는지 확인
+          const alreadyAssignedToDate = participant?.tee_time_assignments?.some(id => {
+            const teeTime = teeTimes.find(tt => tt.id === id);
+            return teeTime?.play_date === date;
+          });
+
+          if (alreadyAssignedToDate) {
+            continue; // 이미 배정된 날짜는 건너뛰기
+          }
+
           const dateTeeTimes = teeTimes.filter(tt => tt.play_date === date);
           
           // 해당 날짜에 빈 자리가 있는 첫 번째 티타임 찾기
           for (const teeTime of dateTeeTimes) {
+            const key = `${participantId}-${teeTime.id}`;
+            
+            // 중복 체크
+            if (existingMap.has(key)) {
+              continue;
+            }
+
             if ((teeTime.assigned_count || 0) < teeTime.max_players) {
               assignments.push({
                 participant_id: participantId,
@@ -306,10 +337,13 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             .sort((a, b) => (a.assigned_count || 0) - (b.assigned_count || 0));
 
           if (availableTeeTimes.length > 0) {
+            const selectedTeeTime = availableTeeTimes[0];
             assignments.push({
               participant_id: participant.id,
-              tee_time_id: availableTeeTimes[0].id
+              tee_time_id: selectedTeeTime.id
             });
+            // 배정 카운트 임시 증가 (중복 방지)
+            selectedTeeTime.assigned_count = (selectedTeeTime.assigned_count || 0) + 1;
           }
         }
       }
