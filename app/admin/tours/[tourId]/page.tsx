@@ -18,7 +18,7 @@ const TABS = [
   { key: "rooms", label: "투어별 객실 배정", icon: <BedDouble className="w-4 h-4" /> },
   { key: "schedules", label: "투어별 일정관리", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티오프시간 관리", icon: <Flag className="w-4 h-4" /> },
-  { key: "pickup-points", label: "탑승 스케줄 관리", icon: <Bus className="w-4 h-4" /> },
+  { key: "boarding-guide", label: "탑승지 안내 미리보기", icon: <Bus className="w-4 h-4" /> },
   { key: "schedule-preview", label: "투어 일정표 미리보기", icon: <FileText className="w-4 h-4" /> },
 ];
 
@@ -100,34 +100,7 @@ const TourDetailPage: React.FC = () => {
             <TeeTimeAssignmentManagerV2 tourId={tourId} refreshKey={refreshKey} />
           </>
         )}
-        {activeTab === "pickup-points" && (
-          <>
-            <BoardingScheduleManager tourId={tourId} />
-            <div className="mt-6 flex justify-end">
-              <button
-                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
-                onClick={() => setShowPreview(true)}
-                aria-label="탑승지 안내 미리보기"
-              >
-                탑승지 안내 미리보기
-              </button>
-            </div>
-            {showPreview && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 relative">
-                  <button
-                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
-                    onClick={() => setShowPreview(false)}
-                    aria-label="미리보기 닫기"
-                  >
-                    ×
-                  </button>
-                  <BoardingGuidePreview tourId={tourId} />
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        {activeTab === "boarding-guide" && <BoardingGuidePreview tourId={tourId} />}
         {activeTab === "schedule-preview" && <TourSchedulePreview tourId={tourId} />}
       </div>
     </div>
