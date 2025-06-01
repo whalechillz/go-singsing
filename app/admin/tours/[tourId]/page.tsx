@@ -7,7 +7,7 @@ import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 import RoomTypeManager from "@/components/RoomTypeManager";
 import ScheduleManager from "@/components/ScheduleManager";
 import TeeTimeSlotManager from "@/components/TeeTimeSlotManager";
-import TeeTimeAssignmentManager from "@/components/TeeTimeAssignmentManager";
+import TeeTimeAssignmentManagerV2 from "@/components/TeeTimeAssignmentManagerV2";
 import BoardingScheduleManager from "@/components/BoardingScheduleManager";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 import TourSchedulePreview from "@/components/TourSchedulePreview";
@@ -97,7 +97,7 @@ const TourDetailPage: React.FC = () => {
         {activeTab === "tee-times" && (
           <>
             <TeeTimeSlotManager tourId={tourId} onDataChange={() => setRefreshKey(prev => prev + 1)} />
-            <TeeTimeAssignmentManager tourId={tourId} refreshKey={refreshKey} />
+            <TeeTimeAssignmentManagerV2 tourId={tourId} refreshKey={refreshKey} />
           </>
         )}
         {activeTab === "pickup-points" && (
