@@ -1005,6 +1005,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       if (tourId) {
         return participants.filter(p => p.tour_id === tourId);
       }
+      // selectedTour가 있으면 해당 투어만 필터링
+      if (selectedTour) {
+        return participants.filter(p => p.tour_id === selectedTour.id);
+      }
       return participants;
     };
     
@@ -1023,7 +1027,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       paymentRate: statsParticipants.length > 0 ? Math.round((paidCount / statsParticipants.length) * 100) : 0,
       currentFiltered: filteredParticipants.length
     };
-  }, [participants, filteredParticipants, tourId]);
+  }, [participants, filteredParticipants, tourId, selectedTour]);
 
   const tabs = tourId ? [
     // 투어별 페이지에서는 active/canceled 탭 제외
@@ -1532,7 +1536,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
             <div className="mt-6 admin-card">
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  참가자 현황 요약 {tourId ? '' : (selectedTour ? `(${selectedTour.title})` : '(전체)')}
+                  참가자 현황 요약 {tourId ? `(${tours.find(t => t.id === tourId)?.title || '투어'})` : (selectedTour ? `(${selectedTour.title})` : '(전체)')}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
