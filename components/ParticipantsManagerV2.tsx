@@ -239,34 +239,15 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   
   useEffect(() => {
     const fetchBoardingPlaces = async () => {
-      if (tourId) {
-        // 투어별 페이지: 해당 투어의 탑승 스케줄에서 가져오기
-        const { data } = await supabase
-          .from("singsing_boarding_schedules")
-          .select("singsing_boarding_places:place_id(name, default_depart_time)")
-          .eq("tour_id", tourId);
-        
-        if (data) {
-          setBoardingPlaces(
-            data
-              .map((schedule: any) => schedule.singsing_boarding_places)
-              .filter(Boolean)
-              .filter((place, idx, arr) => place && arr.findIndex(p => p.name === place.name) === idx)
-          );
-        }
-      } else {
-        // 전체 참가자 관리: 모든 탑승지 가져오기
-        const { data } = await supabase
-          .from("singsing_boarding_places")
-          .select("name, default_depart_time")
-          .order("name", { ascending: true });
-        
-        if (data) {
-          setBoardingPlaces(data);
-        }
+      // 투어별/전체 구분 없이 항상 singsing_boarding_places에서 직접 불러오기
+      const { data } = await supabase
+        .from("singsing_boarding_places")
+        .select("id, name, default_depart_time")
+        .order("name", { ascending: true });
+      if (data) {
+        setBoardingPlaces(data);
       }
     };
-    
     fetchBoardingPlaces();
   }, [tourId]);
 
