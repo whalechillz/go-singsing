@@ -71,45 +71,65 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   // 골프 코스 목록 가져오기 - tour_products에서 실제 코스 정보 가져오기
   const fetchGolfCourses = async () => {
     try {
+      console.log('Fetching golf courses for tourId:', tourId);
+      
       // 1. 투어 정보에서 tour_product_id 조회
       const { data: tour, error: tourErr } = await supabase
         .from("singsing_tours")
-        .select("tour_product_id")
+        .select("tour_product_id, golf_course") // golf_course도 함께 가져오기
         .eq("id", tourId)
         .single();
       
-      if (tourErr || !tour?.tour_product_id) {
-        console.error("Tour product ID not found", tourErr);
+      console.log('Tour data:', tour, 'Error:', tourErr);
+      
+      if (tourErr || !tour) {
+        console.error("Tour not found", tourErr);
         return;
       }
       
-      // 2. tour_products에서 golf_courses 정보 조회
-      const { data: product, error: prodErr } = await supabase
-        .from("tour_products")
-        .select("golf_courses")
-        .eq("id", tour.tour_product_id)
-        .single();
+      // 먼저 singsing_tours의 golf_course 사용 (임시)
+      if (tour.golf_course) {
+        console.log('Using golf_course from singsing_tours:', tour.golf_course);
+        // "파인힐스 CC - 파인 코스" 형태의 문자열을 파싱
+        const courses = tour.golf_course.split(',').map((c: string) => c.trim());
+        setGolfCourses(courses);
+        return;
+      }
       
-      if (!prodErr && product?.golf_courses) {
-        // golf_courses는 [{name: "골프장명", courses: ["코스1", "코스2"]}] 형태
-        const courseList: string[] = [];
+      // tour_product_id가 있으면 tour_products에서 조회
+      if (tour.tour_product_id) {
+        // 2. tour_products에서 golf_course와 courses 정보 조회
+        const { data: product, error: prodErr } = await supabase
+          .from("tour_products")
+          .select("*") // 모든 필드를 가져와서 확인
+          .eq("id", tour.tour_product_id)
+          .single();
         
-        if (Array.isArray(product.golf_courses)) {
-          product.golf_courses.forEach((gc: any) => {
-            if (gc.courses && Array.isArray(gc.courses)) {
-              gc.courses.forEach((courseName: string) => {
-                // "골프장명 - 코스명" 형태로 저장
-                courseList.push(`${gc.name} - ${courseName}`);
-              });
-            }
-          });
-        }
+        console.log('Product data:', product, 'Error:', prodErr);
         
-        if (courseList.length > 0) {
-          setGolfCourses(courseList);
+        if (!prodErr && product) {
+          const courseList: string[] = [];
+          
+          // golf_course (골프장 이름)와 courses (코스 배열)를 조합
+          if (product.golf_course && product.courses && Array.isArray(product.courses)) {
+            product.courses.forEach((courseName: string) => {
+              // "골프장명 - 코스명" 형태로 저장
+              courseList.push(`${product.golf_course} - ${courseName}`);
+            });
+          } else if (product.golf_course) {
+            // courses가 없으면 골프장 이름만 사용
+            courseList.push(product.golf_course);
+          }
+          
+          if (courseList.length > 0) {
+            setGolfCourses(courseList);
+            console.log('Loaded golf courses from tour_products:', courseList);
+          } else {
+            console.warn('No courses found in product:', product);
+          }
+        } else {
+          console.error("Failed to fetch from tour_products", prodErr);
         }
-      } else {
-        console.error("Failed to fetch courses from tour_products", prodErr);
       }
     } catch (error) {
       console.error("Error fetching golf courses:", error);
