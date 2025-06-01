@@ -247,7 +247,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
           .eq("tour_id", tourId);
         
         if (data) {
-          setBoardingPlaces(data);
+          setBoardingPlaces(
+            data
+              .map((schedule: any) => schedule.singsing_boarding_places)
+              .filter(Boolean)
+              .filter((place, idx, arr) => place && arr.findIndex(p => p.name === place.name) === idx)
+          );
         }
       } else {
         // 전체 참가자 관리: 모든 탑승지 가져오기
