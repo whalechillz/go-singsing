@@ -299,3 +299,11 @@ CREATE TABLE user_roles (
     - 구버전 import 및 사용 코드 제거, V2 import 및 사용으로 변경
   - 수정사항 커밋 및 원격 저장소 푸시, Vercel 자동 배포 진행
   - 남은 작업: 배포 완료 후 정상 동작 확인
+
+- **2025-06-01**
+  - 탑승 스케줄 관리 페이지를 "탑승지 안내 미리보기" 전용 페이지로 리팩터링
+    - 파일: `app/admin/tours/[tourId]/boarding/page.tsx`
+    - 기존 BoardingScheduleManager(입력/수정 UI) 제거, BoardingGuidePreview 컴포넌트만 사용
+    - boarding_schedules 테이블 삭제 이후에도 안내 미리보기만 제공하도록 구조 단순화
+  - 커밋 및 원격 저장소 푸시, Vercel 자동 배포 진행
+  - 남은 작업: 실제 안내 미리보기 화면 확인 및 추가 개선사항 반영
