@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabaseClient';
 import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, Clock, FileText } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 
 interface IntegratedScheduleManagerProps {
   tourId: string;
@@ -19,7 +12,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
   const [loading, setLoading] = useState(true);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
   const [editingNotice, setEditingNotice] = useState<any>(null);
-  const supabase = createClient();
+  const [activeTab, setActiveTab] = useState('schedule');
 
   useEffect(() => {
     fetchData();
@@ -148,25 +141,52 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="schedule" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="schedule">
-            <Calendar className="w-4 h-4 mr-2" /> 일정 관리
-          </TabsTrigger>
-          <TabsTrigger value="boarding">
-            <MapPin className="w-4 h-4 mr-2" /> 탑승 정보
-          </TabsTrigger>
-          <TabsTrigger value="notices">
-            <FileText className="w-4 h-4 mr-2" /> 공지사항
-          </TabsTrigger>
-        </TabsList>
+      {/* 탭 네비게이션 */}
+      <div className="border-b">
+        <div className="flex space-x-8">
+          <button
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'schedule' 
+                ? 'border-blue-500 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('schedule')}
+          >
+            <Calendar className="w-4 h-4 inline mr-2" />
+            일정 관리
+          </button>
+          <button
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'boarding' 
+                ? 'border-blue-500 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('boarding')}
+          >
+            <MapPin className="w-4 h-4 inline mr-2" />
+            탑승 정보
+          </button>
+          <button
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'notices' 
+                ? 'border-blue-500 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('notices')}
+          >
+            <FileText className="w-4 h-4 inline mr-2" />
+            공지사항
+          </button>
+        </div>
+      </div>
 
-        {/* 일정 관리 탭 */}
-        <TabsContent value="schedule" className="space-y-4">
+      {/* 일정 관리 탭 */}
+      {activeTab === 'schedule' && (
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">일정 목록</h3>
-            <Button
-              size="sm"
+            <button
+              className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 flex items-center"
               onClick={() => setEditingSchedule({ 
                 date: '', 
                 day_number: schedules.length + 1,
@@ -174,22 +194,21 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
               })}
             >
               <Plus className="w-4 h-4 mr-1" /> 일정 추가
-            </Button>
+            </button>
           </div>
 
           {editingSchedule && (
-            <Card className="border-blue-200">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {editingSchedule.id ? '일정 수정' : '새 일정 추가'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
+              <h4 className="font-semibold mb-4">
+                {editingSchedule.id ? '일정 수정' : '새 일정 추가'}
+              </h4>
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>날짜</Label>
-                    <Input
+                    <label className="block text-sm font-medium mb-1">날짜</label>
+                    <input
                       type="date"
+                      className="w-full px-3 py-2 border rounded-md"
                       value={editingSchedule.date}
                       onChange={(e) => setEditingSchedule({
                         ...editingSchedule,
@@ -198,9 +217,10 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                     />
                   </div>
                   <div>
-                    <Label>Day 번호</Label>
-                    <Input
+                    <label className="block text-sm font-medium mb-1">Day 번호</label>
+                    <input
                       type="number"
+                      className="w-full px-3 py-2 border rounded-md"
                       value={editingSchedule.day_number}
                       onChange={(e) => setEditingSchedule({
                         ...editingSchedule,
@@ -211,8 +231,9 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                 </div>
 
                 <div>
-                  <Label>일정 항목</Label>
-                  <Textarea
+                  <label className="block text-sm font-medium mb-1">일정 항목</label>
+                  <textarea
+                    className="w-full px-3 py-2 border rounded-md"
                     placeholder="시간: 내용 형식으로 입력 (한 줄에 하나씩)"
                     rows={5}
                     value={editingSchedule.schedule_items?.map((item: any) => 
@@ -236,171 +257,173 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
+                    className="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-50"
                     onClick={() => setEditingSchedule(null)}
                   >
-                    <X className="w-4 h-4 mr-1" /> 취소
-                  </Button>
-                  <Button
-                    size="sm"
+                    <X className="w-4 h-4 inline mr-1" /> 취소
+                  </button>
+                  <button
+                    className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
                     onClick={handleSaveSchedule}
                   >
-                    <Save className="w-4 h-4 mr-1" /> 저장
-                  </Button>
+                    <Save className="w-4 h-4 inline mr-1" /> 저장
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           <div className="space-y-2">
             {schedules.map((schedule) => (
-              <Card key={schedule.id}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h4 className="font-semibold">
-                        Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
-                      </h4>
-                      <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                        {schedule.schedule_items?.map((item: any, idx: number) => (
-                          <li key={idx}>
-                            {item.time && <span className="font-medium">{item.time}:</span>} {item.content}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingSchedule(schedule)}
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteSchedule(schedule.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
+              <div key={schedule.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h4 className="font-semibold">
+                      Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
+                    </h4>
+                    <ul className="mt-2 space-y-1 text-sm text-gray-600">
+                      {schedule.schedule_items?.map((item: any, idx: number) => (
+                        <li key={idx}>
+                          {item.time && <span className="font-medium">{item.time}:</span>} {item.content}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex gap-2">
+                    <button
+                      className="p-1 hover:bg-gray-100 rounded"
+                      onClick={() => setEditingSchedule(schedule)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="p-1 hover:bg-gray-100 rounded"
+                      onClick={() => handleDeleteSchedule(schedule.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* 탑승 정보 탭 */}
-        <TabsContent value="boarding" className="space-y-4">
+      {/* 탑승 정보 탭 */}
+      {activeTab === 'boarding' && (
+        <div className="space-y-4">
           <h3 className="text-lg font-semibold">탑승 정보 관리</h3>
           
           <div className="space-y-2">
             {schedules.map((schedule) => (
-              <Card key={schedule.id}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold">
-                      Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
-                    </h4>
+              <div key={schedule.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold">
+                    Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
+                  </h4>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">탑승 시간</label>
+                    <input
+                      type="time"
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={schedule.boarding_info?.time || ''}
+                      onChange={async (e) => {
+                        const updated = {
+                          ...schedule,
+                          boarding_info: {
+                            ...schedule.boarding_info,
+                            time: e.target.value
+                          }
+                        };
+                        await supabase
+                          .from('singsing_schedules')
+                          .update({ boarding_info: updated.boarding_info })
+                          .eq('id', schedule.id);
+                        fetchData();
+                      }}
+                    />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm">탑승 시간</Label>
-                      <Input
-                        type="time"
-                        value={schedule.boarding_info?.time || ''}
-                        onChange={async (e) => {
-                          const updated = {
-                            ...schedule,
-                            boarding_info: {
-                              ...schedule.boarding_info,
-                              time: e.target.value
-                            }
-                          };
-                          await supabase
-                            .from('singsing_schedules')
-                            .update({ boarding_info: updated.boarding_info })
-                            .eq('id', schedule.id);
-                          fetchData();
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">탑승 장소</Label>
-                      <Input
-                        value={schedule.boarding_info?.place || ''}
-                        placeholder="탑승 장소 입력"
-                        onChange={async (e) => {
-                          const updated = {
-                            ...schedule,
-                            boarding_info: {
-                              ...schedule.boarding_info,
-                              place: e.target.value
-                            }
-                          };
-                          await supabase
-                            .from('singsing_schedules')
-                            .update({ boarding_info: updated.boarding_info })
-                            .eq('id', schedule.id);
-                          fetchData();
-                        }}
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">탑승 장소</label>
+                    <input
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={schedule.boarding_info?.place || ''}
+                      placeholder="탑승 장소 입력"
+                      onChange={async (e) => {
+                        const updated = {
+                          ...schedule,
+                          boarding_info: {
+                            ...schedule.boarding_info,
+                            place: e.target.value
+                          }
+                        };
+                        await supabase
+                          .from('singsing_schedules')
+                          .update({ boarding_info: updated.boarding_info })
+                          .eq('id', schedule.id);
+                        fetchData();
+                      }}
+                    />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* 공지사항 탭 */}
-        <TabsContent value="notices" className="space-y-4">
+      {/* 공지사항 탭 */}
+      {activeTab === 'notices' && (
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">공지사항 관리</h3>
-            <Button size="sm" onClick={addNotice}>
-              <Plus className="w-4 h-4 mr-1" /> 공지 추가
-            </Button>
+            <button
+              className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+              onClick={addNotice}
+            >
+              <Plus className="w-4 h-4 inline mr-1" /> 공지 추가
+            </button>
           </div>
 
           <div className="space-y-2">
             {notices.map((notice, index) => (
-              <Card key={index}>
-                <CardContent className="p-4">
-                  <div className="flex gap-2 items-start">
-                    <span className="text-sm font-medium mt-2">{index + 1}.</span>
-                    <Textarea
-                      value={notice.notice}
-                      onChange={(e) => updateNotice(index, e.target.value)}
-                      placeholder="공지사항 내용 입력"
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeNotice(index)}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex gap-2 items-start">
+                  <span className="text-sm font-medium mt-2">{index + 1}.</span>
+                  <textarea
+                    className="flex-1 px-3 py-2 border rounded-md"
+                    value={notice.notice}
+                    onChange={(e) => updateNotice(index, e.target.value)}
+                    placeholder="공지사항 내용 입력"
+                  />
+                  <button
+                    className="p-1 hover:bg-gray-100 rounded"
+                    onClick={() => removeNotice(index)}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
 
           {notices.length > 0 && (
             <div className="flex justify-end">
-              <Button onClick={handleSaveNotices}>
-                <Save className="w-4 h-4 mr-1" /> 공지사항 저장
-              </Button>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                onClick={handleSaveNotices}
+              >
+                <Save className="w-4 h-4 inline mr-1" /> 공지사항 저장
+              </button>
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }

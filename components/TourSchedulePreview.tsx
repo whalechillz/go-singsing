@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabaseClient';
 import { Download, Share2, Printer, Calendar, MapPin, Phone, Clock, Users } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface TourSchedulePreviewProps {
   tourId: string;
@@ -12,7 +9,7 @@ interface TourSchedulePreviewProps {
 export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps) {
   const [tourData, setTourData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const [activeTab, setActiveTab] = useState('full');
 
   useEffect(() => {
     fetchTourData();
@@ -74,48 +71,87 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div className="space-y-6">
       {/* 액션 버튼 */}
       <div className="flex justify-end gap-2 print:hidden">
-        <Button variant="outline" size="sm" onClick={handleShare}>
+        <button 
+          className="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-50 flex items-center"
+          onClick={handleShare}
+        >
           <Share2 className="w-4 h-4 mr-1" /> 공유
-        </Button>
-        <Button variant="outline" size="sm" onClick={handlePrint}>
+        </button>
+        <button 
+          className="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-50 flex items-center"
+          onClick={handlePrint}
+        >
           <Printer className="w-4 h-4 mr-1" /> 인쇄
-        </Button>
-        <Button variant="default" size="sm" onClick={handleDownload}>
+        </button>
+        <button 
+          className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 flex items-center"
+          onClick={handleDownload}
+        >
           <Download className="w-4 h-4 mr-1" /> PDF 다운로드
-        </Button>
+        </button>
       </div>
 
-      <Tabs defaultValue="full" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 print:hidden">
-          <TabsTrigger value="full">전체 일정표</TabsTrigger>
-          <TabsTrigger value="boarding">탑승 안내문</TabsTrigger>
-          <TabsTrigger value="simple">간단 일정표</TabsTrigger>
-        </TabsList>
+      {/* 탭 네비게이션 */}
+      <div className="border-b print:hidden">
+        <div className="flex space-x-8">
+          <button
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'full' 
+                ? 'border-blue-500 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('full')}
+          >
+            전체 일정표
+          </button>
+          <button
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'boarding' 
+                ? 'border-blue-500 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('boarding')}
+          >
+            탑승 안내문
+          </button>
+          <button
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'simple' 
+                ? 'border-blue-500 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('simple')}
+          >
+            간단 일정표
+          </button>
+        </div>
+      </div>
 
-        {/* 전체 일정표 */}
-        <TabsContent value="full" className="space-y-6">
+      {/* 전체 일정표 */}
+      {activeTab === 'full' && (
+        <div className="space-y-6">
           {/* 헤더 */}
-          <Card className="border-2 border-blue-500">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-              <CardTitle className="text-2xl text-center">
+          <div className="border-2 border-blue-500 rounded-lg">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-t-lg">
+              <h1 className="text-2xl font-bold text-center">
                 {tourData.tour_name}
-              </CardTitle>
-              <p className="text-center text-blue-100">
+              </h1>
+              <p className="text-center text-blue-100 mt-2">
                 {new Date(tourData.start_date).toLocaleDateString('ko-KR')} ~ 
                 {new Date(tourData.end_date).toLocaleDateString('ko-KR')}
               </p>
-            </CardHeader>
-          </Card>
+            </div>
+          </div>
 
           {/* 공지사항 */}
           {tourData.notices && tourData.notices.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
+            <div className="border rounded-lg">
+              <div className="p-4 border-b">
+                <h3 className="text-lg font-semibold flex items-center">
                   <Calendar className="w-5 h-5 mr-2" /> 공지사항
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
+              </div>
+              <div className="p-4">
                 <ul className="space-y-2">
                   {tourData.notices.map((notice: any, index: number) => (
                     <li key={index} className="flex items-start">
@@ -124,23 +160,23 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* 일정별 상세 정보 */}
           {tourData.schedules?.map((schedule: any, index: number) => (
-            <Card key={index} className="break-inside-avoid">
-              <CardHeader className="bg-gray-50">
-                <CardTitle className="text-lg">
+            <div key={index} className="border rounded-lg break-inside-avoid">
+              <div className="bg-gray-50 p-4 border-b">
+                <h3 className="text-lg font-semibold">
                   Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR', { 
                     month: 'long', 
                     day: 'numeric', 
                     weekday: 'long' 
                   })}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </h3>
+              </div>
+              <div className="p-4 space-y-4">
                 {/* 탑승 정보 */}
                 {schedule.boarding_info && (
                   <div className="bg-blue-50 p-4 rounded-lg">
@@ -194,17 +230,17 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
 
           {/* 스탭 정보 */}
           {tourData.staff && tourData.staff.length > 0 && (
-            <Card className="break-inside-avoid">
-              <CardHeader className="bg-yellow-50">
-                <CardTitle className="text-lg">싱싱골프투어 스탭</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="border rounded-lg break-inside-avoid">
+              <div className="bg-yellow-50 p-4 border-b">
+                <h3 className="text-lg font-semibold">싱싱골프투어 스탭</h3>
+              </div>
+              <div className="p-4">
                 <div className="grid grid-cols-2 gap-4">
                   {tourData.staff.map((staff: any, index: number) => (
                     <div key={index} className="flex items-center">
@@ -217,21 +253,21 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
-        </TabsContent>
+        </div>
+      )}
 
-        {/* 탑승 안내문 */}
-        <TabsContent value="boarding">
-          <BoardingGuidePreview tourId={tourId} />
-        </TabsContent>
+      {/* 탑승 안내문 */}
+      {activeTab === 'boarding' && (
+        <BoardingGuidePreview tourId={tourId} />
+      )}
 
-        {/* 간단 일정표 */}
-        <TabsContent value="simple">
-          <SimpleScheduleView tourData={tourData} />
-        </TabsContent>
-      </Tabs>
+      {/* 간단 일정표 */}
+      {activeTab === 'simple' && (
+        <SimpleScheduleView tourData={tourData} />
+      )}
 
       {/* 인쇄용 스타일 */}
       <style jsx global>{`
@@ -261,7 +297,10 @@ function BoardingGuidePreview({ tourId }: { tourId: string }) {
   // 기존 BoardingGuidePreview 로직 사용
   return (
     <div className="max-w-2xl mx-auto">
-      {/* 기존 탑승 안내문 미리보기 컴포넌트 내용 */}
+      <div className="border rounded-lg p-6">
+        <h2 className="text-xl font-bold text-center mb-4">탑승 안내문</h2>
+        <p className="text-center text-gray-600">탑승 안내문 미리보기가 여기에 표시됩니다.</p>
+      </div>
     </div>
   );
 }
@@ -270,11 +309,11 @@ function BoardingGuidePreview({ tourId }: { tourId: string }) {
 function SimpleScheduleView({ tourData }: { tourData: any }) {
   return (
     <div className="max-w-2xl mx-auto space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-center">{tourData.tour_name}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="border rounded-lg">
+        <div className="p-4 border-b">
+          <h2 className="text-xl font-bold text-center">{tourData.tour_name}</h2>
+        </div>
+        <div className="p-4">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
@@ -302,8 +341,8 @@ function SimpleScheduleView({ tourData }: { tourData: any }) {
               ))}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
