@@ -382,6 +382,10 @@ export interface Database {
           menu_breakfast: string | null
           menu_lunch: string | null
           menu_dinner: string | null
+          schedule_date: string | null
+          day_number: number | null
+          schedule_items: any | null
+          boarding_info: any | null
         }
         Insert: {
           id?: string
@@ -396,6 +400,10 @@ export interface Database {
           menu_breakfast?: string | null
           menu_lunch?: string | null
           menu_dinner?: string | null
+          schedule_date?: string | null
+          day_number?: number | null
+          schedule_items?: any | null
+          boarding_info?: any | null
         }
         Update: {
           id?: string
@@ -410,6 +418,10 @@ export interface Database {
           menu_breakfast?: string | null
           menu_lunch?: string | null
           menu_dinner?: string | null
+          schedule_date?: string | null
+          day_number?: number | null
+          schedule_items?: any | null
+          boarding_info?: any | null
         }
       }
       singsing_tee_time_players: {
@@ -485,6 +497,7 @@ export interface Database {
           reservation_notice: string | null
           schedule_notice: string | null
           tour_product_id: string | null
+          notices: any | null
         }
         Insert: {
           id?: string
@@ -503,6 +516,7 @@ export interface Database {
           reservation_notice?: string | null
           schedule_notice?: string | null
           tour_product_id?: string | null
+          notices?: any | null
         }
         Update: {
           id?: string
@@ -521,6 +535,7 @@ export interface Database {
           reservation_notice?: string | null
           schedule_notice?: string | null
           tour_product_id?: string | null
+          notices?: any | null
         }
       }
       tour_products: {
@@ -582,6 +597,35 @@ export interface Database {
           courses?: string[] | null
         }
       }
+      singsing_tour_staff: {
+        Row: {
+          id: string
+          tour_id: string
+          name: string
+          phone: string
+          role: string | null
+          order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tour_id: string
+          name: string
+          phone: string
+          role?: string | null
+          order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tour_id?: string
+          name?: string
+          phone?: string
+          role?: string | null
+          order?: number
+          created_at?: string
+        }
+      }
       users: {
         Row: {
           id: string
@@ -612,6 +656,19 @@ export interface Database {
           role?: string
           emergency_phone?: string | null
           created_at?: string
+        }
+      }
+    }
+    Views: {
+      tour_schedule_preview: {
+        Row: {
+          tour_id: string
+          tour_name: string
+          start_date: string
+          end_date: string
+          notices: any | null
+          schedules: any | null
+          staff: any | null
         }
       }
     }

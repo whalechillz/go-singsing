@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import ParticipantsManagerV2 from "@/components/ParticipantsManagerV2";
 import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 import RoomTypeManager from "@/components/RoomTypeManager";
-import ScheduleManager from "@/components/ScheduleManager";
+import IntegratedScheduleManager from "@/components/IntegratedScheduleManager";
 import TeeTimeSlotManager from "@/components/TeeTimeSlotManager";
 import TeeTimeAssignmentManagerV2 from "@/components/TeeTimeAssignmentManagerV2";
 import BoardingScheduleManager from "@/components/BoardingScheduleManager";
@@ -15,13 +15,11 @@ import TourBoardingTimeManager from "@/components/TourBoardingTimeManager";
 import { Users, BedDouble, Calendar, Flag, Bus, FileText, Clock } from 'lucide-react';
 
 const TABS = [
-  { key: "participants", label: "투어별 참가자 관리", icon: <Users className="w-4 h-4" /> },
-  { key: "rooms", label: "투어별 객실 배정", icon: <BedDouble className="w-4 h-4" /> },
-  { key: "schedules", label: "투어별 일정관리", icon: <Calendar className="w-4 h-4" /> },
-  { key: "tee-times", label: "티오프시간 관리", icon: <Flag className="w-4 h-4" /> },
-  { key: "boarding-times", label: "탑승 시간 설정", icon: <Clock className="w-4 h-4" /> },
-  { key: "boarding-guide", label: "탑승지 안내 미리보기", icon: <Bus className="w-4 h-4" /> },
-  { key: "schedule-preview", label: "투어 일정표 미리보기", icon: <FileText className="w-4 h-4" /> },
+  { key: "participants", label: "참가자 관리", icon: <Users className="w-4 h-4" /> },
+  { key: "rooms", label: "객실 배정", icon: <BedDouble className="w-4 h-4" /> },
+  { key: "schedules", label: "일정 관리 (통합)", icon: <Calendar className="w-4 h-4" /> },
+  { key: "tee-times", label: "티타임 관리", icon: <Flag className="w-4 h-4" /> },
+  { key: "schedule-preview", label: "일정표 미리보기", icon: <FileText className="w-4 h-4" /> },
 ];
 
 type Tour = {
@@ -95,15 +93,14 @@ const TourDetailPage: React.FC = () => {
             <RoomAssignmentManager tourId={tourId} />
           </>
         )}
-        {activeTab === "schedules" && tour && <ScheduleManager tourId={tourId} tour={tour} />}
+        {activeTab === "schedules" && tour && <IntegratedScheduleManager tourId={tourId} />}
         {activeTab === "tee-times" && (
           <>
             <TeeTimeSlotManager tourId={tourId} onDataChange={() => setRefreshKey(prev => prev + 1)} />
             <TeeTimeAssignmentManagerV2 tourId={tourId} refreshKey={refreshKey} />
           </>
         )}
-        {activeTab === "boarding-times" && <TourBoardingTimeManager tourId={tourId} />}
-        {activeTab === "boarding-guide" && <BoardingGuidePreview tourId={tourId} />}
+
         {activeTab === "schedule-preview" && <TourSchedulePreview tourId={tourId} />}
       </div>
     </div>

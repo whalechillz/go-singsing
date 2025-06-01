@@ -8,9 +8,10 @@
 - [설치 가이드](./setup.md) - 초기 설정 및 환경 구성
 
 ### 📊 최신 업데이트
-- [프로젝트 현황 (2025-06-01)](./PROJECT_STATUS_20250601.md) - 최신 프로젝트 상태
-- [DB 변경사항 (2025-06-01)](./DB_CHANGES_20250601.md) - 성별 필드 추가
+- [프로젝트 현황 (2025-06-02)](./PROJECT_STATUS_20250602.md) - 최신 프로젝트 상태 ✨
+- [데이터베이스 통합 (2025-06-02)](./updates/DB_CONSOLIDATION_20250602.md) - 테이블 통합 및 UI 개선 ✨
 - [성별 표시 기능 가이드](./GENDER_DISPLAY_GUIDE.md) - 새로운 기능 사용법
+- [DB 변경사항 (2025-06-01)](./DB_CHANGES_20250601.md) - 성별 필드 추가
 
 ### 🏗 시스템 구조
 - [시스템 구조](./system-structure.md) - 전체 아키텍처
@@ -44,10 +45,12 @@
 ### 주요 컴포넌트 위치
 ```
 /components/
-├── TeeTimeAssignmentManagerV2.tsx  # 티타임 배정 (성별 표시 포함)
-├── ParticipantsManagerV2.tsx       # 참가자 관리
-├── RoomAssignmentManager.tsx       # 객실 배정
-└── Dashboard.tsx                   # 관리자 대시보드
+├── IntegratedScheduleManager.tsx    # 통합 일정 관리 ✨
+├── TourSchedulePreview.tsx          # 개선된 일정표 미리보기 ✨
+├── TeeTimeAssignmentManagerV2.tsx   # 티타임 배정 (성별 표시 포함)
+├── ParticipantsManagerV2.tsx        # 참가자 관리
+├── RoomAssignmentManager.tsx        # 객실 배정
+└── Dashboard.tsx                    # 관리자 대시보드
 ```
 
 ### 중요 환경 변수
@@ -69,4 +72,4 @@ npm start      # 빌드된 앱 실행
 - 프로젝트 URL: https://go.singsinggolf.kr
 
 ---
-*최종 업데이트: 2025년 6월 1일*
+*최종 업데이트: 2025년 6월 2일*
