@@ -81,6 +81,9 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   const [showDateActions, setShowDateActions] = useState<string | null>(null);
   const [selectedTeeTime, setSelectedTeeTime] = useState<string | null>(null);
   const [showTeeTimeMove, setShowTeeTimeMove] = useState<boolean>(false);
+  const [showGroupScheduleAdjust, setShowGroupScheduleAdjust] = useState<boolean>(false);
+  const [selectedGroupParticipants, setSelectedGroupParticipants] = useState<string[]>([]);
+  const [adjustments, setAdjustments] = useState<{ [date: string]: { from: string; to: string } }>({});
 
   // 데이터 fetch - 다대다 관계 처리 (완전히 새로 작성)
   const fetchData = async () => {
@@ -195,6 +198,46 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       setError(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 그룹 전체 일정 조정
+  const handleAdjustGroupSchedule = async (adjustments: { date: string; fromTeeTimeId: string; toTeeTimeId: string }[]) => {
+    try {
+      for (const adjustment of adjustments) {
+        const { date, fromTeeTimeId, toTeeTimeId } = adjustment;
+        
+        if (fromTeeTimeId === toTeeTimeId) continue; // 변경사항 없으면 스킵
+        
+        // 해당 티타임의 참가자들 이동
+        for (const participantId of selectedGroupParticipants) {
+          // 기존 배정 삭제
+          await supabase
+            .from("singsing_participant_tee_times")
+            .delete()
+            .eq("participant_id", participantId)
+            .eq("tee_time_id", fromTeeTimeId);
+            
+          // 새 배정 추가
+          await supabase
+            .from("singsing_participant_tee_times")
+            .insert({
+              participant_id: participantId,
+              tee_time_id: toTeeTimeId
+            });
+        }
+      }
+      
+      // 전체 데이터 새로고침
+      await fetchData();
+      
+      showToast('success', '그룹 일정이 조정되었습니다.');
+      setShowGroupScheduleAdjust(false);
+      setSelectedGroupParticipants([]);
+      setAdjustments({});
+    } catch (error: any) {
+      console.error('그룹 일정 조정 오류:', error);
+      showToast('error', `오류 발생: ${error.message}`);
     }
   };
 
@@ -1101,21 +1144,53 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                               {assignedParticipants.length} / {teeTime.max_players}명
                             </span>
                             {assignedParticipants.length > 0 && (
-                              <button
-                                onClick={() => {
-                                  setSelectedTeeTime(teeTime.id);
-                                  setShowTeeTimeMove(true);
-                                }}
-                                className={`px-2 py-1 text-xs rounded transition-colors ${
-                                  selectedTeeTime === teeTime.id 
-                                    ? 'bg-blue-600 text-white' 
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                                title="이 티타임의 모든 참가자 이동"
-                              >
-                                <ArrowUpDown className="w-3 h-3 inline mr-1" />
-                                그룹이동
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setSelectedTeeTime(teeTime.id);
+                                    setShowTeeTimeMove(true);
+                                  }}
+                                  className={`px-2 py-1 text-xs rounded transition-colors ${
+                                    selectedTeeTime === teeTime.id 
+                                      ? 'bg-blue-600 text-white' 
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                  title="이 티타임의 모든 참가자 이동"
+                                >
+                                  <ArrowUpDown className="w-3 h-3 inline mr-1" />
+                                  그룹이동
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedGroupParticipants(assignedParticipants.map(p => p.id));
+                                    // 현재 배정된 티타임 초기화
+                                    const initialAdjustments: { [date: string]: { from: string; to: string } } = {};
+                                    Object.keys(teeTimesByDate).forEach(date => {
+                                      const dateTeeTimeIds = teeTimes
+                                        .filter(tt => tt.play_date === date)
+                                        .map(tt => tt.id);
+                                      
+                                      const firstParticipant = assignedParticipants[0];
+                                      if (firstParticipant) {
+                                        const currentTeeTimeId = firstParticipant.tee_time_assignments?.find(id => 
+                                          dateTeeTimeIds.includes(id)
+                                        );
+                                        
+                                        if (currentTeeTimeId) {
+                                          initialAdjustments[date] = { from: currentTeeTimeId, to: currentTeeTimeId };
+                                        }
+                                      }
+                                    });
+                                    setAdjustments(initialAdjustments);
+                                    setShowGroupScheduleAdjust(true);
+                                  }}
+                                  className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+                                  title="이 그룹의 전체 일정 조정"
+                                >
+                                  <Calendar className="w-3 h-3 inline mr-1" />
+                                  일정조정
+                                </button>
+                              </>
                             )}
                           </div>
                         </div>
@@ -1395,6 +1470,252 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                           })}
                       </div>
                     ))}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+      
+      {/* 그룹 일정 조정 모달 */}
+      {showGroupScheduleAdjust && selectedGroupParticipants.length > 0 && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">그룹 전체 일정 조정</h3>
+              <button
+                onClick={() => {
+                  setShowGroupScheduleAdjust(false);
+                  setSelectedGroupParticipants([]);
+                  setAdjustments({});
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {(() => {
+              // 선택된 참가자 정보
+              const selectedParticipantDetails = participants.filter(p => 
+                selectedGroupParticipants.includes(p.id)
+              );
+              
+              const handleSaveAdjustments = () => {
+                const adjustmentList = Object.entries(adjustments).map(([date, { from, to }]) => ({
+                  date,
+                  fromTeeTimeId: from,
+                  toTeeTimeId: to
+                }));
+                
+                handleAdjustGroupSchedule(adjustmentList);
+              };
+              
+              return (
+                <>
+                  <div className="mb-4 p-4 bg-blue-50 rounded">
+                    <div className="font-medium text-blue-900 mb-2">선택된 그룹 참가자</div>
+                    <div className="text-sm text-blue-700">
+                      {selectedParticipantDetails.map(p => p.name).join(', ')}
+                    </div>
+                  </div>
+                  
+                  {/* 스마트 자동 배정 옵션 */}
+                  <div className="mb-4 p-3 bg-gray-50 rounded">
+                    <div className="text-sm font-medium text-gray-700 mb-2">빠른 설정</div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => {
+                          const dates = Object.keys(teeTimesByDate).sort();
+                          const newAdjustments: typeof adjustments = {};
+                          
+                          dates.forEach((date, index) => {
+                            const times = teeTimesByDate[date].sort((a, b) => a.tee_time.localeCompare(b.tee_time));
+                            const currentId = adjustments[date]?.from;
+                            
+                            if (index === 0) {
+                              // 첫날은 이른 시간
+                              const earlyTime = times[0];
+                              if (earlyTime) {
+                                newAdjustments[date] = { from: currentId || '', to: earlyTime.id };
+                              }
+                            } else {
+                              // 나머지는 늦은 시간
+                              const lateTime = times[times.length - 1];
+                              if (lateTime) {
+                                newAdjustments[date] = { from: currentId || '', to: lateTime.id };
+                              }
+                            }
+                          });
+                          
+                          setAdjustments(newAdjustments);
+                        }}
+                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                      >
+                        첫날 일찍 → 나머지 늦게
+                      </button>
+                      <button
+                        onClick={() => {
+                          const dates = Object.keys(teeTimesByDate).sort();
+                          const newAdjustments: typeof adjustments = {};
+                          
+                          dates.forEach((date) => {
+                            const times = teeTimesByDate[date].sort((a, b) => a.tee_time.localeCompare(b.tee_time));
+                            const currentId = adjustments[date]?.from;
+                            const middleIndex = Math.floor(times.length / 2);
+                            const middleTime = times[middleIndex];
+                            
+                            if (middleTime) {
+                              newAdjustments[date] = { from: currentId || '', to: middleTime.id };
+                            }
+                          });
+                          
+                          setAdjustments(newAdjustments);
+                        }}
+                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+                      >
+                        모두 중간 시간대로
+                      </button>
+                      <button
+                        onClick={() => {
+                          const dates = Object.keys(teeTimesByDate).sort();
+                          const newAdjustments: typeof adjustments = {};
+                          
+                          dates.forEach((date, index) => {
+                            const times = teeTimesByDate[date].sort((a, b) => a.tee_time.localeCompare(b.tee_time));
+                            const currentId = adjustments[date]?.from;
+                            
+                            // 날짜마다 점진적으로 늦게
+                            const targetIndex = Math.min(index * 2, times.length - 1);
+                            const targetTime = times[targetIndex];
+                            
+                            if (targetTime) {
+                              newAdjustments[date] = { from: currentId || '', to: targetTime.id };
+                            }
+                          });
+                          
+                          setAdjustments(newAdjustments);
+                        }}
+                        className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
+                      >
+                        점진적으로 늦게
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {Object.entries(teeTimesByDate).map(([date, times]) => {
+                      const currentTeeTimeId = adjustments[date]?.to || adjustments[date]?.from;
+                      const currentTeeTime = teeTimes.find(tt => tt.id === currentTeeTimeId);
+                      
+                      return (
+                        <div key={date} className={`border rounded-lg p-4 transition-colors ${
+                          adjustments[date]?.from !== adjustments[date]?.to
+                            ? 'border-blue-300 bg-blue-50'
+                            : 'border-gray-200'
+                        }`}>
+                          <div className="font-medium mb-2">
+                            {new Date(date).toLocaleDateString('ko-KR', { 
+                              month: 'long', 
+                              day: 'numeric',
+                              weekday: 'long'
+                            })}
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <div className="text-sm text-gray-600 mb-1">현재 티타임</div>
+                              <div className="font-medium">
+                                {currentTeeTime ? (
+                                  `${currentTeeTime.tee_time} (${currentTeeTime.golf_course})`
+                                ) : (
+                                  '미배정'
+                                )}
+                              </div>
+                            </div>
+                            
+                            {adjustments[date]?.from !== adjustments[date]?.to && (
+                              <div className="text-blue-600">
+                                →
+                              </div>
+                            )}
+                            
+                            <div className="flex-1">
+                              <div className="text-sm text-gray-600 mb-1">변경할 티타임</div>
+                              <select
+                                value={adjustments[date]?.to || ''}
+                                onChange={(e) => {
+                                  setAdjustments(prev => ({
+                                    ...prev,
+                                    [date]: {
+                                      from: adjustments[date]?.from || '',
+                                      to: e.target.value
+                                    }
+                                  }));
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="">선택하세요</option>
+                                {times.map(tt => {
+                                  const currentCount = tt.assigned_count || 0;
+                                  const availableSpace = tt.max_players - currentCount;
+                                  const canAccommodate = tt.id === currentTeeTimeId || availableSpace >= selectedGroupParticipants.length;
+                                  
+                                  return (
+                                    <option 
+                                      key={tt.id} 
+                                      value={tt.id}
+                                      disabled={!canAccommodate}
+                                    >
+                                      {tt.tee_time} ({tt.golf_course}) - {currentCount}/{tt.max_players}명
+                                      {!canAccommodate && ' (공간 부족)'}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* 변경 사항 요약 */}
+                  {Object.entries(adjustments).some(([date, { from, to }]) => from !== to) && (
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                      <div className="text-sm font-medium text-yellow-800 mb-1">변경 예정 사항</div>
+                      <div className="text-xs text-yellow-700">
+                        {Object.entries(adjustments)
+                          .filter(([date, { from, to }]) => from !== to)
+                          .map(([date, { from, to }]) => {
+                            const fromTeeTime = teeTimes.find(tt => tt.id === from);
+                            const toTeeTime = teeTimes.find(tt => tt.id === to);
+                            return `${new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}: ${fromTeeTime?.tee_time} → ${toTeeTime?.tee_time}`;
+                          })
+                          .join(', ')
+                        }
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end gap-2 mt-6">
+                    <button
+                      onClick={() => {
+                        setShowGroupScheduleAdjust(false);
+                        setSelectedGroupParticipants([]);
+                        setAdjustments({});
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={handleSaveAdjustments}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      일정 조정 저장
+                    </button>
                   </div>
                 </>
               );
