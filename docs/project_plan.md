@@ -292,3 +292,10 @@ CREATE TABLE user_roles (
 ---
 *마지막 업데이트: 2025-05-30*
 *업데이트 내용: Phase 3 완료, 데이터베이스 구조 명확화, 현재 진행 상황 추가*
+
+- **2025-05-28**
+  - 티타임 배정 페이지에서 V2 컴포넌트(`TeeTimeAssignmentManagerV2`)로 교체
+    - 파일: `app/admin/tours/[tourId]/page.tsx`
+    - 구버전 import 및 사용 코드 제거, V2 import 및 사용으로 변경
+  - 수정사항 커밋 및 원격 저장소 푸시, Vercel 자동 배포 진행
+  - 남은 작업: 배포 완료 후 정상 동작 확인
