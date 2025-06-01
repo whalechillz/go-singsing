@@ -14,6 +14,27 @@ type TeeTime = {
   created_at?: string;
 };
 
+// 코스별 색상 정의
+const COURSE_COLORS: { [key: string]: string } = {
+  '파인': 'bg-green-50 border-green-300',
+  '레이크': 'bg-blue-50 border-blue-300', 
+  '힐스': 'bg-amber-50 border-amber-300',
+  '메이저': 'bg-purple-50 border-purple-300',
+  '클래식': 'bg-pink-50 border-pink-300',
+  '이스트': 'bg-indigo-50 border-indigo-300',
+  '웨스트': 'bg-teal-50 border-teal-300',
+  '샤인': 'bg-yellow-50 border-yellow-300',
+  '블루': 'bg-sky-50 border-sky-300',
+};
+
+// 코스명에서 색상 가져오기
+const getCourseColor = (courseName: string): string => {
+  const courseKey = Object.keys(COURSE_COLORS).find(key => 
+    courseName.includes(key)
+  );
+  return courseKey ? COURSE_COLORS[courseKey] : 'bg-gray-50 border-gray-300';
+};
+
 type TeeTimeForm = {
   play_date: string;
   golf_course: string;
@@ -336,7 +357,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     return date instanceof Date && !isNaN(date.getTime());
   };
   
-  // 날짜별로 그룹화
+  // 날짜별로 그룹화하고 코스별로 정렬
   const teeTimesByDate = teeTimes.reduce((acc, teeTime) => {
     const date = teeTime.play_date;
     // Invalid date 체크
@@ -348,6 +369,18 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     acc[date].push(teeTime);
     return acc;
   }, {} as Record<string, TeeTime[]>);
+
+  // 각 날짜의 티타임을 코스별로 그룹핑
+  Object.keys(teeTimesByDate).forEach(date => {
+    teeTimesByDate[date].sort((a, b) => {
+      // 먼저 코스명으로 정렬
+      if (a.golf_course !== b.golf_course) {
+        return a.golf_course.localeCompare(b.golf_course);
+      }
+      // 같은 코스면 시간순으로 정렬
+      return a.tee_time.localeCompare(b.tee_time);
+    });
+  });
 
   // 통계 계산
   const totalSlots = teeTimes.length;
@@ -577,7 +610,29 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                 </h3>
               </div>
               
-              <table className="w-full bg-white rounded shadow text-sm">
+              {/* 코스별 통계 */}
+              <div className="mb-3 flex flex-wrap gap-2">
+                {(() => {
+                  const courseStats = times.reduce((acc, t) => {
+                    const course = t.golf_course;
+                    if (!acc[course]) acc[course] = { count: 0, capacity: 0 };
+                    acc[course].count++;
+                    acc[course].capacity += t.max_players;
+                    return acc;
+                  }, {} as Record<string, { count: number; capacity: number }>);
+                  
+                  return Object.entries(courseStats).map(([course, stats]) => (
+                    <div 
+                      key={course}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border ${getCourseColor(course)}`}
+                    >
+                      {course}: {stats.count}팀 ({stats.capacity}명)
+                    </div>
+                  ));
+                })()}
+              </div>
+              
+              <table className="w-full bg-white rounded shadow text-sm overflow-hidden">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700">
                     {isSelectMode && (
@@ -605,16 +660,21 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {times.map(teeTime => (
-                    <tr 
-                      key={teeTime.id} 
-                      className={`border-t border-gray-200 ${isSelectMode ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
-                      onClick={(e) => {
-                        if (isSelectMode && !(e.target as HTMLElement).closest('button, input, select')) {
-                          toggleSelect(teeTime.id);
-                        }
-                      }}
-                    >
+                  {times.map((teeTime, index) => {
+                    const prevCourse = index > 0 ? times[index - 1].golf_course : null;
+                    const isNewCourse = prevCourse !== teeTime.golf_course;
+                    const courseColor = getCourseColor(teeTime.golf_course);
+                    
+                    return (
+                      <tr 
+                        key={teeTime.id} 
+                        className={`${isNewCourse ? 'border-t-2' : 'border-t'} border-gray-200 ${courseColor} ${isSelectMode ? 'hover:opacity-80 cursor-pointer' : ''}`}
+                        onClick={(e) => {
+                          if (isSelectMode && !(e.target as HTMLElement).closest('button, input, select')) {
+                            toggleSelect(teeTime.id);
+                          }
+                        }}
+                      >
                       {isSelectMode && (
                         <td className="py-1 px-2 text-center">
                           <input
@@ -715,7 +775,8 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                         )}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
