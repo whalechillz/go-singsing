@@ -14,25 +14,65 @@ type TeeTime = {
   created_at?: string;
 };
 
-// 코스별 색상 정의
-const COURSE_COLORS: { [key: string]: string } = {
-  '파인': 'bg-green-50 border-green-300',
-  '레이크': 'bg-blue-50 border-blue-300', 
-  '힐스': 'bg-amber-50 border-amber-300',
-  '메이저': 'bg-purple-50 border-purple-300',
-  '클래식': 'bg-pink-50 border-pink-300',
-  '이스트': 'bg-indigo-50 border-indigo-300',
-  '웨스트': 'bg-teal-50 border-teal-300',
-  '샤인': 'bg-yellow-50 border-yellow-300',
-  '블루': 'bg-sky-50 border-sky-300',
+// 코스별 색상 정의 - Tailwind가 빌드시 포함하도록 명시적 클래스 사용
+const COURSE_COLORS: { [key: string]: { bg: string; border: string; tag: string } } = {
+  '파인': { 
+    bg: 'bg-green-50', 
+    border: 'border-green-300',
+    tag: 'bg-green-100 text-green-800 border-green-300'
+  },
+  '레이크': { 
+    bg: 'bg-blue-50', 
+    border: 'border-blue-300',
+    tag: 'bg-blue-100 text-blue-800 border-blue-300'
+  }, 
+  '힐스': { 
+    bg: 'bg-amber-50', 
+    border: 'border-amber-300',
+    tag: 'bg-amber-100 text-amber-800 border-amber-300'
+  },
+  '메이저': { 
+    bg: 'bg-purple-50', 
+    border: 'border-purple-300',
+    tag: 'bg-purple-100 text-purple-800 border-purple-300'
+  },
+  '클래식': { 
+    bg: 'bg-pink-50', 
+    border: 'border-pink-300',
+    tag: 'bg-pink-100 text-pink-800 border-pink-300'
+  },
+  '이스트': { 
+    bg: 'bg-indigo-50', 
+    border: 'border-indigo-300',
+    tag: 'bg-indigo-100 text-indigo-800 border-indigo-300'
+  },
+  '웨스트': { 
+    bg: 'bg-teal-50', 
+    border: 'border-teal-300',
+    tag: 'bg-teal-100 text-teal-800 border-teal-300'
+  },
+  '샤인': { 
+    bg: 'bg-yellow-50', 
+    border: 'border-yellow-300',
+    tag: 'bg-yellow-100 text-yellow-800 border-yellow-300'
+  },
+  '블루': { 
+    bg: 'bg-sky-50', 
+    border: 'border-sky-300',
+    tag: 'bg-sky-100 text-sky-800 border-sky-300'
+  },
 };
 
 // 코스명에서 색상 가져오기
-const getCourseColor = (courseName: string): string => {
+const getCourseColor = (courseName: string) => {
   const courseKey = Object.keys(COURSE_COLORS).find(key => 
     courseName.includes(key)
   );
-  return courseKey ? COURSE_COLORS[courseKey] : 'bg-gray-50 border-gray-300';
+  return courseKey ? COURSE_COLORS[courseKey] : {
+    bg: 'bg-gray-50',
+    border: 'border-gray-300',
+    tag: 'bg-gray-100 text-gray-800 border-gray-300'
+  };
 };
 
 type TeeTimeForm = {
@@ -624,7 +664,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                   return Object.entries(courseStats).map(([course, stats]) => (
                     <div 
                       key={course}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${getCourseColor(course)}`}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border ${getCourseColor(course).tag}`}
                     >
                       {course}: {stats.count}팀 ({stats.capacity}명)
                     </div>
@@ -668,7 +708,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                     return (
                       <tr 
                         key={teeTime.id} 
-                        className={`${isNewCourse ? 'border-t-2' : 'border-t'} border-gray-200 ${courseColor} ${isSelectMode ? 'hover:opacity-80 cursor-pointer' : ''}`}
+                        className={`${isNewCourse ? 'border-t-2' : 'border-t'} ${courseColor.border} ${courseColor.bg} ${isSelectMode ? 'hover:opacity-80 cursor-pointer' : ''}`}
                         onClick={(e) => {
                           if (isSelectMode && !(e.target as HTMLElement).closest('button, input, select')) {
                             toggleSelect(teeTime.id);

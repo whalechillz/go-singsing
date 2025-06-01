@@ -9,6 +9,20 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    // 코스별 색상 safelist
+    'bg-green-50', 'border-green-300', 'bg-green-100', 'text-green-800',
+    'bg-blue-50', 'border-blue-300', 'bg-blue-100', 'text-blue-800',
+    'bg-amber-50', 'border-amber-300', 'bg-amber-100', 'text-amber-800',
+    'bg-purple-50', 'border-purple-300', 'bg-purple-100', 'text-purple-800',
+    'bg-pink-50', 'border-pink-300', 'bg-pink-100', 'text-pink-800',
+    'bg-indigo-50', 'border-indigo-300', 'bg-indigo-100', 'text-indigo-800',
+    'bg-teal-50', 'border-teal-300', 'bg-teal-100', 'text-teal-800',
+    'bg-yellow-50', 'border-yellow-300', 'bg-yellow-100', 'text-yellow-800',
+    'bg-sky-50', 'border-sky-300', 'bg-sky-100', 'text-sky-800',
+    'bg-gray-50', 'border-gray-300', 'bg-gray-100', 'text-gray-800',
+    'border-t-2', 'hover:opacity-80',
+  ],
   theme: {
     container: {
       center: true,

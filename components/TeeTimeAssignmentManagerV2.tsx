@@ -11,6 +11,7 @@ type Participant = {
   note: string;
   status: string;
   tour_id: string;
+  gender?: string; // 성별 필드 추가 ('M' | 'F')
   tee_time_assignments?: string[]; // 배정된 티타임 ID들
 };
 
@@ -98,6 +99,9 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         .order("created_at", { ascending: true });
       
       if (participantsError) throw participantsError;
+      
+      // 성별 정보를 포함한 참가자 데이터
+      const participantsWithGender = participantsData || [];
       
       // 2. 티타임 데이터 가져오기
       const { data: teeTimesData, error: teeTimesError } = await supabase
@@ -673,6 +677,46 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       }
     }
 
+    // 팀 구성 분석 함수
+    const analyzeTeamGender = (teamParticipants: Participant[]) => {
+      const maleCount = teamParticipants.filter(p => p.gender === 'M').length;
+      const femaleCount = teamParticipants.filter(p => p.gender === 'F').length;
+      const unknownCount = teamParticipants.length - maleCount - femaleCount;
+      
+      if (unknownCount > 0) {
+        return { type: '', showIndividual: false };
+      }
+      
+      if (maleCount > 0 && femaleCount > 0) {
+        return { type: '(혼성팀)', showIndividual: false };
+      } else if (maleCount > 0) {
+        return { type: '(남성팀)', showIndividual: false };
+      } else if (femaleCount > 0) {
+        return { type: '(여성팀)', showIndividual: false };
+      }
+      
+      return { type: '', showIndividual: false };
+    };
+
+    // 개별 성별 표시 결정 함수 (소수 성별만 표시)
+    const getGenderSuffix = (participant: Participant, teamParticipants: Participant[]) => {
+      if (!participant.gender) return '';
+      
+      const maleCount = teamParticipants.filter(p => p.gender === 'M').length;
+      const femaleCount = teamParticipants.filter(p => p.gender === 'F').length;
+      
+      // 혼성팀에서 소수 성별만 표시
+      if (maleCount > 0 && femaleCount > 0) {
+        if (maleCount < femaleCount && participant.gender === 'M') {
+          return '(남)';
+        } else if (femaleCount < maleCount && participant.gender === 'F') {
+          return '(여)';
+        }
+      }
+      
+      return '';
+    };
+
     let tablesHTML = '';
     Object.entries(teeTimesByDate).forEach(([date, times]) => {
       const dateStr = new Date(date).toLocaleDateString('ko-KR', { 
@@ -712,15 +756,20 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
               <td colspan="${isStaff ? 5 : 3}" class="empty-slot">배정된 참가자가 없습니다</td>
             </tr>`;
         } else {
+          // 팀 성별 분석
+          const teamGenderInfo = analyzeTeamGender(teeTimeParticipants);
+          
           teeTimeParticipants.forEach((p, index) => {
+            const genderSuffix = getGenderSuffix(p, teeTimeParticipants);
+            
             tableHTML += `
               <tr>
                 ${index === 0 ? `
                   <td rowspan="${teeTimeParticipants.length}">${teeTime.tee_time}</td>
-                  <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course}</td>
+                  <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course} ${teamGenderInfo.type}</td>
                 ` : ''}
                 <td>${index + 1}</td>
-                <td>${p.name}</td>
+                <td>${p.name}${genderSuffix}</td>
                 ${isStaff ? `<td>${p.phone || ''}</td>` : ''}
                 <td>${p.team_name || ''}</td>
                 ${isStaff ? `<td>${p.note || ''}</td>` : ''}
