@@ -46,6 +46,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   const [selectedParticipants, setSelectedParticipants] = useState<{ id: string; name: string; gender?: string }[]>([]);
   const [participantSearch, setParticipantSearch] = useState("");
   const [allSelected, setAllSelected] = useState(false);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   // 참가자 자동완성 데이터 불러오기 (gender 포함)
   useEffect(() => {
@@ -59,20 +60,53 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   // 투어의 tour_product_id → courses 배열 fetch
   useEffect(() => {
     const fetchCourses = async () => {
-      // 1. 투어 정보에서 tour_product_id 조회
-      const { data: tour, error: tourErr } = await supabase.from("singsing_tours").select("tour_product_id").eq("id", tourId).single();
-      if (tourErr || !tour?.tour_product_id) {
-        setCourses([]);
-        return;
-      }
-      // 2. tour_products에서 courses 배열 조회
-      const { data: product, error: prodErr } = await supabase.from("tour_products").select("courses").eq("id", tour.tour_product_id).single();
-      if (!prodErr && product && Array.isArray(product.courses)) {
-        setCourses(product.courses);
-      } else {
+      try {
+        // 1. 투어 정보에서 tour_product_id 조회
+        const { data: tour, error: tourErr } = await supabase
+          .from("singsing_tours")
+          .select("tour_product_id")
+          .eq("id", tourId)
+          .single();
+        
+        if (tourErr || !tour?.tour_product_id) {
+          console.error("Tour product ID not found", tourErr);
+          setCourses([]);
+          return;
+        }
+        
+        // 2. tour_products에서 golf_courses 정보 조회
+        const { data: product, error: prodErr } = await supabase
+          .from("tour_products")
+          .select("golf_courses")
+          .eq("id", tour.tour_product_id)
+          .single();
+        
+        if (!prodErr && product?.golf_courses) {
+          // golf_courses는 보통 [{name: "골프장명", courses: ["코스1", "코스2"]}] 형태
+          const courseList: string[] = [];
+          
+          if (Array.isArray(product.golf_courses)) {
+            product.golf_courses.forEach((gc: any) => {
+              if (gc.courses && Array.isArray(gc.courses)) {
+                gc.courses.forEach((courseName: string) => {
+                  // "골프장명 - 코스명" 형태로 저장
+                  courseList.push(`${gc.name} - ${courseName}`);
+                });
+              }
+            });
+          }
+          
+          setCourses(courseList.length > 0 ? courseList : []);
+        } else {
+          console.error("Failed to fetch courses", prodErr);
+          setCourses([]);
+        }
+      } catch (error) {
+        console.error("Error fetching courses:", error);
         setCourses([]);
       }
     };
+    
     if (tourId) fetchCourses();
   }, [tourId]);
 
@@ -155,6 +189,12 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     }
   };
 
+  // 시간 포맷 함수
+  const formatTimeHHMM = (time: string) => {
+    if (!time) return "";
+    return time.length >= 5 ? time.slice(0, 5) : time;
+  };
+
   const handleEdit = (t: TeeTime) => {
     setEditingId(t.id);
     setForm({
@@ -173,11 +213,77 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     else fetchTeeTimes();
   };
 
-  // 시간 포맷 함수 추가
-  const formatTimeHHMM = (time: string) => {
-    if (!time) return "";
-    // "13:15:00" → "13:15"
-    return time.length >= 5 ? time.slice(0, 5) : time;
+  // 날짜별 전체 삭제
+  const handleDeleteByDate = async (date: string) => {
+    if (!window.confirm(`${date} 날짜의 모든 티타임을 삭제하시겠습니까?`)) return;
+    
+    const { error } = await supabase
+      .from("singsing_tee_times")
+      .delete()
+      .eq("tour_id", tourId)
+      .eq("date", date);
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      fetchTeeTimes();
+    }
+  };
+
+  // 티타임 일괄 생성
+  const handleBulkCreate = async () => {
+    const startTime = prompt("시작 시간을 입력하세요 (예: 06:00)");
+    const interval = prompt("간격(분)을 입력하세요 (예: 8)");
+    const count = prompt("생성할 티타임 개수를 입력하세요 (예: 8)");
+    
+    if (!startTime || !interval || !count || !form.date || !form.course) {
+      alert("모든 정보를 입력해주세요.");
+      return;
+    }
+    
+    const intervalMinutes = parseInt(interval);
+    const teeTimeCount = parseInt(count);
+    
+    // 기존 티타임 확인
+    const existing = teeTimes.filter(t => t.date === form.date && t.course === form.course);
+    if (existing.length > 0) {
+      if (!window.confirm(`${form.date} ${form.course}에 이미 ${existing.length}개의 티타임이 있습니다. 계속하시겠습니까?`)) {
+        return;
+      }
+    }
+    
+    const newTeeTimes = [];
+    let currentTime = startTime;
+    const maxTeamNo = existing.length > 0 ? Math.max(...existing.map(t => t.team_no)) : 0;
+    
+    for (let i = 0; i < teeTimeCount; i++) {
+      newTeeTimes.push({
+        tour_id: tourId,
+        date: form.date,
+        course: form.course,
+        team_no: maxTeamNo + i + 1,
+        tee_time: currentTime,
+        players: []
+      });
+      
+      // 시간 증가
+      const [hours, minutes] = currentTime.split(':').map(Number);
+      const totalMinutes = hours * 60 + minutes + intervalMinutes;
+      const newHours = Math.floor(totalMinutes / 60);
+      const newMinutes = totalMinutes % 60;
+      currentTime = `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+    }
+    
+    const { error } = await supabase
+      .from("singsing_tee_times")
+      .insert(newTeeTimes);
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      fetchTeeTimes();
+      alert(`${teeTimeCount}개의 티타임이 생성되었습니다.`);
+    }
   };
 
   // 4명 자동 배정 핸들러
@@ -210,12 +316,24 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     fetchTeeTimes();
   };
 
-  // 1. 코스명 가공 함수 추가
+  // 1. 코스명 가공 함수 개선
   const formatCourseName = (course: string) => {
-    // 예: "파인힐스 CC - 파인 코스" → "파인힐스(파인)"
     if (!course) return "";
-    const match = course.match(/(.+?) CC - (.+?) 코스/);
-    if (match) return `${match[1]}(${match[2]})`;
+    
+    // "골프장명 - 코스명" 형태로 저장된 경우
+    const parts = course.split(' - ');
+    if (parts.length === 2) {
+      const golfCourseName = parts[0].replace(' CC', '').replace(' GC', '').replace(' 골프클럽', '');
+      const courseName = parts[1].replace(' 코스', '');
+      return `${golfCourseName}(${courseName})`;
+    }
+    
+    // CC/GC가 포함된 경우 처리
+    const match = course.match(/(.+?)\s*(CC|GC|골프클럽)\s*-\s*(.+?)\s*(코스)?$/);
+    if (match) {
+      return `${match[1].trim()}(${match[3].trim()})`;
+    }
+    
     return course;
   };
 
@@ -255,18 +373,23 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-xl font-bold text-blue-800 mb-4">티오프 시간 관리</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-blue-800">티오프 시간 관리</h2>
+          <button 
+            onClick={handleBulkCreate}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+            disabled={!form.date || !form.course}
+          >
+            티타임 일괄 생성
+          </button>
+        </div>
         <form className="flex flex-col md:flex-row gap-2 mb-6 relative" onSubmit={handleSubmit} autoComplete="off">
           <input name="date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
           <select name="course" value={form.course} onChange={e => setForm({ ...form, course: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="코스">
             <option value="">코스 선택</option>
-            {courses.length > 0
-              ? courses.map((c) => <option key={c} value={c}>{formatCourseName(c)}</option>)
-              : [
-                  <option key="파인힐스 CC - 파인 코스" value="파인힐스 CC - 파인 코스">{formatCourseName("파인힐스 CC - 파인 코스")}</option>,
-                  <option key="파인힐스 CC - 레이크 코스" value="파인힐스 CC - 레이크 코스">{formatCourseName("파인힐스 CC - 레이크 코스")}</option>,
-                  <option key="파인힐스 CC - 힐스 코스" value="파인힐스 CC - 힐스 코스">{formatCourseName("파인힐스 CC - 힐스 코스")}</option>,
-                ]}
+            {courses.map((c) => (
+              <option key={c} value={c}>{formatCourseName(c)}</option>
+            ))}
           </select>
           <input name="team_no" type="number" min={1} value={form.team_no} onChange={e => setForm({ ...form, team_no: Number(e.target.value) })} className="border rounded px-2 py-1 w-20" required aria-label="조 번호" />
           <input name="tee_time" type="time" value={form.tee_time} onChange={e => setForm({ ...form, tee_time: e.target.value })} className="border rounded px-2 py-1 w-28" required aria-label="티오프 시간" />
@@ -341,8 +464,16 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
             {Object.keys(grouped).length === 0 && <div className="text-gray-400 text-center py-8">등록된 티오프가 없습니다.</div>}
             {Object.entries(grouped).map(([date, courses]) => (
               <div key={date} className="mb-8">
-                <div className="text-lg font-bold text-blue-900 border-b pb-1 mb-2 flex items-center gap-2">
-                  <span className="material-icons text-blue-400">event</span>{date}
+                <div className="text-lg font-bold text-blue-900 border-b pb-1 mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="material-icons text-blue-400">event</span>{date}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteByDate(date)}
+                    className="text-sm text-red-600 hover:text-red-800 underline"
+                  >
+                    날짜 전체 삭제
+                  </button>
                 </div>
                 {Object.entries(courses).length === 0 && <div className="text-gray-400 text-center py-4">코스 없음</div>}
                 {Object.entries(courses).map(([course, teams]) => (
