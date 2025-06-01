@@ -76,7 +76,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       // 1. 투어 정보에서 tour_product_id 조회
       const { data: tour, error: tourErr } = await supabase
         .from("singsing_tours")
-        .select("tour_product_id, golf_course") // golf_course도 함께 가져오기
+        .select("tour_product_id")
         .eq("id", tourId)
         .single();
       
@@ -84,15 +84,6 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       
       if (tourErr || !tour) {
         console.error("Tour not found", tourErr);
-        return;
-      }
-      
-      // 먼저 singsing_tours의 golf_course 사용 (임시)
-      if (tour.golf_course) {
-        console.log('Using golf_course from singsing_tours:', tour.golf_course);
-        // "파인힐스 CC - 파인 코스" 형태의 문자열을 파싱
-        const courses = tour.golf_course.split(',').map((c: string) => c.trim());
-        setGolfCourses(courses);
         return;
       }
       
