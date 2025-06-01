@@ -387,7 +387,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     return phone;
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = async (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     let { name, value } = e.target;
     
     if (name === "phone" || name === "emergency_contact") {
@@ -436,8 +436,26 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     }
     
     if (name === "pickup_location") {
-      // 탑승지 선택 시
+      // 탑승지 선택 시 해당 투어의 탑승 시간 자동 조회
       setForm({ ...form, pickup_location: value });
+      
+      if (value && (form.tour_id || tourId)) {
+        // 탑승지 ID 찾기
+        const selectedPlace = boardingPlaces.find(p => p.name === value);
+        if (selectedPlace) {
+          // 투어-탑승지 시간 조회
+          const { data } = await supabase
+            .from('singsing_tour_boarding_times')
+            .select('pickup_time')
+            .eq('tour_id', form.tour_id || tourId || '')
+            .eq('boarding_place_id', selectedPlace.id)
+            .single();
+          
+          if (data?.pickup_time) {
+            setForm(prev => ({ ...prev, pickup_time: data.pickup_time }));
+          }
+        }
+      }
       return;
     }
     

@@ -11,13 +11,15 @@ import TeeTimeAssignmentManagerV2 from "@/components/TeeTimeAssignmentManagerV2"
 import BoardingScheduleManager from "@/components/BoardingScheduleManager";
 import BoardingGuidePreview from "@/components/BoardingGuidePreview";
 import TourSchedulePreview from "@/components/TourSchedulePreview";
-import { Users, BedDouble, Calendar, Flag, Bus, FileText } from 'lucide-react';
+import TourBoardingTimeManager from "@/components/TourBoardingTimeManager";
+import { Users, BedDouble, Calendar, Flag, Bus, FileText, Clock } from 'lucide-react';
 
 const TABS = [
   { key: "participants", label: "투어별 참가자 관리", icon: <Users className="w-4 h-4" /> },
   { key: "rooms", label: "투어별 객실 배정", icon: <BedDouble className="w-4 h-4" /> },
   { key: "schedules", label: "투어별 일정관리", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티오프시간 관리", icon: <Flag className="w-4 h-4" /> },
+  { key: "boarding-times", label: "탑승 시간 설정", icon: <Clock className="w-4 h-4" /> },
   { key: "boarding-guide", label: "탑승지 안내 미리보기", icon: <Bus className="w-4 h-4" /> },
   { key: "schedule-preview", label: "투어 일정표 미리보기", icon: <FileText className="w-4 h-4" /> },
 ];
@@ -100,6 +102,7 @@ const TourDetailPage: React.FC = () => {
             <TeeTimeAssignmentManagerV2 tourId={tourId} refreshKey={refreshKey} />
           </>
         )}
+        {activeTab === "boarding-times" && <TourBoardingTimeManager tourId={tourId} />}
         {activeTab === "boarding-guide" && <BoardingGuidePreview tourId={tourId} />}
         {activeTab === "schedule-preview" && <TourSchedulePreview tourId={tourId} />}
       </div>
