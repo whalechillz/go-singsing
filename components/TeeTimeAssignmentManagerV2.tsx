@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X, UserCheck, RefreshCw } from "lucide-react";
+import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X, UserCheck, RefreshCw, ArrowUpDown } from "lucide-react";
 
 type Participant = {
   id: string;
@@ -78,6 +78,9 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   const [bulkAssignOption, setBulkAssignOption] = useState<'all' | 'specific'>('all');
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [participationMode, setParticipationMode] = useState<'full' | 'partial'>('full');
+  const [showDateActions, setShowDateActions] = useState<string | null>(null);
+  const [selectedTeeTime, setSelectedTeeTime] = useState<string | null>(null);
+  const [showTeeTimeMove, setShowTeeTimeMove] = useState<boolean>(false);
 
   // 데이터 fetch - 다대다 관계 처리 (완전히 새로 작성)
   const fetchData = async () => {
@@ -192,6 +195,125 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       setError(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 티타임 그룹 이동
+  const handleMoveTeeTimeGroup = async (fromTeeTimeId: string, toTeeTimeId: string) => {
+    try {
+      const fromTeeTime = teeTimes.find(tt => tt.id === fromTeeTimeId);
+      const toTeeTime = teeTimes.find(tt => tt.id === toTeeTimeId);
+      
+      if (!fromTeeTime || !toTeeTime) {
+        showToast('error', '티타임 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      // 이동할 참가자 찾기
+      const participantsToMove = participants.filter(p => 
+        p.tee_time_assignments?.includes(fromTeeTimeId)
+      );
+
+      if (participantsToMove.length === 0) {
+        showToast('error', '이동할 참가자가 없습니다.');
+        return;
+      }
+
+      // 대상 티타임의 여유 공간 확인
+      const availableSpace = toTeeTime.max_players - (toTeeTime.assigned_count || 0);
+      if (availableSpace < participantsToMove.length) {
+        showToast('error', `대상 티타임에 충분한 공간이 없습니다. (필요: ${participantsToMove.length}명, 가능: ${availableSpace}명)`);
+        return;
+      }
+
+      // 각 참가자에 대해 배정 업데이트
+      for (const participant of participantsToMove) {
+        // 기존 배정 삭제
+        await supabase
+          .from("singsing_participant_tee_times")
+          .delete()
+          .eq("participant_id", participant.id)
+          .eq("tee_time_id", fromTeeTimeId);
+
+        // 새 배정 추가
+        await supabase
+          .from("singsing_participant_tee_times")
+          .insert({
+            participant_id: participant.id,
+            tee_time_id: toTeeTimeId
+          });
+      }
+
+      // 로컬 상태 업데이트
+      setParticipants(prev => prev.map(p => {
+        if (participantsToMove.some(pm => pm.id === p.id)) {
+          const newAssignments = p.tee_time_assignments?.filter(id => id !== fromTeeTimeId) || [];
+          newAssignments.push(toTeeTimeId);
+          return { ...p, tee_time_assignments: newAssignments };
+        }
+        return p;
+      }));
+
+      // 티타임 카운트 업데이트
+      setTeeTimes(prev => prev.map(tt => {
+        if (tt.id === fromTeeTimeId) {
+          return { ...tt, assigned_count: 0 };
+        } else if (tt.id === toTeeTimeId) {
+          return { ...tt, assigned_count: (tt.assigned_count || 0) + participantsToMove.length };
+        }
+        return tt;
+      }));
+
+      showToast('success', `${participantsToMove.length}명을 ${fromTeeTime.tee_time}에서 ${toTeeTime.tee_time}으로 이동했습니다.`);
+      setSelectedTeeTime(null);
+      setShowTeeTimeMove(false);
+    } catch (error: any) {
+      console.error('티타임 그룹 이동 오류:', error);
+      showToast('error', `오류 발생: ${error.message}`);
+      await fetchData();
+    }
+  };
+
+  // 날짜별 전체 배정 취소
+  const handleClearDateAssignments = async (date: string) => {
+    if (!window.confirm(`${new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}의 모든 배정을 취소하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const dateTeeTimeIds = teeTimes
+        .filter(tt => tt.play_date === date)
+        .map(tt => tt.id);
+
+      // 해당 날짜의 모든 배정 삭제
+      const { error } = await supabase
+        .from("singsing_participant_tee_times")
+        .delete()
+        .in("tee_time_id", dateTeeTimeIds);
+
+      if (error) throw error;
+
+      // 로컬 상태 즉시 업데이트
+      setParticipants(prev => prev.map(p => ({
+        ...p,
+        tee_time_assignments: p.tee_time_assignments?.filter(id => 
+          !dateTeeTimeIds.includes(id)
+        ) || []
+      })));
+
+      // 티타임 카운트 초기화
+      setTeeTimes(prev => prev.map(tt => {
+        if (dateTeeTimeIds.includes(tt.id)) {
+          return { ...tt, assigned_count: 0 };
+        }
+        return tt;
+      }));
+
+      showToast('success', `${new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}의 모든 배정이 취소되었습니다.`);
+    } catch (error: any) {
+      console.error('날짜별 배정 취소 오류:', error);
+      showToast('error', `오류 발생: ${error.message}`);
+      await fetchData();
     }
   };
 
@@ -941,8 +1063,18 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                       })}
                     </h3>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    참가: {participants.filter(p => isParticipantAssignedToDate(p.id, date)).length}명
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-600">
+                      참가: {participants.filter(p => isParticipantAssignedToDate(p.id, date)).length}명
+                    </span>
+                    <button
+                      onClick={() => handleClearDateAssignments(date)}
+                      className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors flex items-center gap-1"
+                      title="이 날짜의 모든 배정 취소"
+                    >
+                      <X className="w-3 h-3" />
+                      전체 취소
+                    </button>
                   </div>
                 </div>
                 
@@ -964,9 +1096,28 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                               {teeTime.golf_course}
                             </span>
                           </div>
-                          <span className={assignedParticipants.length === teeTime.max_players ? "text-red-600 font-bold" : "text-gray-500"}>
-                            {assignedParticipants.length} / {teeTime.max_players}명
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={assignedParticipants.length === teeTime.max_players ? "text-red-600 font-bold" : "text-gray-500"}>
+                              {assignedParticipants.length} / {teeTime.max_players}명
+                            </span>
+                            {assignedParticipants.length > 0 && (
+                              <button
+                                onClick={() => {
+                                  setSelectedTeeTime(teeTime.id);
+                                  setShowTeeTimeMove(true);
+                                }}
+                                className={`px-2 py-1 text-xs rounded transition-colors ${
+                                  selectedTeeTime === teeTime.id 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                                title="이 티타임의 모든 참가자 이동"
+                              >
+                                <ArrowUpDown className="w-3 h-3 inline mr-1" />
+                                그룹이동
+                              </button>
+                            )}
+                          </div>
                         </div>
                         
                         {assignedParticipants.length === 0 ? (
@@ -1156,6 +1307,100 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             </div>
           )}
         </>
+      )}
+      
+      {/* 티타임 그룹 이동 모달 */}
+      {showTeeTimeMove && selectedTeeTime && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">티타임 그룹 이동</h3>
+              <button
+                onClick={() => {
+                  setShowTeeTimeMove(false);
+                  setSelectedTeeTime(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {(() => {
+              const sourceTeeTime = teeTimes.find(tt => tt.id === selectedTeeTime);
+              const sourceParticipants = participants.filter(p => 
+                p.tee_time_assignments?.includes(selectedTeeTime)
+              );
+              
+              if (!sourceTeeTime) return null;
+              
+              return (
+                <>
+                  <div className="mb-4 p-4 bg-blue-50 rounded">
+                    <div className="font-medium text-blue-900">현재 선택된 티타임</div>
+                    <div className="mt-1">
+                      {new Date(sourceTeeTime.play_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })} - 
+                      {sourceTeeTime.tee_time} ({sourceTeeTime.golf_course})
+                    </div>
+                    <div className="mt-2 text-sm text-blue-700">
+                      이동할 참가자: {sourceParticipants.map(p => p.name).join(', ')}
+                    </div>
+                  </div>
+                  
+                  <div className="mb-2 font-medium">이동할 티타임 선택</div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {Object.entries(teeTimesByDate).map(([date, times]) => (
+                      <div key={date}>
+                        <div className="text-sm font-medium text-gray-600 mb-1">
+                          {new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
+                        </div>
+                        {times
+                          .filter(tt => tt.id !== selectedTeeTime) // 현재 선택된 티타임 제외
+                          .map(teeTime => {
+                            const currentCount = teeTime.assigned_count || 0;
+                            const availableSpace = teeTime.max_players - currentCount;
+                            const canMove = availableSpace >= sourceParticipants.length;
+                            
+                            return (
+                              <button
+                                key={teeTime.id}
+                                onClick={() => {
+                                  if (canMove) {
+                                    handleMoveTeeTimeGroup(selectedTeeTime, teeTime.id);
+                                  }
+                                }}
+                                disabled={!canMove}
+                                className={`w-full p-3 rounded text-left transition-colors ${
+                                  canMove 
+                                    ? 'bg-gray-50 hover:bg-green-50 hover:border-green-300 border' 
+                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <span className="font-medium">{teeTime.tee_time}</span>
+                                    <span className="ml-2 text-sm text-gray-600">({teeTime.golf_course})</span>
+                                  </div>
+                                  <div className="text-sm">
+                                    {currentCount}/{teeTime.max_players}명
+                                    {canMove ? (
+                                      <span className="ml-2 text-green-600">(가능)</span>
+                                    ) : (
+                                      <span className="ml-2 text-red-600">(공간 부족)</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
       )}
       
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
