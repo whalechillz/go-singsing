@@ -464,6 +464,12 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       let successfulAssignments = [];
       let failedAssignments = [];
       
+      // 실시간 배정 상태 추적을 위한 맵
+      const teeTimeAssignments = new Map();
+      teeTimes.forEach(tt => {
+        teeTimeAssignments.set(tt.id, participants.filter(p => p.tee_time_id === tt.id).length);
+      });
+      
       // 각 참가자를 모든 날짜에 배정
       for (const participant of unassigned) {
         let assignedDates = 0;
@@ -474,7 +480,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           
           // 해당 날짜의 빈 자리 찾기
           for (const teeTime of dayTeeTimes) {
-            const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
+            const currentAssigned = teeTimeAssignments.get(teeTime.id) || 0;
             if (currentAssigned < teeTime.max_players) {
               if (firstDate) {
                 // 첫 번째 날짜는 원본 참가자 사용
@@ -490,6 +496,8 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                   assigned = true;
                   assignedDates++;
                   firstDate = false;
+                  // 배정 카운트 업데이트
+                  teeTimeAssignments.set(teeTime.id, currentAssigned + 1);
                 }
               } else {
                 // 두 번째 날짜부터는 복제 생성
@@ -509,6 +517,8 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                 if (!error) {
                   assigned = true;
                   assignedDates++;
+                  // 배정 카운트 업데이트
+                  teeTimeAssignments.set(teeTime.id, currentAssigned + 1);
                 }
               }
               break;
@@ -573,6 +583,12 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       let successfulAssignments = [];
       let failedAssignments = [];
       
+      // 실시간 배정 상태 추적을 위한 맵
+      const teeTimeAssignments = new Map();
+      teeTimes.forEach(tt => {
+        teeTimeAssignments.set(tt.id, participants.filter(p => p.tee_time_id === tt.id).length);
+      });
+      
       for (const participant of selectedParticipants) {
         let assignedDates = 0;
         let firstDate = true;
@@ -583,7 +599,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           
           // 해당 날짜의 빈 자리 찾기
           for (const teeTime of dayTeeTimes) {
-            const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
+            const currentAssigned = teeTimeAssignments.get(teeTime.id) || 0;
             if (currentAssigned < teeTime.max_players) {
               if (firstDate) {
                 // 첫 번째 날짜는 원본 참가자 사용
@@ -599,6 +615,8 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                   assigned = true;
                   assignedDates++;
                   firstDate = false;
+                  // 배정 카운트 업데이트
+                  teeTimeAssignments.set(teeTime.id, currentAssigned + 1);
                 }
               } else {
                 // 두 번째 날짜부터는 복제 생성
@@ -618,6 +636,8 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                 if (!error) {
                   assigned = true;
                   assignedDates++;
+                  // 배정 카운트 업데이트
+                  teeTimeAssignments.set(teeTime.id, currentAssigned + 1);
                 }
               }
               break;
