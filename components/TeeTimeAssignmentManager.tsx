@@ -187,15 +187,6 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   };
 
   useEffect(() => { if (tourId) fetchData(); }, [tourId, refreshKey]);
-  
-  // 티타임 순서 초기화
-  useEffect(() => {
-    const newOrder: { [date: string]: string[] } = {};
-    Object.entries(teeTimesByDate).forEach(([date, times]) => {
-      newOrder[date] = times.map(t => t.id);
-    });
-    setTeeTimeOrder(newOrder);
-  }, [teeTimes]);
 
   // 티타임 배정 변경
   const handleAssignTeeTime = async (participantId: string, teeTimeId: string) => {
@@ -904,6 +895,15 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     acc[date].push(tt);
     return acc;
   }, {} as Record<string, TeeTime[]>);
+
+  // 티타임 순서 초기화
+  useEffect(() => {
+    const newOrder: { [date: string]: string[] } = {};
+    Object.entries(teeTimesByDate).forEach(([date, times]) => {
+      newOrder[date] = times.map(t => t.id);
+    });
+    setTeeTimeOrder(newOrder);
+  }, [teeTimes]);
 
   return (
     <div className="mb-8">
