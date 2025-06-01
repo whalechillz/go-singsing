@@ -68,6 +68,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [previewType, setPreviewType] = useState<'customer' | 'staff'>('customer');
   const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
   const [bulkAssignDate, setBulkAssignDate] = useState<string>('');
+  const [teeTimeOrder, setTeeTimeOrder] = useState<{ [date: string]: string[] }>({});
 
   // 데이터 fetch
   const fetchData = async () => {
@@ -186,6 +187,15 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   };
 
   useEffect(() => { if (tourId) fetchData(); }, [tourId, refreshKey]);
+  
+  // 티타임 순서 초기화
+  useEffect(() => {
+    const newOrder: { [date: string]: string[] } = {};
+    Object.entries(teeTimesByDate).forEach(([date, times]) => {
+      newOrder[date] = times.map(t => t.id);
+    });
+    setTeeTimeOrder(newOrder);
+  }, [teeTimes]);
 
   // 티타임 배정 변경
   const handleAssignTeeTime = async (participantId: string, teeTimeId: string) => {
@@ -717,7 +727,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     }
   };
 
-  // 일괄 배정 기능
+  // 일괄 배정 기능 (선택한 날짜에만 배정)
   const handleBulkAssign = async () => {
     if (selectedForBulk.length === 0 || !bulkAssignDate) {
       alert('참가자와 날짜를 선택해주세요.');
@@ -732,30 +742,72 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 
     try {
       let participantIndex = 0;
+      let createdCount = 0;
+      
+      // 선택한 참가자들의 현재 상태 확인
+      const selectedParticipants = participants.filter(p => selectedForBulk.includes(p.id));
       
       for (const teeTime of dateTeeTimes) {
         const currentAssigned = participants.filter(p => p.tee_time_id === teeTime.id).length;
         const availableSlots = teeTime.max_players - currentAssigned;
         
-        for (let i = 0; i < availableSlots && participantIndex < selectedForBulk.length; i++) {
-          await supabase
+        for (let i = 0; i < availableSlots && participantIndex < selectedParticipants.length; i++) {
+          const participant = selectedParticipants[participantIndex];
+          
+          // 이미 해당 날짜에 배정된 참가자인지 확인
+          const alreadyAssignedToday = participants.some(p => 
+            p.name === participant.name && 
+            p.phone === participant.phone &&
+            p.tee_time_id && 
+            dateTeeTimes.some(dt => dt.id === p.tee_time_id)
+          );
+          
+          if (alreadyAssignedToday) {
+            participantIndex++;
+            continue;
+          }
+          
+          // 새로운 참가자 데이터 생성 (해당 날짜용)
+          const dayLabel = new Date(bulkAssignDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+          const { error } = await supabase
             .from("singsing_participants")
-            .update({ tee_time_id: teeTime.id })
-            .eq("id", selectedForBulk[participantIndex]);
+            .insert({
+              tour_id: tourId,
+              name: participant.name,
+              phone: participant.phone,
+              team_name: participant.team_name,
+              note: participant.note ? `${participant.note} | ${dayLabel}` : dayLabel,
+              status: participant.status,
+              tee_time_id: teeTime.id
+            });
+          
+          if (!error) {
+            createdCount++;
+          }
           
           participantIndex++;
         }
         
-        if (participantIndex >= selectedForBulk.length) break;
+        if (participantIndex >= selectedParticipants.length) break;
       }
       
-      alert(`${participantIndex}명을 ${bulkAssignDate} 티타임에 배정했습니다.`);
+      alert(`${createdCount}명을 ${new Date(bulkAssignDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })} 티타임에 배정했습니다.`);
       setSelectedForBulk([]);
-      setBulkAssignDate('');
       await fetchData();
     } catch (error: any) {
       setError(`일괄 배정 중 오류: ${error.message}`);
     }
+  };
+
+  // 티타임 순서 이동 기능
+  const handleMoveTeeTime = (date: string, index: number, direction: 'up' | 'down') => {
+    const currentOrder = [...(teeTimeOrder[date] || [])];
+    if (direction === 'up' && index > 0) {
+      [currentOrder[index], currentOrder[index - 1]] = [currentOrder[index - 1], currentOrder[index]];
+    } else if (direction === 'down' && index < currentOrder.length - 1) {
+      [currentOrder[index], currentOrder[index + 1]] = [currentOrder[index + 1], currentOrder[index]];
+    }
+    setTeeTimeOrder({ ...teeTimeOrder, [date]: currentOrder });
   };
 
   // 날짜별 배정 초기화 기능
@@ -792,8 +844,38 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     }
   };
 
-  // 미배정 참가자 필터링
-  const filteredUnassigned = participants.filter(p => !p.tee_time_id && p.name.includes(unassignedSearch));
+  // 현재 선택된 날짜의 미배정 참가자 계산
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  
+  // 선택된 날짜의 티타임에 이미 배정된 참가자 ID 목록
+  const getAssignedParticipantIdsForDate = (date: string) => {
+    const dateTeeTimeIds = teeTimes
+      .filter(tt => tt.play_date === date)
+      .map(tt => tt.id);
+    
+    return participants
+      .filter(p => p.tee_time_id && dateTeeTimeIds.includes(p.tee_time_id))
+      .map(p => {
+        // 이름과 전화번호로 고유 식별
+        return `${p.name}-${p.phone || 'no-phone'}`;
+      });
+  };
+  
+  // 날짜별 미배정 참가자 필터링
+  const getUnassignedForDate = (date: string) => {
+    if (!date) return [];
+    
+    const assignedIdentifiers = getAssignedParticipantIdsForDate(date);
+    
+    // 전체 참가자 중에서 해당 날짜에 배정되지 않은 참가자 찾기
+    // 이름과 전화번호가 같은 참가자는 이미 배정된 것으로 간주
+    return participants.filter(p => {
+      const identifier = `${p.name}-${p.phone || 'no-phone'}`;
+      return !assignedIdentifiers.includes(identifier) && p.name.includes(unassignedSearch);
+    });
+  };
+  
+  const filteredUnassigned = selectedDate ? getUnassignedForDate(selectedDate) : [];
   
   // 통계 계산
   const assignedParticipants = participants.filter(p => p.tee_time_id).length;
@@ -905,10 +987,35 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                 </div>
                 
                 <div className="space-y-3">
-                  {times.map(teeTime => {
+                  {(teeTimeOrder[date] || times.map(t => t.id))
+                    .map((teeTimeId, index, array) => {
+                    const teeTime = times.find(t => t.id === teeTimeId);
+                    if (!teeTime) return null;
                     const assigned = participants.filter(p => p.tee_time_id === teeTime.id);
                     return (
-                      <div key={teeTime.id} className="bg-white rounded-lg p-3 shadow-sm">
+                      <div key={teeTime.id} className="bg-white rounded-lg p-3 shadow-sm relative">
+                        <div className="absolute right-2 top-2 flex flex-col gap-1">
+                          <button
+                            onClick={() => handleMoveTeeTime(date, index, 'up')}
+                            disabled={index === 0}
+                            className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
+                            title="위로 이동"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleMoveTeeTime(date, index, 'down')}
+                            disabled={index === array.length - 1}
+                            className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
+                            title="아래로 이동"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
                             <span className="font-bold text-blue-800">
@@ -956,7 +1063,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                         </ul>
                       </div>
                     );
-                  })}
+                  })
                 </div>
               </div>
             ))}
@@ -964,19 +1071,33 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
             {/* 미배정 참가자 */}
             <div className="bg-gray-50 rounded-lg shadow p-4">
               <div className="flex justify-between items-center mb-4">
-                <div className="font-bold text-gray-700">미배정 참가자</div>
+                <div className="font-bold text-gray-700">
+                  미배정 참가자 
+                  {selectedDate ? (
+                    <span className="text-sm font-normal text-gray-500">
+                      ({new Date(selectedDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })} 기준: {filteredUnassigned.length}명)
+                    </span>
+                  ) : (
+                    <span className="text-sm font-normal text-gray-500">
+                      (전체: {participants.filter(p => !p.tee_time_id).length}명)
+                    </span>
+                  )}
+                </div>
                 
                 {/* 일괄 배정 컨트롤 */}
                 <div className="flex items-center gap-2">
                   <select
-                    value={bulkAssignDate}
-                    onChange={(e) => setBulkAssignDate(e.target.value)}
-                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setBulkAssignDate(e.target.value);
+                    }}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm bg-yellow-50"
                   >
-                    <option value="">날짜 선택</option>
+                    <option value="">날짜를 선택하세요</option>
                     {Object.keys(teeTimesByDate).map(date => (
                       <option key={date} value={date}>
-                        {new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}
+                        {new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })}
                       </option>
                     ))}
                   </select>
@@ -1003,7 +1124,7 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                     className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300"
                   >
                     <Users className="w-4 h-4" />
-                    선택한 {selectedForBulk.length}명 특정날짜 배정
+                    선택한 {selectedForBulk.length}명 현재날짜 배정
                   </button>
                   <button
                     onClick={handleAssignToAllDates}
@@ -1030,18 +1151,25 @@ const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                 onChange={e => setUnassignedSearch(e.target.value)}
                 className="mb-3 w-full max-w-xs border border-gray-300 rounded px-2 py-1 text-sm focus:outline-blue-500"
               />
-              {filteredUnassigned.length === 0 ? (
+              {!selectedDate ? (
+                <div className="text-center py-8">
+                  <div className="text-yellow-600 mb-2">
+                    날짜를 선택하면 해당 날짜의 미배정 참가자가 표시됩니다.
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    각 날짜별로 참가자를 배정할 수 있습니다.
+                  </p>
+                </div>
+              ) : filteredUnassigned.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-gray-400 mb-2">
-                    {participants.filter(p => !p.tee_time_id).length === 0 
-                      ? "현재 모든 참가자가 티타임에 배정되었습니다."
+                    {getUnassignedForDate(selectedDate).length === 0 
+                      ? `${new Date(selectedDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}에 모든 참가자가 배정되었습니다.`
                       : "검색 결과가 없습니다."}
                   </div>
-                  {participants.filter(p => !p.tee_time_id).length === 0 && (
-                    <p className="text-sm text-gray-500">
-                      위의 날짜별 "배정 취소" 버튼으로 배정을 취소할 수 있습니다.
-                    </p>
-                  )}
+                  <p className="text-sm text-gray-500">
+                    다른 날짜를 선택하거나 "배정 취소" 버튼으로 배정을 취소할 수 있습니다.
+                  </p>
                 </div>
               ) : (
                 <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
