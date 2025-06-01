@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X, UserCheck, RefreshCw } from "lucide-react";
+import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X, UserCheck } from "lucide-react";
 
 type Participant = {
   id: string;
@@ -72,12 +72,12 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [participationMode, setParticipationMode] = useState<'full' | 'partial'>('full');
 
-  // 데이터 fetch - 다대다 관계 처리 (완전히 새로 작성)
+  // 데이터 fetch - 다대다 관계 처리
   const fetchData = async () => {
     setLoading(true);
     setError("");
     try {
-      // 1. 참가자 데이터 가져오기 (이 투어만)
+      // 참가자 데이터 가져오기
       const { data: participantsData, error: participantsError } = await supabase
         .from("singsing_participants")
         .select("*")
@@ -86,7 +86,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       
       if (participantsError) throw participantsError;
       
-      // 2. 티타임 데이터 가져오기
+      // 티타임 데이터 가져오기
       const { data: teeTimesData, error: teeTimesError } = await supabase
         .from("singsing_tee_times")
         .select("*")
@@ -94,47 +94,38 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         
       if (teeTimesError) throw teeTimesError;
       
-      // 3. 티타임 배정 정보 가져오기 (중복 제거된 데이터)
+      // 티타임 배정 정보 가져오기 (다대다 관계)
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from("singsing_participant_tee_times")
-        .select("participant_id, tee_time_id")
+        .select("*")
         .in("participant_id", participantsData?.map(p => p.id) || []);
       
       if (assignmentsError) {
-        console.log("배정 데이터 조회 오류:", assignmentsError);
+        console.log("다대다 테이블이 없습니다. 기존 방식으로 처리합니다.");
       }
       
-      // 4. 중복 제거된 배정 정보만 사용
-      const assignmentMap = new Map<string, Set<string>>();
-      assignmentsData?.forEach(assignment => {
-        if (!assignmentMap.has(assignment.participant_id)) {
-          assignmentMap.set(assignment.participant_id, new Set());
-        }
-        assignmentMap.get(assignment.participant_id)?.add(assignment.tee_time_id);
-      });
-      
-      // 5. 참가자별 티타임 배정 정보 매핑
-      const participantsWithAssignments = participantsData?.map(participant => ({
-        ...participant,
-        tee_time_assignments: Array.from(assignmentMap.get(participant.id) || [])
-      })) || [];
+      // 참가자별 티타임 배정 정보 매핑
+      const participantsWithAssignments = participantsData?.map(participant => {
+        const assignments = assignmentsData?.filter(a => a.participant_id === participant.id) || [];
+        return {
+          ...participant,
+          tee_time_assignments: assignments.map(a => a.tee_time_id)
+        };
+      }) || [];
       
       setParticipants(participantsWithAssignments);
       
-      // 6. 티타임별 배정 인원 계산 (중복 제거)
-      const teeTimeAssignmentCount = new Map<string, number>();
-      assignmentsData?.forEach(assignment => {
-        const count = teeTimeAssignmentCount.get(assignment.tee_time_id) || 0;
-        teeTimeAssignmentCount.set(assignment.tee_time_id, count + 1);
-      });
-      
-      const teeTimesWithCount = teeTimesData?.map(teeTime => ({
-        ...teeTime,
-        play_date: teeTime.play_date || teeTime.date,
-        golf_course: teeTime.golf_course || teeTime.course,
-        max_players: teeTime.max_players || 4,
-        assigned_count: teeTimeAssignmentCount.get(teeTime.id) || 0
-      })) || [];
+      // 티타임별 배정 인원 계산
+      const teeTimesWithCount = teeTimesData?.map(teeTime => {
+        const assignedCount = assignmentsData?.filter(a => a.tee_time_id === teeTime.id).length || 0;
+        return {
+          ...teeTime,
+          play_date: teeTime.play_date || teeTime.date,
+          golf_course: teeTime.golf_course || teeTime.course,
+          max_players: teeTime.max_players || 4,
+          assigned_count: assignedCount
+        };
+      }) || [];
       
       setTeeTimes(teeTimesWithCount.sort((a, b) => {
         if (a.play_date < b.play_date) return -1;
@@ -144,7 +135,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         return 0;
       }));
       
-      // 7. 투어 및 스탭 데이터 가져오기
+      // 투어 및 스탭 데이터 가져오기 (기존 코드와 동일)
       const { data: tourData, error: tourError } = await supabase
         .from("singsing_tours")
         .select("*")
@@ -190,20 +181,15 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
   useEffect(() => { if (tourId) fetchData(); }, [tourId, refreshKey]);
 
-  // 티타임 배정/해제 (안전하게 수정)
+  // 티타임 배정/해제 (개선된 버전)
   const handleToggleTeeTimeAssignment = async (participantId: string, teeTimeId: string) => {
     try {
       setAssigning(participantId);
       
-      // 현재 배정 상태 확인
-      const { data: existingAssignment } = await supabase
-        .from("singsing_participant_tee_times")
-        .select("*")
-        .eq("participant_id", participantId)
-        .eq("tee_time_id", teeTimeId)
-        .maybeSingle();
+      const participant = participants.find(p => p.id === participantId);
+      const isAssigned = participant?.tee_time_assignments?.includes(teeTimeId);
       
-      if (existingAssignment) {
+      if (isAssigned) {
         // 배정 해제
         const { error } = await supabase
           .from("singsing_participant_tee_times")
@@ -213,28 +199,39 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         
         if (error) throw error;
       } else {
-        // 배정 추가
-        const teeTime = teeTimes.find(t => t.id === teeTimeId);
-        if (teeTime && (teeTime.assigned_count || 0) >= teeTime.max_players) {
-          alert('이 티타임은 정원이 가득 찼습니다.');
+        // 배정 추가 전 중복 확인
+        const { data: existing } = await supabase
+          .from("singsing_participant_tee_times")
+          .select("*")
+          .eq("participant_id", participantId)
+          .eq("tee_time_id", teeTimeId)
+          .single();
+        
+        if (existing) {
+          console.log('이미 배정됨:', existing);
+          await fetchData();
           return;
         }
         
-        // 삽입 (중복 방지)
+        const teeTime = teeTimes.find(t => t.id === teeTimeId);
+        if (teeTime && (teeTime.assigned_count || 0) >= teeTime.max_players) {
+          alert('이 티타임은 정원이 가듍 찼습니다.');
+          return;
+        }
+        
+        // 삽입
         const { error } = await supabase
           .from("singsing_participant_tee_times")
-          .insert({ 
-            participant_id: participantId, 
-            tee_time_id: teeTimeId 
-          });
+          .insert({ participant_id: participantId, tee_time_id: teeTimeId });
         
         if (error) {
-          // 중복 키 오류는 무시
+          // 중복 키 오류인 경우 무시
           if (error.code === '23505') {
-            console.log('이미 배정됨');
-          } else {
-            throw error;
+            console.log('중복 배정 시도 무시');
+            await fetchData();
+            return;
           }
+          throw error;
         }
       }
       
@@ -248,7 +245,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     }
   };
 
-  // 일괄 배정 (중복 방지 강화)
+  // 일괄 배정 개선 - 전체 일정 또는 선택 날짜
   const handleBulkAssign = async () => {
     if (selectedForBulk.length === 0) {
       alert('참가자를 선택해주세요.');
@@ -266,54 +263,68 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
     try {
       let totalAssigned = 0;
-      
+      const assignments = [];
+
+      // 기존 배정 정보 가져오기 (중복 방지용)
+      const { data: existingAssignments } = await supabase
+        .from("singsing_participant_tee_times")
+        .select("*")
+        .in("participant_id", selectedForBulk);
+
+      const existingMap = new Map();
+      existingAssignments?.forEach(a => {
+        const key = `${a.participant_id}-${a.tee_time_id}`;
+        existingMap.set(key, true);
+      });
+
       for (const participantId of selectedForBulk) {
+        const participant = participants.find(p => p.id === participantId);
+        
         for (const date of targetDates) {
           // 이미 해당 날짜에 배정되어 있는지 확인
-          const { data: existingOnDate } = await supabase
-            .from("singsing_participant_tee_times")
-            .select("tee_time_id")
-            .eq("participant_id", participantId)
-            .in("tee_time_id", teeTimes.filter(tt => tt.play_date === date).map(tt => tt.id));
-          
-          if (existingOnDate && existingOnDate.length > 0) {
-            continue; // 이미 배정됨
+          const alreadyAssignedToDate = participant?.tee_time_assignments?.some(id => {
+            const teeTime = teeTimes.find(tt => tt.id === id);
+            return teeTime?.play_date === date;
+          });
+
+          if (alreadyAssignedToDate) {
+            continue; // 이미 배정된 날짜는 건너뛰기
           }
-          
+
           const dateTeeTimes = teeTimes.filter(tt => tt.play_date === date);
           
-          // 빈 자리가 있는 첫 번째 티타임 찾기
+          // 해당 날짜에 빈 자리가 있는 첫 번째 티타임 찾기
           for (const teeTime of dateTeeTimes) {
-            // 현재 배정 인원 다시 확인
-            const { data: currentAssignments } = await supabase
-              .from("singsing_participant_tee_times")
-              .select("participant_id")
-              .eq("tee_time_id", teeTime.id);
+            const key = `${participantId}-${teeTime.id}`;
             
-            const currentCount = currentAssignments?.length || 0;
-            
-            if (currentCount < teeTime.max_players) {
-              // 배정 시도
-              const { error } = await supabase
-                .from("singsing_participant_tee_times")
-                .insert({
-                  participant_id: participantId,
-                  tee_time_id: teeTime.id
-                });
-              
-              if (!error) {
-                totalAssigned++;
-                break; // 성공했으면 다음 날짜로
-              } else if (error.code !== '23505') {
-                // 중복 키 오류가 아닌 경우만 에러 처리
-                console.error('배정 오류:', error);
-              }
+            // 중복 체크
+            if (existingMap.has(key)) {
+              continue;
+            }
+
+            if ((teeTime.assigned_count || 0) < teeTime.max_players) {
+              assignments.push({
+                participant_id: participantId,
+                tee_time_id: teeTime.id
+              });
+              totalAssigned++;
+              break; // 하나의 티타임에만 배정
             }
           }
         }
       }
 
-      alert(`${totalAssigned}건의 배정이 완료되었습니다.`);
+      // 일괄 삽입
+      if (assignments.length > 0) {
+        // 중복 방지를 위해 upsert 사용
+        const { error } = await supabase
+          .from("singsing_participant_tee_times")
+          .upsert(assignments, { onConflict: 'participant_id,tee_time_id' });
+        
+        if (error) throw error;
+      }
+
+      alert(`${selectedForBulk.length}명을 ${targetDates.length}개 날짜에 배정했습니다. (총 ${totalAssigned}건)`);
       setSelectedForBulk([]);
       setSelectedDates([]);
       await fetchData();
@@ -322,7 +333,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     }
   };
 
-  // 자동 배정 (중복 방지 강화)
+  // 자동 배정 개선 - 스마트 배정
   const handleSmartAutoAssign = async () => {
     if (!window.confirm('미배정 참가자를 자동으로 전체 일정에 배정하시겠습니까?')) return;
     
@@ -337,48 +348,39 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         return;
       }
 
-      let totalAssigned = 0;
+      const assignments = [];
       const dateGroups = Object.entries(teeTimesByDate).sort(([a], [b]) => a.localeCompare(b));
 
+      // 각 참가자를 모든 날짜에 균형있게 배정
       for (const participant of unassigned) {
         for (const [date, dayTeeTimes] of dateGroups) {
           // 가장 여유있는 티타임 찾기
-          let assigned = false;
-          
-          for (const teeTime of dayTeeTimes) {
-            // 현재 배정 인원 확인
-            const { data: currentAssignments } = await supabase
-              .from("singsing_participant_tee_times")
-              .select("participant_id")
-              .eq("tee_time_id", teeTime.id);
-            
-            const currentCount = currentAssignments?.length || 0;
-            
-            if (currentCount < teeTime.max_players) {
-              const { error } = await supabase
-                .from("singsing_participant_tee_times")
-                .insert({
-                  participant_id: participant.id,
-                  tee_time_id: teeTime.id
-                });
-              
-              if (!error) {
-                totalAssigned++;
-                assigned = true;
-                break;
-              } else if (error.code !== '23505') {
-                console.error('배정 오류:', error);
-              }
-            }
-          }
-          
-          if (!assigned) {
-            console.log(`${participant.name}님을 ${date}에 배정할 수 없습니다 (자리 없음)`);
+          const availableTeeTimes = dayTeeTimes
+            .filter(tt => (tt.assigned_count || 0) < tt.max_players)
+            .sort((a, b) => (a.assigned_count || 0) - (b.assigned_count || 0));
+
+          if (availableTeeTimes.length > 0) {
+            const selectedTeeTime = availableTeeTimes[0];
+            assignments.push({
+              participant_id: participant.id,
+              tee_time_id: selectedTeeTime.id
+            });
+            // 배정 카운트 임시 증가 (중복 방지)
+            selectedTeeTime.assigned_count = (selectedTeeTime.assigned_count || 0) + 1;
           }
         }
       }
 
-      alert(`${totalAssigned}건의 배정이 완료되었습니다.`);
+      if (assignments.length > 0) {
+        // 중복 방지를 위해 upsert 사용
+        const { error } = await supabase
+          .from("singsing_participant_tee_times")
+          .upsert(assignments, { onConflict: 'participant_id,tee_time_id' });
+        
+        if (error) throw error;
+      }
+
+      alert(`${unassigned.length}명을 자동 배정했습니다. (총 ${assignments.length}건)`);
       await fetchData();
     } catch (error: any) {
       setError(`자동 배정 중 오류: ${error.message}`);
@@ -395,7 +397,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     return participant?.tee_time_assignments?.some(id => dateTeeTimeIds.includes(id)) || false;
   };
 
-  // 미리보기 HTML 생성
+  // 미리보기 HTML 생성 (개선된 버전)
   const generatePreviewHTML = (type: 'customer' | 'staff') => {
     const teeTimesByDate = teeTimes.reduce((acc, tt) => {
       const date = tt.play_date;
@@ -662,24 +664,12 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     p.name.includes(unassignedSearch)
   );
 
-  // 데이터 새로고침 버튼
-  const handleRefresh = () => {
-    fetchData();
-  };
-
   return (
     <div className="mb-8">
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">티타임별 참가자 배정</h2>
+        <h2 className="text-lg font-semibold text-gray-900">티타임별 참가자 그룹핑 (개선판)</h2>
         <div className="flex gap-2">
-          <button
-            onClick={handleRefresh}
-            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm"
-          >
-            <RefreshCw className="w-4 h-4" />
-            새로고침
-          </button>
           <select
             value={previewType}
             onChange={(e) => setPreviewType(e.target.value as 'customer' | 'staff')}
@@ -702,7 +692,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         <div className="text-center py-4 text-gray-500">불러오는 중...</div>
       ) : (
         <>
-          {/* 통계 정보 */}
+          {/* 개선된 통계 정보 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 rounded-lg p-4">
               <div className="text-sm text-green-600 font-medium">전체 일정 참가</div>
@@ -726,7 +716,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             </div>
           </div>
 
-          {/* 일괄 배정 컨트롤 */}
+          {/* 개선된 일괄 배정 컨트롤 */}
           <div className="bg-purple-50 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-purple-900 mb-3">일괄 배정 도구</h3>
             
@@ -829,7 +819,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             </div>
           </div>
 
-          {/* 날짜별 티타임 배정 */}
+          {/* 날짜별 티타임 배정 (개선된 UI) */}
           <div className="space-y-6">
             {Object.entries(teeTimesByDate).map(([date, times]) => (
               <div key={date} className="border rounded-lg p-4 bg-gray-50">
