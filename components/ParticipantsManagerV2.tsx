@@ -70,6 +70,7 @@ interface ParticipantForm {
   is_paying_for_group?: boolean;
   companions?: string[];
   pickup_location?: string;
+  pickup_time?: string; // 추가
   tour_id?: string;
 }
 
@@ -109,7 +110,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     group_size: 1,
     is_paying_for_group: false,
     companions: [],
-    pickup_location: ""
+    pickup_location: "",
+    pickup_time: ""
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
@@ -232,7 +234,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   }, [scrollToId, filteredParticipants.length]);
 
   // 탑승지 데이터 가져오기
-  const [boardingPlaces, setBoardingPlaces] = useState<string[]>([]);
+  type BoardingPlace = { name: string; default_depart_time?: string };
+  const [boardingPlaces, setBoardingPlaces] = useState<BoardingPlace[]>([]);
   
   useEffect(() => {
     const fetchBoardingPlaces = async () => {
@@ -240,25 +243,21 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         // 투어별 페이지: 해당 투어의 탑승 스케줄에서 가져오기
         const { data } = await supabase
           .from("singsing_boarding_schedules")
-          .select("singsing_boarding_places:place_id(name)")
+          .select("singsing_boarding_places:place_id(name, default_depart_time)")
           .eq("tour_id", tourId);
         
         if (data) {
-          const places = data
-            .map((schedule: any) => schedule.singsing_boarding_places?.name)
-            .filter(Boolean)
-            .filter((value, index, self) => self.indexOf(value) === index); // 중복 제거
-          setBoardingPlaces(places as string[]);
+          setBoardingPlaces(data);
         }
       } else {
         // 전체 참가자 관리: 모든 탑승지 가져오기
         const { data } = await supabase
           .from("singsing_boarding_places")
-          .select("name")
+          .select("name, default_depart_time")
           .order("name", { ascending: true });
         
         if (data) {
-          setBoardingPlaces(data.map(place => place.name));
+          setBoardingPlaces(data);
         }
       }
     };
@@ -442,6 +441,13 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       return;
     }
     
+    if (name === "pickup_location") {
+      // 탑승지 선택 시 출발시간 자동 입력
+      const selected = boardingPlaces.find(p => p.name === value);
+      setForm({ ...form, pickup_location: value, pickup_time: selected?.default_depart_time || "" });
+      return;
+    }
+    
     if (e.target.type === "checkbox") {
       setForm({ ...form, [name]: (e.target as HTMLInputElement).checked });
     } else {
@@ -485,6 +491,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       emergency_contact: form.emergency_contact,
       join_count: form.join_count,
       pickup_location: form.pickup_location,
+      pickup_time: form.pickup_time,
       tour_id: tourId || form.tour_id,
       group_size: form.group_size,
       is_paying_for_group: form.is_paying_for_group,
@@ -559,6 +566,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         is_paying_for_group: participant.is_paying_for_group || false,
         companions: companions,
         pickup_location: participant.pickup_location || "",
+        pickup_time: participant.pickup_time || "",
         tour_id: participant.tour_id || tourId || "" // tourId 추가
       });
       if (participant.role && !roleOptions.includes(participant.role)) {
@@ -581,6 +589,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         is_paying_for_group: false,
         companions: [],
         pickup_location: "",
+        pickup_time: "",
         tour_id: tourId || "" // 투어별 페이지에서는 tourId 자동 설정
       });
       setCustomRole("");
@@ -605,7 +614,8 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       group_size: 1,
       is_paying_for_group: false,
       companions: [],
-      pickup_location: ""
+      pickup_location: "",
+      pickup_time: ""
     });
     setCustomRole("");
     setError("");
@@ -785,7 +795,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         "이메일": "hong@example.com",
         "팀/동호회": "A팀",
         "성별": "남",
-        "탑승지": boardingPlaces[0] || "서울",
+        "탑승지": boardingPlaces[0]?.name || "서울",
         "참여횟수": 0,
         "그룹인원": 1,
         "동반자": "",
@@ -930,9 +940,9 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         }
         
         // 탑승지 검증
-        if (data.pickup_location && boardingPlaces.length > 0 && !boardingPlaces.includes(data.pickup_location)) {
+        if (data.pickup_location && boardingPlaces.length > 0 && !boardingPlaces.some(p => p.name === data.pickup_location)) {
           data.validation.isValid = false;
-          data.validation.errors.push(`탑승지는 다음 중 하나여야 합니다: ${boardingPlaces.join(", ")}`);
+          data.validation.errors.push(`탑승지는 다음 중 하나여야 합니다: ${boardingPlaces.map(p => p.name).join(", ")}`);
         }
       });
 
@@ -1742,9 +1752,23 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   >
                     <option value="">탑승지 선택</option>
                     {boardingPlaces.map(place => (
-                      <option key={place} value={place}>{place}</option>
+                      <option key={place.name} value={place.name}>{place.name}</option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    출발시간
+                  </label>
+                  <input
+                    type="time"
+                    name="pickup_time"
+                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={form.pickup_time || ''}
+                    onChange={handleChange}
+                    placeholder="예: 05:20"
+                  />
                 </div>
 
                 <div>
@@ -2133,7 +2157,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                     >
                       <option value="">탑승지 선택</option>
                       {boardingPlaces.map(place => (
-                        <option key={place} value={place}>{place}</option>
+                        <option key={place.name} value={place.name}>{place.name}</option>
                       ))}
                     </select>
                   ) : bulkEditField === "gender" ? (
