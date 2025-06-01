@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, X, Calendar, Clock } from "lucide-react";
-import { GOLF_COURSES } from "@/constants/golf-courses";
+
 
 type TeeTime = {
   id: string;
@@ -40,7 +40,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     tee_time: "", 
     max_players: "4" 
   });
-  const [golfCourses, setGolfCourses] = useState<string[]>(GOLF_COURSES); // 기본값으로 하드코딩된 목록 사용
+  const [golfCourses, setGolfCourses] = useState<string[]>([]); // DB에서 가져올 때까지 빈 배열
   
   // 코스 로테이션 설정
   const [showRotation, setShowRotation] = useState(false);
@@ -68,23 +68,51 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     setLoading(false);
   };
 
-  // 골프 코스 목록 가져오기
+  // 골프 코스 목록 가져오기 - tour_products에서 실제 코스 정보 가져오기
   const fetchGolfCourses = async () => {
     try {
-      const { data, error } = await supabase
-        .from("golf_courses")
-        .select("name")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+      // 1. 투어 정보에서 tour_product_id 조회
+      const { data: tour, error: tourErr } = await supabase
+        .from("singsing_tours")
+        .select("tour_product_id")
+        .eq("id", tourId)
+        .single();
       
-      if (error) {
-        console.log("Golf courses fetch error:", error);
-        // 에러 시 하드코딩된 목록 사용
-      } else if (data && data.length > 0) {
-        setGolfCourses(data.map(course => course.name));
+      if (tourErr || !tour?.tour_product_id) {
+        console.error("Tour product ID not found", tourErr);
+        return;
       }
-    } catch (err) {
-      console.log("Failed to fetch golf courses, using default list");
+      
+      // 2. tour_products에서 golf_courses 정보 조회
+      const { data: product, error: prodErr } = await supabase
+        .from("tour_products")
+        .select("golf_courses")
+        .eq("id", tour.tour_product_id)
+        .single();
+      
+      if (!prodErr && product?.golf_courses) {
+        // golf_courses는 [{name: "골프장명", courses: ["코스1", "코스2"]}] 형태
+        const courseList: string[] = [];
+        
+        if (Array.isArray(product.golf_courses)) {
+          product.golf_courses.forEach((gc: any) => {
+            if (gc.courses && Array.isArray(gc.courses)) {
+              gc.courses.forEach((courseName: string) => {
+                // "골프장명 - 코스명" 형태로 저장
+                courseList.push(`${gc.name} - ${courseName}`);
+              });
+            }
+          });
+        }
+        
+        if (courseList.length > 0) {
+          setGolfCourses(courseList);
+        }
+      } else {
+        console.error("Failed to fetch courses from tour_products", prodErr);
+      }
+    } catch (error) {
+      console.error("Error fetching golf courses:", error);
     }
   };
 
@@ -100,6 +128,11 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     const groups = parseInt(rotationSettings.groups);
     const interval = parseInt(rotationSettings.interval);
     const courses = rotationSettings.courses.length > 0 ? rotationSettings.courses : golfCourses.slice(0, 3);
+    
+    if (courses.length === 0) {
+      setError("가용 가능한 코스가 없습니다. 먼저 투어 상품에 골프장 정보를 등록해주세요.");
+      return;
+    }
     
     for (let day = 0; day < days; day++) {
       const currentDate = new Date(rotationSettings.startDate);
