@@ -44,7 +44,7 @@ type TourForm = {
   golf_reservation_mobile: string;
   
   // 주의사항
-  notices: string;
+  special_notices: string;
   reservation_notices: ReservationNotice[];
   other_notices: string;
   document_settings: {
@@ -87,11 +87,8 @@ const TourEditPage: React.FC = () => {
     golf_reservation_phone: "",
     golf_reservation_mobile: "",
     
-    // 주의사항 (기본값)
-    notices: `• 집합시간: 티오프 시간 30분 전 골프장 도착
-• 준비사항: 골프복, 골프화, 모자, 선글라스
-• 카트배정: 4인 1카트 원칙
-• 날씨대비: 우산, 우의 등 개인 준비`,
+    // 투어별 특수 공지사항
+    special_notices: "",
     
     reservation_notices: [
       { order: 1, title: "티오프 시간", content: "사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
@@ -157,11 +154,8 @@ const TourEditPage: React.FC = () => {
           golf_reservation_phone: tourData.golf_reservation_phone || "",
           golf_reservation_mobile: tourData.golf_reservation_mobile || "",
           
-          // 주의사항
-          notices: tourData.notices || `• 집합시간: 티오프 시간 30분 전 골프장 도착
-• 준비사항: 골프복, 골프화, 모자, 선글라스
-• 카트배정: 4인 1카트 원칙
-• 날씨대비: 우산, 우의 등 개인 준비`,
+          // 투어별 특수 공지사항
+          special_notices: tourData.special_notices || "",
           
           reservation_notices: tourData.reservation_notices || [
             { order: 1, title: "티오프 시간", content: "사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
@@ -305,7 +299,7 @@ const TourEditPage: React.FC = () => {
         company_mobile: form.company_mobile,
         golf_reservation_phone: form.golf_reservation_phone,
         golf_reservation_mobile: form.golf_reservation_mobile,
-        notices: form.notices,
+        special_notices: form.special_notices,
         reservation_notices: form.reservation_notices.filter(n => n.title.trim() && n.content.trim()),
         other_notices: form.other_notices,
         document_settings: form.document_settings,
@@ -748,16 +742,17 @@ const TourEditPage: React.FC = () => {
               </div>
             </div>
             
-            {/* 라운딩 주의사항 */}
+            {/* 투어별 특수 공지사항 */}
             <label className="flex flex-col gap-1">
-              <span className="font-medium text-gray-700 dark:text-gray-300">라운딩 이용 안내</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">투어별 특수 공지사항</span>
               <textarea
-                name="notices"
-                value={form.notices}
+                name="special_notices"
+                value={form.special_notices}
                 onChange={handleChange}
                 className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[120px] bg-white dark:bg-gray-800"
-                placeholder="라운딩 시 주의사항을 입력하세요"
+                placeholder="이 투어만의 특별한 공지사항이 있다면 입력하세요 (선택사항)"
               />
+              <span className="text-sm text-gray-500">라운딩 주의사항은 여행상품에서 관리됩니다</span>
             </label>
             
             {/* 푸터 메시지 */}

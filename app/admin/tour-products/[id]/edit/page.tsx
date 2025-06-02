@@ -31,6 +31,7 @@ interface TourProductForm {
   excluded_items: string;
   accommodation_info: string;
   general_notices: Notice[];
+  rounding_notices: string;
 }
 
 const initialForm: TourProductForm = {
@@ -53,7 +54,11 @@ const initialForm: TourProductForm = {
     { order: 2, content: "객실 배정: 예약 접수 순서대로 진행되오니 참고 부탁드립니다." },
     { order: 3, content: "식사 서비스: 불참 시에도 별도 환불이 불가하오니 양해 바랍니다." },
     { order: 4, content: "리무진 좌석: 가는 날 좌석은 오는 날에도 동일하게 이용해 주세요." }
-  ]
+  ],
+  rounding_notices: `• 집합시간: 티오프 시간 30분 전 골프장 도착
+• 준비사항: 골프복, 골프화, 모자, 선글라스
+• 카트배정: 4인 1카트 원칙
+• 날씨대비: 우산, 우의 등 개인 준비`
 };
 
 const TourProductEditPage = () => {
@@ -98,7 +103,8 @@ const TourProductEditPage = () => {
           included_items: data.included_items || initialForm.included_items,
           excluded_items: data.excluded_items || initialForm.excluded_items,
           accommodation_info: data.accommodation_info || "",
-          general_notices: data.general_notices || initialForm.general_notices
+          general_notices: data.general_notices || initialForm.general_notices,
+          rounding_notices: data.rounding_notices || initialForm.rounding_notices
         });
       }
     } catch (error: any) {
@@ -430,6 +436,24 @@ const TourProductEditPage = () => {
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* 라운딩 주의사항 */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-800 pb-2 border-b">라운딩 주의사항</h2>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                라운딩 주의사항
+              </label>
+              <textarea
+                name="rounding_notices"
+                value={form.rounding_notices}
+                onChange={handleChange}
+                placeholder="라운딩 시 주의사항을 입력하세요"
+                rows={5}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
             </div>
           </div>
 

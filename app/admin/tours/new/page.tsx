@@ -20,7 +20,7 @@ type TourForm = {
   includes: string;
   excludes: string;
   tour_product_id: string;
-  notices: any;
+  special_notices: string;
 };
 
 const TourNewPage: React.FC = () => {
@@ -35,12 +35,7 @@ const TourNewPage: React.FC = () => {
     includes: "",
     excludes: "",
     tour_product_id: "",
-    notices: {
-      rounding: `• 집합시간: 티오프 시간 30분 전 골프장 도착
-• 준비사항: 골프복, 골프화, 모자, 선글라스
-• 카트배정: 4인 1카트 원칙
-• 날씨대비: 우산, 우의 등 개인 준비`
-    }
+    special_notices: ""
   });
   
   const [staff, setStaff] = useState<StaffMember[]>([
@@ -120,7 +115,7 @@ const TourNewPage: React.FC = () => {
           includes: form.includes,
           excludes: form.excludes,
           tour_product_id: form.tour_product_id || null,
-          notices: form.notices,
+          special_notices: form.special_notices,
         }])
         .select()
         .single();
@@ -275,10 +270,21 @@ const TourNewPage: React.FC = () => {
               </label>
             </div>
             
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">투어별 특수 공지사항</span>
+              <textarea 
+                name="special_notices" 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
+                value={form.special_notices} 
+                onChange={handleChange}
+                placeholder="이 투어만의 특별한 공지사항이 있다면 입력하세요 (선택사항)"
+                rows={3}
+              />
+            </label>
+            
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm text-blue-700">
-                <strong>참고:</strong> 여행상품에서 설정한 이용 안내 사항이 고객 문서에 자동으로 표시됩니다.
-                <br />별도의 예약 안내 사항 입력은 필요하지 않습니다.
+                <strong>참고:</strong> 여행상품에서 설정한 라운딩 주의사항 및 이용 안내가 고객 문서에 자동으로 표시됩니다.
               </p>
             </div>
           </>
