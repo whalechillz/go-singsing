@@ -10,6 +10,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [tourData, setTourData] = useState<any>(null);
   const [productData, setProductData] = useState<any>(null);
   const [documentNotices, setDocumentNotices] = useState<any>({});
+  const [documentFooters, setDocumentFooters] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('customer_schedule');
   const [staffDocumentHTML, setStaffDocumentHTML] = useState<string>('');
@@ -78,9 +79,22 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         }
       }
 
-      // 문서별 공지사항은 일단 비활성화
-      // TODO: document_notices 테이블이 생성된 후 활성화
-      setDocumentNotices({});
+      // 문서별 하단 내용 가져오기
+      const { data: footers, error: footersError } = await supabase
+        .from('document_footers')
+        .select('*')
+        .eq('tour_id', tourId);
+
+      if (!footersError && footers) {
+        const footersByType = footers.reduce((acc, footer) => {
+          if (!acc[footer.document_type]) {
+            acc[footer.document_type] = {};
+          }
+          acc[footer.document_type][footer.section_title] = footer.content;
+          return acc;
+        }, {});
+        setDocumentFooters(footersByType);
+      }
 
       // 데이터 통합
       setTourData({
@@ -337,14 +351,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     </div>
 
-    <!-- 문서별 공지사항 -->
-    ${notices.length > 0 ? `
+    <!-- 문서별 하단 내용 -->
+    ${documentFooters.tour_schedule?.['락카 이용 안내'] ? `
       <div class="section">
         <div class="notice-box">
+          <div class="notice-title">락카 이용 안내</div>
           <ul class="notice-list">
-            ${notices.map((notice: any) => `
-              <li>${notice.content}</li>
-            `).join('')}
+            ${documentFooters.tour_schedule['락카 이용 안내'].split('\n').map((line: string) => 
+              `<li>${line.replace('•', '').trim()}</li>`
+            ).join('')}
           </ul>
         </div>
       </div>
@@ -407,17 +422,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     </div>
     
     <div class="common-info">
-      ${tourData.notices ? `
+      ${documentFooters.boarding_guide?.['탑승 주의사항'] ? `
         <h3 class="section-title">탑승 주의사항</h3>
-        <div class="notice-content">${tourData.notices.replace(/\n/g, '<br>')}</div>
-      ` : ''}
-      
-      ${notices.length > 0 ? `
-        <div class="notice-list">
-          ${notices.map((notice: any) => `
-            <div class="notice-item">${notice.content}</div>
+        <ul class="notice-list">
+          ${documentFooters.boarding_guide['탑승 주의사항'].split('\n').map((line: string) => `
+            <li class="notice-item">${line.replace('•', '').trim()}</li>
           `).join('')}
-        </div>
+        </ul>
       ` : ''}
       
       ${tourData.staff?.length > 0 ? `
@@ -564,12 +575,25 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     `).join('')}
     
-    ${notices.length > 0 ? `
+    ${documentFooters.room_assignment?.['객실 이용 안내'] ? `
       <div class="notices">
-        <h3>이용 안내</h3>
-        ${notices.map((notice: any) => `
-          <p>${notice.content}</p>
-        `).join('')}
+        <h3>객실 이용 안내</h3>
+        <ul>
+          ${documentFooters.room_assignment['객실 이용 안내'].split('\n').map((line: string) => `
+            <li>${line.replace('•', '').trim()}</li>
+          `).join('')}
+        </ul>
+      </div>
+    ` : ''}
+    
+    ${documentFooters.room_assignment?.['식사 안내'] ? `
+      <div class="notices">
+        <h3>식사 안내</h3>
+        <ul>
+          ${documentFooters.room_assignment['식사 안내'].split('\n').map((line: string) => `
+            <li>${line.replace('•', '').trim()}</li>
+          `).join('')}
+        </ul>
       </div>
     ` : ''}
     
@@ -638,12 +662,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     `).join('')}
     
-    ${notices.length > 0 ? `
+    ${documentFooters.rounding_timetable?.['라운딩 주의사항'] ? `
       <div class="notices">
         <h3>라운드 안내</h3>
-        ${notices.map((notice: any) => `
-          <p>${notice.content}</p>
-        `).join('')}
+        <ul>
+          ${documentFooters.rounding_timetable['라운딩 주의사항'].split('\n').map((line: string) => `
+            <li>${line.replace('•', '').trim()}</li>
+          `).join('')}
+        </ul>
       </div>
     ` : ''}
     

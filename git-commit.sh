@@ -4,13 +4,17 @@
 git add .
 
 # 커밋 메시지
-git commit -m "fix: 투어 스케줄 관리 6개 문서 미리보기 오류 수정
+git commit -m "feat: 문서별 하단 내용 관리 시스템 구현
 
-- 실제 존재하는 테이블명으로 변경 (tour_daily_schedules → singsing_schedules)
-- tour_product_id로 여행상품 연결
-- singsing_tee_times, singsing_participants 테이블 구조에 맞게 수정
-- document_notices 테이블 조회 일시 비활성화
-- 객실 배정표, 티타임표 HTML 생성 로직 수정"
+- DocumentFooterManager 컴포넌트 추가
+- document_footers 테이블 생성
+- 일정 관리(통합)에 '문서 하단 내용' 탭 추가
+- 각 문서별로 개별 하단 내용 관리 가능
+  * 라운딩 시간표: 라운딩 주의사항
+  * 탑승지 안내: 탑승 주의사항
+  * 객실 배정: 객실 이용 안내, 식사 안내
+  * 전체 일정표: 락카 이용 안내
+- TourSchedulePreview에서 문서별 하단 내용 표시"
 
 # Push to main branch
 git push origin main
