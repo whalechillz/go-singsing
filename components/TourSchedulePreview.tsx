@@ -711,30 +711,119 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <thead>
             <tr>
               <th width="80">시간</th>
-              <th width="80">코스</th>
+              <th width="100">코스</th>
               <th width="60">팀</th>
               <th>플레이어</th>
             </tr>
           </thead>
           <tbody>
-            ${times.map((teeTime: any) => `
-              <tr>
-                <td>${teeTime.tee_time}</td>
-                <td>${teeTime.course}</td>
-                <td>${teeTime.team_no}팀</td>
-                <td class="players-cell">
-                  ${teeTime.singsing_tee_time_players && teeTime.singsing_tee_time_players.length > 0 ? 
-                    teeTime.singsing_tee_time_players
-                      .sort((a: any, b: any) => (a.order_no || 0) - (b.order_no || 0))
-                      .map((player: any) => 
-                        player.singsing_participants ? 
-                          `<span class="player-name">${player.singsing_participants.name}</span>` : ''
-                      ).join(', ') :
-                    (teeTime.players ? JSON.parse(teeTime.players).join(', ') : '-')
-                  }
-                </td>
-              </tr>
-            `).join('')}
+            ${times.map((teeTime: any) => {
+              // 티타임에 배정된 참가자 정보
+              const players = teeTime.singsing_tee_time_players || [];
+              const sortedPlayers = players.sort((a: any, b: any) => (a.order_no || 0) - (b.order_no || 0));
+              
+              // 팀 성별 분석
+              const teamGenderAnalysis = () => {
+                const maleCount = sortedPlayers.filter((p: any) => 
+                  p.singsing_participants?.gender === 'M' || p.singsing_participants?.gender === '남'
+                ).length;
+                const femaleCount = sortedPlayers.filter((p: any) => 
+                  p.singsing_participants?.gender === 'F' || p.singsing_participants?.gender === '여'
+                ).length;
+                
+                if (maleCount > 0 && femaleCount > 0) return '(혼성팀)';
+                if (maleCount > 0) return '(남성팀)';
+                if (femaleCount > 0) return '(여성팀)';
+                return '';
+              };
+              
+              const teamGenderType = teamGenderAnalysis();
+              
+              // 티타임에 플레이어가 있는 경우
+              if (sortedPlayers.length > 0) {
+                return sortedPlayers.map((player: any, index: number) => {
+                  const participant = player.singsing_participants;
+                  if (!participant) return '';
+                  
+                  // 개별 성별 표시 (혼성팀에서 소수 성별만)
+                  const getGenderMark = () => {
+                    if (!participant.gender) return '';
+                    
+                    const maleCount = sortedPlayers.filter((p: any) => 
+                      p.singsing_participants?.gender === 'M' || p.singsing_participants?.gender === '남'
+                    ).length;
+                    const femaleCount = sortedPlayers.filter((p: any) => 
+                      p.singsing_participants?.gender === 'F' || p.singsing_participants?.gender === '여'
+                    ).length;
+                    
+                    if (maleCount > 0 && femaleCount > 0) {
+                      if (maleCount < femaleCount && (participant.gender === 'M' || participant.gender === '남')) {
+                        return '(남)';
+                      } else if (femaleCount < maleCount && (participant.gender === 'F' || participant.gender === '여')) {
+                        return '(여)';
+                      }
+                    }
+                    return '';
+                  };
+                  
+                  const genderMark = getGenderMark();
+                  const genderColor = (participant.gender === 'M' || participant.gender === '남') ? '#3b82f6' : 
+                                     (participant.gender === 'F' || participant.gender === '여') ? '#ec4899' : 
+                                     '#6b7280';
+                  
+                  return `
+                    <tr>
+                      ${index === 0 ? `
+                        <td rowspan="${sortedPlayers.length}">${teeTime.tee_time}</td>
+                        <td rowspan="${sortedPlayers.length}" style="${
+                          teeTime.course?.includes('레이크') || teeTime.course?.includes('Lake') 
+                            ? 'background-color: #DBEAFE; color: #1E40AF;' 
+                            : teeTime.course?.includes('힐스') || teeTime.course?.includes('Hills')
+                            ? 'background-color: #D1FAE5; color: #065F46;'
+                            : teeTime.course?.includes('밸리') || teeTime.course?.includes('Valley')
+                            ? 'background-color: #EDE9FE; color: #5B21B6;'
+                            : teeTime.course?.includes('오션') || teeTime.course?.includes('Ocean')
+                            ? 'background-color: #CFFAFE; color: #065F46;'
+                            : teeTime.course?.includes('클럽') || teeTime.course?.includes('Club')
+                            ? 'background-color: #FED7AA; color: #C2410C;'
+                            : 'background-color: #F3F4F6; color: #374151;'
+                        } font-weight: bold;">${teeTime.course} ${teamGenderType}</td>
+                        <td rowspan="${sortedPlayers.length}">${teeTime.team_no}팀</td>
+                      ` : ''}
+                      <td class="players-cell">
+                        <span class="player-name">${participant.name}</span>
+                        ${genderMark ? `<span style="color: ${genderColor}; font-weight: bold; margin-left: 4px;">${genderMark}</span>` : ''}
+                      </td>
+                    </tr>
+                  `;
+                }).join('');
+              } else {
+                // 티타임에 플레이어가 없는 경우 (기존 players 필드 사용)
+                const playerNames = teeTime.players ? JSON.parse(teeTime.players) : [];
+                return `
+                  <tr>
+                    <td>${teeTime.tee_time}</td>
+                    <td style="${
+                      teeTime.course?.includes('레이크') || teeTime.course?.includes('Lake') 
+                        ? 'background-color: #DBEAFE; color: #1E40AF;' 
+                        : teeTime.course?.includes('힐스') || teeTime.course?.includes('Hills')
+                        ? 'background-color: #D1FAE5; color: #065F46;'
+                        : teeTime.course?.includes('밸리') || teeTime.course?.includes('Valley')
+                        ? 'background-color: #EDE9FE; color: #5B21B6;'
+                        : teeTime.course?.includes('오션') || teeTime.course?.includes('Ocean')
+                        ? 'background-color: #CFFAFE; color: #065F46;'
+                        : teeTime.course?.includes('클럽') || teeTime.course?.includes('Club')
+                        ? 'background-color: #FED7AA; color: #C2410C;'
+                        : 'background-color: #F3F4F6; color: #374151;'
+                    } font-weight: bold;">${teeTime.course}</td>
+                    <td>${teeTime.team_no}팀</td>
+                    <td class="players-cell">
+                      ${playerNames.length > 0 ? playerNames.join(', ') : '-'}
+                    </td>
+                  </tr>
+                `;
+              }
+            }).join('')}
           </tbody>
         </table>
       </div>

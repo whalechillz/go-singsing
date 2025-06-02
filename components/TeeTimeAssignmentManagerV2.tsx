@@ -773,10 +773,22 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
               <tr>
                 ${index === 0 ? `
                   <td rowspan="${teeTimeParticipants.length}">${teeTime.tee_time || ''}</td>
-                  <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course || ''} ${teamGenderInfo.type}</td>
+                  <td rowspan="${teeTimeParticipants.length}" style="${
+                    teeTime.golf_course?.includes('레이크') || teeTime.golf_course?.includes('Lake') 
+                      ? 'background-color: #DBEAFE; color: #1E40AF;' 
+                      : teeTime.golf_course?.includes('힐스') || teeTime.golf_course?.includes('Hills')
+                      ? 'background-color: #D1FAE5; color: #065F46;'
+                      : teeTime.golf_course?.includes('밸리') || teeTime.golf_course?.includes('Valley')
+                      ? 'background-color: #EDE9FE; color: #5B21B6;'
+                      : teeTime.golf_course?.includes('오션') || teeTime.golf_course?.includes('Ocean')
+                      ? 'background-color: #CFFAFE; color: #065F46;'
+                      : teeTime.golf_course?.includes('클럽') || teeTime.golf_course?.includes('Club')
+                      ? 'background-color: #FED7AA; color: #C2410C;'
+                      : 'background-color: #F3F4F6; color: #374151;'
+                  } font-weight: bold;">${teeTime.golf_course || ''} ${teamGenderInfo.type}</td>
                 ` : ''}
                 <td>${index + 1}</td>
-                <td>${p.name}<span style="color: ${p.gender === 'M' ? '#3b82f6' : p.gender === 'F' ? '#ec4899' : '#6b7280'}; font-weight: bold;">${genderSuffix}</span></td>
+                <td>${p.name}<span style="color: ${p.gender === 'M' || p.gender === '남' ? '#3b82f6' : p.gender === 'F' || p.gender === '여' ? '#ec4899' : '#6b7280'}; font-weight: bold; margin-left: 4px;">${genderSuffix}</span></td>
                 ${isStaff ? `<td>${p.phone || ''}</td>` : ''}
                 <td>${p.team_name || ''}</td>
                 ${isStaff ? `<td>${p.note || ''}</td>` : ''}
