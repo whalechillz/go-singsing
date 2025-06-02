@@ -255,10 +255,11 @@ const TourProductEditPage = () => {
                   name="hotel"
                   value={form.hotel}
                   onChange={handleChange}
-                  placeholder="숙소"
+                  placeholder="숙소 (예: A호텔, B리조트)"
                   className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">여러 숙소를 사용하는 경우 쉼표로 구분해 주세요</p>
               </div>
 
               <div>
