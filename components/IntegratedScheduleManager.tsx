@@ -53,6 +53,17 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
   const handleSaveSchedule = async () => {
     try {
+      // 필수 필드 검증
+      if (!editingSchedule.date) {
+        alert('날짜를 입력해주세요.');
+        return;
+      }
+
+      if (!editingSchedule.title) {
+        alert('제목을 입력해주세요.');
+        return;
+      }
+
       // 텍스트를 일정 항목으로 파싱
       const items = scheduleText.split('\n')
         .filter(line => line.trim())
@@ -70,38 +81,55 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
           };
         });
 
-      const scheduleData = {
+      const scheduleData: any = {
         tour_id: tourId,
+        title: editingSchedule.title,
         date: editingSchedule.date,
-        day_number: editingSchedule.day_number,
-        schedule_items: items,
-        boarding_info: editingSchedule.boarding_info || {}
+        day_number: editingSchedule.day_number || 1,
+        schedule_items: items
       };
+
+      // boarding_info가 있을 때만 추가
+      if (editingSchedule.boarding_info && Object.keys(editingSchedule.boarding_info).length > 0) {
+        scheduleData.boarding_info = editingSchedule.boarding_info;
+      }
+
+      console.log('저장할 데이터:', scheduleData);
 
       if (editingSchedule.id) {
         // 업데이트
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('singsing_schedules')
           .update(scheduleData)
-          .eq('id', editingSchedule.id);
+          .eq('id', editingSchedule.id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error details:', error);
+          throw error;
+        }
+        console.log('업데이트 성공:', data);
       } else {
         // 새로 추가
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('singsing_schedules')
-          .insert(scheduleData);
+          .insert(scheduleData)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error details:', error);
+          throw error;
+        }
+        console.log('추가 성공:', data);
       }
 
       setEditingSchedule(null);
       setScheduleText('');
       fetchData();
       alert('저장되었습니다.');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving schedule:', error);
-      alert('저장 중 오류가 발생했습니다.');
+      alert(`저장 중 오류가 발생했습니다.\n\n오류 내용: ${error.message || '알 수 없는 오류'}`);
     }
   };
 
@@ -131,9 +159,11 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
   };
 
   const handleNewSchedule = () => {
+    const dayNumber = schedules.length + 1;
     setEditingSchedule({ 
+      title: `Day ${dayNumber} 일정`,
       date: '', 
-      day_number: schedules.length + 1,
+      day_number: dayNumber,
       schedule_items: [],
       boarding_info: {}
     });
@@ -277,6 +307,20 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium mb-1">제목</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={editingSchedule.title || ''}
+                    placeholder="예: Day 1 일정"
+                    onChange={(e) => setEditingSchedule({
+                      ...editingSchedule,
+                      title: e.target.value
+                    })}
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium mb-1">일정 항목</label>
                   <textarea
                     className="w-full px-3 py-2 border rounded-md"
@@ -317,7 +361,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h4 className="font-semibold">
-                      Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
+                      {schedule.title || `Day ${schedule.day_number}`} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
                     </h4>
                     <ul className="mt-2 space-y-1 text-sm text-gray-600">
                       {schedule.schedule_items?.map((item: any, idx: number) => (
