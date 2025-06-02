@@ -172,7 +172,9 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         .eq("id", tourId)
         .single();
         
-      if (tourError && tourError.code !== 'PGRST116') throw tourError;
+      if (tourError && tourError.code !== 'PGRST116') {
+        console.error('투어 정보 조회 오류:', tourError);
+      }
       
       if (tourData) {
         setTour({
@@ -645,8 +647,9 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
   // 미리보기 HTML 생성
   const generatePreviewHTML = (type: 'customer' | 'staff') => {
-    const teeTimesByDate = teeTimes.reduce((acc, tt) => {
-      const date = tt.play_date;
+    // 날짜별로 티타임 그룹화
+    const teeTimesByDateForPreview = teeTimes.reduce((acc, tt) => {
+      const date = tt.play_date || tt.date;
       if (!acc[date]) acc[date] = [];
       acc[date].push(tt);
       return acc;
@@ -722,7 +725,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     };
 
     let tablesHTML = '';
-    Object.entries(teeTimesByDate).forEach(([date, times]) => {
+    Object.entries(teeTimesByDateForPreview).forEach(([date, times]) => {
       const dateStr = new Date(date).toLocaleDateString('ko-KR', { 
         year: 'numeric', 
         month: 'long', 
@@ -755,8 +758,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         if (teeTimeParticipants.length === 0) {
           tableHTML += `
             <tr>
-              <td>${teeTime.tee_time}</td>
-              <td>${teeTime.golf_course}</td>
+              <td>${teeTime.tee_time || ''}</td>
+              <td>${teeTime.golf_course || teeTime.course || ''}</td>
               <td colspan="${isStaff ? 5 : 3}" class="empty-slot">배정된 참가자가 없습니다</td>
             </tr>`;
         } else {
@@ -769,8 +772,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             tableHTML += `
               <tr>
                 ${index === 0 ? `
-                  <td rowspan="${teeTimeParticipants.length}">${teeTime.tee_time}</td>
-                  <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course} ${teamGenderInfo.type}</td>
+                  <td rowspan="${teeTimeParticipants.length}">${teeTime.tee_time || ''}</td>
+                  <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course || teeTime.course || ''} ${teamGenderInfo.type}</td>
                 ` : ''}
                 <td>${index + 1}</td>
                 <td>${p.name}<span style="color: ${p.gender === 'M' ? '#3b82f6' : p.gender === 'F' ? '#ec4899' : '#6b7280'}; font-weight: bold;">${genderSuffix}</span></td>

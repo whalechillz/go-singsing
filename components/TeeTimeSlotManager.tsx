@@ -410,13 +410,26 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     return acc;
   }, {} as Record<string, TeeTime[]>);
 
+  // 코스 정렬 순서 정의
+  const COURSE_ORDER = ['파인', '레이크', '힐스', '메이저', '클래식', '이스트', '웨스트', '샤인', '블루'];
+  
+  // 코스 정렬 함수
+  const getCourseOrder = (courseName: string) => {
+    const courseKey = COURSE_ORDER.find(key => courseName.includes(key));
+    return courseKey ? COURSE_ORDER.indexOf(courseKey) : 999;
+  };
+
   // 각 날짜의 티타임을 코스별로 그룹핑
   Object.keys(teeTimesByDate).forEach(date => {
     teeTimesByDate[date].sort((a, b) => {
-      // 먼저 코스명으로 정렬
-      if (a.golf_course !== b.golf_course) {
-        return a.golf_course.localeCompare(b.golf_course);
+      // 먼저 코스 순서대로 정렬 (파인, 레이크, 힐스 순)
+      const aOrder = getCourseOrder(a.golf_course);
+      const bOrder = getCourseOrder(b.golf_course);
+      
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder;
       }
+      
       // 같은 코스면 시간순으로 정렬
       return a.tee_time.localeCompare(b.tee_time);
     });

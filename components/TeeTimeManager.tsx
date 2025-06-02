@@ -37,22 +37,26 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [autoList, setAutoList] = useState<Participant[]>([]);
-  const [showAuto, setShowAuto] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [courses, setCourses] = useState<string[]>([]);
   const [moveTarget, setMoveTarget] = useState<{ player: string; fromId: string } | null>(null);
   const [moveToTeam, setMoveToTeam] = useState<string>("");
   const [selectedParticipants, setSelectedParticipants] = useState<{ id: string; name: string; gender?: string }[]>([]);
   const [participantSearch, setParticipantSearch] = useState("");
   const [allSelected, setAllSelected] = useState(false);
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [selectedTeeTimes, setSelectedTeeTimes] = useState<string[]>([]);
 
   // 참가자 자동완성 데이터 불러오기 (gender 포함)
   useEffect(() => {
     const fetchParticipants = async () => {
       const { data, error } = await supabase.from("singsing_participants").select("id, name, gender").eq("tour_id", tourId);
-      if (!error && data) setParticipants(data);
+      if (!error && data) {
+        // 성별 정보 추가 (이름에서 추측)
+        const participantsWithGender = data.map(p => ({
+          ...p,
+          gender: p.gender || (p.name.includes('(남)') ? '남' : p.name.includes('(여)') ? '여' : null)
+        }));
+        setParticipants(participantsWithGender);
+      }
     };
     if (tourId) fetchParticipants();
   }, [tourId]);
@@ -204,6 +208,16 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
       tee_time: t.tee_time,
       players: t.players.join(" · "),
     });
+    // 선택된 참가자 복원
+    const selectedFromPlayers = t.players.map(playerName => {
+      const cleanName = playerName.replace(/\([남여]\)$/, '');
+      const participant = participants.find(p => p.name === cleanName);
+      if (participant) {
+        return participant;
+      }
+      return { id: playerName, name: cleanName, gender: playerName.includes('(남)') ? '남' : playerName.includes('(여)') ? '여' : undefined };
+    });
+    setSelectedParticipants(selectedFromPlayers);
   };
 
   const handleDelete = async (id: string) => {
@@ -286,17 +300,6 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     }
   };
 
-  // 4명 자동 배정 핸들러
-  const handleAutoAssignPlayers = () => {
-    // 이미 배정된 참가자(이름) 목록
-    const assigned = teeTimes.flatMap(t => t.players);
-    // 미배정 참가자만 필터
-    const unassigned = participants.filter(p => !assigned.includes(p.name + (p.gender ? `(${p.gender})` : "")));
-    // 4명 추천 (이름+성별)
-    const selected = unassigned.slice(0, 4).map(p => p.name + (p.gender ? `(${p.gender})` : ""));
-    setForm({ ...form, players: selected.join(" · ") });
-  };
-
   // 참가자 이동 처리
   const handleMovePlayer = async () => {
     if (!moveTarget || !moveToTeam) return;
@@ -316,7 +319,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     fetchTeeTimes();
   };
 
-  // 1. 코스명 가공 함수 개선
+  // 코스명 가공 함수 개선
   const formatCourseName = (course: string) => {
     if (!course) return "";
     
@@ -337,18 +340,44 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     return course;
   };
 
-  // 1. 참가자 멀티 셀렉트 개선: 체크박스+전체리스트+검색+접근성
+  // 코스별 색상 정의
+  const getCourseColor = (course: string) => {
+    const lowerCourse = course.toLowerCase();
+    if (lowerCourse.includes('파인')) return 'bg-green-100 border-green-300 text-green-800';
+    if (lowerCourse.includes('레이크')) return 'bg-blue-100 border-blue-300 text-blue-800';
+    if (lowerCourse.includes('힐스')) return 'bg-orange-100 border-orange-300 text-orange-800';
+    if (lowerCourse.includes('밸리')) return 'bg-purple-100 border-purple-300 text-purple-800';
+    if (lowerCourse.includes('오션')) return 'bg-cyan-100 border-cyan-300 text-cyan-800';
+    if (lowerCourse.includes('스카이')) return 'bg-sky-100 border-sky-300 text-sky-800';
+    return 'bg-gray-100 border-gray-300 text-gray-800';
+  };
+
+  // 코스 정렬 함수
+  const sortCourses = (courses: string[]) => {
+    const priority = ['파인', '레이크', '힐스'];
+    return courses.sort((a, b) => {
+      const aIndex = priority.findIndex(p => a.toLowerCase().includes(p));
+      const bIndex = priority.findIndex(p => b.toLowerCase().includes(p));
+      
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  };
+
+  // 참가자 멀티 셀렉트: 전체 선택/해제, 성별 그룹핑
   const filteredOptions = participantOptions.filter(p =>
     p.name.includes(participantSearch)
   );
 
-  // 참가자 멀티 셀렉트: 전체 선택/해제, 성별 그룹핑, 모바일 대응, 상단 고정, UX 강화
   const groupedOptions = filteredOptions.reduce((acc, p) => {
     const key = p.gender || "기타";
     if (!acc[key]) acc[key] = [];
     acc[key].push(p);
     return acc;
   }, {} as Record<string, typeof participantOptions>);
+
   const handleSelectAll = () => {
     if (allSelected) {
       setSelectedParticipants([]);
@@ -358,11 +387,12 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
       setAllSelected(true);
     }
   };
+
   useEffect(() => {
     setAllSelected(selectedParticipants.length === participantOptions.length && participantOptions.length > 0);
   }, [selectedParticipants, participantOptions]);
 
-  // 2. 날짜/코스/조별 그룹핑 UI로 표/카드 구조 리팩토링
+  // 날짜/코스/조별 그룹핑 UI로 표/카드 구조 리팩토링
   const grouped = teeTimes.reduce((acc, t) => {
     if (!acc[t.date]) acc[t.date] = {};
     if (!acc[t.date][t.course]) acc[t.date][t.course] = [];
@@ -370,24 +400,92 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     return acc;
   }, {} as Record<string, Record<string, TeeTime[]>>);
 
+  // 통계 계산
+  const calculateStats = () => {
+    const stats = {
+      totalParticipants: 0,
+      assignedParticipants: 0,
+      maleCount: 0,
+      femaleCount: 0,
+      dateStats: {} as Record<string, { total: number; male: number; female: number }>
+    };
+
+    // 날짜별 통계
+    Object.entries(grouped).forEach(([date, courses]) => {
+      let dateTotal = 0;
+      let dateMale = 0;
+      let dateFemale = 0;
+      
+      Object.values(courses).forEach(teams => {
+        teams.forEach(team => {
+          team.players.forEach(player => {
+            dateTotal++;
+            if (player.includes('(남)')) dateMale++;
+            else if (player.includes('(여)')) dateFemale++;
+          });
+        });
+      });
+      
+      stats.dateStats[date] = { total: dateTotal, male: dateMale, female: dateFemale };
+      stats.totalParticipants = Math.max(stats.totalParticipants, dateTotal);
+    });
+
+    // 전체 배정된 참가자 (중복 제거)
+    const uniquePlayers = new Set<string>();
+    teeTimes.forEach(t => {
+      t.players.forEach(p => uniquePlayers.add(p));
+    });
+    stats.assignedParticipants = uniquePlayers.size;
+
+    return stats;
+  };
+
+  const stats = calculateStats();
+
   return (
     <div className="bg-gray-50 min-h-screen p-6">
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-blue-800">티오프 시간 관리</h2>
-          <button 
-            onClick={handleBulkCreate}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
-            disabled={!form.date || !form.course}
-          >
-            티타임 일괄 생성
-          </button>
+          <div className="flex gap-2">
+            {selectedTeeTimes.length > 0 && (
+              <>
+                <button
+                  onClick={() => setSelectedTeeTimes([])}
+                  className="bg-gray-400 text-white px-3 py-2 rounded hover:bg-gray-500 text-sm"
+                >
+                  선택 해제
+                </button>
+                <button
+                  onClick={async () => {
+                    if (window.confirm(`선택한 ${selectedTeeTimes.length}개의 티타임을 삭제하시겠습니까?`)) {
+                      for (const id of selectedTeeTimes) {
+                        await supabase.from("singsing_tee_times").delete().eq("id", id);
+                      }
+                      setSelectedTeeTimes([]);
+                      fetchTeeTimes();
+                    }
+                  }}
+                  className="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 text-sm"
+                >
+                  선택 삭제
+                </button>
+              </>
+            )}
+            <button 
+              onClick={handleBulkCreate}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+              disabled={!form.date || !form.course}
+            >
+              티타임 일괄 생성
+            </button>
+          </div>
         </div>
         <form className="flex flex-col md:flex-row gap-2 mb-6 relative" onSubmit={handleSubmit} autoComplete="off">
           <input name="date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
           <select name="course" value={form.course} onChange={e => setForm({ ...form, course: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="코스">
             <option value="">코스 선택</option>
-            {courses.map((c) => (
+            {sortCourses(courses).map((c) => (
               <option key={c} value={c}>{formatCourseName(c)}</option>
             ))}
           </select>
@@ -417,7 +515,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                       <div className="p-2 text-gray-400">검색 결과 없음</div>
                     ) : (
                       Object.entries(groupedOptions)
-                        .filter(([_, list]) => list.length > 0) // 참가자가 있는 그룹만 렌더링
+                        .filter(([_, list]) => list.length > 0)
                         .map(([gender, list]) => (
                           <div key={gender} className="py-1">
                             <div className="px-3 py-1 text-xs text-blue-700 bg-blue-50 rounded-t font-semibold sticky top-0 z-10">
@@ -434,13 +532,13 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                                   aria-selected={checked}
                                   role="option"
                                 >
-            <input
+                                  <input
                                     type="checkbox"
                                     checked={checked}
                                     readOnly
                                     className="mr-2 accent-blue-600"
                                     tabIndex={-1}
-            />
+                                  />
                                   {p.name}{p.gender ? <span className="ml-1 text-xs text-blue-600">({p.gender})</span> : null}
                                 </CommandItem>
                               );
@@ -454,7 +552,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
             </Popover>
           </div>
           <button type="submit" className="bg-blue-800 text-white px-4 py-1 rounded min-w-[60px]">{editingId ? "수정" : "추가"}</button>
-          {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm(initialForm); }}>취소</button>}
+          {editingId && <button type="button" className="bg-gray-300 text-gray-800 px-4 py-1 rounded min-w-[60px]" onClick={() => { setEditingId(null); setForm(initialForm); setSelectedParticipants([]); }}>취소</button>}
         </form>
         {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
         {loading ? (
@@ -462,84 +560,134 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
         ) : (
           <div className="bg-white rounded-lg shadow p-4">
             {Object.keys(grouped).length === 0 && <div className="text-gray-400 text-center py-8">등록된 티오프가 없습니다.</div>}
-            {Object.entries(grouped).map(([date, courses]) => (
-              <div key={date} className="mb-8">
-                <div className="text-lg font-bold text-blue-900 border-b pb-1 mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="material-icons text-blue-400">event</span>{date}
-                  </div>
-                  <button
-                    onClick={() => handleDeleteByDate(date)}
-                    className="text-sm text-red-600 hover:text-red-800 underline"
-                  >
-                    날짜 전체 삭제
-                  </button>
-                </div>
-                {Object.entries(courses).length === 0 && <div className="text-gray-400 text-center py-4">코스 없음</div>}
-                {Object.entries(courses).map(([course, teams]) => (
-                  <div key={course} className="mb-4">
-                    <div className="text-base font-semibold text-blue-700 mb-1 flex items-center gap-2">
-                      <span className="px-2 py-0.5 bg-blue-50 rounded border border-blue-100">{formatCourseName(course)}</span>
-                      <span className="text-xs text-gray-400">{teams.length}조</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {teams.sort((a, b) => a.team_no - b.team_no).map((t) => (
-                        <div key={t.id} className="border rounded-lg p-3 flex flex-col gap-1 bg-gray-50 shadow-sm hover:shadow-md transition">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="font-bold text-blue-800 text-lg">{t.team_no}조</div>
-                            <div className="text-red-600 font-bold text-base">{formatTimeHHMM(t.tee_time)}</div>
-                          </div>
-                          <div className="flex flex-wrap gap-2 items-center mb-1">
-                            {t.players.length === 0 && <span className="text-gray-400">참가자 없음</span>}
-                      {t.players.map((p, i, arr) => (
-                        <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : ""}>
-                                {p}
-                                <button
-                                  type="button"
-                                  className="ml-1 text-xs text-green-700 underline"
-                                  onClick={() => setMoveTarget({ player: p, fromId: t.id })}
-                                  aria-label="이동"
-                                >이동</button>
-                                {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && (
-                                  <select
-                                    className="ml-1 border rounded px-1 py-0.5 text-xs"
-                                    value={moveToTeam}
-                                    onChange={e => setMoveToTeam(e.target.value)}
-                                  >
-                                    <option value="">조 선택</option>
-                                    {teams.filter(tt => tt.id !== t.id).map(tt => (
-                                      <option key={tt.id} value={tt.id}>{tt.team_no}조</option>
-                                    ))}
-                                  </select>
-                                )}
-                                {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && moveToTeam && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 text-xs text-blue-700 underline"
-                                    onClick={handleMovePlayer}
-                                  >이동확정</button>
-                                )}
-                                {i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
+            {Object.entries(grouped)
+              .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+              .map(([date, courses]) => {
+                const dateStats = stats.dateStats[date] || { total: 0, male: 0, female: 0 };
+                return (
+                  <div key={date} className="mb-8">
+                    <div className="text-lg font-bold text-blue-900 border-b pb-1 mb-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span>{date}</span>
+                        <span className="text-sm font-normal text-gray-600">
+                          ({dateStats.total}명: 남 {dateStats.male}, 여 {dateStats.female})
                         </span>
-                      ))}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteByDate(date)}
+                        className="text-sm text-red-600 hover:text-red-800 underline"
+                      >
+                        날짜 전체 삭제
+                      </button>
+                    </div>
+                    {Object.entries(courses).length === 0 && <div className="text-gray-400 text-center py-4">코스 없음</div>}
+                    {sortCourses(Object.keys(courses)).map((course) => {
+                      const teams = courses[course];
+                      return (
+                        <div key={course} className="mb-4">
+                          <div className="text-base font-semibold text-blue-700 mb-1 flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded border ${getCourseColor(course)}`}>
+                              {formatCourseName(course)}
+                            </span>
+                            <span className="text-xs text-gray-400">{teams.length}조</span>
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                            <span>참가자 수: <span className={t.players.length === 4 ? "text-blue-700 font-bold" : t.players.length > 4 ? "text-red-600 font-bold" : ""}>{t.players.length}</span>/4</span>
-                            {t.players.length > 4 && <span className="text-red-600 font-bold">정원 초과</span>}
-                          </div>
-                          <div className="flex gap-2 mt-1">
-                      <button className="text-blue-700 underline" onClick={() => handleEdit(t)} aria-label="수정">수정</button>
-                      <button className="text-red-600 underline" onClick={() => handleDelete(t.id)} aria-label="삭제">삭제</button>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {teams.sort((a, b) => a.team_no - b.team_no).map((t) => {
+                              const maleCount = t.players.filter(p => p.includes('(남)')).length;
+                              const femaleCount = t.players.filter(p => p.includes('(여)')).length;
+                              const isSelected = selectedTeeTimes.includes(t.id);
+                              
+                              return (
+                                <div key={t.id} className={`border rounded-lg p-3 flex flex-col gap-1 shadow-sm hover:shadow-md transition ${isSelected ? 'bg-blue-100 border-blue-400' : 'bg-gray-50'}`}>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setSelectedTeeTimes([...selectedTeeTimes, t.id]);
+                                          } else {
+                                            setSelectedTeeTimes(selectedTeeTimes.filter(id => id !== t.id));
+                                          }
+                                        }}
+                                        className="w-4 h-4"
+                                      />
+                                      <div className="font-bold text-blue-800 text-lg">{t.team_no}조</div>
+                                    </div>
+                                    <div className="text-red-600 font-bold text-base">{formatTimeHHMM(t.tee_time)}</div>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2 items-center mb-1">
+                                    {t.players.length === 0 && <span className="text-gray-400">참가자 없음</span>}
+                                    {t.players.map((p, i, arr) => (
+                                      <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : p.includes("(여)") ? "text-pink-600 font-medium" : ""}>
+                                        {p}
+                                        <button
+                                          type="button"
+                                          className="ml-1 text-xs text-green-700 underline"
+                                          onClick={() => setMoveTarget({ player: p, fromId: t.id })}
+                                          aria-label="이동"
+                                        >이동</button>
+                                        {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && (
+                                          <select
+                                            className="ml-1 border rounded px-1 py-0.5 text-xs"
+                                            value={moveToTeam}
+                                            onChange={e => setMoveToTeam(e.target.value)}
+                                          >
+                                            <option value="">조 선택</option>
+                                            {teams.filter(tt => tt.id !== t.id).map(tt => (
+                                              <option key={tt.id} value={tt.id}>{tt.team_no}조</option>
+                                            ))}
+                                          </select>
+                                        )}
+                                        {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && moveToTeam && (
+                                          <button
+                                            type="button"
+                                            className="ml-1 text-xs text-blue-700 underline"
+                                            onClick={handleMovePlayer}
+                                          >이동확정</button>
+                                        )}
+                                        {i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                    <span>인원: <span className={t.players.length === 4 ? "text-blue-700 font-bold" : t.players.length > 4 ? "text-red-600 font-bold" : ""}>{t.players.length}</span>/4</span>
+                                    {(maleCount > 0 || femaleCount > 0) && (
+                                      <span className="text-gray-600">
+                                        ({maleCount > 0 && <span className="text-blue-600">남{maleCount}</span>}
+                                        {maleCount > 0 && femaleCount > 0 && ', '}
+                                        {femaleCount > 0 && <span className="text-pink-600">여{femaleCount}</span>})
+                                      </span>
+                                    )}
+                                    {t.players.length > 4 && <span className="text-red-600 font-bold">정원 초과</span>}
+                                  </div>
+                                  <div className="flex gap-2 mt-1">
+                                    <button className="text-blue-700 underline" onClick={() => handleEdit(t)} aria-label="수정">수정</button>
+                                    <button className="text-red-600 underline" onClick={() => handleDelete(t.id)} aria-label="삭제">삭제</button>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            ))}
+                );
+              })}
           </div>
         )}
+        
+        {/* 티타임별 참가자 배정 컴포넌트 */}
+        <div className="mt-8">
+          <h3 className="text-lg font-bold text-blue-800 mb-4">티타임별 참가자 배정</h3>
+          <div className="bg-yellow-50 p-4 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              티타임별 참가자 배정은 "투어 스케줄 관리" 메뉴에서 이용하실 수 있습니다.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
