@@ -28,10 +28,24 @@ const RoundingTimetableDoc = () => {
   const getTeamType = (players: string[]) => {
     if (!Array.isArray(players) || players.length === 0) return "-";
     const hasMale = players.some(p => p.includes("(남)"));
-    const hasFemale = players.some(p => !p.includes("(남)"));
+    const hasFemale = players.some(p => p.includes("(여)"));
     if (hasMale && hasFemale) return "혼성팀";
     if (hasMale) return "남성팀";
     return "여성팀";
+  };
+
+  // 코스명 가공 함수
+  const formatCourseName = (course: string) => {
+    if (!course) return "";
+    
+    const parts = course.split(' - ');
+    if (parts.length === 2) {
+      const golfCourseName = parts[0].replace(' CC', '').replace(' GC', '').replace(' 골프클럽', '');
+      const courseName = parts[1].replace(' 코스', '').replace('코스', '');
+      return `${golfCourseName} - ${courseName}`;
+    }
+    
+    return course;
   };
 
   useEffect(() => {
@@ -76,7 +90,7 @@ const RoundingTimetableDoc = () => {
             </div>
             {Object.entries(courses).map(([course, groups], courseIndex) => (
               <div key={course} className="mb-4 bg-white rounded-lg shadow overflow-hidden">
-                <div className="bg-blue-600 text-white px-4 py-2 font-medium">{course}</div>
+                <div className="bg-blue-600 text-white px-4 py-2 font-medium">{formatCourseName(course)}</div>
                 <table className="min-w-full">
                   <thead className="bg-gray-50">
                     <tr>
@@ -86,7 +100,7 @@ const RoundingTimetableDoc = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {groups.map((g, groupIndex) => (
+                    {groups.sort((a, b) => a.team_no - b.team_no).map((g, groupIndex) => (
                       <tr key={g.id || groupIndex} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">{formatTimeHHMM(g.tee_time)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -102,11 +116,24 @@ const RoundingTimetableDoc = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {Array.isArray(g.players)
-                            ? g.players.map((player: string, i: number, arr: string[]) => (
-                                <span key={i} className={player.includes('(남)') ? 'text-blue-700 font-medium' : ''}>
-                                  {player}{i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
-                                </span>
-                              ))
+                            ? g.players.map((player: string, i: number, arr: string[]) => {
+                                // 성별 정보 추출
+                                const cleanName = player.replace(/\([남여]\)$/, '');
+                                const gender = player.includes('(남)') ? '남' : player.includes('(여)') ? '여' : '';
+                                
+                                return (
+                                  <span key={i}>
+                                    <span className={
+                                      gender === '남' ? 'text-blue-700 font-medium' : 
+                                      gender === '여' ? 'text-pink-600 font-medium' : ''
+                                    }>
+                                      {cleanName}
+                                      {gender && <span className="text-xs ml-0.5">({gender})</span>}
+                                    </span>
+                                    {i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
+                                  </span>
+                                );
+                              })
                             : g.players}
                         </td>
                       </tr>
@@ -160,4 +187,4 @@ const RoundingTimetableDoc = () => {
   );
 };
 
-export default RoundingTimetableDoc; 
+export default RoundingTimetableDoc;

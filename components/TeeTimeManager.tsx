@@ -360,25 +360,14 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     fetchTeeTimes();
   };
 
-  const getCourseColor = (course: string) => {
-    const lowerCourse = course.toLowerCase();
-    if (lowerCourse.includes('파인')) return 'bg-green-100 border-green-300 text-green-800';
-    if (lowerCourse.includes('레이크')) return 'bg-blue-100 border-blue-300 text-blue-800';
-    if (lowerCourse.includes('힐스')) return 'bg-orange-100 border-orange-300 text-orange-800';
-    return 'bg-gray-100 border-gray-300 text-gray-800';
-  };
-
-  const sortCourses = (courses: string[]) => {
-    const priority = ['파인', '레이크', '힐스'];
-    return courses.sort((a, b) => {
-      const aIndex = priority.findIndex(p => a.toLowerCase().includes(p));
-      const bIndex = priority.findIndex(p => b.toLowerCase().includes(p));
-      
-      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-      if (aIndex !== -1) return -1;
-      if (bIndex !== -1) return 1;
-      return a.localeCompare(b);
-    });
+  const getCourseColor = (course: string, index: number) => {
+    // 인덱스 기반 색상 (선택적 - 필요하면 사용)
+    const colors = [
+      'bg-green-100 border-green-300 text-green-800',
+      'bg-blue-100 border-blue-300 text-blue-800',
+      'bg-orange-100 border-orange-300 text-orange-800',
+    ];
+    return colors[index % colors.length] || 'bg-gray-100 border-gray-300 text-gray-800';
   };
 
   const filteredOptions = participantOptions.filter(p =>
@@ -517,7 +506,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
           <input name="date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="날짜" />
           <select name="course" value={form.course} onChange={e => setForm({ ...form, course: e.target.value })} className="border rounded px-2 py-1 flex-1" required aria-label="코스">
             <option value="">코스 선택</option>
-            {sortCourses(courses).map((c) => (
+            {courses.map((c) => (
               <option key={c} value={c}>{formatCourseName(c)}</option>
             ))}
           </select>
@@ -626,12 +615,12 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                       </button>
                     </div>
                     {Object.entries(courses).length === 0 && <div className="text-gray-400 text-center py-4">코스 없음</div>}
-                    {sortCourses(Object.keys(courses)).map((course) => {
+                    {Object.keys(courses).map((course, courseIndex) => {
                       const teams = courses[course];
                       return (
                         <div key={course} className="mb-4">
                           <div className="text-base font-semibold text-blue-700 mb-1 flex items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded border ${getCourseColor(course)}`}>
+                            <span className={`px-2 py-0.5 rounded border ${getCourseColor(course, courseIndex)}`}>
                               {formatCourseName(course)}
                             </span>
                             <span className="text-xs text-gray-400">{teams.length}조</span>
