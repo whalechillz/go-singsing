@@ -58,23 +58,19 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
       // 일정 정보 가져오기
       const { data: schedules, error: schedulesError } = await supabase
-        .from('tour_daily_schedules')
-        .select(`
-          *,
-          tour_schedule_items (*)
-        `)
+        .from('singsing_schedules')
+        .select('*')
         .eq('tour_id', tourId)
-        .order('day_number');
+        .order('date');
 
       if (schedulesError) throw schedulesError;
 
       // 여행상품 정보 가져오기
-      const productName = tour.golf_course; // 투어의 골프장명으로 상품 찾기
-      if (productName) {
+      if (tour.tour_product_id) {
         const { data: product, error: productError } = await supabase
           .from('tour_products')
           .select('*')
-          .eq('name', productName)
+          .eq('id', tour.tour_product_id)
           .single();
 
         if (!productError && product) {
@@ -82,19 +78,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         }
       }
 
-      // 문서별 공지사항 가져오기
-      const { data: notices, error: noticesError } = await supabase
-        .from('document_notices')
-        .select('*')
-        .eq('tour_id', tourId);
-
-      if (!noticesError && notices) {
-        const noticesByType = notices.reduce((acc, notice) => {
-          acc[notice.document_type] = notice.notices || [];
-          return acc;
-        }, {});
-        setDocumentNotices(noticesByType);
-      }
+      // 문서별 공지사항은 일단 비활성화
+      // TODO: document_notices 테이블이 생성된 후 활성화
+      setDocumentNotices({});
 
       // 데이터 통합
       setTourData({
@@ -132,13 +118,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const fetchRoomAssignments = async () => {
     try {
       const { data: assignments, error } = await supabase
-        .from('room_assignments')
-        .select(`
-          *,
-          participants:singsing_participants!inner(name, phone)
-        `)
+        .from('singsing_participants')
+        .select('*')
         .eq('tour_id', tourId)
-        .order('room_number');
+        .not('room_id', 'is', null)
+        .order('room_id');
 
       if (error) throw error;
       
@@ -153,15 +137,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const fetchTeeTimes = async () => {
     try {
       const { data: teeTimes, error } = await supabase
-        .from('tee_time_assignments')
-        .select(`
-          *,
-          participant:singsing_participants!inner(name, phone)
-        `)
+        .from('singsing_tee_times')
+        .select('*')
         .eq('tour_id', tourId)
         .order('date')
-        .order('time')
-        .order('team');
+        .order('tee_time')
+        .order('team_no');
 
       if (error) throw error;
       
@@ -319,17 +300,16 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div class="section">
       <div class="section-title">일정 안내</div>
       <div class="schedule-section">
-        ${tourData.schedules?.map((schedule: any) => `
+        ${tourData.schedules?.map((schedule: any, idx: number) => `
           <div class="day-schedule">
             <div class="day-title">
-              <div>Day ${schedule.day_number} - ${new Date(schedule.date).toLocaleDateString('ko-KR')}</div>
+              <div>Day ${idx + 1} - ${new Date(schedule.date || schedule.schedule_date).toLocaleDateString('ko-KR')}</div>
             </div>
             <div class="day-content">
-              <ol class="schedule-list">
-                ${schedule.tour_schedule_items?.map((item: any) => `
-                  <li>${item.time ? item.time + ' - ' : ''}${item.content}</li>
-                `).join('') || ''}
-              </ol>
+              <div class="schedule-content">
+                ${schedule.title || ''}
+                ${schedule.description ? `<p>${schedule.description}</p>` : ''}
+              </div>
               
               <div class="meal-info">
                 <div class="meal">
@@ -485,7 +465,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         <Flag className="icon" />
         <div>
           <strong>골프장</strong>
-          <p>${tourData.golf_course}</p>
+          <p>${productData?.golf_course || tourData.golf_course || ''}</p>
         </div>
       </div>
       <div class="info-item">
@@ -531,10 +511,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   // 객실 배정표 HTML 생성
   const generateRoomAssignmentHTML = (assignments: any[]) => {
-    const roomsByType = assignments.reduce((acc, assignment) => {
-      const type = assignment.room_type || '일반';
-      if (!acc[type]) acc[type] = [];
-      acc[type].push(assignment);
+    const roomsByRoom = assignments.reduce((acc, participant) => {
+      const roomId = participant.room_id;
+      if (!acc[roomId]) acc[roomId] = [];
+      acc[roomId].push(participant);
       return acc;
     }, {});
 
@@ -558,25 +538,25 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       <p>${tourData.accommodation}</p>
     </div>
     
-    ${Object.entries(roomsByType).map(([type, rooms]: [string, any]) => `
+    ${Object.entries(roomsByRoom).map(([roomId, participants]: [string, any]) => `
       <div class="room-section">
-        <h2>${type}룸</h2>
+        <h2>객실 ${roomId}</h2>
         <table>
           <thead>
             <tr>
-              <th>객실번호</th>
-              <th>투숙객</th>
+              <th>성명</th>
               <th>연락처</th>
+              <th>팀</th>
               <th>비고</th>
             </tr>
           </thead>
           <tbody>
-            ${rooms.map((room: any) => `
+            ${participants.map((participant: any) => `
               <tr>
-                <td>${room.room_number}</td>
-                <td>${room.participants?.name || '-'}</td>
-                <td>${room.participants?.phone || '-'}</td>
-                <td>${room.notes || '-'}</td>
+                <td>${participant.name}</td>
+                <td>${participant.phone || '-'}</td>
+                <td>${participant.team_name || '-'}</td>
+                <td>${participant.note || '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -646,11 +626,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <tbody>
             ${times.map((teeTime: any) => `
               <tr>
-                <td>${teeTime.time}</td>
+                <td>${teeTime.tee_time}</td>
                 <td>${teeTime.course}</td>
-                <td>${teeTime.team}</td>
-                <td>${teeTime.participant?.name || '-'}</td>
-                <td>${teeTime.participant?.phone || '-'}</td>
+                <td>${teeTime.team_no}</td>
+                <td>${teeTime.players ? JSON.parse(teeTime.players).join(', ') : '-'}</td>
+                <td>-</td>
               </tr>
             `).join('')}
           </tbody>
@@ -786,8 +766,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; border-radius: 8px 8px 0 0; }
     .day-content { padding: 15px; }
-    .schedule-list { padding-left: 20px; margin-bottom: 15px; }
-    .schedule-list li { margin-bottom: 8px; color: #4a5568; font-size: 14px; }
+    .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
+    .schedule-content p { margin-top: 8px; }
     .meal-info { display: flex; background: #edf2f7; padding: 10px; border-radius: 6px; justify-content: space-around; }
     .meal { text-align: center; }
     .meal-status { font-weight: bold; margin-top: 4px; }
