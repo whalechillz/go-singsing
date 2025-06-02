@@ -557,6 +557,7 @@ export interface Database {
           usage_locker: string | null
           usage_tour: string | null
           courses: string[] | null
+          golf_courses: { name: string; courses: string[] }[] | null
         }
         Insert: {
           id?: string

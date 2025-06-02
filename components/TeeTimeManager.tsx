@@ -20,6 +20,11 @@ type Participant = {
   gender?: string;
 };
 
+type GolfCourse = {
+  name: string;
+  courses: string[];
+};
+
 const initialForm = {
   date: "",
   course: "",
@@ -48,20 +53,30 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   // 참가자 자동완성 데이터 불러오기 (gender 포함)
   useEffect(() => {
     const fetchParticipants = async () => {
-      const { data, error } = await supabase.from("singsing_participants").select("id, name, gender").eq("tour_id", tourId);
-      if (!error && data) {
-        // 성별 정보 추가 (이름에서 추측)
-        const participantsWithGender = data.map(p => ({
-          ...p,
-          gender: p.gender || (p.name.includes('(남)') ? '남' : p.name.includes('(여)') ? '여' : null)
-        }));
-        setParticipants(participantsWithGender);
+      try {
+        const { data, error } = await supabase
+          .from("singsing_participants")
+          .select("id, name, gender")
+          .eq("tour_id", tourId);
+        
+        if (!error && data) {
+          // 성별 정보를 DB에서 가져오고, 없을 경우에만 이름에서 추측
+          const participantsWithGender = data.map(p => ({
+            ...p,
+            gender: p.gender || undefined
+          }));
+          setParticipants(participantsWithGender);
+        }
+      } catch (err) {
+        console.error("Failed to fetch participants:", err);
+        setParticipants([]);
       }
     };
+    
     if (tourId) fetchParticipants();
   }, [tourId]);
 
-  // 투어의 tour_product_id → courses 배열 fetch
+  // 투어의 tour_product_id → golf_courses 또는 courses 배열 fetch
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -78,25 +93,31 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
           return;
         }
         
-        // 2. tour_products에서 golf_courses 정보 조회
+        // 2. tour_products에서 golf_courses 또는 courses 정보 조회
         const { data: product, error: prodErr } = await supabase
           .from("tour_products")
-          .select("golf_courses")
+          .select("golf_courses, courses")
           .eq("id", tour.tour_product_id)
           .single();
         
-        if (!prodErr && product?.golf_courses) {
-          // golf_courses는 보통 [{name: "골프장명", courses: ["코스1", "코스2"]}] 형태
+        if (!prodErr && product) {
           const courseList: string[] = [];
           
-          if (Array.isArray(product.golf_courses)) {
-            product.golf_courses.forEach((gc: any) => {
+          // golf_courses 형태로 저장된 경우
+          if (product.golf_courses && Array.isArray(product.golf_courses)) {
+            product.golf_courses.forEach((gc: GolfCourse) => {
               if (gc.courses && Array.isArray(gc.courses)) {
                 gc.courses.forEach((courseName: string) => {
                   // "골프장명 - 코스명" 형태로 저장
                   courseList.push(`${gc.name} - ${courseName}`);
                 });
               }
+            });
+          }
+          // courses 배열로 직접 저장된 경우 (레거시 지원)
+          else if (product.courses && Array.isArray(product.courses)) {
+            product.courses.forEach((courseName: string) => {
+              courseList.push(courseName);
             });
           }
           
@@ -118,10 +139,29 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   const fetchTeeTimes = async () => {
     setLoading(true);
     setError("");
-    const { data, error } = await supabase.from("singsing_tee_times").select("*").eq("tour_id", tourId).order("date").order("course").order("team_no");
-    if (error) setError(error.message);
-    else setTeeTimes((data || []).map((t: any) => ({ ...t, players: Array.isArray(t.players) ? t.players : [] })));
-    setLoading(false);
+    
+    try {
+      const { data, error } = await supabase
+        .from("singsing_tee_times")
+        .select("*")
+        .eq("tour_id", tourId)
+        .order("date")
+        .order("course")
+        .order("team_no");
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        setTeeTimes((data || []).map((t: any) => ({ 
+          ...t, 
+          players: Array.isArray(t.players) ? t.players : [] 
+        })));
+      }
+    } catch (err) {
+      setError("티타임 정보를 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -138,10 +178,34 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   }, [form.date, form.course, teeTimes]);
 
   // 참가자 옵션 변환
-  const participantOptions = participants.map(p => ({ id: p.id, name: p.name, gender: p.gender }));
+  const participantOptions = participants.map(p => ({ 
+    id: p.id, 
+    name: p.name, 
+    gender: p.gender 
+  }));
+
+  // 중복 참가자 체크 함수
+  const checkDuplicateAssignment = (participantName: string, date: string, excludeTeeTimeId?: string) => {
+    const duplicates = teeTimes.filter(t => 
+      t.date === date && 
+      t.id !== excludeTeeTimeId &&
+      t.players.some(p => p.includes(participantName))
+    );
+    return duplicates;
+  };
 
   const handleSelectParticipant = (p: { id: string; name: string; gender?: string }) => {
     if (selectedParticipants.find(sp => sp.id === p.id)) return;
+    
+    // 중복 체크
+    if (form.date) {
+      const duplicates = checkDuplicateAssignment(p.name, form.date, editingId || undefined);
+      if (duplicates.length > 0) {
+        const confirmMsg = `${p.name}님은 이미 ${form.date}에 ${duplicates[0].course} ${duplicates[0].team_no}조에 배정되어 있습니다.\n그래도 추가하시겠습니까?`;
+        if (!window.confirm(confirmMsg)) return;
+      }
+    }
+    
     setSelectedParticipants([...selectedParticipants, p]);
   };
 
@@ -152,44 +216,52 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!form.date || !form.course || !form.tee_time || selectedParticipants.length === 0) return;
-    const playersArr = selectedParticipants.map(p => p.name + (p.gender ? `(${p.gender})` : ""));
-    if (editingId) {
-      const { error } = await supabase.from("singsing_tee_times").update({
-        tour_id: tourId,
-        date: form.date,
-        course: form.course,
-        team_no: Number(form.team_no),
-        tee_time: form.tee_time,
-        players: playersArr,
-      }).eq("id", editingId);
-      if (error) setError(error.message);
-      else {
+    
+    if (!form.date || !form.course || !form.tee_time || selectedParticipants.length === 0) {
+      setError("모든 필드를 입력해주세요.");
+      return;
+    }
+    
+    // 플레이어 배열 생성 (성별 정보 포함)
+    const playersArr = selectedParticipants.map(p => 
+      p.name + (p.gender ? `(${p.gender})` : "")
+    );
+    
+    const teeTimeData = {
+      tour_id: tourId,
+      date: form.date,
+      course: form.course,
+      team_no: Number(form.team_no),
+      tee_time: form.tee_time,
+      players: playersArr,
+    };
+    
+    try {
+      if (editingId) {
+        const { error } = await supabase
+          .from("singsing_tee_times")
+          .update(teeTimeData)
+          .eq("id", editingId);
+        
+        if (error) throw error;
+        
         setEditingId(null);
         setForm({ ...initialForm });
         setSelectedParticipants([]);
         fetchTeeTimes();
-      }
-    } else {
-      const filtered = teeTimes.filter(t => t.date === form.date && t.course === form.course);
-      const maxTeamNo = filtered.length > 0 ? Math.max(...filtered.map(t => t.team_no)) : 0;
-      const nextTeamNo = maxTeamNo + 1;
-      const { error } = await supabase.from("singsing_tee_times").insert([
-        {
-          tour_id: tourId,
-          date: form.date,
-          course: form.course,
-          team_no: Number(form.team_no) || nextTeamNo,
-          tee_time: form.tee_time,
-          players: playersArr,
-        },
-      ]);
-      if (error) setError(error.message);
-      else {
+      } else {
+        const { error } = await supabase
+          .from("singsing_tee_times")
+          .insert([teeTimeData]);
+        
+        if (error) throw error;
+        
         setForm({ ...initialForm });
         setSelectedParticipants([]);
         fetchTeeTimes();
       }
+    } catch (err: any) {
+      setError(err.message || "저장 중 오류가 발생했습니다.");
     }
   };
 
@@ -208,39 +280,59 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
       tee_time: t.tee_time,
       players: t.players.join(" · "),
     });
+    
     // 선택된 참가자 복원
     const selectedFromPlayers = t.players.map(playerName => {
-      const cleanName = playerName.replace(/\([남여]\)$/, '');
+      const cleanName = playerName.replace(/\([남여]\)$/, '').trim();
       const participant = participants.find(p => p.name === cleanName);
+      
       if (participant) {
         return participant;
       }
-      return { id: playerName, name: cleanName, gender: playerName.includes('(남)') ? '남' : playerName.includes('(여)') ? '여' : undefined };
+      
+      // 참가자 목록에 없는 경우 (외부 참가자 등)
+      const genderMatch = playerName.match(/\(([남여])\)$/);
+      return { 
+        id: cleanName, 
+        name: cleanName, 
+        gender: genderMatch ? genderMatch[1] : undefined 
+      };
     });
+    
     setSelectedParticipants(selectedFromPlayers);
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    const { error } = await supabase.from("singsing_tee_times").delete().eq("id", id);
-    if (error) setError(error.message);
-    else fetchTeeTimes();
+    
+    try {
+      const { error } = await supabase
+        .from("singsing_tee_times")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+      fetchTeeTimes();
+    } catch (err: any) {
+      setError(err.message || "삭제 중 오류가 발생했습니다.");
+    }
   };
 
   // 날짜별 전체 삭제
   const handleDeleteByDate = async (date: string) => {
     if (!window.confirm(`${date} 날짜의 모든 티타임을 삭제하시겠습니까?`)) return;
     
-    const { error } = await supabase
-      .from("singsing_tee_times")
-      .delete()
-      .eq("tour_id", tourId)
-      .eq("date", date);
-    
-    if (error) {
-      setError(error.message);
-    } else {
+    try {
+      const { error } = await supabase
+        .from("singsing_tee_times")
+        .delete()
+        .eq("tour_id", tourId)
+        .eq("date", date);
+      
+      if (error) throw error;
       fetchTeeTimes();
+    } catch (err: any) {
+      setError(err.message || "삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -257,6 +349,11 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     
     const intervalMinutes = parseInt(interval);
     const teeTimeCount = parseInt(count);
+    
+    if (isNaN(intervalMinutes) || isNaN(teeTimeCount)) {
+      alert("간격과 개수는 숫자로 입력해주세요.");
+      return;
+    }
     
     // 기존 티타임 확인
     const existing = teeTimes.filter(t => t.date === form.date && t.course === form.course);
@@ -288,35 +385,67 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
       currentTime = `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
     }
     
-    const { error } = await supabase
-      .from("singsing_tee_times")
-      .insert(newTeeTimes);
-    
-    if (error) {
-      setError(error.message);
-    } else {
+    try {
+      const { error } = await supabase
+        .from("singsing_tee_times")
+        .insert(newTeeTimes);
+      
+      if (error) throw error;
+      
       fetchTeeTimes();
       alert(`${teeTimeCount}개의 티타임이 생성되었습니다.`);
+    } catch (err: any) {
+      setError(err.message || "일괄 생성 중 오류가 발생했습니다.");
     }
   };
 
   // 참가자 이동 처리
   const handleMovePlayer = async () => {
     if (!moveTarget || !moveToTeam) return;
-    // from 조, to 조 찾기
-    const fromTee = teeTimes.find(t => t.id === moveTarget.fromId);
-    const toTee = teeTimes.find(t => t.id === moveToTeam);
-    if (!fromTee || !toTee) return;
-    // from 조에서 참가자 삭제
-    const newFromPlayers = fromTee.players.filter(p => p !== moveTarget.player);
-    // to 조에 참가자 추가
-    const newToPlayers = [...toTee.players, moveTarget.player];
-    // DB 업데이트
-    await supabase.from("singsing_tee_times").update({ players: newFromPlayers }).eq("id", fromTee.id);
-    await supabase.from("singsing_tee_times").update({ players: newToPlayers }).eq("id", toTee.id);
-    setMoveTarget(null);
-    setMoveToTeam("");
-    fetchTeeTimes();
+    
+    try {
+      // from 조, to 조 찾기
+      const fromTee = teeTimes.find(t => t.id === moveTarget.fromId);
+      const toTee = teeTimes.find(t => t.id === moveToTeam);
+      
+      if (!fromTee || !toTee) {
+        setError("이동할 티타임을 찾을 수 없습니다.");
+        return;
+      }
+      
+      // 중복 체크
+      const playerName = moveTarget.player.replace(/\([남여]\)$/, '').trim();
+      if (toTee.players.some(p => p.includes(playerName))) {
+        alert(`${playerName}님은 이미 ${toTee.team_no}조에 있습니다.`);
+        return;
+      }
+      
+      // from 조에서 참가자 삭제
+      const newFromPlayers = fromTee.players.filter(p => p !== moveTarget.player);
+      // to 조에 참가자 추가
+      const newToPlayers = [...toTee.players, moveTarget.player];
+      
+      // DB 업데이트
+      const { error: fromError } = await supabase
+        .from("singsing_tee_times")
+        .update({ players: newFromPlayers })
+        .eq("id", fromTee.id);
+      
+      if (fromError) throw fromError;
+      
+      const { error: toError } = await supabase
+        .from("singsing_tee_times")
+        .update({ players: newToPlayers })
+        .eq("id", toTee.id);
+      
+      if (toError) throw toError;
+      
+      setMoveTarget(null);
+      setMoveToTeam("");
+      fetchTeeTimes();
+    } catch (err: any) {
+      setError(err.message || "참가자 이동 중 오류가 발생했습니다.");
+    }
   };
 
   // 코스명 가공 함수 개선
@@ -368,7 +497,7 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
 
   // 참가자 멀티 셀렉트: 전체 선택/해제, 성별 그룹핑
   const filteredOptions = participantOptions.filter(p =>
-    p.name.includes(participantSearch)
+    p.name.toLowerCase().includes(participantSearch.toLowerCase())
   );
 
   const groupedOptions = filteredOptions.reduce((acc, p) => {
@@ -433,7 +562,10 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
     // 전체 배정된 참가자 (중복 제거)
     const uniquePlayers = new Set<string>();
     teeTimes.forEach(t => {
-      t.players.forEach(p => uniquePlayers.add(p));
+      t.players.forEach(p => {
+        const cleanName = p.replace(/\([남여]\)$/, '').trim();
+        uniquePlayers.add(cleanName);
+      });
     });
     stats.assignedParticipants = uniquePlayers.size;
 
@@ -459,11 +591,15 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                 <button
                   onClick={async () => {
                     if (window.confirm(`선택한 ${selectedTeeTimes.length}개의 티타임을 삭제하시겠습니까?`)) {
-                      for (const id of selectedTeeTimes) {
-                        await supabase.from("singsing_tee_times").delete().eq("id", id);
+                      try {
+                        for (const id of selectedTeeTimes) {
+                          await supabase.from("singsing_tee_times").delete().eq("id", id);
+                        }
+                        setSelectedTeeTimes([]);
+                        fetchTeeTimes();
+                      } catch (err: any) {
+                        setError(err.message || "선택 삭제 중 오류가 발생했습니다.");
                       }
-                      setSelectedTeeTimes([]);
-                      fetchTeeTimes();
                     }
                   }}
                   className="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 text-sm"
@@ -613,84 +749,4 @@ const TeeTimeManager: React.FC<Props> = ({ tourId }) => {
                                         }}
                                         className="w-4 h-4"
                                       />
-                                      <div className="font-bold text-blue-800 text-lg">{t.team_no}조</div>
-                                    </div>
-                                    <div className="text-red-600 font-bold text-base">{formatTimeHHMM(t.tee_time)}</div>
-                                  </div>
-                                  <div className="flex flex-wrap gap-2 items-center mb-1">
-                                    {t.players.length === 0 && <span className="text-gray-400">참가자 없음</span>}
-                                    {t.players.map((p, i, arr) => (
-                                      <span key={i} className={p.includes("(남)") ? "text-blue-700 font-medium" : p.includes("(여)") ? "text-pink-600 font-medium" : ""}>
-                                        {p}
-                                        <button
-                                          type="button"
-                                          className="ml-1 text-xs text-green-700 underline"
-                                          onClick={() => setMoveTarget({ player: p, fromId: t.id })}
-                                          aria-label="이동"
-                                        >이동</button>
-                                        {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && (
-                                          <select
-                                            className="ml-1 border rounded px-1 py-0.5 text-xs"
-                                            value={moveToTeam}
-                                            onChange={e => setMoveToTeam(e.target.value)}
-                                          >
-                                            <option value="">조 선택</option>
-                                            {teams.filter(tt => tt.id !== t.id).map(tt => (
-                                              <option key={tt.id} value={tt.id}>{tt.team_no}조</option>
-                                            ))}
-                                          </select>
-                                        )}
-                                        {moveTarget && moveTarget.player === p && moveTarget.fromId === t.id && moveToTeam && (
-                                          <button
-                                            type="button"
-                                            className="ml-1 text-xs text-blue-700 underline"
-                                            onClick={handleMovePlayer}
-                                          >이동확정</button>
-                                        )}
-                                        {i < arr.length - 1 && <span className="mx-1 text-gray-400">·</span>}
-                                      </span>
-                                    ))}
-                                  </div>
-                                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                    <span>인원: <span className={t.players.length === 4 ? "text-blue-700 font-bold" : t.players.length > 4 ? "text-red-600 font-bold" : ""}>{t.players.length}</span>/4</span>
-                                    {(maleCount > 0 || femaleCount > 0) && (
-                                      <span className="text-gray-600">
-                                        ({maleCount > 0 && <span className="text-blue-600">남{maleCount}</span>}
-                                        {maleCount > 0 && femaleCount > 0 && ', '}
-                                        {femaleCount > 0 && <span className="text-pink-600">여{femaleCount}</span>})
-                                      </span>
-                                    )}
-                                    {t.players.length > 4 && <span className="text-red-600 font-bold">정원 초과</span>}
-                                  </div>
-                                  <div className="flex gap-2 mt-1">
-                                    <button className="text-blue-700 underline" onClick={() => handleEdit(t)} aria-label="수정">수정</button>
-                                    <button className="text-red-600 underline" onClick={() => handleDelete(t.id)} aria-label="삭제">삭제</button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-          </div>
-        )}
-        
-        {/* 티타임별 참가자 배정 컴포넌트 */}
-        <div className="mt-8">
-          <h3 className="text-lg font-bold text-blue-800 mb-4">티타임별 참가자 배정</h3>
-          <div className="bg-yellow-50 p-4 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              티타임별 참가자 배정은 "투어 스케줄 관리" 메뉴에서 이용하실 수 있습니다.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default TeeTimeManager;
+                                      <div className="font-bold text-blue-800 text-lg">{t.team_no}
