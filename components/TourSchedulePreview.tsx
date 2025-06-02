@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Download, Share2, Printer, Calendar, MapPin, Phone, Clock, Users, FileText, Eye, Home, Car, Golf, Hotel } from 'lucide-react';
+import { Download, Share2, Printer, Calendar, MapPin, Phone, Clock, Users, FileText, Eye, Home, Car, Flag, Building } from 'lucide-react';
 
 interface TourSchedulePreviewProps {
   tourId: string;
@@ -482,14 +482,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     
     <div class="quick-info">
       <div class="info-item">
-        <Golf className="icon" />
+        <Flag className="icon" />
         <div>
           <strong>골프장</strong>
           <p>${tourData.golf_course}</p>
         </div>
       </div>
       <div class="info-item">
-        <Hotel className="icon" />
+        <Building className="icon" />
         <div>
           <strong>숙소</strong>
           <p>${tourData.accommodation}</p>
