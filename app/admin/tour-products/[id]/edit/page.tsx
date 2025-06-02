@@ -323,6 +323,45 @@ const TourProductEditPage = () => {
                 </div>
               )}
             </div>
+
+            {/* 코스명 - 골프장 정보 아래로 이동 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                코스명(여러 개)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  value={courseInput}
+                  onChange={handleCourseInputChange}
+                  onKeyDown={handleCourseInputKeyDown}
+                  placeholder="코스명 입력 후 Enter"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCourse}
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                >
+                  추가
+                </button>
+              </div>
+              {form.courses.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {form.courses.map((c, i) => (
+                    <span key={i} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                      {c}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCourse(i)}
+                        className="ml-2 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 포함/불포함 사항 */}
@@ -481,44 +520,6 @@ const TourProductEditPage = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                코스명(여러 개)
-              </label>
-              <div className="flex gap-2">
-                <input
-                  value={courseInput}
-                  onChange={handleCourseInputChange}
-                  onKeyDown={handleCourseInputKeyDown}
-                  placeholder="코스명 입력 후 Enter"
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddCourse}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-                >
-                  추가
-                </button>
-              </div>
-              {form.courses.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {form.courses.map((c, i) => (
-                    <span key={i} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                      {c}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCourse(i)}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 

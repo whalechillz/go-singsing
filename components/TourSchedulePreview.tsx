@@ -288,15 +288,29 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       ` : ''}
     </div>
 
-    <!-- 일반 공지사항 (여행상품) -->
-    ${productData?.general_notices?.length > 0 ? `
+    <!-- 일반 공지사항 (여행상품) - 위치 수정 -->
+    ${productData?.general_notices && productData.general_notices.length > 0 ? `
       <div class="section">
         <div class="section-title">이용 안내</div>
         <div class="notice-box">
           <ul class="notice-list">
             ${productData.general_notices.map((notice: any) => `
-              <li>${notice.content}</li>
+              <li>${notice.content || notice}</li>
             `).join('')}
+          </ul>
+        </div>
+      </div>
+    ` : productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_locker || productData?.usage_bus || productData?.usage_tour ? `
+      <div class="section">
+        <div class="section-title">이용 안내</div>
+        <div class="notice-box">
+          <ul class="notice-list">
+            ${productData.usage_round ? `<li>라운딩 규정: ${productData.usage_round}</li>` : ''}
+            ${productData.usage_hotel ? `<li>숙소 이용: ${productData.usage_hotel}</li>` : ''}
+            ${productData.usage_meal ? `<li>식사 안내: ${productData.usage_meal}</li>` : ''}
+            ${productData.usage_locker ? `<li>락카 이용: ${productData.usage_locker}</li>` : ''}
+            ${productData.usage_bus ? `<li>버스 이용: ${productData.usage_bus}</li>` : ''}
+            ${productData.usage_tour ? `<li>관광지 투어: ${productData.usage_tour}</li>` : ''}
           </ul>
         </div>
       </div>
