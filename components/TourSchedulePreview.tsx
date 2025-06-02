@@ -288,6 +288,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       ` : ''}
     </div>
 
+    <!-- 라운딩 주의사항 (여행상품) -->
+    ${productData?.rounding_notices ? `
+      <div class="section">
+        <div class="section-title">라운딩 주의사항</div>
+        <div class="notice-box">
+          <ul class="notice-list">
+            ${productData.rounding_notices.split('\n').map((line: string) => 
+              line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
+            ).filter(Boolean).join('')}
+          </ul>
+        </div>
+      </div>
+    ` : ''}
+
     <!-- 일반 공지사항 (여행상품) - 위치 수정 -->
     ${productData?.general_notices && productData.general_notices.length > 0 ? `
       <div class="section">
@@ -370,6 +384,51 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         `).join('') || ''}
       </div>
     </div>
+
+    <!-- 이용 안내 (여행상품) -->
+    ${productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_locker || productData?.usage_bus || productData?.usage_tour ? `
+      <div class="section">
+        <div class="section-title">이용 안내</div>
+        <div class="usage-section">
+          ${productData.usage_round ? `
+            <div class="usage-item">
+              <div class="usage-title">라운딩 규정</div>
+              <div class="usage-content">${productData.usage_round.replace(/\n/g, '<br>')}</div>
+            </div>
+          ` : ''}
+          ${productData.usage_hotel ? `
+            <div class="usage-item">
+              <div class="usage-title">숙소 이용</div>
+              <div class="usage-content">${productData.usage_hotel.replace(/\n/g, '<br>')}</div>
+            </div>
+          ` : ''}
+          ${productData.usage_meal ? `
+            <div class="usage-item">
+              <div class="usage-title">식사 안내</div>
+              <div class="usage-content">${productData.usage_meal.replace(/\n/g, '<br>')}</div>
+            </div>
+          ` : ''}
+          ${productData.usage_locker ? `
+            <div class="usage-item">
+              <div class="usage-title">락카 이용</div>
+              <div class="usage-content">${productData.usage_locker.replace(/\n/g, '<br>')}</div>
+            </div>
+          ` : ''}
+          ${productData.usage_bus ? `
+            <div class="usage-item">
+              <div class="usage-title">버스 이용</div>
+              <div class="usage-content">${productData.usage_bus.replace(/\n/g, '<br>')}</div>
+            </div>
+          ` : ''}
+          ${productData.usage_tour ? `
+            <div class="usage-item">
+              <div class="usage-title">관광지 투어</div>
+              <div class="usage-content">${productData.usage_tour.replace(/\n/g, '<br>')}</div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    ` : ''}
 
     <!-- 문서별 하단 내용 -->
     ${documentFooters.tour_schedule?.['락카 이용 안내'] ? `
@@ -809,6 +868,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .notice-list li:before { content: "•"; margin-right: 8px; color: #4299e1; }
     .notice-item { margin-bottom: 10px; font-size: 14px; }
     .notice-item strong { color: #2b6cb0; }
+    .usage-section { margin: 15px; }
+    .usage-item { margin-bottom: 15px; padding: 12px 15px; background-color: #f8f9fa; border-radius: 6px; }
+    .usage-title { font-weight: bold; color: #2b6cb0; margin-bottom: 6px; font-size: 14px; }
+    .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; }
     .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; border-radius: 8px 8px 0 0; }
     .day-content { padding: 15px; }
