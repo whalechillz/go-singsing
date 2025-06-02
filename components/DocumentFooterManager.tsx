@@ -22,7 +22,8 @@ const DOCUMENT_SECTIONS = [
     document_type: 'rounding_timetable',
     document_name: '라운딩 시간표',
     sections: [
-      { key: 'round_notice', title: '라운딩 주의사항', order: 1 }
+      { key: 'round_notice', title: '라운딩 주의사항', order: 1 },
+      { key: 'locker_usage', title: '락카 이용 안내', order: 2 }
     ]
   },
   {
@@ -38,13 +39,6 @@ const DOCUMENT_SECTIONS = [
     sections: [
       { key: 'room_usage', title: '객실 이용 안내', order: 1 },
       { key: 'meal_info', title: '식사 안내', order: 2 }
-    ]
-  },
-  {
-    document_type: 'tour_schedule',
-    document_name: '전체 일정표', 
-    sections: [
-      { key: 'locker_usage', title: '락카 이용 안내', order: 1 }
     ]
   }
 ];
@@ -127,7 +121,7 @@ export default function DocumentFooterManager({ tourId }: DocumentFooterManagerP
 • 미이용 시 환불 불가
 • 패키지 외 추가 식사는 당일 결제 필수`,
       
-      'tour_schedule_locker_usage': `• 2일 차부터 제공, 프론트 데스크에서 개별 배정
+      'rounding_timetable_locker_usage': `• 2일 차부터 제공, 프론트 데스크에서 개별 배정
 • 매일 새로운 번호로 배정, 사용 시마다 수령 필요
 • 장시간 보관 불가, 분실 시 책임지지 않음`
     };

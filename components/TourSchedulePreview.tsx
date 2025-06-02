@@ -156,9 +156,21 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const fetchTeeTimes = async () => {
     try {
+      // 티타임 정보와 플레이어 정보를 함께 가져오기
       const { data: teeTimes, error } = await supabase
         .from('singsing_tee_times')
-        .select('*')
+        .select(`
+          *,
+          singsing_tee_time_players (
+            *,
+            singsing_participants (
+              id,
+              name,
+              phone,
+              team_name
+            )
+          )
+        `)
         .eq('tour_id', tourId)
         .order('date')
         .order('tee_time')
@@ -322,7 +334,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             ${productData.usage_round ? `<li>라운딩 규정: ${productData.usage_round}</li>` : ''}
             ${productData.usage_hotel ? `<li>숙소 이용: ${productData.usage_hotel}</li>` : ''}
             ${productData.usage_meal ? `<li>식사 안내: ${productData.usage_meal}</li>` : ''}
-            ${productData.usage_locker ? `<li>락카 이용: ${productData.usage_locker}</li>` : ''}
             ${productData.usage_bus ? `<li>버스 이용: ${productData.usage_bus}</li>` : ''}
             ${productData.usage_tour ? `<li>관광지 투어: ${productData.usage_tour}</li>` : ''}
           </ul>
@@ -385,8 +396,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     </div>
 
-    <!-- 이용 안내 (여행상품) -->
-    ${productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_locker || productData?.usage_bus || productData?.usage_tour ? `
+    <!-- 이용 안내 (여행상품) - 락카 이용 제외 -->
+    ${productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour ? `
       <div class="section">
         <div class="section-title">이용 안내</div>
         <div class="usage-section">
@@ -408,12 +419,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <div class="usage-content">${productData.usage_meal.replace(/\n/g, '<br>')}</div>
             </div>
           ` : ''}
-          ${productData.usage_locker ? `
-            <div class="usage-item">
-              <div class="usage-title">락카 이용</div>
-              <div class="usage-content">${productData.usage_locker.replace(/\n/g, '<br>')}</div>
-            </div>
-          ` : ''}
           ${productData.usage_bus ? `
             <div class="usage-item">
               <div class="usage-title">버스 이용</div>
@@ -426,20 +431,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <div class="usage-content">${productData.usage_tour.replace(/\n/g, '<br>')}</div>
             </div>
           ` : ''}
-        </div>
-      </div>
-    ` : ''}
-
-    <!-- 문서별 하단 내용 -->
-    ${documentFooters.tour_schedule?.['락카 이용 안내'] ? `
-      <div class="section">
-        <div class="notice-box">
-          <div class="notice-title">락카 이용 안내</div>
-          <ul class="notice-list">
-            ${documentFooters.tour_schedule['락카 이용 안내'].split('\n').map((line: string) => 
-              `<li>${line.replace('•', '').trim()}</li>`
-            ).join('')}
-          </ul>
         </div>
       </div>
     ` : ''}
@@ -719,11 +710,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         <table>
           <thead>
             <tr>
-              <th>시간</th>
-              <th>코스</th>
-              <th>팀</th>
+              <th width="80">시간</th>
+              <th width="80">코스</th>
+              <th width="60">팀</th>
               <th>플레이어</th>
-              <th>연락처</th>
             </tr>
           </thead>
           <tbody>
@@ -731,9 +721,18 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <tr>
                 <td>${teeTime.tee_time}</td>
                 <td>${teeTime.course}</td>
-                <td>${teeTime.team_no}</td>
-                <td>${teeTime.players ? JSON.parse(teeTime.players).join(', ') : '-'}</td>
-                <td>-</td>
+                <td>${teeTime.team_no}팀</td>
+                <td class="players-cell">
+                  ${teeTime.singsing_tee_time_players && teeTime.singsing_tee_time_players.length > 0 ? 
+                    teeTime.singsing_tee_time_players
+                      .sort((a: any, b: any) => (a.order_no || 0) - (b.order_no || 0))
+                      .map((player: any) => 
+                        player.singsing_participants ? 
+                          `<span class="player-name">${player.singsing_participants.name}</span>` : ''
+                      ).join(', ') :
+                    (teeTime.players ? JSON.parse(teeTime.players).join(', ') : '-')
+                  }
+                </td>
               </tr>
             `).join('')}
           </tbody>
@@ -741,13 +740,29 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     `).join('')}
     
-    ${documentFooters.rounding_timetable?.['라운딩 주의사항'] ? `
+    ${documentFooters.rounding_timetable?.['라운딩 주의사항'] || productData?.rounding_notices ? `
       <div class="notices">
-        <h3>라운드 안내</h3>
+        <h3>라운딩 주의사항</h3>
         <ul>
-          ${documentFooters.rounding_timetable['라운딩 주의사항'].split('\n').map((line: string) => `
-            <li>${line.replace('•', '').trim()}</li>
-          `).join('')}
+          ${documentFooters.rounding_timetable?.['라운딩 주의사항'] ? 
+            documentFooters.rounding_timetable['라운딩 주의사항'].split('\n').map((line: string) => 
+              line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
+            ).filter(Boolean).join('') :
+            productData.rounding_notices.split('\n').map((line: string) => 
+              line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
+            ).filter(Boolean).join('')
+          }
+        </ul>
+      </div>
+    ` : ''}
+    
+    ${documentFooters.rounding_timetable?.['락카 이용 안내'] ? `
+      <div class="notices">
+        <h3>락카 이용 안내</h3>
+        <ul>
+          ${documentFooters.rounding_timetable['락카 이용 안내'].split('\n').map((line: string) => 
+            line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
+          ).filter(Boolean).join('')}
         </ul>
       </div>
     ` : ''}
@@ -993,20 +1008,25 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     return `
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; padding: 30px; }
+    .container { max-width: 900px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; padding: 30px; }
     .header { text-align: center; margin-bottom: 30px; }
     .header h1 { font-size: 24px; color: #2c5282; margin-bottom: 10px; }
-    .header p { color: #718096; }
+    .header p { color: #718096; margin-bottom: 5px; }
     .tee-time-section { margin-bottom: 30px; }
-    .tee-time-section h2 { font-size: 18px; color: #2c5282; margin-bottom: 15px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #DEE2E6; padding: 10px; text-align: center; }
-    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; }
-    .notices { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; }
+    .tee-time-section h2 { font-size: 18px; color: #2c5282; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { border: 1px solid #DEE2E6; padding: 10px 8px; text-align: center; }
+    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; font-size: 14px; }
+    td { font-size: 14px; }
+    .players-cell { text-align: left; padding-left: 15px; }
+    .player-name { margin-right: 5px; }
+    .notices { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 3px solid #4299e1; }
     .notices h3 { font-size: 16px; color: #2c5282; margin-bottom: 10px; }
-    .notices p { margin-bottom: 8px; color: #4a5568; }
-    .footer { text-align: center; margin-top: 30px; color: #718096; }
-    @media print { body { padding: 0; } .container { box-shadow: none; } }
+    .notices ul { list-style: none; }
+    .notices li { padding: 4px 0; color: #4A5568; font-size: 14px; }
+    .notices li:before { content: "•"; margin-right: 8px; color: #4299e1; }
+    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 14px; }
+    @media print { body { padding: 0; } .container { box-shadow: none; max-width: 100%; } }
     `;
   };
 
