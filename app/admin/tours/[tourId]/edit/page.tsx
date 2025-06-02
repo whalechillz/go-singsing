@@ -155,7 +155,9 @@ const TourEditPage: React.FC = () => {
           golf_reservation_mobile: tourData.golf_reservation_mobile || "",
           
           // 투어별 특수 공지사항
-          special_notices: tourData.special_notices || "",
+          special_notices: typeof tourData.special_notices === 'string' 
+            ? tourData.special_notices 
+            : tourData.special_notices?.text || "",
           
           reservation_notices: tourData.reservation_notices || [
             { order: 1, title: "티오프 시간", content: "사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
@@ -299,7 +301,7 @@ const TourEditPage: React.FC = () => {
         company_mobile: form.company_mobile,
         golf_reservation_phone: form.golf_reservation_phone,
         golf_reservation_mobile: form.golf_reservation_mobile,
-        special_notices: form.special_notices,
+        special_notices: form.special_notices || null,
         reservation_notices: form.reservation_notices.filter(n => n.title.trim() && n.content.trim()),
         other_notices: form.other_notices,
         document_settings: form.document_settings,
