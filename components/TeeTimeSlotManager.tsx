@@ -661,14 +661,40 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                     return acc;
                   }, {} as Record<string, { count: number; capacity: number }>);
                   
-                  return Object.entries(courseStats).map(([course, stats]) => (
-                    <div 
-                      key={course}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${getCourseColor(course).tag}`}
-                    >
-                      {course}: {stats.count}팀 ({stats.capacity}명)
-                    </div>
-                  ));
+                  return Object.entries(courseStats).map(([course, stats]) => {
+                    const color = getCourseColor(course);
+                    const bgColor = color.tag.includes('green') ? '#d1fae5' :
+                                    color.tag.includes('blue') ? '#dbeafe' :
+                                    color.tag.includes('amber') ? '#fed7aa' :
+                                    color.tag.includes('purple') ? '#e9d5ff' :
+                                    color.tag.includes('pink') ? '#fbcfe8' :
+                                    color.tag.includes('indigo') ? '#c7d2fe' :
+                                    color.tag.includes('teal') ? '#a7f3d0' :
+                                    color.tag.includes('yellow') ? '#fde68a' :
+                                    color.tag.includes('sky') ? '#bae6fd' : '#e5e7eb';
+                    const textColor = color.tag.includes('green') ? '#065f46' :
+                                      color.tag.includes('blue') ? '#1e40af' :
+                                      color.tag.includes('amber') ? '#92400e' :
+                                      color.tag.includes('purple') ? '#6b21a8' :
+                                      color.tag.includes('pink') ? '#be185d' :
+                                      color.tag.includes('indigo') ? '#4338ca' :
+                                      color.tag.includes('teal') ? '#0f766e' :
+                                      color.tag.includes('yellow') ? '#78350f' :
+                                      color.tag.includes('sky') ? '#075985' : '#374151';
+                    return (
+                      <div 
+                        key={course}
+                        className={`px-3 py-1 rounded-full text-xs font-medium border`}
+                        style={{
+                          backgroundColor: bgColor,
+                          color: textColor,
+                          borderColor: bgColor
+                        }}
+                      >
+                        {course}: {stats.count}팀 ({stats.capacity}명)
+                      </div>
+                    );
+                  });
                 })()}
               </div>
               
@@ -709,6 +735,17 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                       <tr 
                         key={teeTime.id} 
                         className={`${isNewCourse ? 'border-t-2' : 'border-t'} ${courseColor.border} ${courseColor.bg} ${isSelectMode ? 'hover:opacity-80 cursor-pointer' : ''}`}
+                        style={{
+                          backgroundColor: courseColor.bg.replace('bg-', '').includes('green') ? '#f0fdf4' :
+                                          courseColor.bg.replace('bg-', '').includes('blue') ? '#eff6ff' :
+                                          courseColor.bg.replace('bg-', '').includes('amber') ? '#fffbeb' :
+                                          courseColor.bg.replace('bg-', '').includes('purple') ? '#faf5ff' :
+                                          courseColor.bg.replace('bg-', '').includes('pink') ? '#fdf2f8' :
+                                          courseColor.bg.replace('bg-', '').includes('indigo') ? '#eef2ff' :
+                                          courseColor.bg.replace('bg-', '').includes('teal') ? '#f0fdfa' :
+                                          courseColor.bg.replace('bg-', '').includes('yellow') ? '#fefce8' :
+                                          courseColor.bg.replace('bg-', '').includes('sky') ? '#f0f9ff' : '#f9fafb'
+                        }}
                         onClick={(e) => {
                           if (isSelectMode && !(e.target as HTMLElement).closest('button, input, select')) {
                             toggleSelect(teeTime.id);

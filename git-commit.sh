@@ -4,19 +4,14 @@
 git add .
 
 # 커밋 메시지
-git commit -m "feat: 문서별 하단 내용 관리 시스템 구현
+git commit -m "fix: 티타임 관리 및 미리보기 오류 긴급 수정
 
-- DocumentFooterManager 컴포넌트 추가
-- document_footers 테이블 생성
-- 일정 관리(통합)에 '문서 하단 내용' 탭 추가
-- 각 문서별로 개별 하단 내용 관리 가능
-  * 라운딩 시간표: 라운딩 주의사항
-  * 탑승지 안내: 탑승 주의사항
-  * 객실 배정: 객실 이용 안내, 식사 안내
-  * 전체 일정표: 락카 이용 안내
-- TourSchedulePreview에서 문서별 하단 내용 표시"
+- 티타임 관리: 코스별 색상 구분이 표시되도록 인라인 스타일 적용
+- 남녀 표시: 성별 정보가 없을 때 기본값 설정 및 색상 구분 추가
+- 미리보기 화면: document_footers 테이블 접근 오류 처리
+- 코스별 색상: 파인(녹색), 레이크(파랑), 힐스(주황) 등 시각적 구분"
 
 # Push to main branch
 git push origin main
 
-echo "✅ 커밋 및 푸시 완료!"
+echo "✅ 긴급 수정 완료 및 배포!"

@@ -79,21 +79,27 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         }
       }
 
-      // 문서별 하단 내용 가져오기
-      const { data: footers, error: footersError } = await supabase
-        .from('document_footers')
-        .select('*')
-        .eq('tour_id', tourId);
+      // 문서별 하단 내용 가져오기 - 테이블이 없으면 스킵
+      try {
+        const { data: footers, error: footersError } = await supabase
+          .from('document_footers')
+          .select('*')
+          .eq('tour_id', tourId);
 
-      if (!footersError && footers) {
-        const footersByType = footers.reduce((acc, footer) => {
-          if (!acc[footer.document_type]) {
-            acc[footer.document_type] = {};
-          }
-          acc[footer.document_type][footer.section_title] = footer.content;
-          return acc;
-        }, {});
-        setDocumentFooters(footersByType);
+        if (!footersError && footers) {
+          const footersByType = footers.reduce((acc, footer) => {
+            if (!acc[footer.document_type]) {
+              acc[footer.document_type] = {};
+            }
+            acc[footer.document_type][footer.section_title] = footer.content;
+            return acc;
+          }, {});
+          setDocumentFooters(footersByType);
+        }
+      } catch (e) {
+        console.log('document_footers 테이블이 없거나 접근할 수 없습니다.');
+        // 기본값 사용
+        setDocumentFooters({});
       }
 
       // 데이터 통합

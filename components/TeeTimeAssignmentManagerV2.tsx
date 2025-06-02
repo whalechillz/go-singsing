@@ -100,8 +100,12 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       
       if (participantsError) throw participantsError;
       
-      // 성별 정보를 포함한 참가자 데이터
-      const participantsWithGender = participantsData || [];
+      // 성별 정보를 포함한 참가자 데이터 (성별 정보가 없으면 기본값 설정)
+      const participantsWithGender = (participantsData || []).map(p => ({
+        ...p,
+        gender: p.gender || (p.name.match(/(선생|님|미스터|씨)/) ? 'M' : 
+                p.name.match(/(여사|사모|미스|미세스)/) ? 'F' : null)
+      }));
       
       // 2. 티타임 데이터 가져오기
       const { data: teeTimesData, error: teeTimesError } = await supabase
@@ -769,7 +773,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                   <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course} ${teamGenderInfo.type}</td>
                 ` : ''}
                 <td>${index + 1}</td>
-                <td>${p.name}${genderSuffix}</td>
+                <td>${p.name}<span style="color: ${p.gender === 'M' ? '#3b82f6' : p.gender === 'F' ? '#ec4899' : '#6b7280'}; font-weight: bold;">${genderSuffix}</span></td>
                 ${isStaff ? `<td>${p.phone || ''}</td>` : ''}
                 <td>${p.team_name || ''}</td>
                 ${isStaff ? `<td>${p.note || ''}</td>` : ''}
