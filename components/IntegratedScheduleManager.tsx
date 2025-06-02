@@ -14,6 +14,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
   const [editingNotice, setEditingNotice] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('schedule');
+  const [scheduleText, setScheduleText] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -52,13 +53,29 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
   const handleSaveSchedule = async () => {
     try {
+      // 텍스트를 일정 항목으로 파싱
+      const items = scheduleText.split('\n')
+        .filter(line => line.trim())
+        .map(line => {
+          const colonIndex = line.indexOf(':');
+          if (colonIndex > -1) {
+            return {
+              time: line.substring(0, colonIndex).trim(),
+              content: line.substring(colonIndex + 1).trim()
+            };
+          }
+          return {
+            time: '',
+            content: line.trim()
+          };
+        });
+
       const scheduleData = {
-        ...editingSchedule,
-        boarding_info: {
-          time: editingSchedule.boarding_time || '',
-          place: editingSchedule.boarding_place || '',
-          order: editingSchedule.boarding_order || 1
-        }
+        tour_id: tourId,
+        date: editingSchedule.date,
+        day_number: editingSchedule.day_number,
+        schedule_items: items,
+        boarding_info: editingSchedule.boarding_info || {}
       };
 
       if (editingSchedule.id) {
@@ -73,18 +90,18 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
         // 새로 추가
         const { error } = await supabase
           .from('singsing_schedules')
-          .insert({
-            ...scheduleData,
-            tour_id: tourId
-          });
+          .insert(scheduleData);
 
         if (error) throw error;
       }
 
       setEditingSchedule(null);
+      setScheduleText('');
       fetchData();
+      alert('저장되었습니다.');
     } catch (error) {
       console.error('Error saving schedule:', error);
+      alert('저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -104,6 +121,25 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
     }
   };
 
+  const handleEditSchedule = (schedule: any) => {
+    setEditingSchedule(schedule);
+    // schedule_items를 텍스트로 변환
+    const text = schedule.schedule_items?.map((item: any) => 
+      item.time ? `${item.time}: ${item.content}` : item.content
+    ).join('\n') || '';
+    setScheduleText(text);
+  };
+
+  const handleNewSchedule = () => {
+    setEditingSchedule({ 
+      date: '', 
+      day_number: schedules.length + 1,
+      schedule_items: [],
+      boarding_info: {}
+    });
+    setScheduleText('');
+  };
+
   const handleSaveNotices = async () => {
     try {
       const { error } = await supabase
@@ -113,8 +149,10 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
       if (error) throw error;
       setEditingNotice(null);
+      alert('공지사항이 저장되었습니다.');
     } catch (error) {
       console.error('Error saving notices:', error);
+      alert('저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -199,11 +237,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
             <h3 className="text-lg font-semibold">일정 목록</h3>
             <button
               className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 flex items-center"
-              onClick={() => setEditingSchedule({ 
-                date: '', 
-                day_number: schedules.length + 1,
-                schedule_items: [] 
-              })}
+              onClick={handleNewSchedule}
             >
               <Plus className="w-4 h-4 mr-1" /> 일정 추가
             </button>
@@ -221,7 +255,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                     <input
                       type="date"
                       className="w-full px-3 py-2 border rounded-md"
-                      value={editingSchedule.date}
+                      value={editingSchedule.date || ''}
                       onChange={(e) => setEditingSchedule({
                         ...editingSchedule,
                         date: e.target.value
@@ -233,10 +267,10 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                     <input
                       type="number"
                       className="w-full px-3 py-2 border rounded-md"
-                      value={editingSchedule.day_number}
+                      value={editingSchedule.day_number || ''}
                       onChange={(e) => setEditingSchedule({
                         ...editingSchedule,
-                        day_number: parseInt(e.target.value)
+                        day_number: parseInt(e.target.value) || 1
                       })}
                     />
                   </div>
@@ -246,32 +280,23 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                   <label className="block text-sm font-medium mb-1">일정 항목</label>
                   <textarea
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="시간: 내용 형식으로 입력 (한 줄에 하나씩)"
+                    placeholder="시간: 내용 형식으로 입력 (한 줄에 하나씩)&#10;예) 08:00: 호텔 조식&#10;    09:00: 골프장 출발"
                     rows={5}
-                    value={editingSchedule.schedule_items?.map((item: any) => 
-                      `${item.time || ''}: ${item.content}`
-                    ).join('\n') || ''}
-                    onChange={(e) => {
-                      const items = e.target.value.split('\n').map(line => {
-                        const [time, ...contentParts] = line.split(':');
-                        return {
-                          time: time?.trim() || '',
-                          content: contentParts.join(':').trim()
-                        };
-                      }).filter(item => item.content);
-                      
-                      setEditingSchedule({
-                        ...editingSchedule,
-                        schedule_items: items
-                      });
-                    }}
+                    value={scheduleText}
+                    onChange={(e) => setScheduleText(e.target.value)}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    각 줄에 "시간: 내용" 형식으로 입력하세요. 시간은 선택사항입니다.
+                  </p>
                 </div>
 
                 <div className="flex justify-end gap-2">
                   <button
                     className="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-50"
-                    onClick={() => setEditingSchedule(null)}
+                    onClick={() => {
+                      setEditingSchedule(null);
+                      setScheduleText('');
+                    }}
                   >
                     <X className="w-4 h-4 inline mr-1" /> 취소
                   </button>
@@ -305,7 +330,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                   <div className="flex gap-2">
                     <button
                       className="p-1 hover:bg-gray-100 rounded"
-                      onClick={() => setEditingSchedule(schedule)}
+                      onClick={() => handleEditSchedule(schedule)}
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -409,7 +434,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                   <span className="text-sm font-medium mt-2">{index + 1}.</span>
                   <textarea
                     className="flex-1 px-3 py-2 border rounded-md"
-                    value={notice.notice}
+                    value={notice.notice || ''}
                     onChange={(e) => updateNotice(index, e.target.value)}
                     placeholder="공지사항 내용 입력"
                   />
