@@ -3,6 +3,7 @@ import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, X, Users, Phone, FileText, Settings } from "lucide-react";
+import DocumentNoticeManager from "@/components/DocumentNoticeManager";
 
 type StaffMember = {
   id?: string;
@@ -10,6 +11,12 @@ type StaffMember = {
   phone: string;
   role: string;
   display_order?: number;
+};
+
+type ReservationNotice = {
+  order: number;
+  title: string;
+  content: string;
 };
 
 type TourForm = {
@@ -38,8 +45,16 @@ type TourForm = {
   
   // 주의사항
   notices: string;
-  reservation_notice?: string;
-  schedule_notice?: string;
+  reservation_notices: ReservationNotice[];
+  other_notices: string;
+  document_settings: {
+    customer_schedule: boolean;
+    customer_boarding: boolean;
+    staff_boarding: boolean;
+    room_assignment: boolean;
+    tee_time: boolean;
+    simplified: boolean;
+  };
 };
 
 type Params = { tourId?: string };
@@ -78,11 +93,21 @@ const TourEditPage: React.FC = () => {
 • 카트배정: 4인 1카트 원칙
 • 날씨대비: 우산, 우의 등 개인 준비`,
     
-    reservation_notice: `티오프 시간: 사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다.
-객실 배정: 예약 접수 순서대로 진행되오니 참고 부탁드립니다.
-식사 서비스: 불참 시에도 별도 환불이 불가하오니 양해 바랍니다.
-리무진 좌석: 가는 날 좌석은 오는 날에도 동일하게 이용해 주세요. 멀미 증상이 있으신 분은 사전 요청 시 앞좌석 배정 가능.`,
-    schedule_notice: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
+    reservation_notices: [
+      { order: 1, title: "티오프 시간", content: "사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
+      { order: 2, title: "객실 배정", content: "예약 접수 순서대로 진행되오니 참고 부탁드립니다." },
+      { order: 3, title: "식사 서비스", content: "불참 시에도 별도 환불이 불가하오니 양해 바랍니다." },
+      { order: 4, title: "리무진 좌석", content: "가는 날 좌석은 오는 날에도 동일하게 이용해 주세요." }
+    ],
+    other_notices: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
+    document_settings: {
+      customer_schedule: true,
+      customer_boarding: true,
+      staff_boarding: true,
+      room_assignment: true,
+      tee_time: true,
+      simplified: true
+    }
   });
   
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -138,11 +163,21 @@ const TourEditPage: React.FC = () => {
 • 카트배정: 4인 1카트 원칙
 • 날씨대비: 우산, 우의 등 개인 준비`,
           
-          reservation_notice: tourData.reservation_notice || `티오프 시간: 사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다.
-객실 배정: 예약 접수 순서대로 진행되오니 참고 부탁드립니다.
-식사 서비스: 불참 시에도 별도 환불이 불가하오니 양해 바랍니다.
-리무진 좌석: 가는 날 좌석은 오는 날에도 동일하게 이용해 주세요. 멀미 증상이 있으신 분은 사전 요청 시 앞좌석 배정 가능.`,
-          schedule_notice: tourData.schedule_notice || "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
+          reservation_notices: tourData.reservation_notices || [
+            { order: 1, title: "티오프 시간", content: "사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
+            { order: 2, title: "객실 배정", content: "예약 접수 순서대로 진행되오니 참고 부탁드립니다." },
+            { order: 3, title: "식사 서비스", content: "불참 시에도 별도 환불이 불가하오니 양해 바랍니다." },
+            { order: 4, title: "리무진 좌석", content: "가는 날 좌석은 오는 날에도 동일하게 이용해 주세요." }
+          ],
+          other_notices: tourData.other_notices || "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
+          document_settings: tourData.document_settings || {
+            customer_schedule: true,
+            customer_boarding: true,
+            staff_boarding: true,
+            room_assignment: true,
+            tee_time: true,
+            simplified: true
+          }
         });
       }
       
@@ -160,7 +195,7 @@ const TourEditPage: React.FC = () => {
       // 투어 상품 정보 가져오기
       const { data: productsData } = await supabase
         .from("tour_products")
-        .select("id, name, hotel");
+        .select("*");
         
       setProducts(productsData || []);
       setLoading(false);
@@ -172,20 +207,36 @@ const TourEditPage: React.FC = () => {
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, type, value } = e.target;
     if (type === "checkbox") {
-      setForm({ ...form, [name]: (e.target as HTMLInputElement).checked });
+      const checked = (e.target as HTMLInputElement).checked;
+      if (name.startsWith("document_settings.")) {
+        const docType = name.split(".")[1];
+        setForm({
+          ...form,
+          document_settings: {
+            ...form.document_settings,
+            [docType]: checked
+          }
+        });
+      } else {
+        setForm({ ...form, [name]: checked });
+      }
     } else {
       setForm({ ...form, [name]: value });
     }
   };
 
   const handleGolfCourseChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const selectedName = e.target.value;
-    const selectedProduct = products.find((p) => p.name === selectedName);
-    setForm({
-      ...form,
-      golf_course: selectedProduct ? selectedProduct.name : "",
-      accommodation: selectedProduct ? selectedProduct.hotel : "",
-    });
+    const selectedId = e.target.value;
+    const selectedProduct = products.find((p) => p.id === selectedId);
+    if (selectedProduct) {
+      setForm({
+        ...form,
+        golf_course: selectedProduct.name,
+        accommodation: selectedProduct.hotel || "",
+        includes: selectedProduct.included_items || form.includes,
+        excludes: selectedProduct.excluded_items || form.excludes,
+      });
+    }
   };
 
   const handleStaffChange = (index: number, field: 'name' | 'phone' | 'role', value: string) => {
@@ -206,6 +257,28 @@ const TourEditPage: React.FC = () => {
     setStaff(staff.filter((_, i) => i !== index));
   };
 
+  // 예약 안내사항 관리
+  const addReservationNotice = () => {
+    const newOrder = Math.max(...form.reservation_notices.map(n => n.order), 0) + 1;
+    setForm({
+      ...form,
+      reservation_notices: [...form.reservation_notices, { order: newOrder, title: "", content: "" }]
+    });
+  };
+
+  const updateReservationNotice = (index: number, field: 'title' | 'content', value: string) => {
+    const updated = [...form.reservation_notices];
+    updated[index][field] = value;
+    setForm({ ...form, reservation_notices: updated });
+  };
+
+  const removeReservationNotice = (index: number) => {
+    setForm({
+      ...form,
+      reservation_notices: form.reservation_notices.filter((_, i) => i !== index)
+    });
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
@@ -219,6 +292,7 @@ const TourEditPage: React.FC = () => {
           ...form,
           price: form.price ? Number(form.price) : null,
           max_participants: form.max_participants ? Number(form.max_participants) : null,
+          reservation_notices: form.reservation_notices.filter(n => n.title.trim() && n.content.trim()),
           updated_at: new Date().toISOString(),
         })
         .eq("id", tourId);
@@ -327,19 +401,32 @@ const TourEditPage: React.FC = () => {
             </div>
             
             <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">골프장</span>
-              <select name="golf_course" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.golf_course} onChange={handleGolfCourseChange} required>
+              <span className="font-medium">여행상품 선택</span>
+              <select 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
+                value={products.find(p => p.name === form.golf_course)?.id || ""} 
+                onChange={handleGolfCourseChange}
+              >
                 <option value="">선택</option>
                 {products.map((product) => (
-                  <option key={product.id} value={product.name}>{product.name}</option>
+                  <option key={product.id} value={product.id}>
+                    {product.name} - {product.golf_course} ({product.hotel})
+                  </option>
                 ))}
               </select>
             </label>
             
-            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">숙소</span>
-              <input name="accommodation" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.accommodation} onChange={handleChange} required />
-            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+                <span className="font-medium">골프장</span>
+                <input name="golf_course" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.golf_course} onChange={handleChange} required />
+              </label>
+              
+              <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+                <span className="font-medium">숙소</span>
+                <input name="accommodation" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.accommodation} onChange={handleChange} required />
+              </label>
+            </div>
             
             <div className="flex gap-2">
               <label className="flex flex-col gap-1 flex-1 text-gray-700 dark:text-gray-300">
@@ -362,14 +449,52 @@ const TourEditPage: React.FC = () => {
               <textarea name="excludes" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.excludes} onChange={handleChange} />
             </label>
             
-            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">예약 안내 사항</span>
-              <textarea name="reservation_notice" value={form.reservation_notice} onChange={handleChange} className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[120px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
-            </label>
+            {/* 예약 안내사항 */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-gray-700 dark:text-gray-300">예약 안내사항</span>
+                <button
+                  type="button"
+                  onClick={addReservationNotice}
+                  className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  추가
+                </button>
+              </div>
+              
+              {form.reservation_notices.map((notice, idx) => (
+                <div key={idx} className="space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="제목 (예: 티오프 시간)"
+                      value={notice.title}
+                      onChange={(e) => updateReservationNotice(idx, 'title', e.target.value)}
+                      className="flex-1 px-3 py-2 border rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeReservationNotice(idx)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <textarea
+                    placeholder="내용"
+                    value={notice.content}
+                    onChange={(e) => updateReservationNotice(idx, 'content', e.target.value)}
+                    className="w-full px-3 py-2 border rounded resize-none"
+                    rows={2}
+                  />
+                </div>
+              ))}
+            </div>
             
             <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
               <span className="font-medium">기타 안내문구 (일정표 하단)</span>
-              <textarea name="schedule_notice" value={form.schedule_notice} onChange={handleChange} className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[60px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
+              <textarea name="other_notices" value={form.other_notices} onChange={handleChange} className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[60px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
             </label>
           </>
         )}
@@ -439,10 +564,79 @@ const TourEditPage: React.FC = () => {
         {/* 문서 설정 탭 */}
         {activeTab === "document" && (
           <div className="space-y-6">
-            {/* 표시 옵션 */}
+            {/* 문서 생성 옵션 */}
             <div className="space-y-3">
               <h3 className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                 <Settings className="w-4 h-4" />
+                문서 생성 옵션
+              </h3>
+              <div className="grid grid-cols-2 gap-3 pl-6">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="document_settings.customer_schedule"
+                    checked={form.document_settings.customer_schedule}
+                    onChange={handleChange}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">고객용 일정표</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="document_settings.customer_boarding"
+                    checked={form.document_settings.customer_boarding}
+                    onChange={handleChange}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">고객용 탑승안내서</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="document_settings.staff_boarding"
+                    checked={form.document_settings.staff_boarding}
+                    onChange={handleChange}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">스탭용 탑승안내서</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="document_settings.room_assignment"
+                    checked={form.document_settings.room_assignment}
+                    onChange={handleChange}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">객실 배정표</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="document_settings.tee_time"
+                    checked={form.document_settings.tee_time}
+                    onChange={handleChange}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">티타임표</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="document_settings.simplified"
+                    checked={form.document_settings.simplified}
+                    onChange={handleChange}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">간편 일정표</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 표시 옵션 */}
+            <div className="space-y-3">
+              <h3 className="font-medium text-gray-700 dark:text-gray-300">
                 문서 표시 옵션
               </h3>
               <div className="space-y-2 pl-6">
@@ -564,6 +758,11 @@ const TourEditPage: React.FC = () => {
                 className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800"
               />
             </label>
+
+            {/* 문서별 공지사항 관리 */}
+            <div className="border-t pt-6">
+              <DocumentNoticeManager tourId={tourId} />
+            </div>
           </div>
         )}
         
