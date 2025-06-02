@@ -502,7 +502,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       emergency_contact: form.emergency_contact,
       join_count: form.join_count,
       pickup_location: form.pickup_location,
-      pickup_time: form.pickup_time,
+      pickup_time: form.pickup_time || null,  // 빈 문자열인 경우 null로 변환
       tour_id: tourId || form.tour_id,
       group_size: form.group_size,
       is_paying_for_group: form.is_paying_for_group,
