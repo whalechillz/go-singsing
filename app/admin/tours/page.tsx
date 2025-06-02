@@ -15,11 +15,7 @@ type Tour = {
   status?: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   golf_course?: string;
   departure_location?: string;
-  tour_products?: {
-    id: string;
-    name: string;
-    golf_course: string;
-  };
+  tour_product_id?: string;
 };
 
 const TourListPage: React.FC = () => {
@@ -32,20 +28,20 @@ const TourListPage: React.FC = () => {
     setError("");
     
     try {
-      // 투어 기본 정보 가져오기 (tour_products 테이블과 join)
+      // 투어 기본 정보 가져오기
       const { data: toursData, error: toursError } = await supabase
         .from("singsing_tours")
-        .select(`
-          *,
-          tour_products (
-            id,
-            name,
-            golf_course
-          )
-        `)
+        .select("*")
         .order("start_date", { ascending: false });
       
       if (toursError) throw toursError;
+      
+      // tour_products 정보 가져오기
+      const { data: productsData } = await supabase
+        .from("tour_products")
+        .select("id, name, golf_course");
+      
+      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
       
       // 각 투어의 참가자 수 계산
       if (toursData) {
@@ -56,9 +52,11 @@ const TourListPage: React.FC = () => {
               .select("*", { count: 'exact', head: true })
               .eq("tour_id", tour.id);
             
+            const product = tour.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
+            
             return {
               ...tour,
-              golf_course: tour.tour_products?.golf_course || tour.tour_products?.name || "",
+              golf_course: product?.golf_course || product?.name || "",
               current_participants: count || 0,
               max_participants: tour.max_participants || 40, // 기본값 40명
               price: tour.price || 0

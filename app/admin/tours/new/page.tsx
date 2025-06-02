@@ -135,7 +135,7 @@ const TourNewPage: React.FC = () => {
           name: s.name,
           phone: s.phone || "",
           role: s.role,
-          order: index + 1
+          display_order: index + 1
         }));
         
         const { error: staffError } = await supabase
