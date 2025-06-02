@@ -649,7 +649,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   const generatePreviewHTML = (type: 'customer' | 'staff') => {
     // 날짜별로 티타임 그룹화
     const teeTimesByDateForPreview = teeTimes.reduce((acc, tt) => {
-      const date = tt.play_date || tt.date;
+      const date = tt.play_date;
       if (!acc[date]) acc[date] = [];
       acc[date].push(tt);
       return acc;
@@ -759,7 +759,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           tableHTML += `
             <tr>
               <td>${teeTime.tee_time || ''}</td>
-              <td>${teeTime.golf_course || teeTime.course || ''}</td>
+              <td>${teeTime.golf_course || ''}</td>
               <td colspan="${isStaff ? 5 : 3}" class="empty-slot">배정된 참가자가 없습니다</td>
             </tr>`;
         } else {
@@ -773,7 +773,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
               <tr>
                 ${index === 0 ? `
                   <td rowspan="${teeTimeParticipants.length}">${teeTime.tee_time || ''}</td>
-                  <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course || teeTime.course || ''} ${teamGenderInfo.type}</td>
+                  <td rowspan="${teeTimeParticipants.length}">${teeTime.golf_course || ''} ${teamGenderInfo.type}</td>
                 ` : ''}
                 <td>${index + 1}</td>
                 <td>${p.name}<span style="color: ${p.gender === 'M' ? '#3b82f6' : p.gender === 'F' ? '#ec4899' : '#6b7280'}; font-weight: bold;">${genderSuffix}</span></td>
