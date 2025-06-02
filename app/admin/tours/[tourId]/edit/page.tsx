@@ -23,7 +23,7 @@ type TourForm = {
   title: string;
   start_date: string;
   end_date: string;
-  golf_course: string;
+  tour_product_id: string;
   accommodation: string;
   price: string;
   max_participants: string;
@@ -67,7 +67,7 @@ const TourEditPage: React.FC = () => {
     title: "",
     start_date: "",
     end_date: "",
-    golf_course: "",
+    tour_product_id: "",
     accommodation: "",
     price: "",
     max_participants: "",
@@ -137,7 +137,7 @@ const TourEditPage: React.FC = () => {
           title: tourData.title || "",
           start_date: tourData.start_date ? tourData.start_date.substring(0, 10) : "",
           end_date: tourData.end_date ? tourData.end_date.substring(0, 10) : "",
-          golf_course: tourData.golf_course || "",
+          tour_product_id: tourData.tour_product_id || "",
           accommodation: tourData.accommodation || "",
           price: tourData.price?.toString() || "",
           max_participants: tourData.max_participants?.toString() || "",
@@ -225,13 +225,13 @@ const TourEditPage: React.FC = () => {
     }
   };
 
-  const handleGolfCourseChange = (e: ChangeEvent<HTMLSelectElement>) => {
+  const handleProductChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
     const selectedProduct = products.find((p) => p.id === selectedId);
     if (selectedProduct) {
       setForm({
         ...form,
-        golf_course: selectedProduct.name,
+        tour_product_id: selectedId,
         accommodation: selectedProduct.hotel || "",
         includes: selectedProduct.included_items || form.includes,
         excludes: selectedProduct.excluded_items || form.excludes,
@@ -286,15 +286,35 @@ const TourEditPage: React.FC = () => {
     
     try {
       // 1. 투어 정보 업데이트
+      const updateData = {
+        title: form.title,
+        start_date: form.start_date,
+        end_date: form.end_date,
+        tour_product_id: form.tour_product_id || null,
+        accommodation: form.accommodation,
+        price: form.price ? Number(form.price) : null,
+        max_participants: form.max_participants ? Number(form.max_participants) : null,
+        includes: form.includes,
+        excludes: form.excludes,
+        show_staff_info: form.show_staff_info,
+        show_footer_message: form.show_footer_message,
+        show_company_phones: form.show_company_phones,
+        show_golf_phones: form.show_golf_phones,
+        footer_message: form.footer_message,
+        company_phone: form.company_phone,
+        company_mobile: form.company_mobile,
+        golf_reservation_phone: form.golf_reservation_phone,
+        golf_reservation_mobile: form.golf_reservation_mobile,
+        notices: form.notices,
+        reservation_notices: form.reservation_notices.filter(n => n.title.trim() && n.content.trim()),
+        other_notices: form.other_notices,
+        document_settings: form.document_settings,
+        updated_at: new Date().toISOString(),
+      };
+      
       const { error: tourError } = await supabase
         .from("singsing_tours")
-        .update({
-          ...form,
-          price: form.price ? Number(form.price) : null,
-          max_participants: form.max_participants ? Number(form.max_participants) : null,
-          reservation_notices: form.reservation_notices.filter(n => n.title.trim() && n.content.trim()),
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq("id", tourId);
         
       if (tourError) throw tourError;
@@ -404,8 +424,8 @@ const TourEditPage: React.FC = () => {
               <span className="font-medium">여행상품 선택</span>
               <select 
                 className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
-                value={products.find(p => p.name === form.golf_course)?.id || ""} 
-                onChange={handleGolfCourseChange}
+                value={form.tour_product_id} 
+                onChange={handleProductChange}
               >
                 <option value="">선택</option>
                 {products.map((product) => (
@@ -416,17 +436,10 @@ const TourEditPage: React.FC = () => {
               </select>
             </label>
             
-            <div className="grid grid-cols-2 gap-2">
-              <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-                <span className="font-medium">골프장</span>
-                <input name="golf_course" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.golf_course} onChange={handleChange} required />
-              </label>
-              
-              <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-                <span className="font-medium">숙소</span>
-                <input name="accommodation" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.accommodation} onChange={handleChange} required />
-              </label>
-            </div>
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">숙소</span>
+              <input name="accommodation" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.accommodation} onChange={handleChange} required />
+            </label>
             
             <div className="flex gap-2">
               <label className="flex flex-col gap-1 flex-1 text-gray-700 dark:text-gray-300">

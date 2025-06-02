@@ -14,7 +14,6 @@ type TourForm = {
   title: string;
   start_date: string;
   end_date: string;
-  golf_course: string;
   accommodation: string;
   price: string;
   max_participants: string;
@@ -30,7 +29,6 @@ const TourNewPage: React.FC = () => {
     title: "",
     start_date: "",
     end_date: "",
-    golf_course: "",
     accommodation: "",
     price: "",
     max_participants: "",
@@ -82,7 +80,6 @@ const TourNewPage: React.FC = () => {
       setForm({
         ...form,
         tour_product_id: selectedProductId,
-        golf_course: selectedProduct.golf_course || selectedProduct.name || "",
         accommodation: selectedProduct.hotel || "",
         includes: selectedProduct.included_items || "",
         excludes: selectedProduct.excluded_items || "",
@@ -117,7 +114,6 @@ const TourNewPage: React.FC = () => {
           title: form.title,
           start_date: form.start_date,
           end_date: form.end_date,
-          golf_course: form.golf_course,
           accommodation: form.accommodation,
           price: form.price ? Number(form.price) : 0,
           max_participants: form.max_participants ? Number(form.max_participants) : 0,
@@ -240,17 +236,7 @@ const TourNewPage: React.FC = () => {
               </select>
             </label>
             
-            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">골프장</span>
-              <input 
-                name="golf_course" 
-                type="text" 
-                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
-                value={form.golf_course} 
-                onChange={handleChange} 
-                required 
-              />
-            </label>
+
             
             <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
               <span className="font-medium">숙소</span>

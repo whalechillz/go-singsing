@@ -15,6 +15,11 @@ type Tour = {
   status?: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   golf_course?: string;
   departure_location?: string;
+  tour_products?: {
+    id: string;
+    name: string;
+    golf_course: string;
+  };
 };
 
 const TourListPage: React.FC = () => {
@@ -27,10 +32,17 @@ const TourListPage: React.FC = () => {
     setError("");
     
     try {
-      // 투어 기본 정보 가져오기
+      // 투어 기본 정보 가져오기 (tour_products 테이블과 join)
       const { data: toursData, error: toursError } = await supabase
         .from("singsing_tours")
-        .select("*")
+        .select(`
+          *,
+          tour_products (
+            id,
+            name,
+            golf_course
+          )
+        `)
         .order("start_date", { ascending: false });
       
       if (toursError) throw toursError;
@@ -46,6 +58,7 @@ const TourListPage: React.FC = () => {
             
             return {
               ...tour,
+              golf_course: tour.tour_products?.golf_course || tour.tour_products?.name || "",
               current_participants: count || 0,
               max_participants: tour.max_participants || 40, // 기본값 40명
               price: tour.price || 0
