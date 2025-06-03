@@ -423,7 +423,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             <div class="day-content">
               <div class="schedule-content">
                 ${schedule.title || ''}
-                ${schedule.description ? `<p>${schedule.description}</p>` : ''}
+                ${schedule.schedule_items?.length > 0 ? `
+                  <ul class="schedule-items" style="list-style: none; padding: 0; margin: 10px 0;">
+                    ${schedule.schedule_items.map((item: any) => `
+                      <li style="padding: 3px 0;">
+                        ${item.time ? `<span style="font-weight: bold; color: #2c5282;">${item.time}:</span>` : ''} ${item.content}
+                      </li>
+                    `).join('')}
+                  </ul>
+                ` : schedule.description ? `<p>${schedule.description}</p>` : ''}
               </div>
               
               <div class="meal-info">
