@@ -17,7 +17,7 @@ const TABS = [
   { key: "rooms", label: "객실 배정", icon: <BedDouble className="w-4 h-4" /> },
   { key: "schedules", label: "일정 관리 (통합)", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티타임 관리", icon: <Flag className="w-4 h-4" /> },
-  { key: "schedule-preview", label: "일정표 미리보기", icon: <FileText className="w-4 h-4" /> },
+  { key: "schedule-preview", label: "문서 미리보기", icon: <FileText className="w-4 h-4" /> },
 ];
 
 type Tour = {

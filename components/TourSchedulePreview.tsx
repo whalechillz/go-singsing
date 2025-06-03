@@ -259,7 +259,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     if (navigator.share) {
       navigator.share({
         title: tourData?.title,
-        text: `${tourData?.title} 일정표`,
+        text: `${tourData?.title} 문서`,
         url: window.location.href,
       });
     }
