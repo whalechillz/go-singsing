@@ -27,6 +27,7 @@ interface TourBoardingPlace {
   waypoint_name?: string;
   waypoint_duration?: number;
   waypoint_description?: string;
+  visit_date?: string;
   boarding_place?: {
     id: string;
     name: string;
@@ -286,7 +287,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
     const previous = tourBoardingPlaces[currentIndex - 1];
     
     // 같은 날짜인지 확인
-    if (current.visit_date !== previous.visit_date) return;
+    if ((current.visit_date || '') !== (previous.visit_date || '')) return;
     
     await supabase
       .from('singsing_tour_boarding_times')
@@ -309,7 +310,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
     const next = tourBoardingPlaces[currentIndex + 1];
     
     // 같은 날짜인지 확인
-    if (current.visit_date !== next.visit_date) return;
+    if ((current.visit_date || '') !== (next.visit_date || '')) return;
     
     await supabase
       .from('singsing_tour_boarding_times')
@@ -451,7 +452,8 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
                   is_waypoint: false,
                   waypoint_name: "",
                   waypoint_duration: 20,
-                  waypoint_description: ""
+                  waypoint_description: "",
+                  visit_date: tourData?.start_date.split('T')[0] || ""
                 });
               }}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
@@ -498,7 +500,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
               <div className="absolute right-4 top-4 flex flex-col gap-1">
                 <button
                   onClick={() => moveUp(item.id)}
-                  disabled={index === 0 || (index > 0 && items[index-1]?.visit_date !== item.visit_date)}
+                  disabled={index === 0 || (index > 0 && (items[index-1]?.visit_date || '') !== (item.visit_date || ''))}
                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
                   title="위로 이동"
                 >
