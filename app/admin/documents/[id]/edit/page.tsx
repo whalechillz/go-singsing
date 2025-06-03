@@ -6,8 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Save, ArrowLeft } from 'lucide-react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import BoardingGuideForm from "@/components/BoardingGuideForm";
-import BoardingGuidePreview from "@/components/BoardingGuidePreview";
+// BoardingGuideForm 및 BoardingGuidePreview 제거됨
 import TourSchedulePreview from "@/components/TourSchedulePreview";
 
 // 문서 타입 정의
@@ -249,13 +248,11 @@ export default function EditDocumentPage() {
             </div>
           </div>
 
-          {/* BoardingGuideForm & Preview: boarding-guide 유형일 때만 노출 */}
+          {/* BoardingGuideForm & Preview: boarding-guide 유형일 때만 노출 - 제거됨 */}
           {selectedType === "boarding-guide" && selectedTour && (
-            <>
-              <BoardingGuideForm tourId={selectedTour} />
-              <div className="mb-8" />
-              <BoardingGuidePreview tourId={selectedTour} />
-            </>
+            <div className="mb-8 p-4 bg-gray-100 rounded-lg">
+              <p className="text-gray-600">탑승지 안내는 투어 관리 &gt; 탑승지 관리에서 설정할 수 있습니다.</p>
+            </div>
           )}
 
           {/* 투어 일정표 미리보기: tour-schedule 유형일 때만 노출 */}

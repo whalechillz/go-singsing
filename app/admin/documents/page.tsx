@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, MapPin, Users, Calendar, Plus, Search, Trash2, Edit2, Copy, Settings, Eye, Save } from 'lucide-react';
-import DocumentNoticeManager from '@/components/DocumentNoticeManager';
+// DocumentNoticeManager 제거됨
 
 // 문서 타입 정의
 interface Document {
@@ -412,13 +412,12 @@ export default function DocumentsPage() {
             </div>
 
             {selectedTour && (
-              <DocumentNoticeManager 
-                tourId={selectedTour} 
-                onSave={() => {
-                  // 저장 후 처리
-                  console.log('Notices saved');
-                }}
-              />
+              <div className="p-6 bg-gray-100 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">투어별 공지사항 관리</h3>
+                <p className="text-gray-600">
+                  투어별 공지사항은 투어 관리 &gt; 일정 관리에서 설정할 수 있습니다.
+                </p>
+              </div>
             )}
           </div>
         )}
