@@ -179,7 +179,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               id,
               name,
               phone,
-              team_name
+              team_name,
+              gender
             )
           )
         `)
@@ -188,14 +189,29 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .order('tee_time')
         .order('team_no');
 
-      if (error) throw error;
+      if (error) {
+        console.error('티타임 조회 오류:', error);
+        throw error;
+      }
       
-      if (teeTimes) {
-        setTeeTimeHTML(generateTeeTimeHTML(teeTimes, false)); // 고객용
-        setTeeTimeStaffHTML(generateTeeTimeHTML(teeTimes, true)); // 스탭용
+      console.log('티타임 데이터:', teeTimes);
+      
+      if (teeTimes && teeTimes.length > 0) {
+        const customerHTML = generateTeeTimeHTML(teeTimes, false);
+        const staffHTML = generateTeeTimeHTML(teeTimes, true);
+        console.log('고객용 HTML 생성됨:', customerHTML.length);
+        console.log('스탭용 HTML 생성됨:', staffHTML.length);
+        setTeeTimeHTML(customerHTML); // 고객용
+        setTeeTimeStaffHTML(staffHTML); // 스탭용
+      } else {
+        console.log('티타임 데이터가 없습니다');
+        setTeeTimeHTML('<div class="no-data">티타임 데이터가 없습니다.</div>');
+        setTeeTimeStaffHTML('<div class="no-data">티타임 데이터가 없습니다.</div>');
       }
     } catch (error) {
       console.error('Error fetching tee times:', error);
+      setTeeTimeHTML('<div class="error">티타임 데이터를 불러오는 중 오류가 발생했습니다.</div>');
+      setTeeTimeStaffHTML('<div class="error">티타임 데이터를 불러오는 중 오류가 발생했습니다.</div>');
     }
   };
 
@@ -1133,6 +1149,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .notices li { padding: 4px 0; color: #4A5568; font-size: 14px; }
     .notices li:before { content: "•"; margin-right: 8px; color: #4299e1; }
     .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 14px; }
+    .no-data, .error { text-align: center; padding: 40px; color: #718096; font-size: 16px; }
+    .error { color: #e53e3e; }
     @media print { body { padding: 0; } .container { box-shadow: none; max-width: 100%; } }
     `;
   };
