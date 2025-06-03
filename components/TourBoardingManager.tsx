@@ -13,7 +13,11 @@ import {
   Bus,
   Map,
   Building,
-  Coffee
+  Coffee,
+  ChevronUp,
+  ChevronDown,
+  Calendar,
+  Navigation
 } from "lucide-react";
 
 interface TourBoardingPlace {
@@ -154,7 +158,8 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
   const handleAddBoardingPlace = async () => {
     setLoading(true);
     
-    const nextOrderNo = tourBoardingPlaces.length + 1;
+    const placesOnDate = tourBoardingPlaces.filter(p => p.visit_date === formData.visit_date);
+    const nextOrderNo = placesOnDate.length + 1;
     
     const insertData: any = {
       tour_id: tourId,
@@ -250,77 +255,85 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
     if (error) {
       console.error('Error deleting:', error);
     } else {
-      // 순서 재정렬
+      // 날짜별로 순서 재정렬
       await reorderPlaces();
     }
   };
 
   const reorderPlaces = async () => {
-    const { data } = await supabase
-      .from('singsing_tour_boarding_times')
-      .select('*')
-      .eq('tour_id', tourId)
-      .order('order_no');
+    // 날짜별로 그룹화하여 재정렬
+    const groupedByDate = tourBoardingPlaces.reduce((acc, item) => {
+      const date = item.visit_date || 'no-date';
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(item);
+      return acc;
+    }, {} as Record<string, typeof tourBoardingPlaces>);
 
-    if (data) {
-      const updates = data.map((item, index) => ({
-        id: item.id,
-        order_no: index + 1
-      }));
-
-      for (const update of updates) {
+    for (const [date, items] of Object.entries(groupedByDate)) {
+      const sortedItems = items.sort((a, b) => a.order_no - b.order_no);
+      for (let i = 0; i < sortedItems.length; i++) {
         await supabase
           .from('singsing_tour_boarding_times')
-          .update({ order_no: update.order_no })
-          .eq('id', update.id);
+          .update({ order_no: i + 1 })
+          .eq('id', sortedItems[i].id);
       }
-      
-      fetchTourBoardingPlaces();
     }
+    
+    fetchTourBoardingPlaces();
   };
 
   const moveUp = async (itemId: string) => {
-    const currentIndex = tourBoardingPlaces.findIndex(p => p.id === itemId);
+    const currentItem = tourBoardingPlaces.find(p => p.id === itemId);
+    if (!currentItem) return;
+    
+    // 같은 날짜의 아이템들만 필터링
+    const sameDateItems = tourBoardingPlaces
+      .filter(p => p.visit_date === currentItem.visit_date)
+      .sort((a, b) => a.order_no - b.order_no);
+    
+    const currentIndex = sameDateItems.findIndex(p => p.id === itemId);
     if (currentIndex <= 0) return;
     
-    const current = tourBoardingPlaces[currentIndex];
-    const previous = tourBoardingPlaces[currentIndex - 1];
+    const previousItem = sameDateItems[currentIndex - 1];
     
-    // 같은 날짜인지 확인
-    if ((current.visit_date || '') !== (previous.visit_date || '')) return;
-    
+    // order_no 교환
     await supabase
       .from('singsing_tour_boarding_times')
-      .update({ order_no: previous.order_no })
-      .eq('id', current.id);
+      .update({ order_no: previousItem.order_no })
+      .eq('id', currentItem.id);
       
     await supabase
       .from('singsing_tour_boarding_times')
-      .update({ order_no: current.order_no })
-      .eq('id', previous.id);
+      .update({ order_no: currentItem.order_no })
+      .eq('id', previousItem.id);
       
     fetchTourBoardingPlaces();
   };
 
   const moveDown = async (itemId: string) => {
-    const currentIndex = tourBoardingPlaces.findIndex(p => p.id === itemId);
-    if (currentIndex >= tourBoardingPlaces.length - 1) return;
+    const currentItem = tourBoardingPlaces.find(p => p.id === itemId);
+    if (!currentItem) return;
     
-    const current = tourBoardingPlaces[currentIndex];
-    const next = tourBoardingPlaces[currentIndex + 1];
+    // 같은 날짜의 아이템들만 필터링
+    const sameDateItems = tourBoardingPlaces
+      .filter(p => p.visit_date === currentItem.visit_date)
+      .sort((a, b) => a.order_no - b.order_no);
     
-    // 같은 날짜인지 확인
-    if ((current.visit_date || '') !== (next.visit_date || '')) return;
+    const currentIndex = sameDateItems.findIndex(p => p.id === itemId);
+    if (currentIndex >= sameDateItems.length - 1) return;
     
+    const nextItem = sameDateItems[currentIndex + 1];
+    
+    // order_no 교환
     await supabase
       .from('singsing_tour_boarding_times')
-      .update({ order_no: next.order_no })
-      .eq('id', current.id);
+      .update({ order_no: nextItem.order_no })
+      .eq('id', currentItem.id);
       
     await supabase
       .from('singsing_tour_boarding_times')
-      .update({ order_no: current.order_no })
-      .eq('id', next.id);
+      .update({ order_no: currentItem.order_no })
+      .eq('id', nextItem.id);
       
     fetchTourBoardingPlaces();
   };
@@ -483,205 +496,220 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
               return acc;
             }, {} as Record<string, typeof tourBoardingPlaces>)
           ).map(([date, items]) => (
-            <div key={date} className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-                {date === '날짜 없음' ? date : new Date(date).toLocaleDateString('ko-KR', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric',
-                  weekday: 'short'
-                })}
-                {tourData && date === tourData.start_date.split('T')[0] && ' (가는 날)'}
-                {tourData && date === tourData.end_date.split('T')[0] && ' (오는 날)'}
-              </h3>
-              {items.map((item, index) => (
-            <div key={item.id} className="bg-white border rounded-lg p-6 relative">
-              {/* 순서 변경 버튼 */}
-              <div className="absolute right-4 top-4 flex flex-col gap-1">
-                <button
-                  onClick={() => moveUp(item.id)}
-                  disabled={index === 0 || (index > 0 && (items[index-1]?.visit_date || '') !== (item.visit_date || ''))}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                  title="위로 이동"
-                >
-                  ▲
-                </button>
-                <button
-                  onClick={() => moveDown(item.id)}
-                  disabled={index === items.length - 1}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                  title="아래로 이동"
-                >
-                  ▼
-                </button>
+            <div key={date} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              {/* 날짜 헤더 */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-5 h-5" />
+                  <h3 className="text-lg font-semibold">
+                    {date === '날짜 없음' ? date : new Date(date).toLocaleDateString('ko-KR', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      weekday: 'short'
+                    })}
+                  </h3>
+                  {tourData && date === tourData.start_date.split('T')[0] && (
+                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm">가는 날</span>
+                  )}
+                  {tourData && date === tourData.end_date.split('T')[0] && (
+                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm">오는 날</span>
+                  )}
+                </div>
               </div>
 
-              {item.is_waypoint ? (
-                // 경유지/관광지 표시
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <Coffee className="w-8 h-8 text-orange-500" />
-                  </div>
-                  <div className="flex-1">
-                    {editingId === item.id ? (
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          defaultValue={item.waypoint_name}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const target = e.target as HTMLInputElement;
-                              handleUpdateWaypoint(item.id, { 
-                                waypoint_name: target.value 
-                              });
-                            }
-                          }}
-                          className="px-2 py-1 border rounded"
-                          placeholder="경유지명"
-                        />
-                        <input
-                          type="number"
-                          defaultValue={item.waypoint_duration}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const target = e.target as HTMLInputElement;
-                              handleUpdateWaypoint(item.id, { 
-                                waypoint_duration: parseInt(target.value) || 20
-                              });
-                            }
-                          }}
-                          className="px-2 py-1 border rounded w-20"
-                          placeholder="시간(분)"
-                        />
-                        <textarea
-                          defaultValue={item.waypoint_description}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.ctrlKey) {
-                              const target = e.target as HTMLTextAreaElement;
-                              handleUpdateWaypoint(item.id, { 
-                                waypoint_description: target.value 
-                              });
-                            }
-                          }}
-                          className="w-full px-2 py-1 border rounded"
-                          placeholder="설명 (Ctrl+Enter로 저장)"
-                          rows={2}
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <h3 className="text-lg font-medium text-gray-900">
-                          {index + 1}. {item.waypoint_name}
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          정차 시간: 약 {item.waypoint_duration}분
-                        </p>
-                        {item.waypoint_description && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            {item.waypoint_description}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditingId(editingId === item.id ? null : item.id)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                // 탑승지 표시
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <Bus className="w-8 h-8 text-blue-500" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {index + 1}. {item.boarding_place?.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {item.boarding_place?.address}
-                    </p>
-                    
-                    <div className="mt-3 flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        {editingId === item.id ? (
-                          <input
-                            type="time"
-                            defaultValue={item.departure_time?.slice(0, 5) || ''}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                const target = e.target as HTMLInputElement;
-                                handleUpdateTime(item.id, target.value);
-                              }
-                            }}
-                            onBlur={(e) => handleUpdateTime(item.id, e.target.value)}
-                            className="px-2 py-1 border rounded"
-                          />
-                        ) : (
-                          <span className="font-medium text-red-600">
-                            출발: {item.departure_time?.slice(0, 5) || ''}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {item.arrival_time && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">
-                            도착: {item.arrival_time.slice(0, 5)}
-                          </span>
+              {/* 아이템 목록 */}
+              <div className="divide-y">
+                {items.sort((a, b) => a.order_no - b.order_no).map((item, index) => (
+                  <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start gap-4">
+                      {/* 순서 번호 */}
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold">
+                          {index + 1}
                         </div>
-                      )}
-                    </div>
+                      </div>
 
-                    {item.boarding_place?.boarding_main && (
-                      <div className="mt-2 text-sm text-gray-600">
-                        <p className="font-medium">버스 탑승지:</p>
-                        <p>{item.boarding_place.boarding_main}</p>
-                        {item.boarding_place.boarding_sub && (
-                          <p className="text-gray-500">{item.boarding_place.boarding_sub}</p>
+                      {/* 내용 */}
+                      <div className="flex-1">
+                        {item.is_waypoint ? (
+                          // 경유지 카드
+                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <Coffee className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                {editingId === item.id ? (
+                                  <div className="space-y-3">
+                                    <input
+                                      type="text"
+                                      defaultValue={item.waypoint_name}
+                                      className="w-full px-3 py-2 border rounded-lg"
+                                      placeholder="경유지명"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          handleUpdateWaypoint(item.id, { 
+                                            waypoint_name: (e.target as HTMLInputElement).value 
+                                          });
+                                        }
+                                      }}
+                                    />
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="number"
+                                        defaultValue={item.waypoint_duration}
+                                        className="w-24 px-3 py-2 border rounded-lg"
+                                        placeholder="분"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            handleUpdateWaypoint(item.id, { 
+                                              waypoint_duration: parseInt((e.target as HTMLInputElement).value) || 20
+                                            });
+                                          }
+                                        }}
+                                      />
+                                      <span className="py-2 text-gray-600">분 정차</span>
+                                    </div>
+                                    <textarea
+                                      defaultValue={item.waypoint_description}
+                                      className="w-full px-3 py-2 border rounded-lg"
+                                      placeholder="설명"
+                                      rows={2}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && e.ctrlKey) {
+                                          handleUpdateWaypoint(item.id, { 
+                                            waypoint_description: (e.target as HTMLTextAreaElement).value 
+                                          });
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <h3 className="text-lg font-semibold text-orange-900">
+                                      {item.waypoint_name}
+                                    </h3>
+                                    <p className="text-sm text-orange-700 mt-1">
+                                      정차 시간: 약 {item.waypoint_duration}분
+                                    </p>
+                                    {item.waypoint_description && (
+                                      <p className="text-sm text-orange-600 mt-2">
+                                        {item.waypoint_description}
+                                      </p>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          // 탑승지 카드
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <Bus className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-blue-900">
+                                  {item.boarding_place?.name}
+                                </h3>
+                                <p className="text-sm text-blue-700 mt-1">
+                                  {item.boarding_place?.address}
+                                </p>
+                                
+                                <div className="mt-3 flex items-center gap-6">
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-blue-500" />
+                                    {editingId === item.id ? (
+                                      <input
+                                        type="time"
+                                        defaultValue={item.departure_time?.slice(0, 5) || ''}
+                                        className="px-2 py-1 border rounded"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            handleUpdateTime(item.id, (e.target as HTMLInputElement).value);
+                                          }
+                                        }}
+                                        onBlur={(e) => handleUpdateTime(item.id, e.target.value)}
+                                      />
+                                    ) : (
+                                      <span className="font-bold text-red-600 text-lg">
+                                        {item.departure_time?.slice(0, 5) || ''} 출발
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {item.arrival_time && (
+                                    <span className="text-sm text-gray-600">
+                                      ({item.arrival_time.slice(0, 5)} 도착 예정)
+                                    </span>
+                                  )}
+                                </div>
+
+                                {item.boarding_place?.boarding_main && (
+                                  <div className="mt-3 bg-white p-3 rounded">
+                                    <p className="text-sm font-medium text-gray-700">
+                                      <Navigation className="w-4 h-4 inline mr-1" />
+                                      버스 탑승 위치
+                                    </p>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                      {item.boarding_place.boarding_main}
+                                    </p>
+                                    {item.boarding_place.boarding_sub && (
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        {item.boarding_place.boarding_sub}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+
+                                {item.boarding_place?.parking_info && (
+                                  <div className="mt-2">
+                                    <span className="inline-block px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
+                                      주차: {item.boarding_place.parking_info}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
-                    )}
 
-                    {item.boarding_place?.parking_info && (
-                      <div className="mt-2 text-sm">
-                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                          주차: {item.boarding_place.parking_info}
-                        </span>
+                      {/* 액션 버튼 */}
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() => moveUp(item.id)}
+                          disabled={index === 0}
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="위로 이동"
+                        >
+                          <ChevronUp className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => moveDown(item.id)}
+                          disabled={index === items.length - 1}
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="아래로 이동"
+                        >
+                          <ChevronDown className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => setEditingId(editingId === item.id ? null : item.id)}
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          title="수정"
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditingId(editingId === item.id ? null : item.id)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-              ))}
+                ))}
+              </div>
             </div>
           ))
         )}
