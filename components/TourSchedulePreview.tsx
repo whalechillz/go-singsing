@@ -80,6 +80,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .order('date');
 
       if (schedulesError) throw schedulesError;
+      
+      console.log('Schedules data:', schedules);
 
       // 여행상품 정보 가져오기
       if (tour.tour_product_id) {
@@ -390,11 +392,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         </div>
         <div class="info-row">
           <div class="info-label">포함사항</div>
-          <div class="info-value">${productData?.includes || ''}</div>
+          <div class="info-value">${productData?.included_items || ''}</div>
         </div>
         <div class="info-row">
           <div class="info-label">불포함사항</div>
-          <div class="info-value">${productData?.excludes || ''}</div>
+          <div class="info-value">${productData?.excluded_items || ''}</div>
         </div>
       </div>
       
