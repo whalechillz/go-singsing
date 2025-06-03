@@ -380,22 +380,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         <div class="info-row">
           <div class="info-label">골프장</div>
           <div class="info-value">
-            ${productData?.golf_courses?.map((gc: any) => 
-              `${gc.name} ${gc.description || ''}`
-            ).join(', ') || tourData.golf_course}
+            ${productData?.golf_course || ''}
           </div>
         </div>
         <div class="info-row">
           <div class="info-label">숙소</div>
-          <div class="info-value">${tourData.accommodation} ${productData?.accommodation_info || ''}</div>
+          <div class="info-value">${productData?.hotel || ''}</div>
         </div>
         <div class="info-row">
           <div class="info-label">포함사항</div>
-          <div class="info-value">${productData?.included_items || tourData.includes || ''}</div>
+          <div class="info-value">${productData?.includes || ''}</div>
         </div>
         <div class="info-row">
           <div class="info-label">불포함사항</div>
-          <div class="info-value">${productData?.excluded_items || tourData.excludes || ''}</div>
+          <div class="info-value">${productData?.excludes || ''}</div>
         </div>
       </div>
       
@@ -712,14 +710,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         <Flag className="icon" />
         <div>
           <strong>골프장</strong>
-          <p>${productData?.golf_course || tourData.golf_course || ''}</p>
+          <p>${productData?.golf_course || ''}</p>
         </div>
       </div>
       <div class="info-item">
         <Building className="icon" />
         <div>
           <strong>숙소</strong>
-          <p>${tourData.accommodation}</p>
+          <p>${productData?.hotel || ''}</p>
         </div>
       </div>
     </div>
@@ -730,7 +728,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div class="day-header">Day ${schedule.day_number}</div>
           <div class="day-date">${new Date(schedule.date).toLocaleDateString('ko-KR')}</div>
           <div class="main-events">
-            ${schedule.tour_schedule_items?.filter((item: any) => 
+            ${schedule.tour_schedule_items?.filter((item: any) =>
               item.content.includes('골프') || item.content.includes('출발') || item.content.includes('도착')
             ).map((item: any) => `
               <div class="event">${item.time || ''} ${item.content}</div>
@@ -782,7 +780,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div class="header">
       <h1>객실 배정표</h1>
       <p>${tourData.title}</p>
-      <p>${tourData.accommodation}</p>
+      <p>${productData?.hotel || ''}</p>
     </div>
     
     ${Object.entries(roomsByRoom).map(([roomId, participants]: [string, any]) => `
@@ -867,7 +865,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div class="header">
       <h1>티타임표${isStaff ? ' (스탭용)' : ''}</h1>
       <p>${tourData.title}</p>
-      <p>${productData?.golf_course || tourData.golf_course || ''}</p>
+      <p>${productData?.golf_course || ''}</p>
     </div>
     
     ${Object.entries(teeTimesByDate).map(([date, times]: [string, any]) => `
