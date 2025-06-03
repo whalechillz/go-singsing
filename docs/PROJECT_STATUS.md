@@ -13,6 +13,28 @@
 
 ## 변경 이력
 
+### 2025-06-03 🗄️ 데이터베이스 구조 최적화
+
+#### 주요 변경사항
+1. **미사용 테이블 삭제**
+   - 백업 테이블 제거 (singsing_tours_backup, singsing_tee_times_backup 등)
+   - document 관련 미사용 테이블 제거 (document_footers, document_notices, document_templates)
+   - boarding_guide 관련 테이블 제거 (통합 완료)
+   - 기타 미사용 테이블 제거 (tour_basic_info, singsing_pickup_points, users 등)
+
+2. **미사용 컬럼 삭제**
+   - tour_products 테이블: schedule, reservation_notice, note, usage_guide 컬럼 제거
+
+3. **성능 최적화**
+   - 8개의 인덱스 추가 (tours, participants, schedules, payments, tee_times)
+   - 자주 조회되는 필드에 대한 인덱스 생성으로 쿼리 성능 향상
+
+4. **최종 구조**
+   - 15개의 핵심 테이블 + 1개의 뷰로 정리
+   - 깔끔하고 효율적인 데이터베이스 구조 확립
+
+---
+
 ### 2025-06-02 ✨ 데이터베이스 통합 및 UI 개선
 
 #### 주요 변경사항
@@ -30,17 +52,6 @@
 3. **기능 통합**
    - 일정 관리, 탑승 정보, 공지사항을 하나의 인터페이스로 통합
    - 미리보기 기능 강화 (전체/탑승안내/간단 뷰)
-
-#### 마이그레이션 가이드
-```sql
--- 마이그레이션 파일 실행
--- /supabase/migrations/20250602_consolidate_boarding_tables.sql
-
--- 백업 확인 후 기존 테이블 삭제
-DROP TABLE IF EXISTS boarding_guide_contacts;
-DROP TABLE IF EXISTS boarding_guide_notices;
-DROP TABLE IF EXISTS boarding_guide_routes;
-```
 
 ---
 
@@ -98,7 +109,7 @@ DROP TABLE IF EXISTS boarding_guide_routes;
 
 ## 현재 데이터베이스 구조
 
-### 주요 테이블
+### 주요 테이블 (15개)
 ```
 tour_products (여행상품 템플릿)
     └─→ singsing_tours (실제 투어)
@@ -108,10 +119,29 @@ tour_products (여행상품 템플릿)
             ├─→ singsing_rooms (객실)
             ├─→ singsing_payments (결제)
             └─→ singsing_tour_staff (스탭)
+
+기타 테이블:
+- singsing_boarding_places (탑승지 마스터)
+- singsing_tour_boarding_times (투어별 탑승 시간)
+- singsing_participant_tee_times (참가자-티타임 연결)
+- singsing_memo_templates (메모 템플릿)
+- singsing_memos (메모)
+- singsing_work_memos (업무 메모)
+- documents (문서)
 ```
 
 ### 주요 뷰
 - tour_schedule_preview: 투어 일정 미리보기 통합 뷰
+
+### 인덱스 (성능 최적화)
+- idx_singsing_tours_start_date
+- idx_singsing_participants_tour_id
+- idx_singsing_participants_status
+- idx_singsing_schedules_tour_id
+- idx_singsing_schedules_date
+- idx_singsing_payments_tour_id
+- idx_singsing_tee_times_tour_id
+- idx_singsing_tee_times_play_date
 
 ---
 
@@ -211,8 +241,9 @@ npm start
 - [빠른 시작 가이드](/docs/QUICK_START_GUIDE.md)
 - [개발자 가이드](/docs/DEVELOPER_GUIDE.md)
 - [데이터베이스 변경사항](/docs/DATABASE_CHANGES.md)
+- [데이터베이스 스키마](/docs/database/README.md)
 - [UI/UX 구조](/docs/ui-ux-structure.md)
 - [시스템 구조](/docs/system-structure.md)
 
 ---
-*최종 업데이트: 2025-06-02*
+*최종 업데이트: 2025-06-03*
