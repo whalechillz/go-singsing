@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, Clock, FileText, BookOpen } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, FileText } from 'lucide-react';
 // DocumentFooterManager 제거됨
 
 interface IntegratedScheduleManagerProps {
@@ -37,7 +37,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
       // 투어 공지사항 가져오기
       const { data: tourData, error: tourError } = await supabase
         .from('singsing_tours')
-        .select('notices')
+        .select('*')
         .eq('id', tourId)
         .single();
 
@@ -257,17 +257,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
             <FileText className="w-4 h-4 inline mr-2" />
             공지사항
           </button>
-          <button
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'document-footer' 
-                ? 'border-blue-500 text-blue-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('document-footer')}
-          >
-            <BookOpen className="w-4 h-4 inline mr-2" />
-            문서 하단 내용
-          </button>
+
         </div>
       </div>
 
@@ -517,10 +507,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
         </div>
       )}
 
-      {/* 문서 하단 내용 탭 */}
-      {activeTab === 'document-footer' && (
-        <DocumentFooterManager tourId={tourId} />
-      )}
+
     </div>
   );
 }
