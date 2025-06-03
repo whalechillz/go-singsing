@@ -328,7 +328,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto relative">
             <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -347,7 +347,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   수익
                 </th>
-                <th className="relative px-6 py-3">
+                <th className="relative px-6 py-3 overflow-visible">
                   <span className="sr-only">Actions</span>
                 </th>
               </tr>
@@ -410,8 +410,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {((tour.price || 0) * (tour.current_participants || 0)).toLocaleString()}원
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="relative" ref={showDropdown === tour.id ? dropdownRef : null}>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative overflow-visible">
+                      <div className="relative z-20" ref={showDropdown === tour.id ? dropdownRef : null}>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -420,21 +420,21 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                             const button = e.currentTarget;
                             const rect = button.getBoundingClientRect();
                             const windowHeight = window.innerHeight;
-                            const dropdownHeight = 200; // 대략적인 드롭다운 높이
+                            const dropdownHeight = 160; // 대략적인 드롭다운 높이
                             
                             // 화면 하단에 공간이 부족하면 위로 표시
-                            const position = rect.bottom + dropdownHeight > windowHeight - 50 ? 'top' : 'bottom';
+                            const position = rect.bottom + dropdownHeight > windowHeight - 20 ? 'top' : 'bottom';
                             setDropdownPositions(prev => ({ ...prev, [tour.id]: position }));
                             
                             setShowDropdown(showDropdown === tour.id ? null : tour.id);
                           }}
-                          className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                          className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                         >
                           <MoreVertical className="w-5 h-5" />
                         </button>
                         
                         {showDropdown === tour.id && (
-                          <div className={`absolute right-0 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 ${
+                          <div className={`absolute right-0 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[100] ${
                             dropdownPositions[tour.id] === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
                           }`}>
                             <div className="py-1" role="menu">
