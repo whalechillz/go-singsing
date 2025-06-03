@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, Clock, FileText, BookOpen } from 'lucide-react';
-import DocumentFooterManager from './DocumentFooterManager';
+// DocumentFooterManager 제거됨
 
 interface IntegratedScheduleManagerProps {
   tourId: string;
@@ -15,6 +15,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
   const [editingNotice, setEditingNotice] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('schedule');
   const [scheduleText, setScheduleText] = useState('');
+  const [tourProduct, setTourProduct] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -44,6 +45,16 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
       setSchedules(scheduleData || []);
       setNotices(tourData?.notices || []);
+
+      // tour_product 정보도 가져오기
+      if (tourData?.tour_product_id) {
+        const { data: productData } = await supabase
+          .from('tour_products')
+          .select('*')
+          .eq('id', tourData.tour_product_id)
+          .single();
+        setTourProduct(productData);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
