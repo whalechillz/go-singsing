@@ -488,20 +488,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <div class="meal-info">
                 <div class="meal">
                   <div>조식</div>
-                  <div class="meal-status ${schedule.meal_breakfast ? 'included' : 'not-included'}">
-                    ${schedule.meal_breakfast ? 'O' : 'X'}
+                  <div class="meal-status ${schedule.menu_breakfast ? 'included' : 'not-included'}">
+                    ${schedule.menu_breakfast ? 'O' : 'X'}
                   </div>
                 </div>
                 <div class="meal">
                   <div>중식</div>
-                  <div class="meal-status ${schedule.meal_lunch ? 'included' : 'not-included'}">
-                    ${schedule.meal_lunch ? 'O' : 'X'}
+                  <div class="meal-status ${schedule.menu_lunch ? 'included' : 'not-included'}">
+                    ${schedule.menu_lunch ? 'O' : 'X'}
                   </div>
                 </div>
                 <div class="meal">
                   <div>석식</div>
-                  <div class="meal-status ${schedule.meal_dinner ? 'included' : 'not-included'}">
-                    ${schedule.meal_dinner ? 'O' : 'X'}
+                  <div class="meal-status ${schedule.menu_dinner ? 'included' : 'not-included'}">
+                    ${schedule.menu_dinner ? 'O' : 'X'}
                   </div>
                 </div>
               </div>
