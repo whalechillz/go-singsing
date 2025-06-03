@@ -34,7 +34,6 @@ type TourForm = {
   golf_reservation_mobile: string;
   
   // 주의사항
-  special_notices: string;
   other_notices: string;
   document_settings: {
     customer_schedule: boolean;
@@ -73,8 +72,7 @@ const TourEditPage: React.FC = () => {
     golf_reservation_phone: "",
     golf_reservation_mobile: "",
     
-    // 투어별 특수 공지사항
-    special_notices: "",
+    // 기타 안내문구
     other_notices: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
     document_settings: {
       customer_schedule: true,
@@ -131,12 +129,7 @@ const TourEditPage: React.FC = () => {
           golf_reservation_phone: tourData.golf_reservation_phone || "",
           golf_reservation_mobile: tourData.golf_reservation_mobile || "",
           
-          // 투어별 특수 공지사항
-          special_notices: typeof tourData.special_notices === 'string' 
-            ? tourData.special_notices 
-            : tourData.special_notices?.text || "",
-          
-
+          // 기타 안내문구
           other_notices: tourData.other_notices || "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
           document_settings: tourData.document_settings || {
             customer_schedule: true,
@@ -253,7 +246,6 @@ const TourEditPage: React.FC = () => {
         company_mobile: form.company_mobile,
         golf_reservation_phone: form.golf_reservation_phone,
         golf_reservation_mobile: form.golf_reservation_mobile,
-        special_notices: form.special_notices || null,
         other_notices: form.other_notices,
         document_settings: form.document_settings,
         updated_at: new Date().toISOString(),
@@ -392,11 +384,11 @@ const TourEditPage: React.FC = () => {
                   선택된 여행상품 정보
                 </h4>
                 <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                  <p><span className="font-medium">숙소:</span> {selectedProduct.hotel}</p>
                   <p><span className="font-medium">골프장:</span> {selectedProduct.golf_course}</p>
-                  <p><span className="font-medium">가격:</span> {selectedProduct.base_price?.toLocaleString()}원</p>
-                  <p><span className="font-medium">지역:</span> {selectedProduct.region}</p>
-                  <p><span className="font-medium">일정:</span> {selectedProduct.duration}</p>
+                  <p><span className="font-medium">숙소:</span> {selectedProduct.hotel}</p>
+                  {selectedProduct.course && (
+                    <p><span className="font-medium">코스:</span> {selectedProduct.course}</p>
+                  )}
                   {selectedProduct.includes && (
                     <div>
                       <span className="font-medium">포함사항:</span>
@@ -681,18 +673,6 @@ const TourEditPage: React.FC = () => {
               </div>
             </div>
             
-            {/* 투어별 특수 공지사항 */}
-            <label className="flex flex-col gap-1">
-              <span className="font-medium text-gray-700 dark:text-gray-300">투어별 특수 공지사항</span>
-              <textarea
-                name="special_notices"
-                value={form.special_notices}
-                onChange={handleChange}
-                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[120px] bg-white dark:bg-gray-800"
-                placeholder="이 투어만의 특별한 공지사항이 있다면 입력하세요 (선택사항)"
-              />
-              <span className="text-sm text-gray-500">라운딩 주의사항은 여행상품에서 관리됩니다</span>
-            </label>
             
             {/* 푸터 메시지 */}
             <label className="flex flex-col gap-1">
