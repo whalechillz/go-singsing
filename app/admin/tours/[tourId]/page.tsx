@@ -10,12 +10,13 @@ import TeeTimeSlotManager from "@/components/TeeTimeSlotManager";
 import TeeTimeAssignmentManagerV2 from "@/components/TeeTimeAssignmentManagerV2";
 // 사용하지 않는 컴포넌트 import 제거됨
 import TourSchedulePreview from "@/components/TourSchedulePreview";
-import { Users, BedDouble, Calendar, Flag, Bus, FileText, Clock } from 'lucide-react';
+import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock } from 'lucide-react';
 
 const TABS = [
   { key: "participants", label: "참가자 관리", icon: <Users className="w-4 h-4" /> },
+  { key: "boarding-routes", label: "탑승 경로", icon: <MapPin className="w-4 h-4" /> },
   { key: "rooms", label: "객실 배정", icon: <BedDouble className="w-4 h-4" /> },
-  { key: "schedules", label: "일정 관리 (통합)", icon: <Calendar className="w-4 h-4" /> },
+  { key: "schedules", label: "일정 관리", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티타임 관리", icon: <Flag className="w-4 h-4" /> },
   { key: "schedule-preview", label: "문서 미리보기", icon: <FileText className="w-4 h-4" /> },
 ];
@@ -85,6 +86,15 @@ const TourDetailPage: React.FC = () => {
       {/* 탭 컨텐츠 */}
       <div className="bg-white rounded-b-lg shadow-sm p-6">
         {activeTab === "participants" && <ParticipantsManagerV2 tourId={tourId} showColumns={["이름", "연락처", "팀", "탑승지", "객실", "참여횟수", "상태", "관리"]} />}
+        {activeTab === "boarding-routes" && (
+          <div>
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">탑승 경로 관리</h3>
+              <p className="text-sm text-gray-600">이 투어의 탑승 경로와 시간을 관리하세요.</p>
+            </div>
+            <IntegratedScheduleManager tourId={tourId} />
+          </div>
+        )}
         {activeTab === "rooms" && (
           <>
             <RoomTypeManager tourId={tourId} />

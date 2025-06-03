@@ -356,21 +356,21 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       ` : ''}
     </div>
 
-    <!-- 라운딩 주의사항 (여행상품) -->
-    ${productData?.rounding_notices ? `
+    <!-- 특별 공지사항 (투어) -->
+    ${tourData.special_notices && tourData.special_notices.length > 0 ? `
       <div class="section">
-        <div class="section-title">라운딩 주의사항</div>
+        <div class="section-title">특별 공지사항</div>
         <div class="notice-box">
           <ul class="notice-list">
-            ${productData.rounding_notices.split('\n').map((line: string) => 
-              line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
-            ).filter(Boolean).join('')}
+            ${tourData.special_notices.map((notice: any) => 
+              `<li>${notice.content || notice}</li>`
+            ).join('') || ''}
           </ul>
         </div>
       </div>
     ` : ''}
 
-    <!-- 일반 공지사항 (여행상품) - 위치 수정 -->
+    <!-- 일반 공지사항 (여행상품) -->
     ${productData?.general_notices && productData.general_notices.length > 0 ? `
       <div class="section">
         <div class="section-title">이용 안내</div>
@@ -382,7 +382,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           </ul>
         </div>
       </div>
-    ` : productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_locker || productData?.usage_bus || productData?.usage_tour ? `
+    ` : productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour ? `
       <div class="section">
         <div class="section-title">이용 안내</div>
         <div class="notice-box">
@@ -898,18 +898,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     `).join('')}
     
-    ${documentFooters.rounding_timetable?.['라운딩 주의사항'] || productData?.rounding_notices ? `
+    ${documentFooters.rounding_timetable?.['라운딩 주의사항'] ? `
       <div class="notices">
         <h3>라운딩 주의사항</h3>
         <ul>
-          ${documentFooters.rounding_timetable?.['라운딩 주의사항'] ? 
-            documentFooters.rounding_timetable['라운딩 주의사항'].split('\n').map((line: string) => 
-              line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
-            ).filter(Boolean).join('') :
-            productData.rounding_notices.split('\n').map((line: string) => 
-              line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
-            ).filter(Boolean).join('')
-          }
+          ${documentFooters.rounding_timetable['라운딩 주의사항'].split('\n').map((line: string) => 
+            line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
+          ).filter(Boolean).join('')}
         </ul>
       </div>
     ` : ''}
