@@ -90,6 +90,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           .single();
 
         if (!productError && product) {
+          console.log('Product data:', product);
           setProductData(product);
         }
       }
