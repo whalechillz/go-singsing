@@ -1192,6 +1192,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .contact-box { background-color: #edf2f7; border-radius: 8px; padding: 15px; text-align: center; margin-top: 15px; }
     .contact-title { font-weight: bold; color: #2c5282; margin-bottom: 10px; }
     .contact-phone { font-size: 16px; color: #4a5568; margin: 5px 0; }
+    .route-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .route-table th, .route-table td { border: 1px solid #e2e8f0; padding: 10px; }
+    .route-table th { background-color: #edf2f7; font-weight: bold; color: #2c5282; }
     .footer { text-align: center; padding: 15px; background-color: #2c5282; color: white; border-radius: 10px; margin-top: 20px; }
     @media print { body { padding: 0; } .container { max-width: 100%; } }
     `;
