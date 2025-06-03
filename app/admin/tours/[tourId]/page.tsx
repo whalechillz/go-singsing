@@ -8,10 +8,8 @@ import RoomTypeManager from "@/components/RoomTypeManager";
 import IntegratedScheduleManager from "@/components/IntegratedScheduleManager";
 import TeeTimeSlotManager from "@/components/TeeTimeSlotManager";
 import TeeTimeAssignmentManagerV2 from "@/components/TeeTimeAssignmentManagerV2";
-import BoardingScheduleManager from "@/components/BoardingScheduleManager";
-import BoardingGuidePreview from "@/components/BoardingGuidePreview";
+// 사용하지 않는 컴포넌트 import 제거됨
 import TourSchedulePreview from "@/components/TourSchedulePreview";
-import TourBoardingTimeManager from "@/components/TourBoardingTimeManager";
 import { Users, BedDouble, Calendar, Flag, Bus, FileText, Clock } from 'lucide-react';
 
 const TABS = [
