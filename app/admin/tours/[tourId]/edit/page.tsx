@@ -3,7 +3,7 @@ import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, X, Users, Phone, FileText, Settings } from "lucide-react";
-import DocumentNoticeManager from "@/components/DocumentNoticeManager";
+// DocumentNoticeManager 제거됨
 
 type StaffMember = {
   id?: string;
@@ -769,9 +769,9 @@ const TourEditPage: React.FC = () => {
               />
             </label>
 
-            {/* 문서별 공지사항 관리 */}
+            {/* 문서별 공지사항 관리 - 제거됨 */}
             <div className="border-t pt-6">
-              <DocumentNoticeManager tourId={tourId} />
+              <p className="text-gray-600">문서별 공지사항은 투어 관리 &gt; 일정 관리에서 설정할 수 있습니다.</p>
             </div>
           </div>
         )}
