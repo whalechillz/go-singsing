@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, FileText } from 'lucide-react';
-// DocumentFooterManager 제거됨
+import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, FileText, Eye } from 'lucide-react';
+import TourSchedulePreview from './TourSchedulePreview';
 
 interface IntegratedScheduleManagerProps {
   tourId: string;
@@ -257,7 +257,17 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
             <FileText className="w-4 h-4 inline mr-2" />
             공지사항
           </button>
-
+          <button
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'preview' 
+                ? 'border-blue-500 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('preview')}
+          >
+            <Eye className="w-4 h-4 inline mr-2" />
+            일정표 미리보기
+          </button>
         </div>
       </div>
 
@@ -507,7 +517,10 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
         </div>
       )}
 
-
+      {/* 일정표 미리보기 탭 */}
+      {activeTab === 'preview' && (
+        <TourSchedulePreview tourId={tourId} />
+      )}
     </div>
   );
 }

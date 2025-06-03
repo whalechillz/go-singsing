@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import ScheduleManager from "@/components/ScheduleManager";
+import IntegratedScheduleManager from "@/components/IntegratedScheduleManager";
 
 export default function TourSchedulePage() {
   const params = useParams();
@@ -26,5 +26,5 @@ export default function TourSchedulePage() {
   
   if (!tour) return <div className="p-8">로딩중...</div>;
   
-  return <ScheduleManager tourId={tourId} tour={tour} />;
+  return <IntegratedScheduleManager tourId={tourId} />;
 }
