@@ -13,6 +13,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
   const [activeTab, setActiveTab] = useState('schedule');
   const [scheduleText, setScheduleText] = useState('');
   const [tourProduct, setTourProduct] = useState<any>(null);
+  const [localBoardingInfo, setLocalBoardingInfo] = useState<any>({});
 
   useEffect(() => {
     fetchData();
@@ -41,6 +42,15 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
       if (tourError) throw tourError;
 
       setSchedules(scheduleData || []);
+      
+      // boarding_info를 local state로 복사
+      const boardingInfoMap: any = {};
+      scheduleData?.forEach((schedule: any) => {
+        if (schedule.boarding_info) {
+          boardingInfoMap[schedule.id] = schedule.boarding_info;
+        }
+      });
+      setLocalBoardingInfo(boardingInfoMap);
 
       // tour_product 정보도 가져오기
       if (tourData?.tour_product_id) {
@@ -177,7 +187,23 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
     setScheduleText('');
   };
 
-
+  // 탑승 정보 저장 함수
+  const saveBoardingInfo = async (scheduleId: string) => {
+    try {
+      const boardingInfo = localBoardingInfo[scheduleId];
+      if (!boardingInfo) return;
+      
+      const { error } = await supabase
+        .from('singsing_schedules')
+        .update({ boarding_info: boardingInfo })
+        .eq('id', scheduleId);
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving boarding info:', error);
+      alert('탑승 정보 저장 중 오류가 발생했습니다.');
+    }
+  };
 
   if (loading) {
     return (
@@ -356,122 +382,97 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
           <h3 className="text-lg font-semibold">탑승 정보 관리</h3>
           
           <div className="space-y-4">
-            {schedules.map((schedule) => (
-              <div key={schedule.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="font-semibold">
-                    Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
-                  </h4>
-                  <button
-                    className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
-                    onClick={() => {
-                      const newRoute = { place: '', time: '' };
-                      const routes = schedule.boarding_info?.routes || [];
-                      routes.push(newRoute);
-                      const updated = {
-                        ...schedule,
-                        boarding_info: {
-                          ...schedule.boarding_info,
-                          routes: routes
-                        }
-                      };
-                      supabase
-                        .from('singsing_schedules')
-                        .update({ boarding_info: updated.boarding_info })
-                        .eq('id', schedule.id)
-                        .then(() => fetchData());
-                    }}
-                  >
-                    <Plus className="w-4 h-4 inline mr-1" /> 경유지 추가
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {schedule.boarding_info?.routes?.map((route: any, index: number) => (
-                    <div key={index} className="border rounded-lg p-4 bg-gray-50 relative">
-                      <button
-                        className="absolute top-2 right-2 p-1 hover:bg-gray-200 rounded"
-                        onClick={async () => {
-                          const routes = [...(schedule.boarding_info?.routes || [])];
-                          routes.splice(index, 1);
-                          const updated = {
-                            ...schedule,
-                            boarding_info: {
-                              ...schedule.boarding_info,
-                              routes: routes
-                            }
-                          };
-                          await supabase
-                            .from('singsing_schedules')
-                            .update({ boarding_info: updated.boarding_info })
-                            .eq('id', schedule.id);
-                          fetchData();
-                        }}
-                      >
-                        <X className="w-4 h-4 text-red-500" />
-                      </button>
-                      
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">탑승 장소</label>
-                          <input
-                            className="w-full px-3 py-2 border rounded-md"
-                            value={route.place || ''}
-                            placeholder="예: 서울 양재역"
-                            onChange={async (e) => {
-                              const routes = [...(schedule.boarding_info?.routes || [])];
-                              routes[index] = { ...routes[index], place: e.target.value };
-                              const updated = {
-                                ...schedule,
-                                boarding_info: {
-                                  ...schedule.boarding_info,
-                                  routes: routes
-                                }
-                              };
-                              await supabase
-                                .from('singsing_schedules')
-                                .update({ boarding_info: updated.boarding_info })
-                                .eq('id', schedule.id);
-                              fetchData();
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">탑승 시간</label>
-                          <input
-                            type="time"
-                            className="w-full px-3 py-2 border rounded-md"
-                            value={route.time || ''}
-                            onChange={async (e) => {
-                              const routes = [...(schedule.boarding_info?.routes || [])];
-                              routes[index] = { ...routes[index], time: e.target.value };
-                              const updated = {
-                                ...schedule,
-                                boarding_info: {
-                                  ...schedule.boarding_info,
-                                  routes: routes
-                                }
-                              };
-                              await supabase
-                                .from('singsing_schedules')
-                                .update({ boarding_info: updated.boarding_info })
-                                .eq('id', schedule.id);
-                              fetchData();
-                            }}
-                          />
+            {schedules.map((schedule) => {
+              const boardingInfo = localBoardingInfo[schedule.id] || schedule.boarding_info || { routes: [] };
+              
+              return (
+                <div key={schedule.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-semibold">
+                      Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
+                    </h4>
+                    <button
+                      className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+                      onClick={() => {
+                        const newRoute = { place: '', time: '' };
+                        const routes = [...(boardingInfo.routes || [])];
+                        routes.push(newRoute);
+                        setLocalBoardingInfo({
+                          ...localBoardingInfo,
+                          [schedule.id]: { ...boardingInfo, routes }
+                        });
+                      }}
+                    >
+                      <Plus className="w-4 h-4 inline mr-1" /> 경유지 추가
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {boardingInfo.routes?.map((route: any, index: number) => (
+                      <div key={index} className="border rounded-lg p-4 bg-gray-50 relative">
+                        <button
+                          className="absolute top-2 right-2 p-1 hover:bg-gray-200 rounded"
+                          onClick={() => {
+                            const routes = [...boardingInfo.routes];
+                            routes.splice(index, 1);
+                            setLocalBoardingInfo({
+                              ...localBoardingInfo,
+                              [schedule.id]: { ...boardingInfo, routes }
+                            });
+                            saveBoardingInfo(schedule.id);
+                          }}
+                        >
+                          <X className="w-4 h-4 text-red-500" />
+                        </button>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">탑승 장소</label>
+                            <input
+                              className="w-full px-3 py-2 border rounded-md"
+                              value={route.place || ''}
+                              placeholder="예: 서울 양재역"
+                              onChange={(e) => {
+                                const routes = [...boardingInfo.routes];
+                                routes[index] = { ...routes[index], place: e.target.value };
+                                setLocalBoardingInfo({
+                                  ...localBoardingInfo,
+                                  [schedule.id]: { ...boardingInfo, routes }
+                                });
+                              }}
+                              onBlur={() => saveBoardingInfo(schedule.id)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">탑승 시간</label>
+                            <input
+                              type="time"
+                              className="w-full px-3 py-2 border rounded-md"
+                              value={route.time || ''}
+                              onChange={(e) => {
+                                const routes = [...boardingInfo.routes];
+                                routes[index] = { ...routes[index], time: e.target.value };
+                                setLocalBoardingInfo({
+                                  ...localBoardingInfo,
+                                  [schedule.id]: { ...boardingInfo, routes }
+                                });
+                              }}
+                              onBlur={() => saveBoardingInfo(schedule.id)}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  
+                  {(!boardingInfo.routes || boardingInfo.routes.length === 0) && (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      아직 탑승 정보가 없습니다. 경유지를 추가해주세요.
+                    </p>
+                  )}
                 </div>
-                
-                {(!schedule.boarding_info?.routes || schedule.boarding_info.routes.length === 0) && (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    아직 탑승 정보가 없습니다. 경유지를 추가해주세요.
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
