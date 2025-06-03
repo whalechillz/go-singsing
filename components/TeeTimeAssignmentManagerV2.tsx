@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X, UserCheck, RefreshCw, ArrowUpDown } from "lucide-react";
@@ -58,6 +59,7 @@ type StaffMember = {
 type Props = { tourId: string; refreshKey?: number };
 
 const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => {
+  const router = useRouter();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [tour, setTour] = useState<Tour | null>(null);
@@ -977,6 +979,12 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     showToast('success', '데이터가 업데이트되었습니다.');
   };
 
+  const handlePreviewRedirect = (type: 'customer' | 'staff') => {
+    // 일정표 미리보기 탭으로 이동하면서 티타임표 뷰 선택
+    const viewType = type === 'customer' ? 'timetable' : 'timetable-staff';
+    router.push(`/admin/tours/${tourId}/schedule?tab=preview&view=${viewType}`);
+  };
+
   return (
     <div className="mb-8 relative">
       {/* 토스트 메시지 */}
@@ -1018,11 +1026,11 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             <option value="staff">스탭용</option>
           </select>
           <button
-            onClick={handlePreview}
+            onClick={() => handlePreviewRedirect(previewType)}
             className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
           >
             <Eye className="w-4 h-4" />
-            미리보기
+            일정표 미리보기에서 보기
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { Download, Share2, Printer, Calendar, MapPin, Phone, Clock, Users, FileText, Eye, Home, Car, Flag, Building } from 'lucide-react';
 
@@ -16,6 +17,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [staffDocumentHTML, setStaffDocumentHTML] = useState<string>('');
   const [roomAssignmentHTML, setRoomAssignmentHTML] = useState<string>('');
   const [teeTimeHTML, setTeeTimeHTML] = useState<string>('');
+  const [teeTimeStaffHTML, setTeeTimeStaffHTML] = useState<string>('');
+  const searchParams = useSearchParams();
 
   // 문서 타입 정의
   const DOCUMENT_TYPES = [
@@ -23,7 +26,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     { id: 'customer_boarding', label: '고객용 탑승안내서', icon: '🚌' },
     { id: 'staff_boarding', label: '스탭용 탑승안내서', icon: '👥' },
     { id: 'room_assignment', label: '객실 배정표', icon: '🏨' },
-    { id: 'tee_time', label: '티타임표', icon: '⛳' },
+    { id: 'timetable', label: '티타임표 (고객용)', icon: '⛳' },
+    { id: 'timetable-staff', label: '티타임표 (스탭용)', icon: '⛳' },
     { id: 'simplified', label: '간편 일정표', icon: '📄' }
   ];
 
@@ -31,12 +35,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     fetchTourData();
   }, [tourId]);
 
+  // URL 파라미터로 뷰 자동 선택
+  useEffect(() => {
+    const view = searchParams.get('view');
+    if (view && DOCUMENT_TYPES.some(doc => doc.id === view)) {
+      setActiveTab(view);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (activeTab === 'staff_boarding' && tourData) {
       fetchParticipantsForStaff();
     } else if (activeTab === 'room_assignment' && tourData) {
       fetchRoomAssignments();
-    } else if (activeTab === 'tee_time' && tourData) {
+    } else if ((activeTab === 'timetable' || activeTab === 'timetable-staff') && tourData) {
       fetchTeeTimes();
     }
   }, [activeTab, tourData]);
@@ -179,7 +191,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       if (error) throw error;
       
       if (teeTimes) {
-        setTeeTimeHTML(generateTeeTimeHTML(teeTimes));
+        setTeeTimeHTML(generateTeeTimeHTML(teeTimes, false)); // 고객용
+        setTeeTimeStaffHTML(generateTeeTimeHTML(teeTimes, true)); // 스탭용
       }
     } catch (error) {
       console.error('Error fetching tee times:', error);
@@ -222,8 +235,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         return staffDocumentHTML || '<div>스탭용 문서를 생성 중입니다...</div>';
       case 'room_assignment':
         return roomAssignmentHTML || '<div>객실 배정표를 생성 중입니다...</div>';
-      case 'tee_time':
+      case 'timetable':
         return teeTimeHTML || '<div>티타임표를 생성 중입니다...</div>';
+      case 'timetable-staff':
+        return teeTimeStaffHTML || '<div>티타임표를 생성 중입니다...</div>';
       case 'simplified':
         return getSimplifiedScheduleHTML();
       default:
@@ -676,7 +691,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   };
 
   // 티타임표 HTML 생성
-  const generateTeeTimeHTML = (teeTimes: any[]) => {
+  const generateTeeTimeHTML = (teeTimes: any[], isStaff: boolean = false) => {
     const teeTimesByDate = teeTimes.reduce((acc, teeTime) => {
       const date = teeTime.date;
       if (!acc[date]) acc[date] = [];
@@ -691,7 +706,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${tourData.title} - 티타임표</title>
+  <title>${tourData.title} - 티타임표${isStaff ? ' (스탭용)' : ''}</title>
   <style>
     ${getTeeTimeStyles()}
   </style>
@@ -699,7 +714,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <body>
   <div class="container">
     <div class="header">
-      <h1>티타임표</h1>
+      <h1>티타임표${isStaff ? ' (스탭용)' : ''}</h1>
       <p>${tourData.title}</p>
       <p>${tourData.golf_course}</p>
     </div>
@@ -714,6 +729,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <th width="100">코스</th>
               <th width="60">팀</th>
               <th>플레이어</th>
+                ${isStaff ? '<th>연락처</th>' : ''}
             </tr>
           </thead>
           <tbody>
@@ -794,6 +810,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                         <span class="player-name">${participant.name}</span>
                         ${genderMark ? `<span style="color: ${genderColor}; font-weight: bold; margin-left: 4px;">${genderMark}</span>` : ''}
                       </td>
+                      ${isStaff ? `<td>${participant.phone || '-'}</td>` : ''}
                     </tr>
                   `;
                 }).join('');
@@ -820,6 +837,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     <td class="players-cell">
                       ${playerNames.length > 0 ? playerNames.join(', ') : '-'}
                     </td>
+                    ${isStaff ? '<td>-</td>' : ''}
                   </tr>
                 `;
               }
