@@ -2,8 +2,7 @@
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Plus, X, Users, Phone, FileText, Settings } from "lucide-react";
-// DocumentNoticeManager 제거됨
+import { Plus, X, Users, Phone, FileText, Settings, Info } from "lucide-react";
 
 type StaffMember = {
   id?: string;
@@ -24,11 +23,8 @@ type TourForm = {
   start_date: string;
   end_date: string;
   tour_product_id: string;
-  // accommodation: string; // 삭제됨
   price: string;
   max_participants: string;
-  // includes: string; // 삭제됨
-  // excludes: string; // 삭제됨
   
   // 문서 표시 옵션
   show_staff_info: boolean;
@@ -68,11 +64,8 @@ const TourEditPage: React.FC = () => {
     start_date: "",
     end_date: "",
     tour_product_id: "",
-    // accommodation: "", // 삭제됨
     price: "",
     max_participants: "",
-    // includes: "", // 삭제됨
-    // excludes: "", // 삭제됨
     
     // 문서 표시 옵션 (기본값)
     show_staff_info: true,
@@ -115,6 +108,7 @@ const TourEditPage: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [products, setProducts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"basic" | "staff" | "document">("basic");
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -135,11 +129,8 @@ const TourEditPage: React.FC = () => {
           start_date: tourData.start_date ? tourData.start_date.substring(0, 10) : "",
           end_date: tourData.end_date ? tourData.end_date.substring(0, 10) : "",
           tour_product_id: tourData.tour_product_id || "",
-          accommodation: tourData.accommodation || "",
           price: tourData.price?.toString() || "",
           max_participants: tourData.max_participants?.toString() || "",
-          includes: tourData.includes || "",
-          excludes: tourData.excludes || "",
           
           // 문서 표시 옵션
           show_staff_info: tourData.show_staff_info ?? true,
@@ -194,6 +185,13 @@ const TourEditPage: React.FC = () => {
         .select("*");
         
       setProducts(productsData || []);
+      
+      // 선택된 상품 정보 설정
+      if (tourData?.tour_product_id && productsData) {
+        const product = productsData.find(p => p.id === tourData.tour_product_id);
+        setSelectedProduct(product);
+      }
+      
       setLoading(false);
     };
     
@@ -223,16 +221,12 @@ const TourEditPage: React.FC = () => {
 
   const handleProductChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
-    const selectedProduct = products.find((p) => p.id === selectedId);
-    if (selectedProduct) {
-      setForm({
-        ...form,
-        tour_product_id: selectedId,
-        accommodation: selectedProduct.hotel || "",
-        includes: selectedProduct.included_items || form.includes,
-        excludes: selectedProduct.excluded_items || form.excludes,
-      });
-    }
+    const product = products.find((p) => p.id === selectedId);
+    setSelectedProduct(product);
+    setForm({
+      ...form,
+      tour_product_id: selectedId
+    });
   };
 
   const handleStaffChange = (index: number, field: 'name' | 'phone' | 'role', value: string) => {
@@ -287,11 +281,8 @@ const TourEditPage: React.FC = () => {
         start_date: form.start_date,
         end_date: form.end_date,
         tour_product_id: form.tour_product_id || null,
-        accommodation: form.accommodation,
         price: form.price ? Number(form.price) : null,
         max_participants: form.max_participants ? Number(form.max_participants) : null,
-        includes: form.includes,
-        excludes: form.excludes,
         show_staff_info: form.show_staff_info,
         show_footer_message: form.show_footer_message,
         show_company_phones: form.show_company_phones,
@@ -422,6 +413,7 @@ const TourEditPage: React.FC = () => {
                 className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
                 value={form.tour_product_id} 
                 onChange={handleProductChange}
+                required
               >
                 <option value="">선택</option>
                 {products.map((product) => (
@@ -432,31 +424,44 @@ const TourEditPage: React.FC = () => {
               </select>
             </label>
             
-            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">숙소</span>
-              <input name="accommodation" type="text" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.accommodation} onChange={handleChange} required />
-            </label>
+            {/* 선택된 여행상품 정보 미리보기 */}
+            {selectedProduct && (
+              <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-200 dark:border-gray-700">
+                <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  선택된 여행상품 정보
+                </h4>
+                <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                  <p><span className="font-medium">숙소:</span> {selectedProduct.hotel}</p>
+                  <p><span className="font-medium">골프장:</span> {selectedProduct.golf_course}</p>
+                  <p><span className="font-medium">기본 가격:</span> {selectedProduct.base_price?.toLocaleString()}원</p>
+                  {selectedProduct.includes && (
+                    <div>
+                      <span className="font-medium">포함사항:</span>
+                      <p className="ml-4 mt-1">{selectedProduct.includes}</p>
+                    </div>
+                  )}
+                  {selectedProduct.excludes && (
+                    <div>
+                      <span className="font-medium">불포함사항:</span>
+                      <p className="ml-4 mt-1">{selectedProduct.excludes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="flex gap-2">
               <label className="flex flex-col gap-1 flex-1 text-gray-700 dark:text-gray-300">
-                <span className="font-medium">가격</span>
+                <span className="font-medium">투어 가격</span>
                 <input name="price" type="number" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.price} onChange={handleChange} required />
+                <span className="text-xs text-gray-500">여행상품의 기본 가격과 다를 경우 입력</span>
               </label>
               <label className="flex flex-col gap-1 flex-1 text-gray-700 dark:text-gray-300">
                 <span className="font-medium">최대 인원</span>
                 <input name="max_participants" type="number" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.max_participants} onChange={handleChange} required />
               </label>
             </div>
-            
-            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">포함사항</span>
-              <textarea name="includes" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.includes} onChange={handleChange} />
-            </label>
-            
-            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">불포함사항</span>
-              <textarea name="excludes" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.excludes} onChange={handleChange} />
-            </label>
             
             {/* 예약 안내사항 */}
             <div className="space-y-3">
@@ -480,7 +485,7 @@ const TourEditPage: React.FC = () => {
                       placeholder="제목 (예: 티오프 시간)"
                       value={notice.title}
                       onChange={(e) => updateReservationNotice(idx, 'title', e.target.value)}
-                      className="flex-1 px-3 py-2 border rounded"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-700"
                     />
                     <button
                       type="button"
@@ -494,7 +499,7 @@ const TourEditPage: React.FC = () => {
                     placeholder="내용"
                     value={notice.content}
                     onChange={(e) => updateReservationNotice(idx, 'content', e.target.value)}
-                    className="w-full px-3 py-2 border rounded resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded resize-none bg-white dark:bg-gray-700"
                     rows={2}
                   />
                 </div>
