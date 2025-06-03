@@ -572,11 +572,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div class="card-border"></div>
           <div class="card-content">
             <div class="card-title">${boardingPlace.name}</div>
-            <div class="card-time">${place.departure_time || '미정'}</div>
+            <div class="card-time">${place.departure_time ? place.departure_time.slice(0, 5) : '미정'}</div>
             <div class="card-date">${new Date(tourData.start_date).toLocaleDateString('ko-KR')}</div>
             <div class="card-info">
               <div class="info-parking">주차: ${boardingPlace.parking_info || '무료'}</div>
-              <div class="info-arrival">${place.arrival_time || getArrivalTime(place.departure_time)} 도착</div>
+              <div class="info-arrival">${place.arrival_time ? place.arrival_time.slice(0, 5) : getArrivalTime(place.departure_time)} 도착</div>
             </div>
             
             ${boardingPlace.boarding_main || boardingPlace.boarding_sub || boardingPlace.parking_main ? `
@@ -1252,7 +1252,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const getArrivalTime = (time: string) => {
     if (!time) return '';
-    const [hour, minute] = time.split(':').map(Number);
+    // HH:MM:SS 형식에서 HH:MM만 추출
+    const timeStr = time.slice(0, 5);
+    const [hour, minute] = timeStr.split(':').map(Number);
     let arrivalHour = hour;
     let arrivalMinute = minute - 20;
     

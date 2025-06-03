@@ -48,7 +48,6 @@ interface BoardingPlace {
   parking_main?: string;
   parking_map_url?: string;
   parking_info?: string;
-  place_type?: string;
 }
 
 interface TourBoardingManagerProps {
@@ -78,40 +77,6 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
   const fetchTourBoardingPlaces = async () => {
     setLoading(true);
     
-    // 먼저 singsing_tour_boarding_times 테이블이 있는지 확인
-    const { data: tableCheck, error: tableError } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'singsing_tour_boarding_times')
-      .single();
-
-    if (tableError || !tableCheck) {
-      // 테이블이 없으면 생성
-      const { error: createError } = await supabase.rpc('exec_sql', {
-        sql: `
-          CREATE TABLE IF NOT EXISTS singsing_tour_boarding_times (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            tour_id UUID REFERENCES singsing_tours(id) ON DELETE CASCADE,
-            boarding_place_id UUID REFERENCES singsing_boarding_places(id),
-            departure_time TIME,
-            arrival_time TIME,
-            order_no INTEGER DEFAULT 1,
-            is_waypoint BOOLEAN DEFAULT false,
-            waypoint_name VARCHAR(255),
-            waypoint_duration INTEGER DEFAULT 20,
-            waypoint_description TEXT,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(tour_id, order_no)
-          );
-        `
-      });
-
-      if (createError) {
-        console.error('테이블 생성 실패:', createError);
-      }
-    }
-
     // 데이터 조회
     const { data, error } = await supabase
       .from('singsing_tour_boarding_times')
@@ -124,7 +89,12 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
 
     if (error) {
       console.error('Error fetching tour boarding places:', error);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+      // 테이블이 없을 수 있으므로 빈 배열로 설정
+      setTourBoardingPlaces([]);
     } else {
+      console.log('Fetched tour boarding places:', data);
       setTourBoardingPlaces(data || []);
     }
     setLoading(false);
@@ -173,18 +143,30 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
       insertData.waypoint_duration = formData.waypoint_duration;
       insertData.waypoint_description = formData.waypoint_description;
     } else {
+      if (!formData.boarding_place_id || !formData.departure_time) {
+        alert('탑승지와 출발 시간을 선택해주세요.');
+        setLoading(false);
+        return;
+      }
       insertData.boarding_place_id = formData.boarding_place_id;
-      insertData.departure_time = formData.departure_time;
-      insertData.arrival_time = calculateArrivalTime(formData.departure_time);
+      insertData.departure_time = `${formData.departure_time}:00`; // TIME 형식에 맞게 :00 추가
+      insertData.arrival_time = `${calculateArrivalTime(formData.departure_time)}:00`;
     }
 
-    const { error } = await supabase
+    console.log('저장할 데이터:', insertData);
+
+    const { data, error } = await supabase
       .from('singsing_tour_boarding_times')
-      .insert([insertData]);
+      .insert([insertData])
+      .select();
 
     if (error) {
       console.error('Error adding boarding place:', error);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+      alert(`저장 오류: ${error.message}\n${error.details || ''}\n${error.hint || ''}`);
     } else {
+      console.log('저장 성공:', data);
       fetchTourBoardingPlaces();
       setShowAddForm(false);
       setFormData({
@@ -203,8 +185,8 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
     const { error } = await supabase
       .from('singsing_tour_boarding_times')
       .update({
-        departure_time: departureTime,
-        arrival_time: calculateArrivalTime(departureTime)
+        departure_time: `${departureTime}:00`,
+        arrival_time: `${calculateArrivalTime(departureTime)}:00`
       })
       .eq('id', id);
 
@@ -385,7 +367,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
                   required={!formData.is_waypoint}
                 >
                   <option value="">선택하세요</option>
-                  {availablePlaces.filter(p => p.place_type !== 'waypoint').map(place => (
+                  {availablePlaces.map(place => (
                     <option key={place.id} value={place.id}>
                       {place.name} - {place.address}
                     </option>
@@ -568,7 +550,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
                         {editingId === item.id ? (
                           <input
                             type="time"
-                            defaultValue={item.departure_time}
+                            defaultValue={item.departure_time?.slice(0, 5) || ''}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 const target = e.target as HTMLInputElement;
@@ -580,7 +562,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
                           />
                         ) : (
                           <span className="font-medium text-red-600">
-                            출발: {item.departure_time}
+                            출발: {item.departure_time?.slice(0, 5) || ''}
                           </span>
                         )}
                       </div>
@@ -588,7 +570,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
                       {item.arrival_time && (
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-500">
-                            도착: {item.arrival_time}
+                            도착: {item.arrival_time.slice(0, 5)}
                           </span>
                         </div>
                       )}
