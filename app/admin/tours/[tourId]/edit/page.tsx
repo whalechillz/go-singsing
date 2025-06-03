@@ -12,12 +12,6 @@ type StaffMember = {
   display_order?: number;
 };
 
-type ReservationNotice = {
-  order: number;
-  title: string;
-  content: string;
-};
-
 type TourForm = {
   title: string;
   start_date: string;
@@ -41,7 +35,6 @@ type TourForm = {
   
   // 주의사항
   special_notices: string;
-  reservation_notices: ReservationNotice[];
   other_notices: string;
   document_settings: {
     customer_schedule: boolean;
@@ -82,13 +75,6 @@ const TourEditPage: React.FC = () => {
     
     // 투어별 특수 공지사항
     special_notices: "",
-    
-    reservation_notices: [
-      { order: 1, title: "티오프 시간", content: "사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
-      { order: 2, title: "객실 배정", content: "예약 접수 순서대로 진행되오니 참고 부탁드립니다." },
-      { order: 3, title: "식사 서비스", content: "불참 시에도 별도 환불이 불가하오니 양해 바랍니다." },
-      { order: 4, title: "리무진 좌석", content: "가는 날 좌석은 오는 날에도 동일하게 이용해 주세요." }
-    ],
     other_notices: "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
     document_settings: {
       customer_schedule: true,
@@ -150,12 +136,7 @@ const TourEditPage: React.FC = () => {
             ? tourData.special_notices 
             : tourData.special_notices?.text || "",
           
-          reservation_notices: tourData.reservation_notices || [
-            { order: 1, title: "티오프 시간", content: "사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
-            { order: 2, title: "객실 배정", content: "예약 접수 순서대로 진행되오니 참고 부탁드립니다." },
-            { order: 3, title: "식사 서비스", content: "불참 시에도 별도 환불이 불가하오니 양해 바랍니다." },
-            { order: 4, title: "리무진 좌석", content: "가는 날 좌석은 오는 날에도 동일하게 이용해 주세요." }
-          ],
+
           other_notices: tourData.other_notices || "※ 상기 일정은 현지 사정 및 기상 변화에 의해 변경될 수 있으나, 투어 진행에 항상 최선을 다하겠습니다.",
           document_settings: tourData.document_settings || {
             customer_schedule: true,
@@ -247,27 +228,7 @@ const TourEditPage: React.FC = () => {
     setStaff(staff.filter((_, i) => i !== index));
   };
 
-  // 예약 안내사항 관리
-  const addReservationNotice = () => {
-    const newOrder = Math.max(...form.reservation_notices.map(n => n.order), 0) + 1;
-    setForm({
-      ...form,
-      reservation_notices: [...form.reservation_notices, { order: newOrder, title: "", content: "" }]
-    });
-  };
 
-  const updateReservationNotice = (index: number, field: 'title' | 'content', value: string) => {
-    const updated = [...form.reservation_notices];
-    updated[index][field] = value;
-    setForm({ ...form, reservation_notices: updated });
-  };
-
-  const removeReservationNotice = (index: number) => {
-    setForm({
-      ...form,
-      reservation_notices: form.reservation_notices.filter((_, i) => i !== index)
-    });
-  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -293,7 +254,6 @@ const TourEditPage: React.FC = () => {
         golf_reservation_phone: form.golf_reservation_phone,
         golf_reservation_mobile: form.golf_reservation_mobile,
         special_notices: form.special_notices || null,
-        reservation_notices: form.reservation_notices.filter(n => n.title.trim() && n.content.trim()),
         other_notices: form.other_notices,
         document_settings: form.document_settings,
         updated_at: new Date().toISOString(),
@@ -434,7 +394,9 @@ const TourEditPage: React.FC = () => {
                 <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                   <p><span className="font-medium">숙소:</span> {selectedProduct.hotel}</p>
                   <p><span className="font-medium">골프장:</span> {selectedProduct.golf_course}</p>
-                  <p><span className="font-medium">기본 가격:</span> {selectedProduct.base_price?.toLocaleString()}원</p>
+                  <p><span className="font-medium">가격:</span> {selectedProduct.base_price?.toLocaleString()}원</p>
+                  <p><span className="font-medium">지역:</span> {selectedProduct.region}</p>
+                  <p><span className="font-medium">일정:</span> {selectedProduct.duration}</p>
                   {selectedProduct.includes && (
                     <div>
                       <span className="font-medium">포함사항:</span>
@@ -447,6 +409,19 @@ const TourEditPage: React.FC = () => {
                       <p className="ml-4 mt-1">{selectedProduct.excludes}</p>
                     </div>
                   )}
+                  {selectedProduct.reservation_notices && selectedProduct.reservation_notices.length > 0 && (
+                    <div className="mt-2 pt-2 border-t">
+                      <span className="font-medium">예약 안내사항:</span>
+                      <div className="ml-4 mt-1 space-y-1">
+                        {selectedProduct.reservation_notices.map((notice: any, idx: number) => (
+                          <div key={idx}>
+                            <span className="font-medium text-xs">{notice.title}:</span>
+                            <span className="text-xs ml-1">{notice.content}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -455,55 +430,12 @@ const TourEditPage: React.FC = () => {
               <label className="flex flex-col gap-1 flex-1 text-gray-700 dark:text-gray-300">
                 <span className="font-medium">투어 가격</span>
                 <input name="price" type="number" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.price} onChange={handleChange} required />
-                <span className="text-xs text-gray-500">여행상품의 기본 가격과 다를 경우 입력</span>
+                <span className="text-xs text-gray-500">여행상품 가격과 다를 경우 입력</span>
               </label>
               <label className="flex flex-col gap-1 flex-1 text-gray-700 dark:text-gray-300">
                 <span className="font-medium">최대 인원</span>
                 <input name="max_participants" type="number" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.max_participants} onChange={handleChange} required />
               </label>
-            </div>
-            
-            {/* 예약 안내사항 */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-gray-700 dark:text-gray-300">예약 안내사항</span>
-                <button
-                  type="button"
-                  onClick={addReservationNotice}
-                  className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                >
-                  <Plus className="w-4 h-4" />
-                  추가
-                </button>
-              </div>
-              
-              {form.reservation_notices.map((notice, idx) => (
-                <div key={idx} className="space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="제목 (예: 티오프 시간)"
-                      value={notice.title}
-                      onChange={(e) => updateReservationNotice(idx, 'title', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-700"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeReservationNotice(idx)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <textarea
-                    placeholder="내용"
-                    value={notice.content}
-                    onChange={(e) => updateReservationNotice(idx, 'content', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded resize-none bg-white dark:bg-gray-700"
-                    rows={2}
-                  />
-                </div>
-              ))}
             </div>
             
             <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
