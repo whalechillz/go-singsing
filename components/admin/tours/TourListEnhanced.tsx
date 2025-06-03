@@ -51,7 +51,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'participants'>('date');
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
-  const [dropdownPositions, setDropdownPositions] = useState<Record<string, 'bottom' | 'top'>>({});
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 클릭 외부 영역 감지
@@ -328,8 +328,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto relative">
-            <table className="w-full">
+          <div className="overflow-x-auto" style={{overflow: 'visible'}}>
+            <table className="w-full" style={{overflow: 'visible'}}>
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -347,19 +347,19 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   수익
                 </th>
-                <th className="relative px-6 py-3 overflow-visible">
+                <th className="relative px-6 py-3">
                   <span className="sr-only">Actions</span>
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200" style={{overflow: 'visible'}}>
               {sortedTours.map((tour) => {
                 const status = getTourStatus(tour);
                 const occupancyRate = getOccupancyRate(tour);
                 
                 return (
                   <tr key={tour.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-6 whitespace-nowrap">
                       <div>
                         <Link 
                           href={`/admin/tours/${tour.id}`}
@@ -377,7 +377,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-6 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {formatDate(tour.start_date)} - {formatDate(tour.end_date)}
                       </div>
@@ -385,7 +385,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                         기사: {tour.driver_name}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-6 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="text-sm text-gray-900">
                           {tour.current_participants || 0} / {tour.max_participants || 0}
@@ -404,39 +404,23 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-6 whitespace-nowrap">
                       {getStatusBadge(status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
                       {((tour.price || 0) * (tour.current_participants || 0)).toLocaleString()}원
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative overflow-visible">
-                      <div className="relative z-20" ref={showDropdown === tour.id ? dropdownRef : null}>
+                    <td className="px-6 py-6 whitespace-nowrap text-right text-sm font-medium" style={{overflow: 'visible'}}>
+                      <div className="relative flex items-center justify-end" ref={showDropdown === tour.id ? dropdownRef : null}>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            
-                            // 드롭다운 위치 계산
-                            const button = e.currentTarget;
-                            const rect = button.getBoundingClientRect();
-                            const windowHeight = window.innerHeight;
-                            const dropdownHeight = 160; // 대략적인 드롭다운 높이
-                            
-                            // 화면 하단에 공간이 부족하면 위로 표시
-                            const position = rect.bottom + dropdownHeight > windowHeight - 20 ? 'top' : 'bottom';
-                            setDropdownPositions(prev => ({ ...prev, [tour.id]: position }));
-                            
-                            setShowDropdown(showDropdown === tour.id ? null : tour.id);
-                          }}
+                          onClick={() => setShowDropdown(showDropdown === tour.id ? null : tour.id)}
                           className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                         >
                           <MoreVertical className="w-5 h-5" />
                         </button>
                         
                         {showDropdown === tour.id && (
-                          <div className={`absolute right-0 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[100] ${
-                            dropdownPositions[tour.id] === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
-                          }`}>
+                          <div className="absolute right-0 top-full mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5" style={{zIndex: 9999}}>
                             <div className="py-1" role="menu">
                               <Link
                                 href={`/admin/tours/${tour.id}`}
