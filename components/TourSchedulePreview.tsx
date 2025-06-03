@@ -18,6 +18,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [roomAssignmentHTML, setRoomAssignmentHTML] = useState<string>('');
   const [teeTimeHTML, setTeeTimeHTML] = useState<string>('');
   const [teeTimeStaffHTML, setTeeTimeStaffHTML] = useState<string>('');
+  const [tourBoardingPlaces, setTourBoardingPlaces] = useState<any[]>([]);
   const searchParams = useSearchParams();
 
   // 문서 타입 정의
@@ -33,6 +34,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   useEffect(() => {
     fetchTourData();
+    fetchTourBoardingPlaces();
   }, [tourId]);
 
   // URL 파라미터로 뷰 자동 선택
@@ -124,6 +126,30 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       console.error('Error fetching tour data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTourBoardingPlaces = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('singsing_tour_boarding_times')
+        .select(`
+          *,
+          boarding_place:singsing_boarding_places (*)
+        `)
+        .eq('tour_id', tourId)
+        .eq('is_waypoint', false)
+        .order('order_no');
+
+      if (error) {
+        console.error('Error fetching tour boarding places:', error);
+      } else {
+        setTourBoardingPlaces(data || []);
+      }
+    } catch (error) {
+      console.error('Error in fetchTourBoardingPlaces:', error);
+      // 테이블이 없을 수 있으므로 예외 처리
+      setTourBoardingPlaces([]);
     }
   };
 
@@ -518,8 +544,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   // 고객용 탑승안내서 HTML
   const getCustomerBoardingHTML = () => {
     const notices = documentNotices.customer_boarding || [];
-    const firstSchedule = tourData.schedules?.[0];
-    const boardingInfo = firstSchedule?.boarding_info || {};
     
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -539,20 +563,47 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     </div>
     
     <div class="boarding-cards">
-      ${boardingInfo.routes?.map((route: any, index: number) => `
+      ${tourBoardingPlaces.map((place: any, index: number) => {
+        const boardingPlace = place.boarding_place;
+        if (!boardingPlace) return '';
+        
+        return `
         <div class="boarding-card">
           <div class="card-border"></div>
           <div class="card-content">
-            <div class="card-title">${route.place}</div>
-            <div class="card-time">${route.time}</div>
+            <div class="card-title">${boardingPlace.name}</div>
+            <div class="card-time">${place.departure_time || '미정'}</div>
             <div class="card-date">${new Date(tourData.start_date).toLocaleDateString('ko-KR')}</div>
             <div class="card-info">
-              <div class="info-parking">주차: ${getParking(route.place)}</div>
-              <div class="info-arrival">${getArrivalTime(route.time)} 도착</div>
+              <div class="info-parking">주차: ${boardingPlace.parking_info || '무료'}</div>
+              <div class="info-arrival">${place.arrival_time || getArrivalTime(place.departure_time)} 도착</div>
             </div>
+            
+            ${boardingPlace.boarding_main || boardingPlace.boarding_sub || boardingPlace.parking_main ? `
+              <div class="location-info">
+                ${boardingPlace.boarding_main ? `
+                  <div class="location-section">
+                    <p class="location-title">버스탑승지</p>
+                    <p class="location-main">${boardingPlace.boarding_main}</p>
+                    ${boardingPlace.boarding_sub ? `<p class="location-sub">${boardingPlace.boarding_sub}</p>` : ''}
+                  </div>
+                ` : ''}
+                
+                ${boardingPlace.parking_main ? `
+                  <div class="location-section">
+                    <p class="location-title">주차장 오는길</p>
+                    <p class="location-main">${boardingPlace.parking_main}</p>
+                    ${boardingPlace.parking_map_url ? `
+                      <a href="${boardingPlace.parking_map_url}" class="map-link" target="_blank">네이버 지도에서 보기</a>
+                    ` : ''}
+                  </div>
+                ` : ''}
+              </div>
+            ` : ''}
           </div>
         </div>
-      `).join('') || ''}
+        `;
+      }).join('') || '<p class="text-center py-8">탑승지 정보가 없습니다.</p>'}
     </div>
     
     <div class="common-info">
@@ -1074,6 +1125,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .card-info { display: flex; gap: 15px; margin-top: 15px; font-size: 14px; }
     .info-parking { background-color: #ebf8ff; color: #2B6CB0; padding: 5px 10px; border-radius: 4px; }
     .info-arrival { background-color: #fff5f5; color: #e53e3e; padding: 5px 10px; border-radius: 4px; }
+    .location-info { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; flex-direction: column; gap: 15px; }
+    .location-section { background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
+    .location-title { font-weight: 600; color: #2d3748; margin-bottom: 5px; display: flex; align-items: center; }
+    .location-title:before { content: "📍"; margin-right: 5px; }
+    .location-main { font-weight: 600; color: #2d3748; margin-bottom: 2px; }
+    .location-sub { color: #718096; font-size: 13px; }
+    .map-link { display: inline-block; background-color: #3182ce; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-top: 5px; font-size: 13px; }
     .common-info { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
     .section-title { font-size: 18px; font-weight: bold; color: #2c5282; margin-bottom: 15px; }
     .notice-content { white-space: pre-line; color: #4a5568; margin-bottom: 15px; }
@@ -1193,9 +1251,16 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   };
 
   const getArrivalTime = (time: string) => {
+    if (!time) return '';
     const [hour, minute] = time.split(':').map(Number);
-    const arrivalHour = hour > 0 ? hour - 1 : 23;
-    const arrivalMinute = minute >= 20 ? minute - 20 : minute + 40;
+    let arrivalHour = hour;
+    let arrivalMinute = minute - 20;
+    
+    if (arrivalMinute < 0) {
+      arrivalMinute += 60;
+      arrivalHour = hour > 0 ? hour - 1 : 23;
+    }
+    
     return `${String(arrivalHour).padStart(2, '0')}:${String(arrivalMinute).padStart(2, '0')}`;
   };
 
