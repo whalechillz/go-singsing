@@ -24,11 +24,11 @@ type TourForm = {
   start_date: string;
   end_date: string;
   tour_product_id: string;
-  accommodation: string;
+  // accommodation: string; // 삭제됨
   price: string;
   max_participants: string;
-  includes: string;
-  excludes: string;
+  // includes: string; // 삭제됨
+  // excludes: string; // 삭제됨
   
   // 문서 표시 옵션
   show_staff_info: boolean;
@@ -68,11 +68,11 @@ const TourEditPage: React.FC = () => {
     start_date: "",
     end_date: "",
     tour_product_id: "",
-    accommodation: "",
+    // accommodation: "", // 삭제됨
     price: "",
     max_participants: "",
-    includes: "",
-    excludes: "",
+    // includes: "", // 삭제됨
+    // excludes: "", // 삭제됨
     
     // 문서 표시 옵션 (기본값)
     show_staff_info: true,
