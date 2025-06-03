@@ -54,9 +54,16 @@ interface TourBoardingManagerProps {
   tourId: string;
 }
 
+interface TourData {
+  id: string;
+  start_date: string;
+  end_date: string;
+}
+
 export default function TourBoardingManager({ tourId }: TourBoardingManagerProps) {
   const [tourBoardingPlaces, setTourBoardingPlaces] = useState<TourBoardingPlace[]>([]);
   const [availablePlaces, setAvailablePlaces] = useState<BoardingPlace[]>([]);
+  const [tourData, setTourData] = useState<TourData | null>(null);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -66,13 +73,29 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
     is_waypoint: false,
     waypoint_name: "",
     waypoint_duration: 20,
-    waypoint_description: ""
+    waypoint_description: "",
+    visit_date: ""
   });
 
   useEffect(() => {
+    fetchTourData();
     fetchTourBoardingPlaces();
     fetchAvailablePlaces();
   }, [tourId]);
+
+  const fetchTourData = async () => {
+    const { data, error } = await supabase
+      .from('singsing_tours')
+      .select('id, start_date, end_date')
+      .eq('id', tourId)
+      .single();
+
+    if (data) {
+      setTourData(data);
+      // 기본 날짜를 첫날로 설정
+      setFormData(prev => ({ ...prev, visit_date: data.start_date.split('T')[0] }));
+    }
+  };
 
   const fetchTourBoardingPlaces = async () => {
     setLoading(true);
@@ -85,7 +108,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
         boarding_place:singsing_boarding_places (*)
       `)
       .eq('tour_id', tourId)
-      .order('order_no');
+      .order('visit_date, order_no');
 
     if (error) {
       console.error('Error fetching tour boarding places:', error);
@@ -142,6 +165,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
       insertData.waypoint_name = formData.waypoint_name;
       insertData.waypoint_duration = formData.waypoint_duration;
       insertData.waypoint_description = formData.waypoint_description;
+      insertData.visit_date = formData.visit_date;
     } else {
       if (!formData.boarding_place_id || !formData.departure_time) {
         alert('탑승지와 출발 시간을 선택해주세요.');
@@ -151,6 +175,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
       insertData.boarding_place_id = formData.boarding_place_id;
       insertData.departure_time = `${formData.departure_time}:00`; // TIME 형식에 맞게 :00 추가
       insertData.arrival_time = `${calculateArrivalTime(formData.departure_time)}:00`;
+      insertData.visit_date = formData.visit_date;
     }
 
     console.log('저장할 데이터:', insertData);
@@ -175,7 +200,8 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
         is_waypoint: false,
         waypoint_name: "",
         waypoint_duration: 20,
-        waypoint_description: ""
+        waypoint_description: "",
+        visit_date: tourData?.start_date.split('T')[0] || ""
       });
     }
     setLoading(false);
@@ -252,11 +278,15 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
     }
   };
 
-  const moveUp = async (index: number) => {
-    if (index === 0) return;
+  const moveUp = async (itemId: string) => {
+    const currentIndex = tourBoardingPlaces.findIndex(p => p.id === itemId);
+    if (currentIndex <= 0) return;
     
-    const current = tourBoardingPlaces[index];
-    const previous = tourBoardingPlaces[index - 1];
+    const current = tourBoardingPlaces[currentIndex];
+    const previous = tourBoardingPlaces[currentIndex - 1];
+    
+    // 같은 날짜인지 확인
+    if (current.visit_date !== previous.visit_date) return;
     
     await supabase
       .from('singsing_tour_boarding_times')
@@ -271,11 +301,15 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
     fetchTourBoardingPlaces();
   };
 
-  const moveDown = async (index: number) => {
-    if (index === tourBoardingPlaces.length - 1) return;
+  const moveDown = async (itemId: string) => {
+    const currentIndex = tourBoardingPlaces.findIndex(p => p.id === itemId);
+    if (currentIndex >= tourBoardingPlaces.length - 1) return;
     
-    const current = tourBoardingPlaces[index];
-    const next = tourBoardingPlaces[index + 1];
+    const current = tourBoardingPlaces[currentIndex];
+    const next = tourBoardingPlaces[currentIndex + 1];
+    
+    // 같은 날짜인지 확인
+    if (current.visit_date !== next.visit_date) return;
     
     await supabase
       .from('singsing_tour_boarding_times')
@@ -311,6 +345,19 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
       {showAddForm && (
         <div className="bg-white border border-blue-500 rounded-lg p-6">
           <h3 className="text-lg font-medium mb-4">새 항목 추가</h3>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">날짜 선택</label>
+            <input
+              type="date"
+              value={formData.visit_date}
+              onChange={(e) => setFormData({ ...formData, visit_date: e.target.value })}
+              min={tourData?.start_date.split('T')[0]}
+              max={tourData?.end_date.split('T')[0]}
+              className="w-full px-3 py-2 border rounded-lg"
+              required
+            />
+          </div>
           
           <div className="mb-4">
             <label className="flex items-center gap-2">
@@ -416,7 +463,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
       )}
 
       {/* 탑승지/경유지 목록 */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {loading && !showAddForm ? (
           <div className="text-center py-8 text-gray-500">불러오는 중...</div>
         ) : tourBoardingPlaces.length === 0 ? (
@@ -425,21 +472,41 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
             <p className="text-gray-500">아직 등록된 탑승지나 경유지가 없습니다</p>
           </div>
         ) : (
-          tourBoardingPlaces.map((item, index) => (
+          // 날짜별로 그룹화
+          Object.entries(
+            tourBoardingPlaces.reduce((acc, item) => {
+              const date = item.visit_date || '날짜 없음';
+              if (!acc[date]) acc[date] = [];
+              acc[date].push(item);
+              return acc;
+            }, {} as Record<string, typeof tourBoardingPlaces>)
+          ).map(([date, items]) => (
+            <div key={date} className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                {date === '날짜 없음' ? date : new Date(date).toLocaleDateString('ko-KR', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric',
+                  weekday: 'short'
+                })}
+                {tourData && date === tourData.start_date.split('T')[0] && ' (가는 날)'}
+                {tourData && date === tourData.end_date.split('T')[0] && ' (오는 날)'}
+              </h3>
+              {items.map((item, index) => (
             <div key={item.id} className="bg-white border rounded-lg p-6 relative">
               {/* 순서 변경 버튼 */}
               <div className="absolute right-4 top-4 flex flex-col gap-1">
                 <button
-                  onClick={() => moveUp(index)}
-                  disabled={index === 0}
+                  onClick={() => moveUp(item.id)}
+                  disabled={index === 0 || (index > 0 && items[index-1]?.visit_date !== item.visit_date)}
                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
                   title="위로 이동"
                 >
                   ▲
                 </button>
                 <button
-                  onClick={() => moveDown(index)}
-                  disabled={index === tourBoardingPlaces.length - 1}
+                  onClick={() => moveDown(item.id)}
+                  disabled={index === items.length - 1}
                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
                   title="아래로 이동"
                 >
@@ -611,6 +678,8 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
                   </div>
                 </div>
               )}
+            </div>
+              ))}
             </div>
           ))
         )}

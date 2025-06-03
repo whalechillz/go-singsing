@@ -19,6 +19,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [teeTimeHTML, setTeeTimeHTML] = useState<string>('');
   const [teeTimeStaffHTML, setTeeTimeStaffHTML] = useState<string>('');
   const [tourBoardingPlaces, setTourBoardingPlaces] = useState<any[]>([]);
+  const [tourWaypoints, setTourWaypoints] = useState<any[]>([]);
   const searchParams = useSearchParams();
 
   // 문서 타입 정의
@@ -131,6 +132,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const fetchTourBoardingPlaces = async () => {
     try {
+      // 가는 날 탑승지만 가져오기 (가는 날 = start_date)
+      const { data: tourInfo } = await supabase
+        .from('singsing_tours')
+        .select('start_date')
+        .eq('id', tourId)
+        .single();
+
+      if (!tourInfo) return;
+
       const { data, error } = await supabase
         .from('singsing_tour_boarding_times')
         .select(`
@@ -139,12 +149,26 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         `)
         .eq('tour_id', tourId)
         .eq('is_waypoint', false)
+        .eq('visit_date', tourInfo.start_date.split('T')[0])
         .order('order_no');
 
       if (error) {
         console.error('Error fetching tour boarding places:', error);
       } else {
         setTourBoardingPlaces(data || []);
+      }
+
+      // 경유지 정보도 가져오기
+      const { data: waypoints } = await supabase
+        .from('singsing_tour_boarding_times')
+        .select('*')
+        .eq('tour_id', tourId)
+        .eq('is_waypoint', true)
+        .eq('visit_date', tourInfo.start_date.split('T')[0])
+        .order('order_no');
+
+      if (waypoints) {
+        setTourWaypoints(waypoints);
       }
     } catch (error) {
       console.error('Error in fetchTourBoardingPlaces:', error);
@@ -604,6 +628,33 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         </div>
         `;
       }).join('') || '<p class="text-center py-8">탑승지 정보가 없습니다.</p>'}
+    </div>
+    
+    ${/* 경유지 정보 추가 */''}
+    <div class="common-info">
+      <h3 class="section-title">이동 경로 및 정차 정보</h3>
+      <table class="route-table">
+        <tr>
+          <th style="width: 30%;">시간</th>
+          <th>장소</th>
+        </tr>
+        ${tourBoardingPlaces.map((place: any, index: number) => {
+          const boardingPlace = place.boarding_place;
+          if (!boardingPlace) return '';
+          return `
+            <tr>
+              <td>${place.departure_time ? place.departure_time.slice(0, 5) : '미정'}</td>
+              <td>${boardingPlace.name} 출발</td>
+            </tr>
+          `;
+        }).join('')}
+        ${tourWaypoints.map((waypoint: any) => `
+          <tr>
+            <td>-</td>
+            <td>${waypoint.waypoint_name} 정차 (약 ${waypoint.waypoint_duration}분) ${waypoint.waypoint_description ? `- ${waypoint.waypoint_description}` : ''}</td>
+          </tr>
+        `).join('')}
+      </table>
     </div>
     
     <div class="common-info">
