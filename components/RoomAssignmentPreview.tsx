@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Printer, Download, FileText } from "lucide-react";
 
 type Props = {
@@ -7,11 +7,19 @@ type Props = {
   onClose: () => void;
   html: string;
   type: 'customer' | 'staff';
+  initialDriverName?: string;
+  initialDriverPhone?: string;
 };
 
-const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type }) => {
-  const [driverName, setDriverName] = useState('김성팔 기사');
-  const [driverPhone, setDriverPhone] = useState('010-5254-9876');
+const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type, initialDriverName, initialDriverPhone }) => {
+  const [driverName, setDriverName] = useState(initialDriverName || '기사님');
+  const [driverPhone, setDriverPhone] = useState(initialDriverPhone || '010-0000-0000');
+  
+  // props가 변경되면 state 업데이트
+  useEffect(() => {
+    if (initialDriverName) setDriverName(initialDriverName);
+    if (initialDriverPhone) setDriverPhone(initialDriverPhone);
+  }, [initialDriverName, initialDriverPhone]);
   
   if (!isOpen) return null;
 
@@ -64,26 +72,29 @@ const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type })
         </div>
 
         {/* 기사 정보 입력 */}
-        <div className="p-4 bg-gray-50 border-b flex gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">담당자:</label>
-            <input
+        <div className="p-4 bg-gray-50 border-b">
+          <div className="text-sm text-gray-600 mb-2">📝 출력 전 담당 기사 정보를 확인하고 수정하실 수 있습니다</div>
+          <div className="flex gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">담당 기사:</label>
+              <input
               type="text"
               value={driverName}
               onChange={(e) => setDriverName(e.target.value)}
               className="border rounded px-2 py-1 text-sm"
               placeholder="기사님 성함"
             />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">연락처:</label>
-            <input
-              type="text"
-              value={driverPhone}
-              onChange={(e) => setDriverPhone(e.target.value)}
-              className="border rounded px-2 py-1 text-sm"
-              placeholder="010-0000-0000"
-            />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">연락처:</label>
+              <input
+                type="text"
+                value={driverPhone}
+                onChange={(e) => setDriverPhone(e.target.value)}
+                className="border rounded px-2 py-1 text-sm"
+                placeholder="010-0000-0000"
+              />
+            </div>
           </div>
         </div>
 

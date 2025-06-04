@@ -70,7 +70,6 @@ interface ParticipantForm {
   is_paying_for_group?: boolean;
   companions?: string[];
   pickup_location?: string;
-  pickup_time?: string; // 추가
   tour_id?: string;
 }
 
@@ -110,8 +109,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     group_size: 1,
     is_paying_for_group: false,
     companions: [],
-    pickup_location: "",
-    pickup_time: ""
+    pickup_location: ""
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
@@ -436,26 +434,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     }
     
     if (name === "pickup_location") {
-      // 탑승지 선택 시 해당 투어의 탑승 시간 자동 조회
       setForm({ ...form, pickup_location: value });
-      
-      if (value && (form.tour_id || tourId)) {
-        // 탑승지 ID 찾기
-        const selectedPlace = boardingPlaces.find(p => p.name === value);
-        if (selectedPlace) {
-          // 투어-탑승지 시간 조회
-          const { data } = await supabase
-            .from('singsing_tour_boarding_times')
-            .select('pickup_time')
-            .eq('tour_id', form.tour_id || tourId || '')
-            .eq('boarding_place_id', selectedPlace.id)
-            .single();
-          
-          if (data?.pickup_time) {
-            setForm(prev => ({ ...prev, pickup_time: data.pickup_time }));
-          }
-        }
-      }
       return;
     }
     
@@ -502,7 +481,6 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       emergency_contact: form.emergency_contact,
       join_count: form.join_count,
       pickup_location: form.pickup_location,
-      pickup_time: form.pickup_time || null,  // 빈 문자열인 경우 null로 변환
       tour_id: tourId || form.tour_id,
       group_size: form.group_size,
       is_paying_for_group: form.is_paying_for_group,
@@ -577,7 +555,6 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         is_paying_for_group: participant.is_paying_for_group || false,
         companions: companions,
         pickup_location: participant.pickup_location || "",
-        pickup_time: participant.pickup_time || "",
         tour_id: participant.tour_id || tourId || "" // tourId 추가
       });
       if (participant.role && !roleOptions.includes(participant.role)) {
@@ -600,7 +577,6 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         is_paying_for_group: false,
         companions: [],
         pickup_location: "",
-        pickup_time: "",
         tour_id: tourId || "" // 투어별 페이지에서는 tourId 자동 설정
       });
       setCustomRole("");
@@ -625,8 +601,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
       group_size: 1,
       is_paying_for_group: false,
       companions: [],
-      pickup_location: "",
-      pickup_time: ""
+      pickup_location: ""
     });
     setCustomRole("");
     setError("");
@@ -1768,19 +1743,7 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    출발시간
-                  </label>
-                  <input
-                    type="time"
-                    name="pickup_time"
-                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    value={form.pickup_time || ''}
-                    onChange={handleChange}
-                    placeholder="예: 05:20"
-                  />
-                </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

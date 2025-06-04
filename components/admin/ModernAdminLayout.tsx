@@ -27,6 +27,13 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     if (pathname.startsWith('/admin/memos')) return '참가자 메모';
     if (pathname.startsWith('/admin/work-memos')) return '업무 메모';
     if (pathname.startsWith('/admin/memo-templates')) return '메모 템플릿';
+    if (pathname.startsWith('/admin/tour-staff')) return '투어 운영진';
+    if (pathname.startsWith('/admin/staff')) return '투어 운영진'; // 기존 URL 호환성
+    if (pathname.startsWith('/admin/users')) return '사용자 관리';
+    if (pathname.startsWith('/admin/roles')) return '권한 관리';
+    if (pathname.startsWith('/admin/customers')) return '고객 데이터베이스';
+    if (pathname.startsWith('/admin/messages')) return '메시지 발송';
+    if (pathname.startsWith('/admin/campaigns')) return '마케팅 캠페인';
     if (pathname.startsWith('/admin/statistics')) return '통계';
     if (pathname.startsWith('/admin/settings')) return '설정';
     return '대시보드';

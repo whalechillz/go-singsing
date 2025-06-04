@@ -32,8 +32,20 @@ type Room = {
 
 type Tour = {
   id: string;
-  tour_title: string;
-  tour_period: string;
+  title: string;  // 실제 DB 커럼명
+  start_date: string;
+  end_date: string;
+  driver_name?: string;
+  driver_phone?: string;
+};
+
+type Staff = {
+  id: string;
+  tour_id: string;
+  name: string;
+  phone: string;
+  role: string;
+  order: number;
 };
 
 type Props = { tourId: string; refreshKey?: number };
@@ -42,6 +54,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [tour, setTour] = useState<Tour | null>(null);
+  const [tourStaff, setTourStaff] = useState<Staff | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [assigning, setAssigning] = useState<string | null>(null);
@@ -56,7 +69,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     setLoading(true);
     setError("");
     try {
-      const [{ data: participantsData, error: participantsError }, { data: roomsData, error: roomsError }, { data: tourData, error: tourError }] = await Promise.all([
+      const [{ data: participantsData, error: participantsError }, { data: roomsData, error: roomsError }, { data: tourData, error: tourError }, { data: staffData, error: staffError }] = await Promise.all([
         supabase
           .from("singsing_participants")
           .select("*, singsing_rooms:room_id(id, room_type, room_seq, room_number, capacity)")
@@ -71,7 +84,14 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           .from("singsing_tours")
           .select("*")
           .eq("id", tourId)
-          .single()
+          .single(),
+        supabase
+          .from("singsing_tour_staff")
+          .select("*")
+          .eq("tour_id", tourId)
+          .eq("role", "기사")
+          .order("order")
+          .limit(1)
       ]);
       
       if (participantsError) throw participantsError;
@@ -81,6 +101,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       setParticipants((participantsData || []) as Participant[]);
       setRooms((roomsData || []) as Room[]);
       setTour(tourData as Tour);
+      setTourStaff(staffData && staffData.length > 0 ? staffData[0] as Staff : null);
     } catch (error: any) {
       console.error('Error fetching data:', error);
       setError(error.message);
@@ -149,7 +170,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   };
 
   // 미리보기 HTML 생성
-  const generatePreviewHTML = (type: 'customer' | 'staff') => {
+  const generatePreviewHTML = (type: 'customer' | 'staff', driverName?: string, driverPhone?: string) => {
     const assignedParticipants = participants.filter(p => p.room_id);
     const sortedParticipants = [...assignedParticipants].sort((a, b) => {
       const roomA = rooms.find(r => r.id === a.room_id);
@@ -158,10 +179,28 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       return roomA.room_number!.localeCompare(roomB.room_number!);
     });
 
-    const tourTitle = tour?.tour_title || "투어명";
-    const tourPeriod = tour?.tour_period || "투어 기간";
+    const tourTitle = tour?.title || "투어명";
+    
+    // 투어 기간 계산
+    let tourPeriod = "투어 기간";
+    if (tour?.start_date && tour?.end_date) {
+      const startDate = new Date(tour.start_date);
+      const endDate = new Date(tour.end_date);
+      const formatDate = (date: Date) => {
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+        const weekday = weekdays[date.getDay()];
+        return `${month}/${day}(${weekday})`;
+      };
+      tourPeriod = `${formatDate(startDate)}~${formatDate(endDate)}`;
+    }
     const isStaff = type === 'staff';
     const currentDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    
+    // 기사 정보 결정 (우선순위: 전달받은 값 > 스태프 정보 > 투어 정보 > 기본값)
+    const finalDriverName = driverName || tourStaff?.name || tour?.driver_name || '기사님';
+    const finalDriverPhone = driverPhone || tourStaff?.phone || tour?.driver_phone || '010-0000-0000';
 
     const participantRows = sortedParticipants.map((p, index) => {
       const room = rooms.find(r => r.id === p.room_id);
@@ -235,8 +274,8 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
       </div>
       <div class="info-section">
-        <p>담당: 기사님</p>
-        <p>연락처: 010-0000-0000</p>
+        <p>담당: ${finalDriverName}</p>
+        <p>연락처: ${finalDriverPhone}</p>
       </div>
     </div>
     <div style="margin-bottom: 20px; padding: 15px; background-color: #f1f5f9; border: 2px solid #64748b; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -325,8 +364,8 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
       </div>
       <div class="info-section">
-        <p>담당: 기사님</p>
-        <p>연락처: 010-0000-0000</p>
+        <p>담당: ${finalDriverName}</p>
+        <p>연락처: ${finalDriverPhone}</p>
       </div>
     </div>
     <div class="table-container">
@@ -350,7 +389,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       <div class="summary-title" style="color: #0369a1;">투어 요약</div>
       <p><strong>참가 인원:</strong> 총 ${sortedParticipants.length}명</p>
       <p><strong>객실 현황:</strong> ${occupiedRoomCount}개 객실 사용 (총 ${totalRooms}개 중)</p>
-      <p><strong>담당 기사:</strong> 기사님 (010-0000-0000)</p>
+      <p><strong>담당 기사:</strong> ${finalDriverName} (${finalDriverPhone})</p>
     </div>
     
     <div class="notice">
@@ -396,7 +435,11 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   };
 
   const handlePreview = () => {
-    const html = generatePreviewHTML(previewType);
+    // 기본 기사 정보 설정
+    const defaultDriverName = tourStaff?.name || tour?.driver_name || '기사님';
+    const defaultDriverPhone = tourStaff?.phone || '010-0000-0000';
+    
+    const html = generatePreviewHTML(previewType, defaultDriverName, defaultDriverPhone);
     setPreviewHtml(html);
     setIsPreviewOpen(true);
   };
@@ -610,6 +653,8 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         onClose={() => setIsPreviewOpen(false)}
         html={previewHtml}
         type={previewType}
+        initialDriverName={tourStaff?.name || tour?.driver_name || '기사님'}
+        initialDriverPhone={tourStaff?.phone || tour?.driver_phone || '010-0000-0000'}
       />
     </div>
   );

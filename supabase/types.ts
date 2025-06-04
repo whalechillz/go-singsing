@@ -1,6 +1,162 @@
 export interface Database {
   public: {
     Tables: {
+      roles: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          permissions: any
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          permissions?: any
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          permissions?: any
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      users: {
+        Row: {
+          id: string
+          name: string
+          phone: string
+          email: string | null
+          team: string | null
+          role: string | null
+          password_hash: string | null
+          is_active: boolean
+          role_id: string | null
+          department: string | null
+          hire_date: string | null
+          profile_image_url: string | null
+          emergency_phone: string | null
+          last_login: string | null
+          login_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          phone: string
+          email?: string | null
+          team?: string | null
+          role?: string | null
+          password_hash?: string | null
+          is_active?: boolean
+          role_id?: string | null
+          department?: string | null
+          hire_date?: string | null
+          profile_image_url?: string | null
+          emergency_phone?: string | null
+          last_login?: string | null
+          login_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          phone?: string
+          email?: string | null
+          team?: string | null
+          role?: string | null
+          password_hash?: string | null
+          is_active?: boolean
+          role_id?: string | null
+          department?: string | null
+          hire_date?: string | null
+          profile_image_url?: string | null
+          emergency_phone?: string | null
+          last_login?: string | null
+          login_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      customers: {
+        Row: {
+          id: string
+          name: string
+          phone: string
+          email: string | null
+          birth_date: string | null
+          gender: string | null
+          marketing_agreed: boolean
+          marketing_agreed_at: string | null
+          kakao_friend: boolean
+          kakao_friend_at: string | null
+          status: string
+          customer_type: string | null
+          first_tour_date: string | null
+          last_tour_date: string | null
+          total_tour_count: number
+          total_payment_amount: number
+          source: string | null
+          notes: string | null
+          tags: string[] | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          phone: string
+          email?: string | null
+          birth_date?: string | null
+          gender?: string | null
+          marketing_agreed?: boolean
+          marketing_agreed_at?: string | null
+          kakao_friend?: boolean
+          kakao_friend_at?: string | null
+          status?: string
+          customer_type?: string | null
+          first_tour_date?: string | null
+          last_tour_date?: string | null
+          total_tour_count?: number
+          total_payment_amount?: number
+          source?: string | null
+          notes?: string | null
+          tags?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          phone?: string
+          email?: string | null
+          birth_date?: string | null
+          gender?: string | null
+          marketing_agreed?: boolean
+          marketing_agreed_at?: string | null
+          kakao_friend?: boolean
+          kakao_friend_at?: string | null
+          status?: string
+          customer_type?: string | null
+          first_tour_date?: string | null
+          last_tour_date?: string | null
+          total_tour_count?: number
+          total_payment_amount?: number
+          source?: string | null
+          notes?: string | null
+          tags?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       boarding_guide_contacts: {
         Row: {
           id: number
@@ -494,6 +650,7 @@ export interface Database {
           created_at: string
           updated_at: string
           driver_name: string | null
+          driver_phone: string | null
           reservation_notice: string | null
           schedule_notice: string | null
           tour_product_id: string | null
@@ -513,6 +670,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
           driver_name?: string | null
+          driver_phone?: string | null
           reservation_notice?: string | null
           schedule_notice?: string | null
           tour_product_id?: string | null
@@ -532,6 +690,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
           driver_name?: string | null
+          driver_phone?: string | null
           reservation_notice?: string | null
           schedule_notice?: string | null
           tour_product_id?: string | null
@@ -606,6 +765,8 @@ export interface Database {
           phone: string
           role: string | null
           order: number
+          user_id: string | null
+          display_order: number
           created_at: string
         }
         Insert: {
@@ -615,6 +776,8 @@ export interface Database {
           phone: string
           role?: string | null
           order?: number
+          user_id?: string | null
+          display_order?: number
           created_at?: string
         }
         Update: {
@@ -624,43 +787,54 @@ export interface Database {
           phone?: string
           role?: string | null
           order?: number
+          user_id?: string | null
+          display_order?: number
           created_at?: string
         }
       }
-      users: {
+    }
+    Views: {
+      active_users: {
         Row: {
           id: string
           name: string
           phone: string
           email: string | null
           team: string | null
-          role: string
+          role: string | null
+          password_hash: string | null
+          is_active: boolean
+          role_id: string | null
+          department: string | null
+          hire_date: string | null
+          profile_image_url: string | null
           emergency_phone: string | null
+          last_login: string | null
+          login_count: number
           created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          phone: string
-          email?: string | null
-          team?: string | null
-          role?: string
-          emergency_phone?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          phone?: string
-          email?: string | null
-          team?: string | null
-          role?: string
-          emergency_phone?: string | null
-          created_at?: string
+          updated_at: string
+          role_name: string | null
+          permissions: any | null
         }
       }
-    }
-    Views: {
+      tour_staff_details: {
+        Row: {
+          id: string
+          tour_id: string
+          name: string
+          phone: string
+          role: string | null
+          order: number
+          user_id: string | null
+          display_order: number
+          created_at: string
+          tour_title: string | null
+          start_date: string | null
+          end_date: string | null
+          user_email: string | null
+          department: string | null
+        }
+      }
       tour_schedule_preview: {
         Row: {
           tour_id: string

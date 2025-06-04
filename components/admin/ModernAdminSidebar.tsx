@@ -16,7 +16,10 @@ import {
   ChevronDown,
   Menu,
   Palette,
-  Package
+  Package,
+  UserCog,
+  Shield,
+  Phone
 } from 'lucide-react';
 
 interface NavSubItem {
@@ -42,7 +45,13 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
   const pathname = usePathname();
   const router = useRouter();
   
-  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ 'participants-management': true, 'tour-management': true, 'memo-management': true });
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({ 
+    'participants-management': true, 
+    'tour-management': true, 
+    'memo-management': true,
+    'tour-staff-management': true,
+    'customer-management': true 
+  });
   
   // pathname에 따라 activeNav 결정
   const getActiveNav = () => {
@@ -59,6 +68,13 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/memos')) return 'memos';
     if (pathname.startsWith('/admin/work-memos')) return 'work-memos';
     if (pathname.startsWith('/admin/memo-templates')) return 'memo-templates';
+    if (pathname.startsWith('/admin/tour-staff')) return 'tour-staff';
+    if (pathname.startsWith('/admin/staff')) return 'tour-staff'; // 기존 URL 호환성
+    if (pathname.startsWith('/admin/users')) return 'users';
+    if (pathname.startsWith('/admin/roles')) return 'roles';
+    if (pathname.startsWith('/admin/customers')) return 'customers';
+    if (pathname.startsWith('/admin/messages')) return 'messages';
+    if (pathname.startsWith('/admin/campaigns')) return 'campaigns';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     return 'dashboard';
   };
@@ -89,6 +105,26 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       subMenu: [
         { id: 'participants-list', label: '참가자 목록', href: '/admin/participants' },
         { id: 'payments', label: '결제 관리', href: '/admin/payments' },
+      ]
+    },
+    { 
+      id: 'customer-management', 
+      label: '고객 관리', 
+      icon: <Phone className="w-5 h-5" />,
+      subMenu: [
+        { id: 'customers', label: '고객 데이터베이스', href: '/admin/customers' },
+        { id: 'messages', label: '메시지 발송', href: '/admin/messages' },
+        { id: 'campaigns', label: '마케팅 캠페인', href: '/admin/campaigns' },
+      ]
+    },
+    { 
+      id: 'tour-staff-management', 
+      label: '투어 운영진', 
+      icon: <UserCog className="w-5 h-5" />,
+      subMenu: [
+        { id: 'tour-staff', label: '기사/가이드 관리', href: '/admin/tour-staff' },
+        { id: 'users', label: '시스템 계정', href: '/admin/users' },
+        { id: 'roles', label: '권한 설정', href: '/admin/roles' },
       ]
     },
     { id: 'documents', label: '문서 관리', icon: <FileText className="w-5 h-5" />, href: '/admin/documents' },

@@ -4,7 +4,7 @@
 싱싱골프투어 관리 시스템의 데이터베이스 구조 문서입니다.
 
 - **데이터베이스**: PostgreSQL (Supabase)
-- **최종 업데이트**: 2025-06-03
+- **최종 업데이트**: 2025-06-04
 
 ## 🗄️ 파일 구조
 ```
@@ -19,6 +19,11 @@ database/
 ```
 
 ## 📊 현재 테이블 구조
+
+### 권한/유저 관리 테이블 (3개) - 🆕 2025-06-04 추가
+1. **roles** - 권한 역할 (admin, manager, staff, driver)
+2. **users** - 시스템 사용자 (확장됨)
+3. **customers** - 고객 마스터 데이터베이스
 
 ### 핵심 테이블 (15개)
 1. **tour_products** - 여행상품 템플릿 (3 rows)
@@ -42,36 +47,61 @@ database/
 15. **documents** - 문서 (4 rows)
 
 ### 뷰 (View)
+- **active_users** - 활성 사용자 뷰 🆕
+- **tour_staff_details** - 투어 스탭 상세 뷰 🆕
 - **tour_schedule_preview** - 투어 일정 미리보기
 
-## 🔧 최근 변경사항 (2025-06-03)
+## 🔧 최근 변경사항 (2025-06-04)
 
-### 삭제된 테이블
-- ❌ 백업 테이블들 (singsing_tours_backup, singsing_tee_times_backup 등)
-- ❌ document_footers, document_notices, document_templates
-- ❌ boarding_guide_contacts, boarding_guide_notices, boarding_guide_routes
-- ❌ tour_basic_info
-- ❌ singsing_pickup_points
-- ❌ singsing_work_memo_comments
-- ❌ users
+### 추가된 테이블 🆕
+- ✅ **roles** - 권한 역할 관리
+  - id, name, description, permissions (JSONB)
+  - 기본 역할: admin, manager, staff, driver
 
-### 삭제된 컬럼
-- ❌ tour_products.schedule
-- ❌ tour_products.reservation_notice
-- ❌ tour_products.note
-- ❌ tour_products.usage_guide
+- ✅ **customers** - 고객 마스터 DB
+  - id, name, phone, email, birth_date, gender
+  - 마케팅 동의: marketing_agreed, kakao_friend
+  - 통계: total_tour_count, last_tour_date, total_payment_amount
+  - 상태: status (active/inactive/blocked), customer_type (vip/regular/new)
 
-### 추가된 인덱스
-- ✅ idx_singsing_tours_start_date
-- ✅ idx_singsing_participants_tour_id
-- ✅ idx_singsing_participants_status
-- ✅ idx_singsing_schedules_tour_id
-- ✅ idx_singsing_schedules_date
-- ✅ idx_singsing_payments_tour_id
-- ✅ idx_singsing_tee_times_tour_id
-- ✅ idx_singsing_tee_times_play_date
+### 수정된 테이블
+- ✅ **users** 테이블 확장
+  - 추가 컬럼: password_hash, is_active, role_id (FK to roles)
+  - 추가 정보: department, hire_date, profile_image_url
+  - 로그인 정보: last_login, login_count
+
+- ✅ **singsing_tours**
+  - 추가 컬럼: driver_phone
+
+- ✅ **singsing_tour_staff**
+  - 추가 컬럼: user_id (FK to users), display_order
+
+### 추가된 함수
+- ✅ check_user_permission() - 권한 확인
+- ✅ update_updated_at_column() - updated_at 자동 업데이트
+- ✅ update_customer_stats() - 고객 통계 자동 업데이트
+
+### RLS (Row Level Security) 설정
+- 개발 중이므로 모든 테이블의 RLS 비활성화됨
+- 프로덕션 배포 전 활성화 필요
 
 ## 📑 주요 테이블 관계
+
+### 권한 시스템 관계도 🆕
+```
+roles (권한 역할)
+    ↓ role_id
+users (시스템 사용자)
+    ↓ user_id
+singsing_tour_staff (투어별 스탭)
+```
+
+### 고객 관리 관계도 🆕
+```
+customers (고객 마스터)
+    ← phone으로 연결
+singsing_participants (투어 참가자)
+```
 
 ### 핵심 관계도
 ```
@@ -88,75 +118,109 @@ singsing_tours (실제 투어)
     └── singsing_tour_staff (스탭)
 ```
 
-## 📊 테이블별 주요 필드
+## 📊 새로 추가된 테이블 상세
 
-### tour_products
-- id, name, golf_courses (jsonb), accommodation
-- included_items, excluded_items
-- general_notices (jsonb), rounding_notices
-- usage_round, usage_hotel, usage_meal, usage_bus, usage_tour
+### roles 테이블
+```sql
+CREATE TABLE roles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(50) UNIQUE NOT NULL,
+  description TEXT,
+  permissions JSONB DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
 
-### singsing_tours  
-- id, title, start_date, end_date
-- tour_product_id (FK)
-- golf_course, accommodation, price, max_participants
+-- 기본 역할
+- admin: {"all": true}
+- manager: {"tours": true, "participants": true, "documents": true}
+- staff: {"tours": ["read"], "participants": ["read"]}
+- driver: {"tours": ["read"], "participants": ["read"]}
+```
 
-### singsing_schedules
-- id, tour_id (FK), date, title, description
-- day_number, meal_breakfast, meal_lunch, meal_dinner
-- schedule_items (jsonb), boarding_info (jsonb)
-
-### singsing_participants
-- id, tour_id (FK), name, phone, email
-- status, pickup_location, room_id
-- gender, team_name, group_size
+### customers 테이블
+```sql
+CREATE TABLE customers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(100) NOT NULL,
+  phone VARCHAR(20) UNIQUE NOT NULL,
+  email VARCHAR(255),
+  -- 고객 정보
+  birth_date DATE,
+  gender VARCHAR(10),
+  -- 마케팅 동의
+  marketing_agreed BOOLEAN DEFAULT false,
+  marketing_agreed_at TIMESTAMP,
+  kakao_friend BOOLEAN DEFAULT false,
+  -- 통계
+  total_tour_count INT DEFAULT 0,
+  total_payment_amount DECIMAL(12,2) DEFAULT 0,
+  -- 상태
+  status VARCHAR(20) DEFAULT 'active',
+  customer_type VARCHAR(20), -- vip, regular, new
+  -- 메타
+  source VARCHAR(50),
+  tags TEXT[],
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
 
 ## 🔍 유용한 쿼리
 
-### 테이블 크기 확인
+### 권한 확인
 ```sql
-SELECT
-    tablename,
-    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size,
-    (SELECT COUNT(*) FROM information_schema.columns 
-     WHERE table_name = tablename) as columns
-FROM pg_tables
-WHERE schemaname = 'public'
-ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+-- 사용자 권한 확인
+SELECT check_user_permission(user_id, 'tours', 'write');
+
+-- 활성 사용자 목록
+SELECT * FROM active_users;
+
+-- VIP 고객 목록
+SELECT * FROM customers WHERE customer_type = 'vip';
 ```
 
-### 인덱스 목록 확인
+### 통계 쿼리
 ```sql
-SELECT
-    schemaname,
-    tablename,
-    indexname,
-    indexdef
-FROM pg_indexes
-WHERE schemaname = 'public'
-ORDER BY tablename, indexname;
-```
-
-### 투어 통계 조회
-```sql
+-- 고객별 투어 참여 통계
 SELECT 
-    t.id,
-    t.title,
-    t.start_date,
-    (SELECT COUNT(*) FROM singsing_participants p 
-     WHERE p.tour_id = t.id AND p.status = '확정') as confirmed_count,
-    (SELECT COUNT(*) FROM singsing_schedules s 
-     WHERE s.tour_id = t.id) as schedule_count
-FROM singsing_tours t
-ORDER BY t.start_date DESC;
+  c.name,
+  c.phone,
+  c.total_tour_count,
+  c.last_tour_date,
+  c.customer_type
+FROM customers c
+WHERE c.total_tour_count > 0
+ORDER BY c.total_tour_count DESC;
+
+-- 직원별 담당 투어
+SELECT 
+  u.name as staff_name,
+  r.name as role,
+  COUNT(DISTINCT ts.tour_id) as tour_count
+FROM users u
+JOIN roles r ON u.role_id = r.id
+LEFT JOIN singsing_tour_staff ts ON ts.user_id = u.id
+GROUP BY u.id, u.name, r.name;
 ```
 
 ## ⚠️ 주의사항
 
-1. **백업**: 스키마 변경 전 반드시 백업
-2. **마이그레이션**: Supabase Migration 사용 권장
-3. **문서 업데이트**: 스키마 변경 시 이 문서도 업데이트
-4. **인덱스 관리**: 쿼리 성능 모니터링 후 필요시 추가
+1. **RLS 설정**: 현재 개발 중이므로 비활성화 상태. 프로덕션 배포 전 반드시 활성화
+2. **비밀번호**: users 테이블의 password_hash는 bcrypt 해시 사용 필수
+3. **권한 관리**: roles 테이블의 permissions JSONB 구조 준수
+4. **고객 통계**: 트리거를 통해 자동 업데이트되므로 수동 수정 금지
+
+## 🔐 보안 고려사항
+
+1. **개발 환경**
+   - 모든 테이블 RLS 비활성화
+   - 테스트 데이터 사용
+
+2. **프로덕션 환경**
+   - 모든 테이블 RLS 활성화
+   - 적절한 정책(Policy) 설정
+   - 민감 정보 암호화
 
 ---
 *이 문서는 데이터베이스 스키마가 변경될 때마다 업데이트되어야 합니다.*
+*최종 업데이트: 2025-06-04*
