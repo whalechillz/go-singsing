@@ -993,7 +993,13 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                                   payment_status: payment.payment_status || 'completed',
                                   payment_date: payment.payment_date ? payment.payment_date.split('T')[0] : new Date().toISOString().split('T')[0],
                                   note: payment.note || '',
-                                  group_member_ids: groupMemberIds
+                                  group_member_ids: groupMemberIds,
+                                  // 할인 관련 필드
+                                  discount_amount: payment.discount_amount || 0,
+                                  discount_type: payment.discount_type || '',
+                                  discount_name: payment.discount_name || '',
+                                  original_amount: payment.original_amount || payment.amount,
+                                  final_amount: payment.final_amount || payment.amount
                                 });
                                 setShowModal(true);
                               }}
