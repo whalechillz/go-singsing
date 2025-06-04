@@ -27,6 +27,8 @@
   "exclude": [
     "node_modules",
     "backup_files",
-    "backup_fixed_20250603"
+    "backup_fixed_20250603",
+    "scripts",
+    "docs"
   ]
 }
