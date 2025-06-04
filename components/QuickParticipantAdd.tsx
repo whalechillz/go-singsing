@@ -20,21 +20,58 @@ const QuickParticipantAdd: React.FC<QuickParticipantAddProps> = ({ tourId, onSuc
   const parseParticipants = (text: string) => {
     const lines = text.trim().split('\n').filter(line => line.trim());
     const parsed = lines.map((line, index) => {
-      const parts = line.split(/[\t,]/); // 탭이나 쉼표로 구분
+      const parts = line.split(/[\t,]/).map(p => p.trim()); // 탭이나 쉼표로 구분
+      
+      // 첨 번째는 항상 이름
+      const name = parts[0] || '';
+      
+      // 두 번째와 세 번째 필드 판단
+      let phone = '';
+      let gender = '';
+      
+      if (parts[1]) {
+        // 두 번째 필드가 성별인지 전화번호인지 판단
+        if (isGender(parts[1])) {
+          gender = normalizeGender(parts[1]);
+          phone = parts[2] ? normalizePhone(parts[2]) : '';
+        } else {
+          phone = normalizePhone(parts[1]);
+          gender = parts[2] ? normalizeGender(parts[2]) : '';
+        }
+      }
+      
+      // 나머지 필드들
+      const team = parts[3] || '';
+      const role = parts[4] || ''; // 기본값 제거
+      const pickup_location = parts[5] || '';
       
       return {
         row: index + 1,
-        name: parts[0]?.trim() || '',
-        phone: normalizePhone(parts[1]?.trim() || ''),
-        gender: parts[2]?.trim() || '',
-        team: parts[3]?.trim() || '',
-        role: parts[4]?.trim() || '총무', // 기본값 총무
-        pickup_location: parts[5]?.trim() || '',
-        valid: !!parts[0]?.trim() // 최소한 이름은 있어야 함
+        name,
+        phone,
+        gender,
+        team,
+        role,
+        pickup_location,
+        valid: !!name // 최소한 이름은 있어야 함
       };
     });
     
     return parsed;
+  };
+
+  // 성별 판단 함수
+  const isGender = (value: string) => {
+    const normalized = value.toUpperCase();
+    return ['남', '여', 'M', 'F'].includes(normalized);
+  };
+
+  // 성별 정규화 함수
+  const normalizeGender = (value: string) => {
+    const normalized = value.toUpperCase();
+    if (normalized === 'M' || normalized === '남') return '남';
+    if (normalized === 'F' || normalized === '여') return '여';
+    return value;
   };
 
   // 전화번호 정규화
@@ -133,10 +170,17 @@ const QuickParticipantAdd: React.FC<QuickParticipantAddProps> = ({ tourId, onSuc
                   <div className="bg-gray-100 p-3 rounded text-sm font-mono mb-4">
                     이름[탭]전화번호[탭]성별[탭]팀[탭]직책[탭]탑승지<br/>
                     홍길동[탭]01012345678[탭]남[탭]A팀[탭]총무[탭]서울<br/>
-                    김영희[탭]01098765432[탭]여[탭]B팀[탭]회원[탭]부산
+                    김영희[탭]01098765432[탭]여[탭]B팀[탭]회원[탭]부산<br/>
+                    <br/>
+                    또는<br/>
+                    <br/>
+                    이름[탭]성별[탭]전화번호[탭]팀[탭]직책[탭]탑승지<br/>
+                    박철수[탭]M[탭]01087654321[탭]C팀[탭]회원[탭]대구
                   </div>
                   <p className="text-xs text-gray-500 mb-2">
-                    * 직책을 입력하지 않으면 기본값 '총무'로 설정됩니다
+                    * 성별은 남/여 또는 M/F 로 입력 가능합니다<br/>
+                    * 이름 다음에 전화번호 또는 성별이 올 수 있습니다<br/>
+                    * 필수 항목은 이름만 입니다
                   </p>
                 </div>
 
@@ -196,7 +240,7 @@ const QuickParticipantAdd: React.FC<QuickParticipantAddProps> = ({ tourId, onSuc
                           <td className="px-4 py-2">{p.phone || '-'}</td>
                           <td className="px-4 py-2">{p.gender || '-'}</td>
                           <td className="px-4 py-2">{p.team || '-'}</td>
-                          <td className="px-4 py-2">{p.role || '총무'}</td>
+                          <td className="px-4 py-2">{p.role || '-'}</td>
                           <td className="px-4 py-2">{p.pickup_location || '-'}</td>
                           <td className="px-4 py-2">
                             {p.valid ? (

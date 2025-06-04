@@ -386,22 +386,31 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                       </div>
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="text-sm text-gray-900">
-                          {tour.current_participants || 0} / {tour.max_participants || 0}
-                        </div>
-                        <div className="ml-2 w-20">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full ${
-                                occupancyRate >= 80 ? 'bg-green-600' : 
-                                occupancyRate >= 50 ? 'bg-yellow-600' : 
-                                'bg-gray-400'
-                              }`}
-                              style={{ width: `${occupancyRate}%` }}
-                            />
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center">
+                          <div className="text-sm text-gray-900">
+                            {tour.current_participants || 0} / {tour.max_participants || 0}
+                          </div>
+                          <div className="ml-2 w-20">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${
+                                  occupancyRate >= 80 ? 'bg-green-600' : 
+                                  occupancyRate >= 50 ? 'bg-yellow-600' : 
+                                  'bg-gray-400'
+                                }`}
+                                style={{ width: `${occupancyRate}%` }}
+                              />
+                            </div>
                           </div>
                         </div>
+                        <Link
+                          href={`/admin/tours/${tour.id}/participants`}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                        >
+                          <Users className="w-3.5 h-3.5 inline mr-1" />
+                          관리
+                        </Link>
                       </div>
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap">

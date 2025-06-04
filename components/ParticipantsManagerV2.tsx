@@ -1136,10 +1136,10 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
 
                 {/* 액션 버튼들 */}
                 <div className="flex items-center gap-1 sm:gap-2">
-                  {/* 간단 입력 - 투어별 페이지에서만 */}
-                  {tourId && (
+                  {/* 간단 입력 - 투어별 페이지 또는 투어가 선택된 경우 */}
+                  {(tourId || selectedTour) && (
                     <QuickParticipantAdd 
-                      tourId={tourId} 
+                      tourId={tourId || selectedTour?.id || ''} 
                       onSuccess={fetchParticipants}
                       boardingPlaces={boardingPlaces}
                     />
