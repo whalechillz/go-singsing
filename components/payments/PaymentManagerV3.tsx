@@ -1,5 +1,6 @@
 "use client";
 import RefundModal from './RefundModal';
+import DiscountSection from './DiscountSection';
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { 
@@ -22,7 +23,8 @@ import {
   Download,
   ChevronDown,
   Calculator,
-  Calendar
+  Calendar,
+  Tag
 } from 'lucide-react';
 
 interface PaymentManagerProps {
@@ -204,7 +206,10 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 결제 금액 검증
+    // 할인이 있을 경우 최종 금액 계산
+    const finalAmount = Math.max(0, form.amount - (form.discount_amount || 0));
+    
+    // 결제 금액 검증 (최종 금액 기준)
     if (!editingPayment && form.participant_id) {
       const participant = participants.find(p => p.id === form.participant_id);
       const tour = tours.find(t => t.id === form.tour_id);
@@ -216,7 +221,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
           p.payment_status !== 'refunded'
         );
         const totalPaid = existingPayments.reduce((sum, p) => sum + p.amount, 0);
-        const totalAfterPayment = totalPaid + form.amount;
+        const totalAfterPayment = totalPaid + finalAmount;
         
         if (totalAfterPayment > tourPrice) {
           const remaining = tourPrice - totalPaid;
@@ -276,12 +281,18 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
         const updatePromises = relatedPayments.map(payment => 
           supabase.from("singsing_payments").update({
             payment_method: form.payment_method,
-            amount: form.amount,
+            amount: finalAmount,
             receipt_type: form.receipt_type,
             receipt_requested: form.receipt_requested,
             payment_status: form.payment_status,
             payment_date: form.payment_date,
-            note: form.note
+            note: form.note,
+            // 할인 정보 추가
+            discount_amount: form.discount_amount || 0,
+            discount_type: form.discount_type || '',
+            discount_name: form.discount_name || '',
+            original_amount: form.amount,
+            final_amount: finalAmount
           }).eq("id", payment.id)
         );
         
@@ -293,14 +304,20 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
           participant_id: form.participant_id,
           payer_id: form.payer_id || form.participant_id,
           payment_method: form.payment_method,
-          amount: form.amount,
+          amount: finalAmount,
           is_group_payment: false,
           receipt_type: form.receipt_type,
           receipt_requested: form.receipt_requested,
           payment_type: form.payment_type,
           payment_status: form.payment_status,
           payment_date: form.payment_date,
-          note: form.note
+          note: form.note,
+          // 할인 정보 추가
+          discount_amount: form.discount_amount || 0,
+          discount_type: form.discount_type || '',
+          discount_name: form.discount_name || '',
+          original_amount: form.amount,
+          final_amount: finalAmount
         };
         
         await supabase
@@ -312,7 +329,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
       // 새로운 결제 추가
       if (form.is_group_payment && form.group_member_ids.length > 0) {
         // 그룹 결제 처리
-        const perPersonAmount = form.amount; // 입력한 금액을 그대로 사용
+        const perPersonAmount = finalAmount; // 할인 적용된 최종 금액 사용
         
         // 각 그룹 멤버에 대해 결제 레코드 생성
         const paymentPromises = form.group_member_ids.map(memberId => 
@@ -328,7 +345,13 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
             payment_type: form.payment_type,
             payment_status: form.payment_status,
             payment_date: form.payment_date,
-            note: form.note
+            note: form.note,
+            // 할인 정보 추가
+            discount_amount: form.discount_amount || 0,
+            discount_type: form.discount_type || '',
+            discount_name: form.discount_name || '',
+            original_amount: form.amount,
+            final_amount: finalAmount
           })
         );
         
@@ -340,14 +363,20 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
           participant_id: form.participant_id,
           payer_id: form.payer_id || form.participant_id,
           payment_method: form.payment_method,
-          amount: form.amount,
+          amount: finalAmount,
           is_group_payment: false,
           receipt_type: form.receipt_type,
           receipt_requested: form.receipt_requested,
           payment_type: form.payment_type,
           payment_status: form.payment_status,
           payment_date: form.payment_date,
-          note: form.note
+          note: form.note,
+          // 할인 정보 추가
+          discount_amount: form.discount_amount || 0,
+          discount_type: form.discount_type || '',
+          discount_name: form.discount_name || '',
+          original_amount: form.amount,
+          final_amount: finalAmount
         };
         
         await supabase
@@ -927,9 +956,31 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`font-medium ${payment.amount < 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                        {payment.amount < 0 ? '-' : ''}{Math.abs(payment.amount).toLocaleString()}원
-                      </span>
+                      {payment.discount_amount && payment.discount_amount > 0 ? (
+                        <div>
+                          <div className="text-sm text-gray-500 line-through">
+                            {payment.original_amount?.toLocaleString() || (payment.amount + payment.discount_amount).toLocaleString()}원
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className={`font-medium ${payment.amount < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                              {payment.amount < 0 ? '-' : ''}{Math.abs(payment.amount).toLocaleString()}원
+                            </span>
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                              <Tag className="w-3 h-3 mr-0.5" />
+                              -{payment.discount_amount.toLocaleString()}
+                            </span>
+                          </div>
+                          {payment.discount_name && (
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {payment.discount_name}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className={`font-medium ${payment.amount < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                          {payment.amount < 0 ? '-' : ''}{Math.abs(payment.amount).toLocaleString()}원
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {getPaymentTypeBadge(payment.payment_type)}
@@ -998,7 +1049,7 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                                   discount_amount: payment.discount_amount || 0,
                                   discount_type: payment.discount_type || '',
                                   discount_name: payment.discount_name || '',
-                                  original_amount: payment.original_amount || payment.amount,
+                                  original_amount: payment.original_amount || (payment.discount_amount ? payment.amount + payment.discount_amount : payment.amount),
                                   final_amount: payment.final_amount || payment.amount
                                 });
                                 setShowModal(true);
@@ -1523,6 +1574,9 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                     placeholder="추가 메모사항"
                   />
                 </div>
+
+                {/* 할인 섹션 추가 */}
+                <DiscountSection form={form} setForm={setForm} />
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
