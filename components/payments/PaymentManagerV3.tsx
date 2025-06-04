@@ -53,6 +53,12 @@ interface Payment {
   refund_reason?: string;
   refund_items?: any;
   refund_type?: string;
+  // 할인 관련 필드
+  discount_amount?: number;
+  discount_type?: string;
+  discount_name?: string;
+  original_amount?: number;
+  final_amount?: number;
 }
 
 interface Participant {
@@ -102,7 +108,13 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
     payment_status: "completed",
     payment_date: new Date().toISOString().split('T')[0],
     note: "",
-    group_member_ids: [] as string[]
+    group_member_ids: [] as string[],
+    // 할인 관련 필드
+    discount_amount: 0,
+    discount_type: "",
+    discount_name: "",
+    original_amount: 0,
+    final_amount: 0
   });
 
   useEffect(() => {
@@ -394,7 +406,13 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
       payment_status: "completed",
       payment_date: new Date().toISOString().split('T')[0],
       note: "",
-      group_member_ids: []
+      group_member_ids: [],
+      // 할인 관련 필드
+      discount_amount: 0,
+      discount_type: "",
+      discount_name: "",
+      original_amount: 0,
+      final_amount: 0
     });
     setEditingPayment(null);
     setAmountInputMode('preset');
