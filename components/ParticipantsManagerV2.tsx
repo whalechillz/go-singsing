@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare } from 'lucide-react';
 import QuickMemo from "@/components/memo/QuickMemo";
 import MemoViewer from "@/components/memo/MemoViewer";
+import QuickParticipantAdd from "@/components/QuickParticipantAdd";
 
 // 공통 ParticipantsManager Props
 interface ParticipantsManagerProps {
@@ -781,12 +782,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         "이메일": "hong@example.com",
         "팀/동호회": "A팀",
         "성별": "남",
+        "직책": "총무",
         "탑승지": boardingPlaces[0]?.name || "서울",
         "참여횟수": 0,
         "그룹인원": 1,
         "동반자": "",
         "일괄결제": "X",
-        "직책": "회원",
         "비상연락처": "",
         "상태": "확정",
         "참고사항": ""
@@ -797,9 +798,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "템플릿");
 
-    // 현재 날짜로 파일명 생성
+    // 현재 날짜와 투어명으로 파일명 생성
     const today = new Date().toISOString().split('T')[0];
-    const filename = `참가자_업로드_템플릿_${today}.xlsx`;
+    const tourName = tourId ? tours.find(t => t.id === tourId)?.title : '';
+    const filename = tourId && tourName
+      ? `참가자_템플릿_${tourName}_${today}.xlsx`
+      : `참가자_템플릿_${today}.xlsx`;
     
     XLSX.writeFile(wb, filename);
   };
@@ -872,12 +876,12 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         email: row["이메일"] || "",
         team_name: row["팀/동호회"] || "",
         gender: row["성별"] || "",
+        role: row["직책"] || "",
         pickup_location: row["탑승지"] || "",
         join_count: parseInt(row["참여횟수"]) || 0,
         group_size: parseInt(row["그룹인원"]) || 1,
         companions: row["동반자"] ? row["동반자"].split(",").map((c: string) => c.trim()) : [],
-        is_paying_for_group: row["일괄결제"] === "O",
-        role: row["직책"] || "",
+        is_paying_for_group: row["일괄겳제"] === "O",
         emergency_contact: normalizePhone(row["비상연락처"] || ""),
         status: row["상태"] || "확정",
         note: row["참고사항"] || "",
@@ -1132,6 +1136,15 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
 
                 {/* 액션 버튼들 */}
                 <div className="flex items-center gap-1 sm:gap-2">
+                  {/* 간단 입력 - 투어별 페이지에서만 */}
+                  {tourId && (
+                    <QuickParticipantAdd 
+                      tourId={tourId} 
+                      onSuccess={fetchParticipants}
+                      boardingPlaces={boardingPlaces}
+                    />
+                  )}
+
                   {/* 엑셀 템플릿 다운로드 */}
                   <button
                     className="bg-white text-gray-700 px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
