@@ -1225,7 +1225,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; }
     .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin-bottom: 2px; }
-    .day-round { font-size: 14px; font-weight: normal; }
+    .day-round { font-weight: bold; }
     .day-content { padding: 15px; }
     .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
     .schedule-content p { margin-top: 8px; }
