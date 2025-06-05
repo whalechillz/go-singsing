@@ -82,6 +82,17 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       if (schedulesError) throw schedulesError;
       
       console.log('Schedules data:', schedules);
+      // 식사 정보 확인
+      schedules?.forEach((schedule, idx) => {
+        console.log(`Day ${idx + 1} 식사 정보:`, {
+          meal_breakfast: schedule.meal_breakfast,
+          menu_breakfast: schedule.menu_breakfast,
+          meal_lunch: schedule.meal_lunch,
+          menu_lunch: schedule.menu_lunch,
+          meal_dinner: schedule.meal_dinner,
+          menu_dinner: schedule.menu_dinner
+        });
+      });
 
       // 여행상품 정보 가져오기
       if (tour.tour_product_id) {
@@ -488,21 +499,30 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <div class="meal-info">
                 <div class="meal">
                   <div>조식</div>
-                  <div class="meal-status ${schedule.menu_breakfast ? 'included' : 'not-included'}">
-                    ${schedule.menu_breakfast ? 'O' : 'X'}
+                  <div class="meal-status ${schedule.meal_breakfast ? 'included' : 'not-included'}">
+                    ${schedule.meal_breakfast ? 'O' : 'X'}
                   </div>
+                  ${schedule.meal_breakfast && schedule.menu_breakfast ? `
+                    <div class="meal-menu">${schedule.menu_breakfast}</div>
+                  ` : ''}
                 </div>
                 <div class="meal">
                   <div>중식</div>
-                  <div class="meal-status ${schedule.menu_lunch ? 'included' : 'not-included'}">
-                    ${schedule.menu_lunch ? 'O' : 'X'}
+                  <div class="meal-status ${schedule.meal_lunch ? 'included' : 'not-included'}">
+                    ${schedule.meal_lunch ? 'O' : 'X'}
                   </div>
+                  ${schedule.meal_lunch && schedule.menu_lunch ? `
+                    <div class="meal-menu">${schedule.menu_lunch}</div>
+                  ` : ''}
                 </div>
                 <div class="meal">
                   <div>석식</div>
-                  <div class="meal-status ${schedule.menu_dinner ? 'included' : 'not-included'}">
-                    ${schedule.menu_dinner ? 'O' : 'X'}
+                  <div class="meal-status ${schedule.meal_dinner ? 'included' : 'not-included'}">
+                    ${schedule.meal_dinner ? 'O' : 'X'}
                   </div>
+                  ${schedule.meal_dinner && schedule.menu_dinner ? `
+                    <div class="meal-menu">${schedule.menu_dinner}</div>
+                  ` : ''}
                 </div>
               </div>
             </div>
@@ -1149,8 +1169,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
     .schedule-content p { margin-top: 8px; }
     .meal-info { display: flex; background: #edf2f7; padding: 10px; border-radius: 6px; justify-content: space-around; }
-    .meal { text-align: center; }
+    .meal { text-align: center; flex: 1; }
     .meal-status { font-weight: bold; margin-top: 4px; }
+    .meal-menu { font-size: 12px; color: #4a5568; margin-top: 4px; }
     .included { color: #2F855A; }
     .not-included { color: #C53030; }
     .other-notice { margin: 15px; padding: 15px; background-color: #fffaf0; border: 1px solid #feb2b2; border-radius: 6px; color: #7b341e; font-size: 14px; }
