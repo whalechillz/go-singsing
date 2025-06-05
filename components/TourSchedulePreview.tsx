@@ -1241,35 +1241,35 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; padding: 0; }
     .container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .header { background-color: #6b7280; color: white; padding: 20px 15px; text-align: center; }
+    .header { background-color: #4a6fa5; color: white; padding: 20px 15px; text-align: center; }
     .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     .company-info { font-size: 13px; opacity: 0.9; }
     .section { padding: 0; margin-bottom: 15px; }
-    .section-title { font-size: 16px; font-weight: bold; margin: 0 15px; padding: 15px 0 10px 0; color: #2d3748; border-bottom: 2px solid #6b7280; margin-bottom: 15px; }
+    .section-title { font-size: 16px; font-weight: bold; margin: 0 15px; padding: 15px 0 10px 0; color: #2d3748; border-bottom: 2px solid #4a6fa5; margin-bottom: 15px; }
     .product-info-box { margin: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .info-row { display: flex; border-bottom: 1px solid #e2e8f0; }
     .info-row:last-child { border-bottom: none; }
     .info-label { width: 120px; padding: 12px 15px; background-color: #edf2f7; font-weight: bold; font-size: 14px; }
     .info-value { flex: 1; padding: 12px 15px; font-size: 14px; }
     .important { font-weight: 600; color: #2d3748; }
-    .notice-box { margin: 15px; background-color: #f8f9fa; border-left: 3px solid #6b7280; border-radius: 6px; padding: 14px 16px; }
-    .reservation-box { margin: 15px; background-color: #f8f9fa; border: 1px solid #d3d3d3; border-radius: 8px; padding: 20px; }
+    .notice-box { margin: 15px; background-color: #f8f9fa; border-left: 3px solid #4299e1; border-radius: 6px; padding: 14px 16px; }
+    .reservation-box { margin: 15px; background-color: #e7f3ff; border: 1px solid #4299e1; border-radius: 8px; padding: 20px; }
     .reservation-list { list-style: none; padding: 0; }
-    .reservation-list li { padding: 8px 0; color: #4a5568; font-size: 14px; border-bottom: 1px solid #e2e8f0; }
+    .reservation-list li { padding: 8px 0; color: #2c5282; font-size: 14px; border-bottom: 1px solid #d3e4f4; }
     .reservation-list li:last-child { border-bottom: none; }
-    .reservation-list li:before { content: "•"; margin-right: 8px; color: #4a6fa5; font-weight: bold; }
+    .reservation-list li:before { content: "•"; margin-right: 8px; color: #4299e1; font-weight: bold; }
     .notice-title { font-weight: bold; color: #2b6cb0; margin-bottom: 10px; }
     .notice-list { list-style: none; }
     .notice-list li { padding: 4px 0; color: #4A5568; font-size: 14px; }
-    .notice-list li:before { content: "•"; margin-right: 8px; color: #6b7280; }
+    .notice-list li:before { content: "•"; margin-right: 8px; color: #4299e1; }
     .notice-item { margin-bottom: 10px; font-size: 14px; }
     .notice-item strong { color: #2b6cb0; }
     .usage-section { margin: 15px; }
     .usage-item { margin-bottom: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .usage-header { background: #6b7280; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
+    .usage-header { background: #4a6fa5; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
     .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; padding: 15px; background-color: white; }
     .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .day-title { background: #6b7280; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin-bottom: 2px; }
+    .day-title { background: #4a6fa5; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin-bottom: 2px; }
     .day-round { font-weight: bold; }
     .day-content { padding: 15px; }
     .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
@@ -1279,7 +1279,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .timeline-item:hover { background-color: #f3f4f6; transform: translateX(2px); }
     .timeline-icon { font-size: 18px; margin-right: 12px; flex-shrink: 0; }
     .timeline-content { flex: 1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; line-height: 1.6; }
-    .timeline-time { font-weight: bold; color: #2c5282; font-size: 16px; white-space: nowrap; }
+    .timeline-time { font-weight: bold; color: #4299e1; font-size: 16px; white-space: nowrap; }
     .timeline-text { color: #4a5568; font-size: 14px; line-height: 1.6; }
     /* 색상 최소화 - 골프만 강조, 식사는 아주 연한 베이지 */
     .timeline-item.golf { background-color: #e6f4ea; }
@@ -1310,14 +1310,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; line-height: 1.6; padding: 10px; }
     .container { max-width: 800px; margin: 0 auto; }
-    .header { background-color: #6b7280; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
+    .header { background-color: #2c5282; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
     .header-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     .header-subtitle { font-size: 16px; opacity: 0.9; }
     .boarding-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px; }
     .boarding-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
-    .card-border { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #6b7280; }
+    .card-border { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #3182ce; }
     .card-content { padding: 20px 20px 20px 26px; }
-    .card-title { font-size: 20px; font-weight: bold; color: #374151; margin-bottom: 15px; }
+    .card-title { font-size: 20px; font-weight: bold; color: #2c5282; margin-bottom: 15px; }
     .card-time { font-size: 32px; font-weight: bold; color: #e53e3e; margin-bottom: 5px; }
     .card-date { font-size: 16px; color: #4a5568; margin-bottom: 10px; }
     .card-info { display: flex; gap: 15px; margin-top: 15px; font-size: 14px; }
@@ -1329,20 +1329,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .location-title:before { content: "📍"; margin-right: 5px; }
     .location-main { font-weight: 600; color: #2d3748; margin-bottom: 2px; }
     .location-sub { color: #718096; font-size: 13px; }
-    .map-link { display: inline-block; background-color: #6b7280; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-top: 5px; font-size: 13px; }
+    .map-link { display: inline-block; background-color: #3182ce; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-top: 5px; font-size: 13px; }
     .common-info { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    .section-title { font-size: 18px; font-weight: bold; color: #374151; margin-bottom: 15px; }
+    .section-title { font-size: 18px; font-weight: bold; color: #2c5282; margin-bottom: 15px; }
     .notice-content { white-space: pre-line; color: #4a5568; margin-bottom: 15px; }
     .notice-list { margin-top: 15px; }
     .notice-item { position: relative; padding-left: 20px; margin-bottom: 10px; color: #4a5568; }
     .notice-item:before { content: '※'; position: absolute; left: 0; color: #e53e3e; }
     .contact-box { background-color: #edf2f7; border-radius: 8px; padding: 15px; text-align: center; margin-top: 15px; }
-    .contact-title { font-weight: bold; color: #374151; margin-bottom: 10px; }
+    .contact-title { font-weight: bold; color: #2c5282; margin-bottom: 10px; }
     .contact-phone { font-size: 16px; color: #4a5568; margin: 5px 0; }
     .route-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
     .route-table th, .route-table td { border: 1px solid #e2e8f0; padding: 10px; }
-    .route-table th { background-color: #edf2f7; font-weight: bold; color: #374151; }
-    .footer { text-align: center; padding: 15px; background-color: #6b7280; color: white; border-radius: 10px; margin-top: 20px; }
+    .route-table th { background-color: #edf2f7; font-weight: bold; color: #2c5282; }
+    .footer { text-align: center; padding: 15px; background-color: #2c5282; color: white; border-radius: 10px; margin-top: 20px; }
     @media print { body { padding: 0; } .container { max-width: 100%; } }
     `;
   };
@@ -1352,18 +1352,18 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; padding: 15px; }
     .container { max-width: 900px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-    .header-container { display: flex; justify-content: space-between; background-color: #6b7280; color: white; padding: 20px; }
+    .header-container { display: flex; justify-content: space-between; background-color: #2c5282; color: white; padding: 20px; }
     .title-section h1 { font-size: 24px; margin-bottom: 8px; }
     .subtitle { font-size: 16px; opacity: 0.9; }
     .info-section { text-align: right; background: rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 4px; }
     .section { padding: 20px; }
     .location-section { margin-bottom: 30px; }
-    .location-section h3 { font-size: 18px; color: #374151; margin-bottom: 10px; }
+    .location-section h3 { font-size: 18px; color: #2c5282; margin-bottom: 10px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
     th, td { border: 1px solid #DEE2E6; padding: 10px; text-align: center; }
-    th { background-color: #ECF0F1; font-weight: bold; color: #374151; }
+    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; }
     .notices { margin-top: 30px; padding: 20px; background-color: #f8f9fa; }
-    .notices h3 { font-size: 16px; color: #374151; margin-bottom: 10px; }
+    .notices h3 { font-size: 16px; color: #2c5282; margin-bottom: 10px; }
     .notices p { margin-bottom: 8px; color: #4a5568; }
     .footer { padding: 15px; text-align: center; background-color: #f8f9fa; }
     @media print { body { padding: 0; } .container { box-shadow: none; } }
@@ -1376,16 +1376,16 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     body { background-color: #f5f7fa; color: #343a40; padding: 20px; }
     .container { max-width: 600px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; padding: 30px; }
     .header { text-align: center; margin-bottom: 30px; }
-    .header h1 { font-size: 24px; color: #374151; margin-bottom: 10px; }
+    .header h1 { font-size: 24px; color: #2c5282; margin-bottom: 10px; }
     .header p { color: #718096; }
     .quick-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
     .info-item { display: flex; align-items: center; gap: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; }
-    .icon { width: 40px; height: 40px; color: #6b7280; }
-    .info-item strong { display: block; color: #374151; margin-bottom: 5px; }
+    .icon { width: 40px; height: 40px; color: #4299e1; }
+    .info-item strong { display: block; color: #2c5282; margin-bottom: 5px; }
     .info-item p { color: #4a5568; }
     .schedule-summary { margin-bottom: 30px; }
-    .day-summary { border-left: 3px solid #6b7280; padding-left: 20px; margin-bottom: 20px; }
-    .day-header { font-weight: bold; color: #374151; font-size: 18px; }
+    .day-summary { border-left: 3px solid #4299e1; padding-left: 20px; margin-bottom: 20px; }
+    .day-header { font-weight: bold; color: #2c5282; font-size: 18px; }
     .day-date { color: #718096; margin-bottom: 10px; }
     .event { margin-bottom: 5px; color: #4a5568; }
     .notices { padding: 15px; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 20px; }
@@ -1401,14 +1401,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     body { background-color: #f5f7fa; color: #343a40; padding: 20px; }
     .container { max-width: 900px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
     .header { text-align: center; padding: 30px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; }
-    .header h1 { font-size: 28px; color: #374151; margin-bottom: 10px; }
+    .header h1 { font-size: 28px; color: #2c5282; margin-bottom: 10px; }
     .header p { color: #718096; margin: 5px 0; }
     .content { padding: 30px; }
     .room-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .room-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #f8f9fa; border-bottom: 1px solid #e2e8f0; }
-    .room-number { font-size: 18px; font-weight: bold; color: #374151; }
+    .room-number { font-size: 18px; font-weight: bold; color: #2c5282; }
     .room-type { color: #718096; font-size: 14px; }
-    .room-capacity { background-color: #f3f4f6; color: #374151; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; }
+    .room-capacity { background-color: #e6f3ff; color: #2563eb; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; }
     .room-body { padding: 0; }
     .empty-room { padding: 40px; text-align: center; color: #9ca3af; font-style: italic; }
     .participant-table { width: 100%; border-collapse: collapse; }
@@ -1420,16 +1420,16 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .driver-room { background-color: #fef3c7; border-color: #fbbf24; }
     .driver-room .room-header { background-color: #fef3c7; }
     .summary-section { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; }
-    .summary-section h3 { font-size: 18px; color: #374151; margin-bottom: 15px; }
+    .summary-section h3 { font-size: 18px; color: #2c5282; margin-bottom: 15px; }
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .summary-item { text-align: center; }
     .summary-label { display: block; color: #718096; font-size: 14px; margin-bottom: 5px; }
-    .summary-value { display: block; font-size: 24px; font-weight: bold; color: #374151; }
-    .notice-section { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 3px solid #6b7280; }
-    .notice-section h3 { font-size: 16px; color: #374151; margin-bottom: 10px; }
+    .summary-value { display: block; font-size: 24px; font-weight: bold; color: #2c5282; }
+    .notice-section { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 3px solid #4299e1; }
+    .notice-section h3 { font-size: 16px; color: #2c5282; margin-bottom: 10px; }
     .notice-section ul { list-style: none; padding-left: 0; }
     .notice-section li { padding: 4px 0; color: #4a5568; font-size: 14px; position: relative; padding-left: 20px; }
-    .notice-section li:before { content: "•"; position: absolute; left: 0; color: #6b7280; }
+    .notice-section li:before { content: "•"; position: absolute; left: 0; color: #4299e1; }
     .caution-section { background-color: #fffbeb; border-left-color: #f59e0b; }
     .caution-section h3 { color: #92400e; }
     .caution-section li { color: #78350f; }
@@ -1449,21 +1449,21 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     body { background-color: #f5f7fa; color: #343a40; padding: 20px; }
     .container { max-width: 900px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; padding: 30px; }
     .header { text-align: center; margin-bottom: 30px; }
-    .header h1 { font-size: 24px; color: #374151; margin-bottom: 10px; }
+    .header h1 { font-size: 24px; color: #2c5282; margin-bottom: 10px; }
     .header p { color: #718096; margin-bottom: 5px; }
     .tee-time-section { margin-bottom: 30px; }
-    .tee-time-section h2 { font-size: 18px; color: #374151; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+    .tee-time-section h2 { font-size: 18px; color: #2c5282; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     th, td { border: 1px solid #DEE2E6; padding: 10px 8px; text-align: center; }
-    th { background-color: #ECF0F1; font-weight: bold; color: #374151; font-size: 14px; }
+    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; font-size: 14px; }
     td { font-size: 14px; }
     .players-cell { text-align: left; padding-left: 15px; }
     .player-name { margin-right: 5px; }
-    .notices { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 3px solid #6b7280; }
-    .notices h3 { font-size: 16px; color: #374151; margin-bottom: 10px; }
+    .notices { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 3px solid #4299e1; }
+    .notices h3 { font-size: 16px; color: #2c5282; margin-bottom: 10px; }
     .notices ul { list-style: none; }
     .notices li { padding: 4px 0; color: #4A5568; font-size: 14px; }
-    .notices li:before { content: "•"; margin-right: 8px; color: #6b7280; }
+    .notices li:before { content: "•"; margin-right: 8px; color: #4299e1; }
     .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 14px; }
     .no-data, .error { text-align: center; padding: 40px; color: #718096; font-size: 16px; }
     .error { color: #e53e3e; }
