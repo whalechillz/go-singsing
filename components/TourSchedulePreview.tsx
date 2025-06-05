@@ -437,6 +437,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             ${productData?.golf_course || ''}
           </div>
         </div>
+        ${productData?.courses?.length > 0 ? `
+        <div class="info-row">
+          <div class="info-label">코스</div>
+          <div class="info-value">${productData.courses.join(', ')}</div>
+        </div>
+        ` : ''}
         <div class="info-row">
           <div class="info-label">숙소</div>
           <div class="info-value">${productData?.hotel || ''}</div>
@@ -450,12 +456,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div class="info-value">${productData?.excluded_items || ''}</div>
         </div>
       </div>
-      
-      ${productData?.courses?.length > 0 ? `
-        <div class="course-info">
-          <strong>코스:</strong> ${productData.courses.join(', ')}
-        </div>
-      ` : ''}
     </div>
 
     <!-- 특별 공지사항 (투어) -->
@@ -1206,7 +1206,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .info-label { width: 120px; padding: 12px 15px; background-color: #edf2f7; font-weight: bold; font-size: 14px; }
     .info-value { flex: 1; padding: 12px 15px; font-size: 14px; }
     .important { font-weight: 600; color: #2d3748; }
-    .course-info { margin: 0 15px 15px; padding: 10px 15px; background-color: #f8f9fa; border-radius: 6px; font-size: 14px; }
     .notice-box { margin: 15px; background-color: #f8f9fa; border-left: 3px solid #4299e1; border-radius: 6px; padding: 14px 16px; }
     .reservation-box { margin: 15px; background-color: #e7f3ff; border: 1px solid #4299e1; border-radius: 8px; padding: 20px; }
     .reservation-list { list-style: none; padding: 0; }
