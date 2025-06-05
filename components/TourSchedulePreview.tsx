@@ -522,10 +522,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div class="day-schedule">
             <div class="day-title">
               <div>Day ${idx + 1} - ${new Date(schedule.date || schedule.schedule_date).toLocaleDateString('ko-KR')}</div>
+              <div class="day-round">${schedule.title || ''}</div>
             </div>
             <div class="day-content">
               <div class="schedule-content">
-                ${schedule.title || ''}
                 ${schedule.schedule_items?.length > 0 ? `
                   <ul class="schedule-items" style="list-style: none; padding: 0; margin: 10px 0;">
                     ${schedule.schedule_items.map((item: any) => `
@@ -1217,8 +1217,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .usage-item { margin-bottom: 15px; padding: 12px 15px; background-color: #f8f9fa; border-radius: 6px; }
     .usage-title { font-weight: bold; color: #2b6cb0; margin-bottom: 6px; font-size: 14px; }
     .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; }
-    .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; border-radius: 8px 8px 0 0; }
+    .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+    .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .day-round { font-size: 14px; font-weight: normal; }
     .day-content { padding: 15px; }
     .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
     .schedule-content p { margin-top: 8px; }
