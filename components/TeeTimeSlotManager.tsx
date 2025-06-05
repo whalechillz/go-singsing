@@ -141,11 +141,11 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     if (!window.confirm(`선택한 ${selectedTimes.size}개의 티타임을 삭제하시겠습니까?\n배정된 참가자들은 미배정 상태가 됩니다.`)) return;
     
     try {
-      // 1. 선택된 티타임에 배정된 참가자들을 미배정으로 변경
+      // 1. 선택된 티타임에 배정된 참가자들의 관계 삭제 (다대다 관계 테이블에서)
       const teeTimeIds = Array.from(selectedTimes);
       const { error: updateError } = await supabase
-        .from("singsing_participants")
-        .update({ tee_time_id: null })
+        .from("singsing_participant_tee_times")
+        .delete()
         .in("tee_time_id", teeTimeIds);
       
       if (updateError) throw updateError;
@@ -368,10 +368,10 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     if (!window.confirm("정말 삭제하시겠습니까? 배정된 참가자들은 미배정 상태가 됩니다.")) return;
     
     try {
-      // 먼저 해당 티타임에 배정된 참가자들을 미배정으로 변경
+      // 먼저 해당 티타임에 배정된 참가자들의 관계 삭제 (다대다 관계 테이블에서)
       const { error: updateError } = await supabase
-        .from("singsing_participants")
-        .update({ tee_time_id: null })
+        .from("singsing_participant_tee_times")
+        .delete()
         .eq("tee_time_id", id);
       
       if (updateError) throw updateError;

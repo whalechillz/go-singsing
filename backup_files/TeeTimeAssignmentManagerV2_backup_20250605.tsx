@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X, UserCheck, RefreshCw, ArrowUpDown } from "lucide-react";
@@ -11,7 +12,7 @@ type Participant = {
   note: string;
   status: string;
   tour_id: string;
-  gender?: string; // 성별 필드 추가 ('M' | 'F' | '남' | '여')
+  gender?: string; // 성별 필드 추가 ('M' | 'F')
   tee_time_assignments?: string[]; // 배정된 티타임 ID들
 };
 
@@ -58,6 +59,7 @@ type StaffMember = {
 type Props = { tourId: string; refreshKey?: number };
 
 const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => {
+  const router = useRouter();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [tour, setTour] = useState<Tour | null>(null);
@@ -100,10 +102,11 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       
       if (participantsError) throw participantsError;
       
-      // 성별 정보를 포함한 참가자 데이터
+      // 성별 정보를 포함한 참가자 데이터 (성별 정보가 없으면 기본값 설정)
       const participantsWithGender = (participantsData || []).map(p => ({
         ...p,
-        gender: p.gender || null
+        gender: p.gender || (p.name.match(/(선생|님|미스터|씨)/) ? 'M' : 
+                p.name.match(/(여사|사모|미스|미세스)/) ? 'F' : null)
       }));
       
       // 2. 티타임 데이터 가져오기
@@ -685,58 +688,42 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
     // 팀 구성 분석 함수
     const analyzeTeamGender = (teamParticipants: Participant[]) => {
-      const maleCount = teamParticipants.filter(p => p.gender === 'M' || p.gender === '남').length;
-      const femaleCount = teamParticipants.filter(p => p.gender === 'F' || p.gender === '여').length;
+      const maleCount = teamParticipants.filter(p => p.gender === 'M').length;
+      const femaleCount = teamParticipants.filter(p => p.gender === 'F').length;
       const unknownCount = teamParticipants.length - maleCount - femaleCount;
       
       if (unknownCount > 0) {
-        return { type: '', showIndividual: true };
+        return { type: '', showIndividual: false };
       }
       
       if (maleCount > 0 && femaleCount > 0) {
-        return { type: '(혼성팀)', showIndividual: true };
+        return { type: '(혼성팀)', showIndividual: false };
       } else if (maleCount > 0) {
         return { type: '(남성팀)', showIndividual: false };
       } else if (femaleCount > 0) {
         return { type: '(여성팀)', showIndividual: false };
       }
       
-      return { type: '', showIndividual: true };
+      return { type: '', showIndividual: false };
     };
 
-    // 개별 성별 표시 결정 함수 (모든 참가자에게 성별 표시)
-    const getGenderSuffix = (participant: Participant) => {
+    // 개별 성별 표시 결정 함수 (소수 성별만 표시)
+    const getGenderSuffix = (participant: Participant, teamParticipants: Participant[]) => {
       if (!participant.gender) return '';
       
-      // 모든 참가자에게 성별 표시
-      if (participant.gender === 'M' || participant.gender === '남') {
-        return '(남)';
-      } else if (participant.gender === 'F' || participant.gender === '여') {
-        return '(여)';
+      const maleCount = teamParticipants.filter(p => p.gender === 'M').length;
+      const femaleCount = teamParticipants.filter(p => p.gender === 'F').length;
+      
+      // 혼성팀에서 소수 성별만 표시
+      if (maleCount > 0 && femaleCount > 0) {
+        if (maleCount < femaleCount && participant.gender === 'M') {
+          return '(남)';
+        } else if (femaleCount < maleCount && participant.gender === 'F') {
+          return '(여)';
+        }
       }
       
       return '';
-    };
-
-    // 코스명 표시 함수 (색상 대신 텍스트로 구분)
-    const formatCourseDisplay = (courseName: string) => {
-      if (!courseName) return '';
-      
-      // 코스명에서 핵심 단어 추출
-      let prefix = '';
-      if (courseName.includes('레이크') || courseName.includes('Lake')) {
-        prefix = '【레이크】';
-      } else if (courseName.includes('파인') || courseName.includes('Pine')) {
-        prefix = '【파인】';
-      } else if (courseName.includes('힐스') || courseName.includes('Hills')) {
-        prefix = '【힐스】';
-      } else if (courseName.includes('밸리') || courseName.includes('Valley')) {
-        prefix = '【밸리】';
-      } else if (courseName.includes('오션') || courseName.includes('Ocean')) {
-        prefix = '【오션】';
-      }
-      
-      return prefix + courseName;
     };
 
     let tablesHTML = '';
@@ -774,7 +761,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           tableHTML += `
             <tr>
               <td>${teeTime.tee_time || ''}</td>
-              <td>${formatCourseDisplay(teeTime.golf_course || '')}</td>
+              <td>${teeTime.golf_course || ''}</td>
               <td colspan="${isStaff ? 5 : 3}" class="empty-slot">배정된 참가자가 없습니다</td>
             </tr>`;
         } else {
@@ -782,13 +769,25 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           const teamGenderInfo = analyzeTeamGender(teeTimeParticipants);
           
           teeTimeParticipants.forEach((p, index) => {
-            const genderSuffix = getGenderSuffix(p);
+            const genderSuffix = getGenderSuffix(p, teeTimeParticipants);
             
             tableHTML += `
               <tr>
                 ${index === 0 ? `
                   <td rowspan="${teeTimeParticipants.length}">${teeTime.tee_time || ''}</td>
-                  <td rowspan="${teeTimeParticipants.length}" style="font-weight: bold;">${formatCourseDisplay(teeTime.golf_course || '')} ${teamGenderInfo.type}</td>
+                  <td rowspan="${teeTimeParticipants.length}" style="${
+                    teeTime.golf_course?.includes('레이크') || teeTime.golf_course?.includes('Lake') 
+                      ? 'background-color: #DBEAFE; color: #1E40AF;' 
+                      : teeTime.golf_course?.includes('힐스') || teeTime.golf_course?.includes('Hills')
+                      ? 'background-color: #D1FAE5; color: #065F46;'
+                      : teeTime.golf_course?.includes('밸리') || teeTime.golf_course?.includes('Valley')
+                      ? 'background-color: #EDE9FE; color: #5B21B6;'
+                      : teeTime.golf_course?.includes('오션') || teeTime.golf_course?.includes('Ocean')
+                      ? 'background-color: #CFFAFE; color: #065F46;'
+                      : teeTime.golf_course?.includes('클럽') || teeTime.golf_course?.includes('Club')
+                      ? 'background-color: #FED7AA; color: #C2410C;'
+                      : 'background-color: #F3F4F6; color: #374151;'
+                  } font-weight: bold;">${teeTime.golf_course || ''} ${teamGenderInfo.type}</td>
                 ` : ''}
                 <td>${index + 1}</td>
                 <td>${p.name}<span style="color: ${p.gender === 'M' || p.gender === '남' ? '#3b82f6' : p.gender === 'F' || p.gender === '여' ? '#ec4899' : '#6b7280'}; font-weight: bold; margin-left: 4px;">${genderSuffix}</span></td>
@@ -980,20 +979,10 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     showToast('success', '데이터가 업데이트되었습니다.');
   };
 
-  // 골프장 코스별 스타일 (텍스트 기반)
-  const getCourseDisplayStyle = (course: string) => {
-    if (course.includes('레이크') || course.includes('Lake')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #3b82f6;';
-    } else if (course.includes('파인') || course.includes('Pine')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #10b981;';
-    } else if (course.includes('힐스') || course.includes('Hills')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #f59e0b;';
-    } else if (course.includes('밸리') || course.includes('Valley')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #8b5cf6;';
-    } else if (course.includes('오션') || course.includes('Ocean')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #06b6d4;';
-    }
-    return 'font-weight: bold;';
+  const handlePreviewRedirect = (type: 'customer' | 'staff') => {
+    // 일정표 미리보기 탭으로 이동하면서 티타임표 뷰 선택
+    const viewType = type === 'customer' ? 'timetable' : 'timetable-staff';
+    router.push(`/admin/tours/${tourId}/schedule?tab=preview&view=${viewType}`);
   };
 
   return (
@@ -1037,11 +1026,11 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             <option value="staff">스탭용</option>
           </select>
           <button
-            onClick={handlePreview}
+            onClick={() => handlePreviewRedirect(previewType)}
             className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
           >
             <Eye className="w-4 h-4" />
-            미리보기
+            일정표 미리보기에서 보기
           </button>
         </div>
       </div>
@@ -1222,22 +1211,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                               <Clock className="w-4 h-4 inline mr-1" />
                               {teeTime.tee_time}
                             </span>
-                            {/* 코스별 구분 표시 개선 */}
-                            <span className="px-2 py-1 rounded text-sm" style={{backgroundColor: '#f3f4f6'}}>
-                              <span style={{
-                                fontWeight: 'bold',
-                                ...(teeTime.golf_course?.includes('레이크') && { color: '#3b82f6' }),
-                                ...(teeTime.golf_course?.includes('파인') && { color: '#10b981' }),
-                                ...(teeTime.golf_course?.includes('힐스') && { color: '#f59e0b' }),
-                                ...(teeTime.golf_course?.includes('밸리') && { color: '#8b5cf6' }),
-                                ...(teeTime.golf_course?.includes('오션') && { color: '#06b6d4' }),
-                              }}>
-                                {teeTime.golf_course?.includes('레이크') && '【레이크】'}
-                                {teeTime.golf_course?.includes('파인') && '【파인】'}
-                                {teeTime.golf_course?.includes('힐스') && '【힐스】'}
-                                {teeTime.golf_course?.includes('밸리') && '【밸리】'}
-                                {teeTime.golf_course?.includes('오션') && '【오션】'}
-                              </span>
+                            <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
                               {teeTime.golf_course}
                             </span>
                           </div>
@@ -1304,16 +1278,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                             {assignedParticipants.map(p => (
                               <div key={p.id} className="flex items-center justify-between bg-gray-50 px-2 py-1 rounded">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-gray-900">
-                                    {p.name}
-                                    {p.gender && (
-                                      <span className={`ml-1 font-bold ${
-                                        p.gender === 'M' || p.gender === '남' ? 'text-blue-600' : 'text-pink-600'
-                                      }`}>
-                                        ({p.gender === 'M' || p.gender === '남' ? '남' : '여'})
-                                      </span>
-                                    )}
-                                  </span>
+                                  <span className="font-medium text-gray-900">{p.name}</span>
                                   <span className="text-xs text-gray-500">({p.team_name || '개인'})</span>
                                 </div>
                                 <button
@@ -1362,13 +1327,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                                     className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
                                   >
                                     + {p.name}
-                                    {p.gender && (
-                                      <span className={`ml-1 ${
-                                        p.gender === 'M' || p.gender === '남' ? 'text-blue-600' : 'text-pink-600'
-                                      }`}>
-                                        ({p.gender === 'M' || p.gender === '남' ? '남' : '여'})
-                                      </span>
-                                    )}
                                   </button>
                                 ))}
                             </div>
@@ -1437,16 +1395,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                             className="w-4 h-4 text-blue-600"
                           />
                           <div>
-                            <div className="font-medium text-gray-900">
-                              {p.name}
-                              {p.gender && (
-                                <span className={`ml-1 font-bold ${
-                                  p.gender === 'M' || p.gender === '남' ? 'text-blue-600' : 'text-pink-600'
-                                }`}>
-                                  ({p.gender === 'M' || p.gender === '남' ? '남' : '여'})
-                                </span>
-                              )}
-                            </div>
+                            <div className="font-medium text-gray-900">{p.name}</div>
                             <div className="text-xs text-gray-500">{p.team_name || '개인'}</div>
                           </div>
                         </div>
@@ -1495,16 +1444,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium text-gray-900">
-                              {p.name}
-                              {p.gender && (
-                                <span className={`ml-1 font-bold ${
-                                  p.gender === 'M' || p.gender === '남' ? 'text-blue-600' : 'text-pink-600'
-                                }`}>
-                                  ({p.gender === 'M' || p.gender === '남' ? '남' : '여'})
-                                </span>
-                              )}
-                            </div>
+                            <div className="font-medium text-gray-900">{p.name}</div>
                             <div className="text-xs text-gray-500">{p.team_name || '개인'}</div>
                             <div className="text-xs text-yellow-600 mt-1">
                               {assignedDatesCount}/{Object.keys(teeTimesByDate).length}일 배정됨
