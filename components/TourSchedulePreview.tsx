@@ -216,6 +216,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .eq('tour_id', tourId)
         .eq('status', '확정')
         .order('pickup_location', { ascending: true })
+        .order('team_name', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -1160,12 +1161,24 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   // 스탭용 탑승안내서 HTML 생성
   const generateStaffHTML = (participants: any[]) => {
+    // 탑승지별로 그룹화
     const participantsByLocation = participants.reduce((acc, participant) => {
       const location = participant.pickup_location || '미정';
       if (!acc[location]) acc[location] = [];
       acc[location].push(participant);
       return acc;
     }, {});
+
+    // 각 탑승지 내에서 팀별로 다시 그룹화
+    const participantsByLocationAndTeam = Object.entries(participantsByLocation).reduce((acc, [location, locationParticipants]: [string, any]) => {
+      acc[location] = locationParticipants.reduce((teamAcc: any, participant: any) => {
+        const teamName = participant.team_name || '팀 미정';
+        if (!teamAcc[teamName]) teamAcc[teamName] = [];
+        teamAcc[teamName].push(participant);
+        return teamAcc;
+      }, {});
+      return acc;
+    }, {} as any);
 
     const notices = documentNotices.staff_boarding || [];
 
@@ -1190,33 +1203,39 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     </div>
     
     <div class="section">
-      ${Object.entries(participantsByLocation).map(([location, locationParticipants]: [string, any]) => `
+      ${Object.entries(participantsByLocationAndTeam).map(([location, teams]: [string, any]) => {
+        const totalCount = Object.values(teams).reduce((sum: number, teamParticipants: any) => sum + teamParticipants.length, 0);
+        return `
         <div class="location-section">
-          <h3>${location} - ${locationParticipants.length}명</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>No.</th>
-                <th>성함</th>
-                <th>연락처</th>
-                <th>팀</th>
-                <th>비고</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${locationParticipants.map((participant: any, idx: number) => `
-                <tr>
-                  <td>${idx + 1}</td>
-                  <td>${participant.name}</td>
-                  <td>${participant.phone || '-'}</td>
-                  <td>${participant.team_name || '-'}</td>
-                  <td>${participant.notes || '-'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+          <h3>${location} - 총 ${totalCount}명</h3>
+          ${Object.entries(teams).map(([teamName, teamParticipants]: [string, any]) => `
+            <div class="team-section">
+              <h4>${teamName} - ${teamParticipants.length}명</h4>
+              <table>
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>성함</th>
+                    <th>연락처</th>
+                    <th>비고</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${teamParticipants.map((participant: any, idx: number) => `
+                    <tr>
+                      <td>${idx + 1}</td>
+                      <td>${participant.name}</td>
+                      <td>${participant.phone || '-'}</td>
+                      <td>${participant.notes || '-'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `).join('')}
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     
     ${notices.length > 0 ? `
@@ -1351,22 +1370,25 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   };
 
   const getBoardingStaffStyles = () => {
+    const { operational } = DOCUMENT_COLOR_SCHEME;
     return `
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; padding: 15px; }
     .container { max-width: 900px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-    .header-container { display: flex; justify-content: space-between; background-color: #2c5282; color: white; padding: 20px; }
+    .header-container { display: flex; justify-content: space-between; background-color: ${operational.header}; color: white; padding: 20px; border-radius: 10px 10px 0 0; }
     .title-section h1 { font-size: 24px; margin-bottom: 8px; }
     .subtitle { font-size: 16px; opacity: 0.9; }
     .info-section { text-align: right; background: rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 4px; }
     .section { padding: 20px; }
     .location-section { margin-bottom: 30px; }
-    .location-section h3 { font-size: 18px; color: #2c5282; margin-bottom: 10px; }
+    .location-section h3 { font-size: 18px; color: ${operational.header}; margin-bottom: 10px; }
+    .team-section { margin-bottom: 20px; margin-left: 20px; }
+    .team-section h4 { font-size: 16px; color: #4a5568; margin-bottom: 8px; font-weight: 600; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
     th, td { border: 1px solid #DEE2E6; padding: 10px; text-align: center; }
-    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; }
+    th { background-color: #ECF0F1; font-weight: bold; color: ${operational.header}; }
     .notices { margin-top: 30px; padding: 20px; background-color: #f8f9fa; }
-    .notices h3 { font-size: 16px; color: #2c5282; margin-bottom: 10px; }
+    .notices h3 { font-size: 16px; color: ${operational.header}; margin-bottom: 10px; }
     .notices p { margin-bottom: 8px; color: #4a5568; }
     .footer { padding: 15px; text-align: center; background-color: #f8f9fa; }
     @media print { body { padding: 0; } .container { box-shadow: none; } }
