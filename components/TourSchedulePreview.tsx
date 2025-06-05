@@ -16,6 +16,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [activeTab, setActiveTab] = useState('customer_schedule');
   const [staffDocumentHTML, setStaffDocumentHTML] = useState<string>('');
   const [roomAssignmentHTML, setRoomAssignmentHTML] = useState<string>('');
+  const [roomAssignmentStaffHTML, setRoomAssignmentStaffHTML] = useState<string>('');
   const [teeTimeHTML, setTeeTimeHTML] = useState<string>('');
   const [teeTimeStaffHTML, setTeeTimeStaffHTML] = useState<string>('');
   const [tourBoardingPlaces, setTourBoardingPlaces] = useState<any[]>([]);
@@ -27,7 +28,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     { id: 'customer_schedule', label: '고객용 일정표', icon: '📋' },
     { id: 'customer_boarding', label: '고객용 탑승안내서', icon: '🚌' },
     { id: 'staff_boarding', label: '스탭용 탑승안내서', icon: '👥' },
-    { id: 'room_assignment', label: '객실 배정표', icon: '🏨' },
+    { id: 'room_assignment', label: '객실 배정표 (고객용)', icon: '🏨' },
+    { id: 'room_assignment_staff', label: '객실 배정표 (스탭용)', icon: '🏨' },
     { id: 'timetable', label: '티타임표 (고객용)', icon: '⛳' },
     { id: 'timetable-staff', label: '티타임표 (스탭용)', icon: '⛳' },
     { id: 'simplified', label: '간편 일정표', icon: '📄' }
@@ -49,7 +51,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   useEffect(() => {
     if (activeTab === 'staff_boarding' && tourData) {
       fetchParticipantsForStaff();
-    } else if (activeTab === 'room_assignment' && tourData) {
+    } else if ((activeTab === 'room_assignment' || activeTab === 'room_assignment_staff') && tourData) {
       fetchRoomAssignments();
     } else if ((activeTab === 'timetable' || activeTab === 'timetable-staff') && tourData) {
       fetchTeeTimes();
@@ -213,17 +215,38 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const fetchRoomAssignments = async () => {
     try {
+      // 참가자 정보 가져오기
       const { data: assignments, error } = await supabase
         .from('singsing_participants')
         .select('*')
         .eq('tour_id', tourId)
-        .not('room_id', 'is', null)
         .order('room_id');
 
       if (error) throw error;
       
-      if (assignments) {
-        setRoomAssignmentHTML(generateRoomAssignmentHTML(assignments));
+      // 객실 정보 가져오기
+      const { data: rooms, error: roomsError } = await supabase
+        .from('singsing_rooms')
+        .select('*')
+        .eq('tour_id', tourId)
+        .order('room_number');
+        
+      if (roomsError) throw roomsError;
+      
+      // 스태프 정보 가져오기 (기사 정보를 위해)
+      const { data: staffData } = await supabase
+        .from('singsing_tour_staff')
+        .select('*')
+        .eq('tour_id', tourId)
+        .eq('role', '기사')
+        .order('order')
+        .limit(1);
+      
+      const tourStaff = staffData && staffData.length > 0 ? staffData[0] : null;
+      
+      if (assignments && rooms) {
+        setRoomAssignmentHTML(generateRoomAssignmentHTML(assignments, rooms, tourStaff, false)); // 고객용
+        setRoomAssignmentStaffHTML(generateRoomAssignmentHTML(assignments, rooms, tourStaff, true)); // 스탭용
       }
     } catch (error) {
       console.error('Error fetching room assignments:', error);
@@ -340,6 +363,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         return staffDocumentHTML || '<div>스탭용 문서를 생성 중입니다...</div>';
       case 'room_assignment':
         return roomAssignmentHTML || '<div>객실 배정표를 생성 중입니다...</div>';
+      case 'room_assignment_staff':
+        return roomAssignmentStaffHTML || '<div>객실 배정표를 생성 중입니다...</div>';
       case 'timetable':
         return teeTimeHTML || '<div>티타임표를 생성 중입니다...</div>';
       case 'timetable-staff':
@@ -778,7 +803,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   };
 
   // 객실 배정표 HTML 생성
-  const generateRoomAssignmentHTML = (assignments: any[]) => {
+  const generateRoomAssignmentHTML = (assignments: any[], isStaff: boolean = false) => {
     const roomsByRoom = assignments.reduce((acc, participant) => {
       const roomId = participant.room_id;
       if (!acc[roomId]) acc[roomId] = [];
@@ -813,18 +838,18 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <thead>
             <tr>
               <th>성명</th>
-              <th>연락처</th>
+              ${isStaff ? '<th>연락처</th>' : ''}
               <th>팀</th>
-              <th>비고</th>
+              ${isStaff ? '<th>비고</th>' : ''}
             </tr>
           </thead>
           <tbody>
             ${participants.map((participant: any) => `
               <tr>
                 <td>${participant.name}</td>
-                <td>${participant.phone || '-'}</td>
+                ${isStaff ? `<td>${participant.phone || '-'}</td>` : ''}
                 <td>${participant.team_name || '-'}</td>
-                <td>${participant.note || '-'}</td>
+                ${isStaff ? `<td>${participant.note || '-'}</td>` : ''}
               </tr>
             `).join('')}
           </tbody>
