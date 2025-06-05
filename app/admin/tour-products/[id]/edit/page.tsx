@@ -432,7 +432,7 @@ const TourProductEditPage = () => {
           {/* 일반 공지사항 */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">이용 안내 및 주의사항</h2>
+              <h2 className="text-lg font-semibold text-gray-800">예약 안내 사항</h2>
               <button
                 type="button"
                 onClick={handleAddNotice}
@@ -467,7 +467,7 @@ const TourProductEditPage = () => {
 
           {/* 이용 안내 */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-800 pb-2 border-b">이용 안내</h2>
+            <h2 className="text-lg font-semibold text-gray-800 pb-2 border-b">상세 이용 안내</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

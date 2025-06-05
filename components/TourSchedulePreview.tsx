@@ -475,7 +475,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <!-- 일반 공지사항 (여행상품) -->
     ${productData?.general_notices && productData.general_notices.length > 0 ? `
       <div class="section">
-        <div class="section-title">이용 안내</div>
+        <div class="section-title">예약 안내 사항</div>
         <div class="notice-box">
           <ul class="notice-list">
             ${productData.general_notices.map((notice: any) => `
@@ -486,7 +486,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     ` : productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour || productData?.usage_locker ? `
       <div class="section">
-        <div class="section-title">이용 안내</div>
+        <div class="section-title">예약 안내 사항</div>
         <div class="notice-box">
           <ul class="notice-list">
             ${productData.usage_round ? `<li>라운딩 규정: ${productData.usage_round}</li>` : ''}
@@ -572,10 +572,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     </div>
 
-    <!-- 이용 안내 (여행상품) -->
+    <!-- 상세 이용 안내 (여행상품) -->
     ${productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour || productData?.usage_locker ? `
       <div class="section">
-        <div class="section-title">이용 안내</div>
+        <div class="section-title">상세 이용 안내</div>
         <div class="usage-section">
           ${productData.usage_round ? `
             <div class="usage-item">
