@@ -1369,11 +1369,22 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .contact-box { background-color: #edf2f7; border-radius: 8px; padding: 15px; text-align: center; margin-top: 15px; }
     .contact-title { font-weight: bold; color: ${operational.header}; margin-bottom: 10px; }
     .contact-phone { font-size: 16px; color: #4a5568; margin: 5px 0; }
-    .route-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .route-table th, .route-table td { border: 1px solid #e2e8f0; padding: 10px; }
-    .route-table td:first-child { text-align: center; }
-    .route-table td:last-child { text-align: left; padding-left: 15px; }
-    .route-table th { background-color: #edf2f7; font-weight: bold; color: ${operational.header}; text-align: center; }
+    /* 경로 섹션 스타일 */
+    .route-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    .route-cards { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+    .route-card { display: flex; align-items: center; gap: 20px; padding: 15px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; transition: all 0.2s ease; }
+    .route-card:hover { background-color: #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .route-number { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; color: white; border-radius: 8px; flex-shrink: 0; }
+    .boarding-stop .route-number { background-color: #4299e1; }
+    .waypoint .route-number { background-color: #9333ea; }
+    .route-content { flex: 1; display: flex; align-items: center; gap: 20px; }
+    .route-time { font-size: 20px; font-weight: bold; color: #1a202c; min-width: 60px; }
+    .route-place { font-size: 16px; font-weight: 600; color: #2d3748; flex: 1; }
+    .route-type { background-color: #e0e7ff; color: #4338ca; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; }
+    .route-info { display: flex; gap: 10px; align-items: center; }
+    .route-duration { background-color: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 14px; }
+    .route-desc { color: #6b7280; font-size: 14px; }
+    @media (max-width: 640px) { .route-card { flex-direction: column; align-items: flex-start; gap: 10px; } .route-content { width: 100%; flex-direction: column; align-items: flex-start; gap: 10px; } .route-number { width: 32px; height: 32px; font-size: 16px; } .route-time { font-size: 18px; } .route-place { font-size: 15px; } }
     .footer { text-align: center; padding: 15px; background-color: ${operational.header}; color: white; border-radius: 10px; margin-top: 20px; }
     @media print { body { padding: 0; } .container { max-width: 100%; } }
     `;
