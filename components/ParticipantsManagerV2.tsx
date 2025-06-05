@@ -503,20 +503,45 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
         if (pickupLocationChanged && form.pickup_location && form.companions && form.companions.length > 0) {
           const companionNames = form.companions.filter(c => c.trim() !== "");
           if (companionNames.length > 0) {
-            // 동반자 탑승지 업데이트 의사 확인
-            const confirmUpdate = window.confirm(
-              `동반자(${companionNames.join(", ")})의 탑승지도 '${form.pickup_location}'로 함께 변경하시겠습니까?\n\n확인을 누르면 동반자들의 탑승지가 함께 변경됩니다."
+            // 동반자들의 정보 찾기 (같은 투어에서만)
+            const { data: companionData } = await supabase
+              .from("singsing_participants")
+              .select("id, name, pickup_location")
+              .eq("tour_id", form.tour_id || tourId)
+              .in("name", companionNames);
+            
+            // 찾은 동반자와 찾지 못한 동반자 구분
+            const foundCompanionNames = companionData ? companionData.map(c => c.name) : [];
+            const notFoundCompanions = companionNames.filter(name => 
+              !foundCompanionNames.includes(name)
             );
             
-            if (confirmUpdate) {
-              // 동반자들의 ID 찾기
-              const { data: companionData } = await supabase
-                .from("singsing_participants")
-                .select("id, name")
-                .eq("tour_id", form.tour_id || tourId)
-                .in("name", companionNames);
+            console.log('동반자 검색 결과:', {
+              요청된_동반자: companionNames,
+              찾은_동반자: foundCompanionNames,
+              찾지못한_동반자: notFoundCompanions,
+              투어ID: form.tour_id || tourId
+            });
+            
+            if (companionData && companionData.length > 0) {
+              // 실제로 찾은 동반자들의 이름과 현재 탑승지 표시
+              const foundCompanions = companionData.map(c => 
+                `${c.name} (현재: ${c.pickup_location || '미지정'})`
+              ).join("\n");
               
-              if (companionData && companionData.length > 0) {
+              let confirmMessage = `다음 동반자들의 탑승지를 '${form.pickup_location}'로 함께 변경하시겠습니까?\n\n${foundCompanions}`;
+              
+              // 찾지 못한 동반자가 있는 경우 추가 안내
+              if (notFoundCompanions.length > 0) {
+                confirmMessage += `\n\n⚠️ 다음 동반자는 아직 참가자로 등록되지 않아 탑승지를 변경할 수 없습니다:\n${notFoundCompanions.join(", ")}`;
+              }
+              
+              confirmMessage += "\n\n확인을 누르면 찾은 동반자들의 탑승지가 변경됩니다.";
+              
+              // 동반자 탑승지 업데이트 의사 확인
+              const confirmUpdate = window.confirm(confirmMessage);
+              
+              if (confirmUpdate) {
                 // 동반자들의 탑승지 업데이트
                 const companionIds = companionData.map(c => c.id);
                 const { error: updateError } = await supabase
@@ -528,9 +553,22 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                   console.log(`동반자 ${companionIds.length}명의 탑승지도 '${form.pickup_location}'로 업데이트되었습니다.`);
                   // 사용자에게 알림
                   const companionNamesStr = companionData.map(c => c.name).join(", ");
-                  alert(`✅ 동반자(${companionNamesStr})의 탑승지가 '${form.pickup_location}'로 함께 변경되었습니다.`);
+                  let successMessage = `✅ 동반자(${companionNamesStr})의 탑승지가 '${form.pickup_location}'로 함께 변경되었습니다.`;
+                  
+                  if (notFoundCompanions.length > 0) {
+                    successMessage += `\n\n⚠️ ${notFoundCompanions.join(", ")}은(는) 아직 참가자로 등록되지 않아 변경되지 않았습니다.`;
+                  }
+                  
+                  alert(successMessage);
+                } else {
+                  console.error('동반자 탑승지 업데이트 오류:', updateError);
+                  alert('동반자 탑승지 업데이트 중 오류가 발생했습니다.');
                 }
               }
+            } else if (companionNames.length > 0) {
+              // 모든 동반자를 찾지 못한 경우
+              console.log('등록된 참가자 중 동반자를 찾을 수 없습니다:', companionNames);
+              alert(`⚠️ 동반자(${companionNames.join(", ")})가 아직 참가자로 등록되지 않아 탑승지를 변경할 수 없습니다.\n\n동반자를 먼저 참가자로 등록해주세요.`);
             }
           }
         }
@@ -1795,6 +1833,11 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
                       <option key={place.id} value={place.name}>{place.name}</option>
                     ))}
                   </select>
+                  {editingId && form.companions && form.companions.filter(c => c.trim() !== "").length > 0 && (
+                    <p className="text-xs text-blue-600 mt-1">
+                      ℹ️ 동반자 정보가 있는 경우, 탑승지 변경 시 확인창이 나타납니다.
+                    </p>
+                  )}
                 </div>
 
 
