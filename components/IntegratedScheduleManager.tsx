@@ -11,6 +11,14 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
   const [loading, setLoading] = useState(true);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
   const [scheduleText, setScheduleText] = useState('');
+  const [mealInfo, setMealInfo] = useState<any>({
+    meal_breakfast: false,
+    meal_lunch: false,
+    meal_dinner: false,
+    menu_breakfast: '',
+    menu_lunch: '',
+    menu_dinner: ''
+  });
   const [tourProduct, setTourProduct] = useState<any>(null);
 
   useEffect(() => {
@@ -92,7 +100,13 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
         title: editingSchedule.title,
         date: editingSchedule.date,
         day_number: editingSchedule.day_number || 1,
-        schedule_items: items
+        schedule_items: items,
+        meal_breakfast: mealInfo.meal_breakfast,
+        meal_lunch: mealInfo.meal_lunch,
+        meal_dinner: mealInfo.meal_dinner,
+        menu_breakfast: mealInfo.menu_breakfast,
+        menu_lunch: mealInfo.menu_lunch,
+        menu_dinner: mealInfo.menu_dinner
       };
 
       console.log('저장할 데이터:', scheduleData);
@@ -126,6 +140,14 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
       setEditingSchedule(null);
       setScheduleText('');
+      setMealInfo({
+        meal_breakfast: false,
+        meal_lunch: false,
+        meal_dinner: false,
+        menu_breakfast: '',
+        menu_lunch: '',
+        menu_dinner: ''
+      });
       fetchData();
       alert('저장되었습니다.');
     } catch (error: any) {
@@ -157,6 +179,16 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
       item.time ? `${item.time}: ${item.content}` : item.content
     ).join('\n') || '';
     setScheduleText(text);
+    
+    // 식사 정보 설정
+    setMealInfo({
+      meal_breakfast: schedule.meal_breakfast || false,
+      meal_lunch: schedule.meal_lunch || false,
+      meal_dinner: schedule.meal_dinner || false,
+      menu_breakfast: schedule.menu_breakfast || '',
+      menu_lunch: schedule.menu_lunch || '',
+      menu_dinner: schedule.menu_dinner || ''
+    });
   };
 
   const handleNewSchedule = () => {
@@ -168,6 +200,14 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
       schedule_items: []
     });
     setScheduleText('');
+    setMealInfo({
+      meal_breakfast: false,
+      meal_lunch: false,
+      meal_dinner: false,
+      menu_breakfast: '',
+      menu_lunch: '',
+      menu_dinner: ''
+    });
   };
 
   if (loading) {
@@ -253,12 +293,104 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                 </p>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium mb-1">식사 정보</label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="border rounded-md p-3">
+                    <label className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={mealInfo.meal_breakfast}
+                        onChange={(e) => setMealInfo({
+                          ...mealInfo,
+                          meal_breakfast: e.target.checked
+                        })}
+                      />
+                      <span className="font-medium">조식</span>
+                    </label>
+                    {mealInfo.meal_breakfast && (
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1 border rounded text-sm"
+                        placeholder="메뉴 입력"
+                        value={mealInfo.menu_breakfast}
+                        onChange={(e) => setMealInfo({
+                          ...mealInfo,
+                          menu_breakfast: e.target.value
+                        })}
+                      />
+                    )}
+                  </div>
+                  <div className="border rounded-md p-3">
+                    <label className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={mealInfo.meal_lunch}
+                        onChange={(e) => setMealInfo({
+                          ...mealInfo,
+                          meal_lunch: e.target.checked
+                        })}
+                      />
+                      <span className="font-medium">중식</span>
+                    </label>
+                    {mealInfo.meal_lunch && (
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1 border rounded text-sm"
+                        placeholder="메뉴 입력"
+                        value={mealInfo.menu_lunch}
+                        onChange={(e) => setMealInfo({
+                          ...mealInfo,
+                          menu_lunch: e.target.value
+                        })}
+                      />
+                    )}
+                  </div>
+                  <div className="border rounded-md p-3">
+                    <label className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={mealInfo.meal_dinner}
+                        onChange={(e) => setMealInfo({
+                          ...mealInfo,
+                          meal_dinner: e.target.checked
+                        })}
+                      />
+                      <span className="font-medium">석식</span>
+                    </label>
+                    {mealInfo.meal_dinner && (
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1 border rounded text-sm"
+                        placeholder="메뉴 입력"
+                        value={mealInfo.menu_dinner}
+                        onChange={(e) => setMealInfo({
+                          ...mealInfo,
+                          menu_dinner: e.target.value
+                        })}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2">
                 <button
                   className="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-50"
                   onClick={() => {
                     setEditingSchedule(null);
                     setScheduleText('');
+                    setMealInfo({
+                      meal_breakfast: false,
+                      meal_lunch: false,
+                      meal_dinner: false,
+                      menu_breakfast: '',
+                      menu_lunch: '',
+                      menu_dinner: ''
+                    });
                   }}
                 >
                   <X className="w-4 h-4 inline mr-1" /> 취소
@@ -289,6 +421,18 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                       </li>
                     ))}
                   </ul>
+                  {/* 식사 정보 표시 */}
+                  <div className="mt-3 flex gap-4 text-sm">
+                    <span className={`px-2 py-1 rounded ${schedule.meal_breakfast ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      조식: {schedule.meal_breakfast ? (schedule.menu_breakfast || 'O') : 'X'}
+                    </span>
+                    <span className={`px-2 py-1 rounded ${schedule.meal_lunch ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      중식: {schedule.meal_lunch ? (schedule.menu_lunch || 'O') : 'X'}
+                    </span>
+                    <span className={`px-2 py-1 rounded ${schedule.meal_dinner ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      석식: {schedule.meal_dinner ? (schedule.menu_dinner || 'O') : 'X'}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button
