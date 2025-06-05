@@ -517,7 +517,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <!-- 일정 안내 -->
     <div class="section">
       <div class="section-title">일정 안내</div>
-      <div class="schedule-section">
+      <div class="schedule-section" style="padding-top: 5px;">
         ${tourData.schedules?.map((schedule: any, idx: number) => `
           <div class="day-schedule">
             <div class="day-title">
@@ -1199,7 +1199,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     .company-info { font-size: 13px; opacity: 0.9; }
     .section { padding: 0; margin-bottom: 15px; }
-    .section-title { font-size: 16px; font-weight: bold; margin: 0 15px; padding: 15px 0 10px 0; color: #2c5282; border-bottom: 2px solid #2c5282; }
+    .section-title { font-size: 16px; font-weight: bold; margin: 0 15px; padding: 15px 0 10px 0; color: #2c5282; border-bottom: 2px solid #2c5282; margin-bottom: 15px; }
     .product-info-box { margin: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .info-row { display: flex; border-bottom: 1px solid #e2e8f0; }
     .info-row:last-child { border-bottom: none; }
