@@ -1,0 +1,104 @@
+/**
+ * 싱싱골프투어 브랜드 CSS 변수
+ * 
+ * @description 전역 CSS 변수로 색상 관리
+ * @usage :root 또는 특정 클래스에 적용
+ */
+
+:root {
+  /* Primary Brand Colors */
+  --singsing-primary-dark: #2c5282;
+  --singsing-primary-main: #4a6fa5;
+  --singsing-primary-light: #4299e1;
+  --singsing-primary-lighter: #e7f3ff;
+
+  /* Document Type Colors */
+  --singsing-contract-header: #2c5282;
+  --singsing-operational-header: #4a6fa5;
+
+  /* Semantic Colors */
+  --singsing-success: #2F855A;
+  --singsing-warning: #F59E0B;
+  --singsing-error: #E53E3E;
+  --singsing-info: #3182CE;
+
+  /* Neutral Colors */
+  --singsing-text-primary: #2D3748;
+  --singsing-text-secondary: #4A5568;
+  --singsing-text-muted: #718096;
+  --singsing-border: #E2E8F0;
+  --singsing-background: #F5F7FA;
+
+  /* Timeline Colors (60대 고객 친화적) */
+  --singsing-timeline-golf: #e6f4ea;      /* 골프 - 연한 초록 */
+  --singsing-timeline-meal: #fdf9f3;      /* 식사 - 아주 연한 베이지 */
+  --singsing-timeline-default: #f8f9fa;   /* 기본 - 연한 회색 */
+
+  /* Typography */
+  --singsing-font-family: 'Noto Sans KR', sans-serif;
+  --singsing-font-size-xs: 12px;
+  --singsing-font-size-sm: 14px;
+  --singsing-font-size-base: 16px;
+  --singsing-font-size-lg: 18px;
+  --singsing-font-size-xl: 20px;
+  --singsing-font-size-2xl: 24px;
+  --singsing-font-size-3xl: 28px;
+
+  /* Spacing */
+  --singsing-spacing-xs: 4px;
+  --singsing-spacing-sm: 8px;
+  --singsing-spacing-md: 16px;
+  --singsing-spacing-lg: 24px;
+  --singsing-spacing-xl: 32px;
+
+  /* Border Radius */
+  --singsing-radius-sm: 4px;
+  --singsing-radius-md: 8px;
+  --singsing-radius-lg: 10px;
+  --singsing-radius-xl: 12px;
+
+  /* Shadows */
+  --singsing-shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --singsing-shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --singsing-shadow-lg: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* 문서 타입별 테마 */
+.singsing-theme-contract {
+  --primary-color: var(--singsing-primary-dark);
+  --header-bg: var(--singsing-primary-dark);
+  --header-radius: 0;
+}
+
+.singsing-theme-operational {
+  --primary-color: var(--singsing-primary-main);
+  --header-bg: var(--singsing-primary-main);
+  --header-radius: var(--singsing-radius-lg);
+}
+
+/* 접근성 모드 (60대 고객용) */
+.singsing-accessibility-mode {
+  --singsing-font-size-base: 18px;
+  --singsing-font-size-lg: 20px;
+  --singsing-spacing-md: 20px;
+  --singsing-text-primary: #1A202C;
+}
+
+/* 인쇄 모드 */
+@media print {
+  :root {
+    --singsing-primary-dark: #000000;
+    --singsing-primary-main: #333333;
+    --singsing-text-primary: #000000;
+    --singsing-border: #666666;
+  }
+}
+
+/* 다크 모드 (선택적) */
+@media (prefers-color-scheme: dark) {
+  .singsing-theme-auto-dark {
+    --singsing-background: #1A202C;
+    --singsing-text-primary: #F7FAFC;
+    --singsing-text-secondary: #E2E8F0;
+  }
+}

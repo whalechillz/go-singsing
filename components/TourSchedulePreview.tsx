@@ -1241,11 +1241,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; padding: 0; }
     .container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .header { background-color: #4a6fa5; color: white; padding: 20px 15px; text-align: center; }
+    .header { background-color: #2c5282; color: white; padding: 20px 15px; text-align: center; }
     .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     .company-info { font-size: 13px; opacity: 0.9; }
     .section { padding: 0; margin-bottom: 15px; }
-    .section-title { font-size: 16px; font-weight: bold; margin: 0 15px; padding: 15px 0 10px 0; color: #2d3748; border-bottom: 2px solid #4a6fa5; margin-bottom: 15px; }
+    .section-title { font-size: 16px; font-weight: bold; margin: 0 15px; padding: 15px 0 10px 0; color: #2d3748; border-bottom: 2px solid #2c5282; margin-bottom: 15px; }
     .product-info-box { margin: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .info-row { display: flex; border-bottom: 1px solid #e2e8f0; }
     .info-row:last-child { border-bottom: none; }
@@ -1266,10 +1266,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .notice-item strong { color: #2b6cb0; }
     .usage-section { margin: 15px; }
     .usage-item { margin-bottom: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .usage-header { background: #4a6fa5; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
+    .usage-header { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
     .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; padding: 15px; background-color: white; }
     .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .day-title { background: #4a6fa5; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin-bottom: 2px; }
+    .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin-bottom: 2px; }
     .day-round { font-weight: bold; }
     .day-content { padding: 15px; }
     .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
@@ -1310,14 +1310,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; line-height: 1.6; padding: 10px; }
     .container { max-width: 800px; margin: 0 auto; }
-    .header { background-color: #2c5282; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
+    .header { background-color: #4a6fa5; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
     .header-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     .header-subtitle { font-size: 16px; opacity: 0.9; }
     .boarding-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px; }
     .boarding-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
-    .card-border { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #3182ce; }
+    .card-border { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #4299e1; }
     .card-content { padding: 20px 20px 20px 26px; }
-    .card-title { font-size: 20px; font-weight: bold; color: #2c5282; margin-bottom: 15px; }
+    .card-title { font-size: 20px; font-weight: bold; color: #4a6fa5; margin-bottom: 15px; }
     .card-time { font-size: 32px; font-weight: bold; color: #e53e3e; margin-bottom: 5px; }
     .card-date { font-size: 16px; color: #4a5568; margin-bottom: 10px; }
     .card-info { display: flex; gap: 15px; margin-top: 15px; font-size: 14px; }
@@ -1329,20 +1329,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .location-title:before { content: "📍"; margin-right: 5px; }
     .location-main { font-weight: 600; color: #2d3748; margin-bottom: 2px; }
     .location-sub { color: #718096; font-size: 13px; }
-    .map-link { display: inline-block; background-color: #3182ce; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-top: 5px; font-size: 13px; }
+    .map-link { display: inline-block; background-color: #4299e1; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-top: 5px; font-size: 13px; }
     .common-info { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    .section-title { font-size: 18px; font-weight: bold; color: #2c5282; margin-bottom: 15px; }
+    .section-title { font-size: 18px; font-weight: bold; color: #4a6fa5; margin-bottom: 15px; }
     .notice-content { white-space: pre-line; color: #4a5568; margin-bottom: 15px; }
     .notice-list { margin-top: 15px; }
     .notice-item { position: relative; padding-left: 20px; margin-bottom: 10px; color: #4a5568; }
     .notice-item:before { content: '※'; position: absolute; left: 0; color: #e53e3e; }
     .contact-box { background-color: #edf2f7; border-radius: 8px; padding: 15px; text-align: center; margin-top: 15px; }
-    .contact-title { font-weight: bold; color: #2c5282; margin-bottom: 10px; }
+    .contact-title { font-weight: bold; color: #4a6fa5; margin-bottom: 10px; }
     .contact-phone { font-size: 16px; color: #4a5568; margin: 5px 0; }
     .route-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
     .route-table th, .route-table td { border: 1px solid #e2e8f0; padding: 10px; }
-    .route-table th { background-color: #edf2f7; font-weight: bold; color: #2c5282; }
-    .footer { text-align: center; padding: 15px; background-color: #2c5282; color: white; border-radius: 10px; margin-top: 20px; }
+    .route-table th { background-color: #edf2f7; font-weight: bold; color: #4a6fa5; }
+    .footer { text-align: center; padding: 15px; background-color: #4a6fa5; color: white; border-radius: 10px; margin-top: 20px; }
     @media print { body { padding: 0; } .container { max-width: 100%; } }
     `;
   };
@@ -1400,9 +1400,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; padding: 20px; }
     .container { max-width: 900px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-    .header { text-align: center; padding: 30px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; }
-    .header h1 { font-size: 28px; color: #2c5282; margin-bottom: 10px; }
-    .header p { color: #718096; margin: 5px 0; }
+    .header { background-color: #2c5282; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+    .header h1 { font-size: 24px; color: white; margin-bottom: 10px; }
+    .header p { color: white; opacity: 0.9; margin: 5px 0; font-size: 16px; }
     .content { padding: 30px; }
     .room-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .room-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #f8f9fa; border-bottom: 1px solid #e2e8f0; }
