@@ -803,13 +803,21 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   };
 
   // 객실 배정표 HTML 생성
-  const generateRoomAssignmentHTML = (assignments: any[], isStaff: boolean = false) => {
-    const roomsByRoom = assignments.reduce((acc, participant) => {
+  const generateRoomAssignmentHTML = (assignments: any[], rooms: any[], tourStaff: any, isStaff: boolean = false) => {
+    // 참가자를 room_id로 그룹화
+    const participantsByRoom = assignments.reduce((acc, participant) => {
       const roomId = participant.room_id;
+      if (!roomId) return acc;
       if (!acc[roomId]) acc[roomId] = [];
       acc[roomId].push(participant);
       return acc;
-    }, {});
+    }, {} as Record<string, any[]>);
+
+    // 객실 정보를 ID로 매핑
+    const roomsMap = rooms.reduce((acc, room) => {
+      acc[room.id] = room;
+      return acc;
+    }, {} as Record<string, any>);
 
     const notices = documentNotices.room_assignment || [];
 
@@ -818,7 +826,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${tourData.title} - 객실 배정표</title>
+  <title>${tourData.title} - 객실 배정표${isStaff ? ' (스탭용)' : ''}</title>
   <style>
     ${getRoomAssignmentStyles()}
   </style>
@@ -826,55 +834,119 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <body>
   <div class="container">
     <div class="header">
-      <h1>객실 배정표</h1>
-      <p>${tourData.title}</p>
-      <p>${productData?.hotel || ''}</p>
+      <h1>객실 배정표${isStaff ? ' (스탭용)' : ''}</h1>
+      <p style="font-size: 20px; font-weight: bold; margin: 10px 0;">${tourData.title}</p>
+      <p style="font-size: 16px; color: #666;">${productData?.hotel || ''}</p>
     </div>
     
-    ${Object.entries(roomsByRoom).map(([roomId, participants]: [string, any]) => `
-      <div class="room-section">
-        <h2>객실 ${roomId}</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>성명</th>
-              ${isStaff ? '<th>연락처</th>' : ''}
-              <th>팀</th>
-              ${isStaff ? '<th>비고</th>' : ''}
-            </tr>
-          </thead>
-          <tbody>
-            ${participants.map((participant: any) => `
-              <tr>
-                <td>${participant.name}</td>
-                ${isStaff ? `<td>${participant.phone || '-'}</td>` : ''}
-                <td>${participant.team_name || '-'}</td>
-                ${isStaff ? `<td>${participant.note || '-'}</td>` : ''}
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+    <div class="content">
+      ${rooms.sort((a, b) => {
+        // room_number가 있으면 그걸로 정렬, 없으면 room_seq로 정렬
+        if (a.room_number && b.room_number) {
+          return a.room_number.localeCompare(b.room_number, 'ko', { numeric: true });
+        }
+        return (a.room_seq || 0) - (b.room_seq || 0);
+      }).map(room => {
+        const roomParticipants = participantsByRoom[room.id] || [];
+        const isEmpty = roomParticipants.length === 0;
+        
+        return `
+        <div class="room-card">
+          <div class="room-header">
+            <span class="room-number">${room.room_number || `객실 ${room.room_seq || ''}`}</span>
+            <span class="room-type">${room.room_type}</span>
+            <span class="room-capacity">${roomParticipants.length}/${room.capacity}명</span>
+          </div>
+          <div class="room-body">
+            ${isEmpty ? `
+              <div class="empty-room">빈 객실</div>
+            ` : `
+              <table class="participant-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40px;">No</th>
+                    <th>성명</th>
+                    ${isStaff ? '<th style="width: 120px;">연락처</th>' : ''}
+                    <th style="width: 100px;">팀</th>
+                    ${isStaff ? '<th>비고</th>' : ''}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${roomParticipants.map((participant: any, index: number) => `
+                    <tr>
+                      <td class="text-center">${index + 1}</td>
+                      <td class="text-center">${participant.name}</td>
+                      ${isStaff ? `<td class="text-center">${participant.phone || '-'}</td>` : ''}
+                      <td class="text-center">${participant.team_name || '-'}</td>
+                      ${isStaff ? `<td>${participant.note || '-'}</td>` : ''}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `}
+          </div>
+        </div>
+        `;
+      }).join('')}
+      
+      ${tourStaff ? `
+        <div class="room-card driver-room">
+          <div class="room-header">
+            <span class="room-number">기사님 객실</span>
+            <span class="room-type">별도 배정</span>
+          </div>
+          <div class="room-body">
+            <table class="participant-table">
+              <tbody>
+                <tr>
+                  <td style="padding: 15px; text-align: center;">
+                    <strong>${tourStaff.name}</strong> ${tourStaff.role || '기사'}
+                    ${isStaff ? ` - ${tourStaff.phone}` : ''}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+    
+    <div class="summary-section">
+      <h3>객실 배정 요약</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="summary-label">총 객실</span>
+          <span class="summary-value">${rooms.length}실</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">배정 인원</span>
+          <span class="summary-value">${assignments.filter(p => p.room_id).length}명</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">미배정</span>
+          <span class="summary-value">${assignments.filter(p => !p.room_id).length}명</span>
+        </div>
       </div>
-    `).join('')}
+    </div>
     
     ${documentFooters.room_assignment?.['객실 이용 안내'] ? `
-      <div class="notices">
+      <div class="notice-section">
         <h3>객실 이용 안내</h3>
         <ul>
-          ${documentFooters.room_assignment['객실 이용 안내'].split('\n').map((line: string) => `
-            <li>${line.replace('•', '').trim()}</li>
-          `).join('')}
+          ${documentFooters.room_assignment['객실 이용 안내'].split('\n').map((line: string) => 
+            line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
+          ).filter(Boolean).join('')}
         </ul>
       </div>
     ` : ''}
     
     ${documentFooters.room_assignment?.['식사 안내'] ? `
-      <div class="notices">
+      <div class="notice-section">
         <h3>식사 안내</h3>
         <ul>
-          ${documentFooters.room_assignment['식사 안내'].split('\n').map((line: string) => `
-            <li>${line.replace('•', '').trim()}</li>
-          `).join('')}
+          ${documentFooters.room_assignment['식사 안내'].split('\n').map((line: string) => 
+            line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
+          ).filter(Boolean).join('')}
         </ul>
       </div>
     ` : ''}
@@ -1299,20 +1371,43 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     return `
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
     body { background-color: #f5f7fa; color: #343a40; padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; padding: 30px; }
-    .header { text-align: center; margin-bottom: 30px; }
-    .header h1 { font-size: 24px; color: #2c5282; margin-bottom: 10px; }
-    .header p { color: #718096; }
-    .room-section { margin-bottom: 30px; }
-    .room-section h2 { font-size: 18px; color: #2c5282; margin-bottom: 15px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #DEE2E6; padding: 10px; text-align: center; }
-    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; }
-    .notices { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; }
-    .notices h3 { font-size: 16px; color: #2c5282; margin-bottom: 10px; }
-    .notices p { margin-bottom: 8px; color: #4a5568; }
-    .footer { text-align: center; margin-top: 30px; color: #718096; }
-    @media print { body { padding: 0; } .container { box-shadow: none; } }
+    .container { max-width: 900px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+    .header { text-align: center; padding: 30px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+    .header h1 { font-size: 28px; color: #2c5282; margin-bottom: 10px; }
+    .header p { color: #718096; margin: 5px 0; }
+    .content { padding: 30px; }
+    .room-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .room-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #f8f9fa; border-bottom: 1px solid #e2e8f0; }
+    .room-number { font-size: 18px; font-weight: bold; color: #2c5282; }
+    .room-type { color: #718096; font-size: 14px; }
+    .room-capacity { background-color: #e6f3ff; color: #2563eb; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; }
+    .room-body { padding: 0; }
+    .empty-room { padding: 40px; text-align: center; color: #9ca3af; font-style: italic; }
+    .participant-table { width: 100%; border-collapse: collapse; }
+    .participant-table th { background-color: #f3f4f6; font-weight: bold; padding: 12px 8px; text-align: center; font-size: 14px; color: #374151; border-bottom: 1px solid #e5e7eb; }
+    .participant-table td { padding: 10px 8px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+    .participant-table tbody tr:last-child td { border-bottom: none; }
+    .participant-table tbody tr:hover { background-color: #f9fafb; }
+    .text-center { text-align: center; }
+    .driver-room { background-color: #fef3c7; border-color: #fbbf24; }
+    .driver-room .room-header { background-color: #fef3c7; }
+    .summary-section { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; }
+    .summary-section h3 { font-size: 18px; color: #2c5282; margin-bottom: 15px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .summary-item { text-align: center; }
+    .summary-label { display: block; color: #718096; font-size: 14px; margin-bottom: 5px; }
+    .summary-value { display: block; font-size: 24px; font-weight: bold; color: #2c5282; }
+    .notice-section { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 3px solid #4299e1; }
+    .notice-section h3 { font-size: 16px; color: #2c5282; margin-bottom: 10px; }
+    .notice-section ul { list-style: none; padding-left: 0; }
+    .notice-section li { padding: 4px 0; color: #4a5568; font-size: 14px; position: relative; padding-left: 20px; }
+    .notice-section li:before { content: "•"; position: absolute; left: 0; color: #4299e1; }
+    .footer { text-align: center; padding: 30px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 14px; }
+    @media print { 
+      body { padding: 0; background: white; } 
+      .container { box-shadow: none; max-width: 100%; } 
+      .room-card { page-break-inside: avoid; }
+    }
     `;
   };
 
