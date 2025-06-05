@@ -573,44 +573,44 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     </div>
 
-    <!-- 상세 이용 안내 (여행상품) -->
+    <!-- 이용 안내 (여행상품) -->
     ${productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour || productData?.usage_locker ? `
       <div class="section">
-        <div class="section-title">상세 이용 안내</div>
+        <div class="section-title">이용 안내</div>
         <div class="usage-section">
           ${productData.usage_round ? `
             <div class="usage-item">
-              <div class="usage-title">라운딩 규정</div>
+              <div class="usage-header">라운딩 규정</div>
               <div class="usage-content">${formatTextWithBold(productData.usage_round)}</div>
             </div>
           ` : ''}
           ${productData.usage_hotel ? `
             <div class="usage-item">
-              <div class="usage-title">숙소 이용</div>
+              <div class="usage-header">숙소 이용</div>
               <div class="usage-content">${formatTextWithBold(productData.usage_hotel)}</div>
             </div>
           ` : ''}
           ${productData.usage_meal ? `
             <div class="usage-item">
-              <div class="usage-title">식사 안내</div>
+              <div class="usage-header">식사 안내</div>
               <div class="usage-content">${formatTextWithBold(productData.usage_meal)}</div>
             </div>
           ` : ''}
           ${productData.usage_locker ? `
             <div class="usage-item">
-              <div class="usage-title">락카 이용</div>
+              <div class="usage-header">락카 이용</div>
               <div class="usage-content">${formatTextWithBold(productData.usage_locker)}</div>
             </div>
           ` : ''}
           ${productData.usage_bus ? `
             <div class="usage-item">
-              <div class="usage-title">버스 이용</div>
+              <div class="usage-header">버스 이용</div>
               <div class="usage-content">${formatTextWithBold(productData.usage_bus)}</div>
             </div>
           ` : ''}
           ${productData.usage_tour ? `
             <div class="usage-item">
-              <div class="usage-title">관광지 투어</div>
+              <div class="usage-header">관광지 투어</div>
               <div class="usage-content">${formatTextWithBold(productData.usage_tour)}</div>
             </div>
           ` : ''}
@@ -1220,9 +1220,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .notice-item { margin-bottom: 10px; font-size: 14px; }
     .notice-item strong { color: #2b6cb0; }
     .usage-section { margin: 15px; }
-    .usage-item { margin-bottom: 15px; padding: 12px 15px; background-color: #f8f9fa; border-radius: 6px; }
-    .usage-title { font-weight: bold; color: #2b6cb0; margin-bottom: 6px; font-size: 14px; }
-    .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; }
+    .usage-item { margin-bottom: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .usage-header { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
+    .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; padding: 15px; background-color: white; }
     .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin-bottom: 2px; }
     .day-round { font-weight: bold; }
