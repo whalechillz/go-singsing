@@ -16,10 +16,8 @@ type TourForm = {
   end_date: string;
   price: string;
   max_participants: string;
-  includes: string;
-  excludes: string;
   tour_product_id: string;
-  special_notices: string;
+  other_notices: string;
 };
 
 const TourNewPage: React.FC = () => {
@@ -30,10 +28,8 @@ const TourNewPage: React.FC = () => {
     end_date: "",
     price: "",
     max_participants: "",
-    includes: "",
-    excludes: "",
     tour_product_id: "",
-    special_notices: ""
+    other_notices: ""
   });
   
   const [staff, setStaff] = useState<StaffMember[]>([
@@ -73,8 +69,6 @@ const TourNewPage: React.FC = () => {
       setForm({
         ...form,
         tour_product_id: selectedProductId,
-        includes: selectedProduct.included_items || "",
-        excludes: selectedProduct.excluded_items || "",
       });
     }
   };
@@ -99,27 +93,18 @@ const TourNewPage: React.FC = () => {
     setError("");
     
     try {
-      // 선택된 여행상품 정보 가져오기
-      const selectedProduct = products.find(p => p.id === form.tour_product_id);
-      const golfCourse = selectedProduct?.golf_course || "";
-      const accommodation = selectedProduct?.hotel || "";  // hotel 필드를 accommodation으로 사용
-      
-      // 1. 투어 생성
+      // 1. 투어 생성 - 타입 체크 무시하고 실제 DB 스키마에 맞게 수정
       const { data: tourData, error: tourError } = await supabase
         .from("singsing_tours")
         .insert([{
           title: form.title,
           start_date: form.start_date,
           end_date: form.end_date,
-          golf_course: golfCourse,  // 여행상품에서 가져온 골프장 정보
-          accommodation: accommodation,  // 여행상품에서 가져온 숙소 정보
           price: form.price ? Number(form.price) : 0,
           max_participants: form.max_participants ? Number(form.max_participants) : 0,
-          includes: form.includes,
-          excludes: form.excludes,
           tour_product_id: form.tour_product_id || null,
-          special_notices: form.special_notices,
-        }])
+          other_notices: form.other_notices || null,
+        }])  // types.ts를 수정했으므로 타입 에러 해결
         .select()
         .single();
       
@@ -267,11 +252,11 @@ const TourNewPage: React.FC = () => {
             </div>
             
             <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">투어별 특수 공지사항</span>
+              <span className="font-medium">기타 공지사항</span>
               <textarea 
-                name="special_notices" 
+                name="other_notices" 
                 className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
-                value={form.special_notices} 
+                value={form.other_notices} 
                 onChange={handleChange}
                 placeholder="이 투어만의 특별한 공지사항이 있다면 입력하세요 (선택사항)"
                 rows={3}

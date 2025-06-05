@@ -641,60 +641,66 @@ export interface Database {
           title: string
           start_date: string
           end_date: string
-          golf_course: string
-          accommodation: string
           price: number
           max_participants: number
-          includes: string | null
-          excludes: string | null
           created_at: string
           updated_at: string
-          driver_name: string | null
-          driver_phone: string | null
-          reservation_notice: string | null
-          schedule_notice: string | null
           tour_product_id: string | null
-          notices: any | null
+          footer_message: string | null
+          company_phone: string | null
+          company_mobile: string | null
+          golf_reservation_phone: string | null
+          golf_reservation_mobile: string | null
+          show_staff_info: boolean | null
+          show_footer_message: boolean | null
+          show_company_phone: boolean | null
+          show_golf_phones: boolean | null
+          other_notices: string | null
+          document_settings: any | null
         }
         Insert: {
           id?: string
           title: string
           start_date: string
           end_date: string
-          golf_course: string
-          accommodation: string
           price: number
           max_participants: number
-          includes?: string | null
-          excludes?: string | null
           created_at?: string
           updated_at?: string
-          driver_name?: string | null
-          driver_phone?: string | null
-          reservation_notice?: string | null
-          schedule_notice?: string | null
           tour_product_id?: string | null
-          notices?: any | null
+          footer_message?: string | null
+          company_phone?: string | null
+          company_mobile?: string | null
+          golf_reservation_phone?: string | null
+          golf_reservation_mobile?: string | null
+          show_staff_info?: boolean | null
+          show_footer_message?: boolean | null
+          show_company_phone?: boolean | null
+          show_golf_phones?: boolean | null
+          other_notices?: string | null
+          document_settings?: any | null
         }
         Update: {
           id?: string
           title?: string
           start_date?: string
           end_date?: string
-          golf_course?: string
-          accommodation?: string
           price?: number
           max_participants?: number
-          includes?: string | null
-          excludes?: string | null
           created_at?: string
           updated_at?: string
-          driver_name?: string | null
-          driver_phone?: string | null
-          reservation_notice?: string | null
-          schedule_notice?: string | null
           tour_product_id?: string | null
-          notices?: any | null
+          footer_message?: string | null
+          company_phone?: string | null
+          company_mobile?: string | null
+          golf_reservation_phone?: string | null
+          golf_reservation_mobile?: string | null
+          show_staff_info?: boolean | null
+          show_footer_message?: boolean | null
+          show_company_phone?: boolean | null
+          show_golf_phones?: boolean | null
+          other_notices?: string | null
+          document_settings?: any | null
         }
       }
       tour_products: {
