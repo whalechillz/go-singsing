@@ -470,7 +470,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           </ul>
         </div>
       </div>
-    ` : productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour ? `
+    ` : productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour || productData?.usage_locker ? `
       <div class="section">
         <div class="section-title">이용 안내</div>
         <div class="notice-box">
@@ -480,6 +480,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             ${productData.usage_meal ? `<li>식사 안내: ${productData.usage_meal}</li>` : ''}
             ${productData.usage_bus ? `<li>버스 이용: ${productData.usage_bus}</li>` : ''}
             ${productData.usage_tour ? `<li>관광지 투어: ${productData.usage_tour}</li>` : ''}
+            ${productData.usage_locker ? `<li>락카 이용: ${productData.usage_locker}</li>` : ''}
           </ul>
         </div>
       </div>
@@ -557,8 +558,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     </div>
 
-    <!-- 이용 안내 (여행상품) - 락카 이용 제외 -->
-    ${productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour ? `
+    <!-- 이용 안내 (여행상품) -->
+    ${productData?.usage_round || productData?.usage_hotel || productData?.usage_meal || productData?.usage_bus || productData?.usage_tour || productData?.usage_locker ? `
       <div class="section">
         <div class="section-title">이용 안내</div>
         <div class="usage-section">
@@ -590,6 +591,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             <div class="usage-item">
               <div class="usage-title">관광지 투어</div>
               <div class="usage-content">${productData.usage_tour.replace(/\n/g, '<br>')}</div>
+            </div>
+          ` : ''}
+          ${productData.usage_locker ? `
+            <div class="usage-item">
+              <div class="usage-title">락카 이용</div>
+              <div class="usage-content">${productData.usage_locker.replace(/\n/g, '<br>')}</div>
             </div>
           ` : ''}
         </div>
