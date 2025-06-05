@@ -527,14 +527,60 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             <div class="day-content">
               <div class="schedule-content">
                 ${schedule.schedule_items?.length > 0 ? `
-                  <ul class="schedule-items" style="list-style: none; padding: 0; margin: 10px 0;">
-                    ${schedule.schedule_items.map((item: any) => `
-                      <li style="padding: 3px 0;">
-                        ${item.time ? `<span style="font-weight: bold; color: #2c5282;">${item.time}:</span>` : ''} ${item.content}
-                      </li>
-                    `).join('')}
-                  </ul>
-                ` : schedule.description ? `<p>${schedule.description}</p>` : ''}
+                  <div class="schedule-timeline">
+                    ${schedule.schedule_items.map((item: any) => {
+                      // 아이콘 결정
+                      let icon = '';
+                      let iconClass = '';
+                      const content = item.content.toLowerCase();
+                      
+                      if (content.includes('탑승') || content.includes('출발')) {
+                        icon = '🚌';
+                        iconClass = 'departure';
+                      } else if (content.includes('이동') || content.includes('경유')) {
+                        icon = '🚗';
+                        iconClass = 'transit';
+                      } else if (content.includes('라운드') || content.includes('골프')) {
+                        icon = '⛳';
+                        iconClass = 'golf';
+                      } else if (content.includes('조식') || content.includes('아침')) {
+                        icon = '🌅';
+                        iconClass = 'meal';
+                      } else if (content.includes('중식') || content.includes('점심')) {
+                        icon = '🍴';
+                        iconClass = 'meal';
+                      } else if (content.includes('석식') || content.includes('저녁')) {
+                        icon = '🌙';
+                        iconClass = 'meal';
+                      } else if (content.includes('휴식') || content.includes('자유')) {
+                        icon = '🏨';
+                        iconClass = 'rest';
+                      } else if (content.includes('도착')) {
+                        icon = '📍';
+                        iconClass = 'arrival';
+                      } else if (content.includes('마트') || content.includes('쇼핑')) {
+                        icon = '🛒';
+                        iconClass = 'shopping';
+                      } else if (content.includes('관광') || content.includes('투어')) {
+                        icon = '🏛️';
+                        iconClass = 'tour';
+                      } else {
+                        icon = '•';
+                        iconClass = 'default';
+                      }
+                      
+                      return `
+                        <div class="timeline-item ${iconClass}">
+                          <div class="timeline-icon">${icon}</div>
+                          <div class="timeline-content">
+                            ${item.time ? `<span class="timeline-time">${item.time}</span>` : ''}
+                            <span class="timeline-text">${item.content}</span>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                ` : schedule.description ? `<p class="schedule-description">${schedule.description}</p>` : ''}
               </div>
               
               <div class="meal-info">
@@ -1228,6 +1274,22 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .day-content { padding: 15px; }
     .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
     .schedule-content p { margin-top: 8px; }
+    .schedule-timeline { margin: 10px 0; }
+    .timeline-item { display: flex; align-items: center; margin-bottom: 12px; padding: 8px 12px; border-radius: 8px; background-color: #f8f9fa; transition: all 0.2s; }
+    .timeline-item:hover { background-color: #e7f3ff; transform: translateX(3px); }
+    .timeline-icon { font-size: 20px; margin-right: 12px; flex-shrink: 0; }
+    .timeline-content { flex: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .timeline-time { font-weight: bold; color: #2c5282; font-size: 14px; white-space: nowrap; }
+    .timeline-text { color: #4a5568; font-size: 14px; }
+    .timeline-item.departure { background-color: #fee; }
+    .timeline-item.transit { background-color: #f0f9ff; }
+    .timeline-item.golf { background-color: #d1fae5; }
+    .timeline-item.meal { background-color: #fef3c7; }
+    .timeline-item.rest { background-color: #ede9fe; }
+    .timeline-item.arrival { background-color: #dbeafe; }
+    .timeline-item.shopping { background-color: #fce7f3; }
+    .timeline-item.tour { background-color: #e0e7ff; }
+    .schedule-description { color: #4a5568; line-height: 1.6; }
     .meal-info { display: flex; background: #edf2f7; padding: 10px; border-radius: 6px; justify-content: space-around; }
     .meal { text-align: center; flex: 1; }
     .meal-status { font-weight: bold; margin-top: 4px; }
