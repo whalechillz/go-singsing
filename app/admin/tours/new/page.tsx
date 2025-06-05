@@ -14,7 +14,6 @@ type TourForm = {
   title: string;
   start_date: string;
   end_date: string;
-  accommodation: string;
   price: string;
   max_participants: string;
   includes: string;
@@ -29,7 +28,6 @@ const TourNewPage: React.FC = () => {
     title: "",
     start_date: "",
     end_date: "",
-    accommodation: "",
     price: "",
     max_participants: "",
     includes: "",
@@ -75,7 +73,6 @@ const TourNewPage: React.FC = () => {
       setForm({
         ...form,
         tour_product_id: selectedProductId,
-        accommodation: selectedProduct.hotel || "",
         includes: selectedProduct.included_items || "",
         excludes: selectedProduct.excluded_items || "",
       });
@@ -102,6 +99,11 @@ const TourNewPage: React.FC = () => {
     setError("");
     
     try {
+      // 선택된 여행상품 정보 가져오기
+      const selectedProduct = products.find(p => p.id === form.tour_product_id);
+      const golfCourse = selectedProduct?.golf_course || "";
+      const accommodation = selectedProduct?.hotel || "";  // hotel 필드를 accommodation으로 사용
+      
       // 1. 투어 생성
       const { data: tourData, error: tourError } = await supabase
         .from("singsing_tours")
@@ -109,7 +111,8 @@ const TourNewPage: React.FC = () => {
           title: form.title,
           start_date: form.start_date,
           end_date: form.end_date,
-          accommodation: form.accommodation,
+          golf_course: golfCourse,  // 여행상품에서 가져온 골프장 정보
+          accommodation: accommodation,  // 여행상품에서 가져온 숙소 정보
           price: form.price ? Number(form.price) : 0,
           max_participants: form.max_participants ? Number(form.max_participants) : 0,
           includes: form.includes,
@@ -231,19 +234,12 @@ const TourNewPage: React.FC = () => {
               </select>
             </label>
             
+            <div className="bg-blue-50 p-4 rounded-lg mt-2">
+              <p className="text-sm text-blue-700">
+                <strong>참고:</strong> 골프장과 숙소 정보는 여행상품에서 자동으로 가져옵니다.
+              </p>
+            </div>
 
-            
-            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">숙소</span>
-              <input 
-                name="accommodation" 
-                type="text" 
-                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
-                value={form.accommodation} 
-                onChange={handleChange} 
-                required 
-              />
-            </label>
             
             <div className="flex gap-2">
               <label className="flex flex-col gap-1 flex-1 text-gray-700 dark:text-gray-300">

@@ -542,7 +542,11 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
     completedCount: filteredPaymentsForStats.filter(p => p.payment_status === 'completed' && p.amount > 0).length,
     pendingCount: filteredPaymentsForStats.filter(p => p.payment_status === 'pending').length,
     refundedCount: filteredPaymentsForStats.filter(p => p.payment_status === 'refunded' || p.amount < 0).length,
-    refundedAmount: filteredPaymentsForStats.filter(p => p.payment_status === 'refunded' || p.amount < 0).reduce((sum, p) => sum + Math.abs(p.amount), 0)
+    refundedAmount: filteredPaymentsForStats.filter(p => p.payment_status === 'refunded' || p.amount < 0).reduce((sum, p) => sum + Math.abs(p.amount), 0),
+    // 할인 관련 통계 추가
+    totalDiscountAmount: filteredPaymentsForStats.filter(p => p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + (p.discount_amount || 0), 0),
+    originalTotalAmount: filteredPaymentsForStats.filter(p => p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + (p.original_amount || p.amount), 0),
+    discountedPaymentsCount: filteredPaymentsForStats.filter(p => p.payment_status !== 'refunded' && p.amount > 0 && p.discount_amount && p.discount_amount > 0).length
   };
 
   // 참가자별 결제 현황 계산 (선택된 투어로 필터링)
@@ -753,9 +757,16 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                       ? Number(tours.find(t => t.id === selectedTourId)?.price || 0).toLocaleString() 
                       : totalExpectedRevenue.toLocaleString()}원
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    총 인원: {filteredParticipants.length}명
-                  </p>
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-gray-500">
+                      총 인원: {filteredParticipants.length}명
+                    </p>
+                    {stats.totalDiscountAmount > 0 && (
+                      <p className="text-xs text-orange-500">
+                        할인 적용: {stats.discountedPaymentsCount}건
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <FileText className="w-8 h-8 text-gray-500" />
               </div>
@@ -766,10 +777,15 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">총 수입</p>
                   <p className="text-2xl font-bold text-green-600">{stats.totalAmount.toLocaleString()}원</p>
-                  {selectedTourId && tours.find(t => t.id === selectedTourId) && (() => {
-                    const collectionRate = totalExpectedRevenue > 0 ? Math.round((stats.totalAmount / totalExpectedRevenue) * 100) : 0;
-                    return <p className="text-xs text-gray-500 mt-1">수금률: {collectionRate}%</p>;
-                  })()}
+                  <div className="space-y-0.5">
+                    {stats.totalDiscountAmount > 0 && (
+                      <p className="text-xs text-red-500">할인: -{stats.totalDiscountAmount.toLocaleString()}원</p>
+                    )}
+                    {selectedTourId && tours.find(t => t.id === selectedTourId) && (() => {
+                      const collectionRate = totalExpectedRevenue > 0 ? Math.round((stats.totalAmount / totalExpectedRevenue) * 100) : 0;
+                      return <p className="text-xs text-gray-500">수금률: {collectionRate}%</p>;
+                    })()}
+                  </div>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-500" />
               </div>
@@ -797,6 +813,44 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
               </div>
             </div>
           </div>
+          
+          {/* 할인 통계 추가 (할인이 있을 경우만) */}
+          {stats.totalDiscountAmount > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="md:col-span-4">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className="w-5 h-5 text-orange-600" />
+                        <p className="text-sm font-medium text-orange-700">할인 현황</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-xs text-orange-600">할인 적용 건수</p>
+                          <p className="text-xl font-bold text-orange-900">{stats.discountedPaymentsCount}건</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-orange-600">총 할인 금액</p>
+                          <p className="text-xl font-bold text-orange-900">-{stats.totalDiscountAmount.toLocaleString()}원</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-orange-600">원가 합계</p>
+                          <p className="text-xl font-bold text-gray-700">{stats.originalTotalAmount.toLocaleString()}원</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-orange-600">평균 할인율</p>
+                          <p className="text-xl font-bold text-orange-900">
+                            {stats.originalTotalAmount > 0 ? Math.round((stats.totalDiscountAmount / stats.originalTotalAmount) * 100) : 0}%
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* 두 번째 줄: 완납, 미수금, 환불, 미납 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
