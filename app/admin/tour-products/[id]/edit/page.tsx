@@ -60,6 +60,34 @@ const initialForm: TourProductForm = {
   ]
 };
 
+// 텍스트를 파싱하여 "제목: 내용" 형식을 볼드 처리하는 함수
+const formatTextWithBold = (text: string): string => {
+  return text.split('\n').map(line => {
+    const colonIndex = line.indexOf(':');
+    if (colonIndex > -1 && colonIndex < line.length - 1) {
+      const title = line.substring(0, colonIndex).trim();
+      const content = line.substring(colonIndex + 1).trim();
+      return `<strong>${title}:</strong> ${content}`;
+    }
+    return line;
+  }).join('<br>');
+};
+
+// 미리보기용 컴포넌트
+const UsagePreview = ({ value, label }: { value: string; label: string }) => {
+  if (!value) return null;
+  
+  return (
+    <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
+      <div className="text-xs text-gray-500 mb-1">{label} 미리보기:</div>
+      <div 
+        dangerouslySetInnerHTML={{ __html: formatTextWithBold(value) }}
+        className="text-gray-700"
+      />
+    </div>
+  );
+};
+
 const TourProductEditPage = () => {
   const [form, setForm] = useState<TourProductForm>(initialForm);
   const [loading, setLoading] = useState(false);
@@ -454,6 +482,8 @@ const TourProductEditPage = () => {
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
+                <p className="text-xs text-gray-500 mt-1">"제목: 내용" 형식으로 입력하면 제목이 볼드체로 표시됩니다.</p>
+                <UsagePreview value={form.usage_round} label="라운딩 규정" />
               </div>
 
               <div>
@@ -468,6 +498,7 @@ const TourProductEditPage = () => {
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
+                <UsagePreview value={form.usage_hotel} label="숙소 이용" />
               </div>
 
               <div>
@@ -482,6 +513,7 @@ const TourProductEditPage = () => {
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
+                <UsagePreview value={form.usage_meal} label="식사 안내" />
               </div>
 
               <div>
@@ -496,6 +528,7 @@ const TourProductEditPage = () => {
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
+                <UsagePreview value={form.usage_locker} label="락카 이용" />
               </div>
 
               <div>
@@ -510,6 +543,7 @@ const TourProductEditPage = () => {
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
+                <UsagePreview value={form.usage_bus} label="버스 이용" />
               </div>
 
               <div>
@@ -524,6 +558,7 @@ const TourProductEditPage = () => {
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
+                <UsagePreview value={form.usage_tour} label="관광지 투어" />
               </div>
             </div>
           </div>

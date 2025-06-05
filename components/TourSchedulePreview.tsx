@@ -7,6 +7,20 @@ interface TourSchedulePreviewProps {
   tourId: string;
 }
 
+// 텍스트를 파싱하여 "제목: 내용" 형식을 볼드 처리하는 함수
+const formatTextWithBold = (text: string): string => {
+  if (!text) return '';
+  return text.split('\n').map(line => {
+    const colonIndex = line.indexOf(':');
+    if (colonIndex > -1 && colonIndex < line.length - 1) {
+      const title = line.substring(0, colonIndex).trim();
+      const content = line.substring(colonIndex + 1).trim();
+      return `<strong>${title}:</strong> ${content}`;
+    }
+    return line;
+  }).join('<br>');
+};
+
 export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps) {
   const [tourData, setTourData] = useState<any>(null);
   const [productData, setProductData] = useState<any>(null);
@@ -478,9 +492,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             ${productData.usage_round ? `<li>라운딩 규정: ${productData.usage_round}</li>` : ''}
             ${productData.usage_hotel ? `<li>숙소 이용: ${productData.usage_hotel}</li>` : ''}
             ${productData.usage_meal ? `<li>식사 안내: ${productData.usage_meal}</li>` : ''}
+            ${productData.usage_locker ? `<li>락카 이용: ${productData.usage_locker}</li>` : ''}
             ${productData.usage_bus ? `<li>버스 이용: ${productData.usage_bus}</li>` : ''}
             ${productData.usage_tour ? `<li>관광지 투어: ${productData.usage_tour}</li>` : ''}
-            ${productData.usage_locker ? `<li>락카 이용: ${productData.usage_locker}</li>` : ''}
           </ul>
         </div>
       </div>
@@ -566,37 +580,37 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           ${productData.usage_round ? `
             <div class="usage-item">
               <div class="usage-title">라운딩 규정</div>
-              <div class="usage-content">${productData.usage_round.replace(/\n/g, '<br>')}</div>
+              <div class="usage-content">${formatTextWithBold(productData.usage_round)}</div>
             </div>
           ` : ''}
           ${productData.usage_hotel ? `
             <div class="usage-item">
               <div class="usage-title">숙소 이용</div>
-              <div class="usage-content">${productData.usage_hotel.replace(/\n/g, '<br>')}</div>
+              <div class="usage-content">${formatTextWithBold(productData.usage_hotel)}</div>
             </div>
           ` : ''}
           ${productData.usage_meal ? `
             <div class="usage-item">
               <div class="usage-title">식사 안내</div>
-              <div class="usage-content">${productData.usage_meal.replace(/\n/g, '<br>')}</div>
-            </div>
-          ` : ''}
-          ${productData.usage_bus ? `
-            <div class="usage-item">
-              <div class="usage-title">버스 이용</div>
-              <div class="usage-content">${productData.usage_bus.replace(/\n/g, '<br>')}</div>
-            </div>
-          ` : ''}
-          ${productData.usage_tour ? `
-            <div class="usage-item">
-              <div class="usage-title">관광지 투어</div>
-              <div class="usage-content">${productData.usage_tour.replace(/\n/g, '<br>')}</div>
+              <div class="usage-content">${formatTextWithBold(productData.usage_meal)}</div>
             </div>
           ` : ''}
           ${productData.usage_locker ? `
             <div class="usage-item">
               <div class="usage-title">락카 이용</div>
-              <div class="usage-content">${productData.usage_locker.replace(/\n/g, '<br>')}</div>
+              <div class="usage-content">${formatTextWithBold(productData.usage_locker)}</div>
+            </div>
+          ` : ''}
+          ${productData.usage_bus ? `
+            <div class="usage-item">
+              <div class="usage-title">버스 이용</div>
+              <div class="usage-content">${formatTextWithBold(productData.usage_bus)}</div>
+            </div>
+          ` : ''}
+          ${productData.usage_tour ? `
+            <div class="usage-item">
+              <div class="usage-title">관광지 투어</div>
+              <div class="usage-content">${formatTextWithBold(productData.usage_tour)}</div>
             </div>
           ` : ''}
         </div>
