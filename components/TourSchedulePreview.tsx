@@ -239,10 +239,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .select('*')
         .eq('tour_id', tourId)
         .eq('role', '기사')
-        .order('order')
+        .order('display_order')
         .limit(1);
       
       const tourStaff = staffData && staffData.length > 0 ? staffData[0] : null;
+      console.log('기사 정보:', tourStaff);
       
       if (assignments && rooms) {
         setRoomAssignmentHTML(generateRoomAssignmentHTML(assignments, rooms, tourStaff, false)); // 고객용
@@ -951,6 +952,17 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
     ` : ''}
     
+    ${documentFooters.room_assignment?.['주의사항'] ? `
+      <div class="notice-section caution-section">
+        <h3>주의사항</h3>
+        <ul>
+          ${documentFooters.room_assignment['주의사항'].split('\n').map((line: string) => 
+            line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
+          ).filter(Boolean).join('')}
+        </ul>
+      </div>
+    ` : ''}
+    
     <div class="footer">
       <p>싱싱골프투어 | 031-215-3990</p>
     </div>
@@ -1402,6 +1414,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .notice-section ul { list-style: none; padding-left: 0; }
     .notice-section li { padding: 4px 0; color: #4a5568; font-size: 14px; position: relative; padding-left: 20px; }
     .notice-section li:before { content: "•"; position: absolute; left: 0; color: #4299e1; }
+    .caution-section { background-color: #fffbeb; border-left-color: #f59e0b; }
+    .caution-section h3 { color: #92400e; }
+    .caution-section li { color: #78350f; }
+    .caution-section li:before { color: #f59e0b; }
     .footer { text-align: center; padding: 30px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 14px; }
     @media print { 
       body { padding: 0; background: white; } 
