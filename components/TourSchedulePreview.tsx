@@ -837,7 +837,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div class="header">
       <h1>객실 배정표${isStaff ? ' (스탭용)' : ''}</h1>
       <p style="font-size: 20px; font-weight: bold; margin: 10px 0;">${tourData.title}</p>
-      <p style="font-size: 16px; color: #666;">${productData?.hotel || ''}</p>
     </div>
     
     <div class="content">
@@ -890,82 +889,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         `;
       }).join('')}
       
-      ${tourStaff ? `
-        <div class="room-card driver-room">
-          <div class="room-header">
-            <span class="room-number">기사님 객실</span>
-            <span class="room-type">별도 배정</span>
-          </div>
-          <div class="room-body">
-            <table class="participant-table">
-              <tbody>
-                <tr>
-                  <td style="padding: 15px; text-align: center;">
-                    <strong>${tourStaff.name}</strong> ${tourStaff.role || '기사'}
-                    ${isStaff ? ` - ${tourStaff.phone}` : ''}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ` : ''}
+
     </div>
     
-    <div class="summary-section">
-      <h3>객실 배정 요약</h3>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <span class="summary-label">총 객실</span>
-          <span class="summary-value">${rooms.length}실</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">배정 인원</span>
-          <span class="summary-value">${assignments.filter(p => p.room_id).length}명</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">미배정</span>
-          <span class="summary-value">${assignments.filter(p => !p.room_id).length}명</span>
-        </div>
-      </div>
-    </div>
+
     
-    ${documentFooters.room_assignment?.['객실 이용 안내'] ? `
-      <div class="notice-section">
-        <h3>객실 이용 안내</h3>
-        <ul>
-          ${documentFooters.room_assignment['객실 이용 안내'].split('\n').map((line: string) => 
-            line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
-          ).filter(Boolean).join('')}
-        </ul>
-      </div>
-    ` : ''}
-    
-    ${documentFooters.room_assignment?.['식사 안내'] ? `
-      <div class="notice-section">
-        <h3>식사 안내</h3>
-        <ul>
-          ${documentFooters.room_assignment['식사 안내'].split('\n').map((line: string) => 
-            line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
-          ).filter(Boolean).join('')}
-        </ul>
-      </div>
-    ` : ''}
-    
-    ${documentFooters.room_assignment?.['주의사항'] ? `
-      <div class="notice-section caution-section">
-        <h3>주의사항</h3>
-        <ul>
-          ${documentFooters.room_assignment['주의사항'].split('\n').map((line: string) => 
-            line.trim() ? `<li>${line.replace('•', '').trim()}</li>` : ''
-          ).filter(Boolean).join('')}
-        </ul>
-      </div>
-    ` : ''}
-    
-    <div class="footer">
-      <p>싱싱골프투어 | 031-215-3990</p>
-    </div>
+
   </div>
 </body>
 </html>`;
@@ -1188,12 +1117,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         <h1>탑승지별 배정 안내</h1>
         <p class="subtitle">${tourData.title} - 탑승 ${participants.length}명</p>
       </div>
-      <div class="info-section">
-        ${tourData.staff?.map((staff: any) => `
-          <p><strong>${staff.name} ${staff.role}</strong></p>
-          <p>${staff.phone}</p>
-        `).join('') || ''}
-      </div>
+
     </div>
     
     <div class="section">
