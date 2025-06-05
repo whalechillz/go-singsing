@@ -489,11 +489,52 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
     };
     
     if (editingId) {
+      // 기존 참가자 정보 가져오기 (탑승지 변경 확인을 위해)
+      const originalParticipant = participants.find(p => p.id === editingId);
+      const pickupLocationChanged = originalParticipant?.pickup_location !== form.pickup_location;
+      
       const { error } = await supabase.from("singsing_participants").update(payload).eq("id", editingId);
       if (error) {
         setError(error.message);
       } else {
         console.log('참가자 정보 수정 성공:', editingId);
+        
+        // 탑승지가 변경되었고 동반자가 있는 경우, 동반자들의 탑승지도 업데이트
+        if (pickupLocationChanged && form.pickup_location && form.companions && form.companions.length > 0) {
+          const companionNames = form.companions.filter(c => c.trim() !== "");
+          if (companionNames.length > 0) {
+            // 동반자 탑승지 업데이트 의사 확인
+            const confirmUpdate = window.confirm(
+              `동반자(${companionNames.join(", ")})의 탑승지도 '${form.pickup_location}'로 함께 변경하시겠습니까?\n\n확인을 누르면 동반자들의 탑승지가 함께 변경됩니다."
+            );
+            
+            if (confirmUpdate) {
+              // 동반자들의 ID 찾기
+              const { data: companionData } = await supabase
+                .from("singsing_participants")
+                .select("id, name")
+                .eq("tour_id", form.tour_id || tourId)
+                .in("name", companionNames);
+              
+              if (companionData && companionData.length > 0) {
+                // 동반자들의 탑승지 업데이트
+                const companionIds = companionData.map(c => c.id);
+                const { error: updateError } = await supabase
+                  .from("singsing_participants")
+                  .update({ pickup_location: form.pickup_location })
+                  .in("id", companionIds);
+                
+                if (!updateError) {
+                  console.log(`동반자 ${companionIds.length}명의 탑승지도 '${form.pickup_location}'로 업데이트되었습니다.`);
+                  // 사용자에게 알림
+                  const companionNamesStr = companionData.map(c => c.name).join(", ");
+                  alert(`✅ 동반자(${companionNamesStr})의 탑승지가 '${form.pickup_location}'로 함께 변경되었습니다.`);
+                }
+              }
+            }
+          }
+        }
+        
         closeModal();
         await fetchParticipants();
         // 수정한 항목으로 스크롤
