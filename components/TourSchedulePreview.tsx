@@ -504,12 +504,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     ${tourData.reservation_notices?.length > 0 ? `
       <div class="section">
         <div class="section-title">예약 안내사항</div>
-        <div class="notice-box">
-          ${tourData.reservation_notices.map((notice: any) => `
-            <div class="notice-item">
-              <strong>${notice.title}:</strong> ${notice.content}
-            </div>
-          `).join('')}
+        <div class="reservation-box">
+          <ul class="reservation-list">
+            ${tourData.reservation_notices.map((notice: any) => `
+              <li>${notice.title}: ${notice.content}</li>
+            `).join('')}
+          </ul>
         </div>
       </div>
     ` : ''}
@@ -543,29 +543,30 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   <div class="meal-status ${schedule.meal_breakfast ? 'included' : 'not-included'}">
                     ${schedule.meal_breakfast ? 'O' : 'X'}
                   </div>
-                  ${schedule.meal_breakfast && schedule.menu_breakfast ? `
-                    <div class="meal-menu">${schedule.menu_breakfast}</div>
-                  ` : ''}
                 </div>
                 <div class="meal">
                   <div>중식</div>
                   <div class="meal-status ${schedule.meal_lunch ? 'included' : 'not-included'}">
                     ${schedule.meal_lunch ? 'O' : 'X'}
                   </div>
-                  ${schedule.meal_lunch && schedule.menu_lunch ? `
-                    <div class="meal-menu">${schedule.menu_lunch}</div>
-                  ` : ''}
                 </div>
                 <div class="meal">
                   <div>석식</div>
                   <div class="meal-status ${schedule.meal_dinner ? 'included' : 'not-included'}">
                     ${schedule.meal_dinner ? 'O' : 'X'}
                   </div>
-                  ${schedule.meal_dinner && schedule.menu_dinner ? `
-                    <div class="meal-menu">${schedule.menu_dinner}</div>
-                  ` : ''}
                 </div>
               </div>
+              ${(schedule.meal_breakfast && schedule.menu_breakfast) || 
+                (schedule.meal_lunch && schedule.menu_lunch) || 
+                (schedule.meal_dinner && schedule.menu_dinner) ? `
+              <div class="meal-menu-section">
+                <div class="meal-menu-title">식사 메뉴</div>
+                ${schedule.meal_breakfast && schedule.menu_breakfast ? `<div class="meal-menu-item">조식: ${schedule.menu_breakfast}</div>` : ''}
+                ${schedule.meal_lunch && schedule.menu_lunch ? `<div class="meal-menu-item">중식: ${schedule.menu_lunch}</div>` : ''}
+                ${schedule.meal_dinner && schedule.menu_dinner ? `<div class="meal-menu-item">석식: ${schedule.menu_dinner}</div>` : ''}
+              </div>
+              ` : ''}
             </div>
           </div>
         `).join('') || ''}
@@ -1207,6 +1208,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .important { font-weight: 600; color: #2d3748; }
     .course-info { margin: 0 15px 15px; padding: 10px 15px; background-color: #f8f9fa; border-radius: 6px; font-size: 14px; }
     .notice-box { margin: 15px; background-color: #f8f9fa; border-left: 3px solid #4299e1; border-radius: 6px; padding: 14px 16px; }
+    .reservation-box { margin: 15px; background-color: #e7f3ff; border: 1px solid #4299e1; border-radius: 8px; padding: 20px; }
+    .reservation-list { list-style: none; padding: 0; }
+    .reservation-list li { padding: 8px 0; color: #2c5282; font-size: 14px; border-bottom: 1px solid #d3e4f4; }
+    .reservation-list li:last-child { border-bottom: none; }
+    .reservation-list li:before { content: "•"; margin-right: 8px; color: #4299e1; font-weight: bold; }
     .notice-title { font-weight: bold; color: #2b6cb0; margin-bottom: 10px; }
     .notice-list { list-style: none; }
     .notice-list li { padding: 4px 0; color: #4A5568; font-size: 14px; }
@@ -1217,8 +1223,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .usage-item { margin-bottom: 15px; padding: 12px 15px; background-color: #f8f9fa; border-radius: 6px; }
     .usage-title { font-weight: bold; color: #2b6cb0; margin-bottom: 6px; font-size: 14px; }
     .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; }
-    .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
-    .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .day-title { background: #2c5282; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin-bottom: 2px; }
     .day-round { font-size: 14px; font-weight: normal; }
     .day-content { padding: 15px; }
     .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
@@ -1226,7 +1232,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .meal-info { display: flex; background: #edf2f7; padding: 10px; border-radius: 6px; justify-content: space-around; }
     .meal { text-align: center; flex: 1; }
     .meal-status { font-weight: bold; margin-top: 4px; }
-    .meal-menu { font-size: 12px; color: #4a5568; margin-top: 4px; }
+    .meal-menu-section { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
+    .meal-menu-title { font-weight: bold; color: #2c5282; margin-bottom: 5px; font-size: 13px; }
+    .meal-menu-item { font-size: 13px; color: #4a5568; padding: 2px 0; }
     .included { color: #2F855A; }
     .not-included { color: #C53030; }
     .other-notice { margin: 15px; padding: 15px; background-color: #fffaf0; border: 1px solid #feb2b2; border-radius: 6px; color: #7b341e; font-size: 14px; }
