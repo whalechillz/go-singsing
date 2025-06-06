@@ -617,6 +617,23 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                           <div class="timeline-content">
                             ${item.time ? `<span class="timeline-time">${item.time}</span>` : ''}
                             <span class="timeline-text">${item.content}</span>
+                            ${item.attraction_data ? `
+                              <div class="attraction-detail">
+                                ${item.attraction_data.main_image_url || item.attraction_data.image_urls?.[0] ? `
+                                  <img src="${item.attraction_data.main_image_url || item.attraction_data.image_urls[0]}" alt="${item.attraction_data.name}" class="attraction-thumb" />
+                                ` : ''}
+                                <div class="attraction-info">
+                                  <p class="attraction-desc">${item.attraction_data.description}</p>
+                                  ${item.attraction_data.features?.length > 0 ? `
+                                    <div class="attraction-features">
+                                      ${item.attraction_data.features.map((feature: string) => `<span class="feature-tag">${feature}</span>`).join('')}
+                                    </div>
+                                  ` : ''}
+                                  ${item.attraction_data.address ? `<p class="attraction-addr">📍 ${item.attraction_data.address}</p>` : ''}
+                                  ${item.attraction_data.recommended_duration ? `<p class="attraction-duration">추천 체류시간: ${item.attraction_data.recommended_duration}분</p>` : ''}
+                                </div>
+                              </div>
+                            ` : ''}
                           </div>
                         </div>
                       `;
@@ -1311,7 +1328,350 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   // 스타일 함수들
   const getCustomerScheduleStyles = () => {
-    return DOCUMENT_COLOR_SCHEME.customer.schedule;
+    return `
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+      }
+      
+      .header {
+        text-align: center;
+        padding-bottom: 30px;
+        border-bottom: 3px solid #2c5282;
+        margin-bottom: 30px;
+      }
+      
+      .logo {
+        font-size: 28px;
+        font-weight: bold;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
+      
+      .company-info {
+        font-size: 12px;
+        color: #666;
+        line-height: 1.4;
+      }
+      
+      .section {
+        margin-bottom: 30px;
+      }
+      
+      .section-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c5282;
+        padding: 10px;
+        background: #e7f3ff;
+        margin-bottom: 15px;
+        border-left: 4px solid #2c5282;
+      }
+      
+      .product-info-box {
+        border: 1px solid #ddd;
+        padding: 0;
+      }
+      
+      .info-row {
+        display: flex;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .info-row:last-child {
+        border-bottom: none;
+      }
+      
+      .info-label {
+        width: 120px;
+        padding: 12px;
+        background: #f8f9fa;
+        font-weight: bold;
+        color: #555;
+        border-right: 1px solid #eee;
+      }
+      
+      .info-value {
+        flex: 1;
+        padding: 12px;
+      }
+      
+      .info-value.important {
+        font-weight: bold;
+        color: #2c5282;
+      }
+      
+      .notice-box, .reservation-box {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+      }
+      
+      .notice-list, .reservation-list {
+        margin: 0;
+        padding-left: 20px;
+      }
+      
+      .notice-list li, .reservation-list li {
+        margin-bottom: 8px;
+        line-height: 1.6;
+      }
+      
+      .schedule-section {
+        padding: 0;
+      }
+      
+      .day-schedule {
+        margin-bottom: 25px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      
+      .day-title {
+        background: #2c5282;
+        color: white;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+      }
+      
+      .day-round {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+      
+      .day-content {
+        padding: 20px;
+      }
+      
+      .schedule-content {
+        margin-bottom: 20px;
+      }
+      
+      .schedule-timeline {
+        padding-left: 20px;
+      }
+      
+      .timeline-item {
+        position: relative;
+        padding: 10px 0;
+        padding-left: 40px;
+        min-height: 40px;
+      }
+      
+      .timeline-icon {
+        position: absolute;
+        left: 0;
+        top: 10px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        background: #f0f0f0;
+        border-radius: 50%;
+      }
+      
+      .timeline-item.departure .timeline-icon { background: #e3f2fd; }
+      .timeline-item.golf .timeline-icon { background: #e8f5e9; }
+      .timeline-item.meal .timeline-icon { background: #fff3e0; }
+      .timeline-item.rest .timeline-icon { background: #f3e5f5; }
+      .timeline-item.tour .timeline-icon { background: #fce4ec; }
+      
+      .timeline-content {
+        line-height: 1.6;
+      }
+      
+      .timeline-time {
+        font-weight: bold;
+        color: #2c5282;
+        margin-right: 10px;
+      }
+      
+      .timeline-text {
+        color: #333;
+      }
+      
+      /* 관광지 정보 스타일 */
+      .attraction-detail {
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+      }
+      
+      .attraction-thumb {
+        width: 100%;
+        max-width: 400px;
+        height: auto;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .attraction-info {
+        font-size: 13px;
+      }
+      
+      .attraction-desc {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+      
+      .attraction-features {
+        margin: 10px 0;
+      }
+      
+      .feature-tag {
+        display: inline-block;
+        padding: 4px 10px;
+        margin: 2px 4px 2px 0;
+        background: #e7f3ff;
+        color: #2c5282;
+        border-radius: 15px;
+        font-size: 12px;
+      }
+      
+      .attraction-addr {
+        color: #666;
+        font-size: 12px;
+        margin: 8px 0;
+      }
+      
+      .attraction-duration {
+        color: #4a6fa5;
+        font-weight: bold;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+      
+      .meal-info {
+        display: flex;
+        gap: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+      
+      .meal {
+        flex: 1;
+        text-align: center;
+      }
+      
+      .meal-status {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 5px;
+      }
+      
+      .meal-status.included {
+        color: #2F855A;
+      }
+      
+      .meal-status.not-included {
+        color: #E53E3E;
+      }
+      
+      .meal-menu-section {
+        background: #f0f7ff;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #d0e2ff;
+      }
+      
+      .meal-menu-title {
+        font-weight: bold;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
+      
+      .meal-menu-item {
+        font-size: 13px;
+        margin-bottom: 5px;
+        color: #555;
+      }
+      
+      .usage-section {
+        padding: 0;
+      }
+      
+      .usage-item {
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      
+      .usage-header {
+        background: #4a6fa5;
+        color: white;
+        padding: 10px 15px;
+        font-weight: bold;
+      }
+      
+      .usage-content {
+        padding: 15px;
+        line-height: 1.8;
+        color: #555;
+      }
+      
+      .other-notice {
+        margin-top: 30px;
+        padding: 20px;
+        background: #fff8dc;
+        border: 1px solid #ffd700;
+        border-radius: 5px;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.8;
+      }
+      
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #ddd;
+        text-align: center;
+        color: #666;
+      }
+      
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        
+        .container {
+          max-width: 100%;
+          padding: 20px;
+        }
+        
+        .day-schedule {
+          page-break-inside: avoid;
+        }
+        
+        .attraction-thumb {
+          max-width: 300px;
+        }
+      }
+    `;
   };
 
   const getBoardingGuideStyles = () => {
