@@ -13,7 +13,11 @@ import {
   Map,
   Navigation,
   Search,
-  Building
+  Building,
+  Coffee,
+  ShoppingBag,
+  Camera,
+  Utensils
 } from "lucide-react";
 
 type BoardingPlace = {
@@ -32,30 +36,30 @@ type BoardingPlace = {
   attraction?: any;
 };
 
-const placeTypeMap: Record<string, string> = {
-  'boarding': '탑승지',
-  'rest_area': '휴게소',
-  'mart': '마트',
-  'tourist_spot': '관광지',
-  'restaurant': '맛집'
+const placeTypeMap: Record<string, { label: string; icon: any; color: string }> = {
+  'boarding': { label: '탑승지', icon: Bus, color: 'blue' },
+  'rest_area': { label: '휴게소', icon: Coffee, color: 'green' },
+  'mart': { label: '마트', icon: ShoppingBag, color: 'purple' },
+  'tourist_spot': { label: '관광지', icon: Camera, color: 'orange' },
+  'restaurant': { label: '맛집', icon: Utensils, color: 'red' }
 };
 
 const BoardingPlaceManagerEnhanced: React.FC = () => {
-const [places, setPlaces] = useState<BoardingPlace[]>([]);
-const [form, setForm] = useState<Omit<BoardingPlace, "id" | "created_at">>({
-name: "",
-address: "",
-boarding_main: "",
-boarding_sub: "",
-parking_main: "",
-parking_map_url: "",
-parking_info: "",
-  place_type: "boarding",
-  attraction_id: ""
-});
-const [editingId, setEditingId] = useState<string | null>(null);
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
+  const [places, setPlaces] = useState<BoardingPlace[]>([]);
+  const [form, setForm] = useState<Omit<BoardingPlace, "id" | "created_at">>({
+    name: "",
+    address: "",
+    boarding_main: "",
+    boarding_sub: "",
+    parking_main: "",
+    parking_map_url: "",
+    parking_info: "",
+    place_type: "boarding",
+    attraction_id: ""
+  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [attractions, setAttractions] = useState<any[]>([]);
@@ -91,11 +95,12 @@ const [error, setError] = useState<string | null>(null);
     fetchAttractions();
   }, []);
 
-  // 필터링된 장소 목록 - place_type 없이 검색만
+  // 필터링된 장소 목록
   const filteredPlaces = places.filter(place => {
     const matchesSearch = place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       place.address.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const matchesType = selectedType === 'all' || place.place_type === selectedType;
+    return matchesSearch && matchesType;
   });
 
   // 입력값 변경
@@ -129,12 +134,12 @@ const [error, setError] = useState<string | null>(null);
     setError(null);
     
     if (!form.name || !form.address) {
-      setError("탑승지명과 주소는 필수입니다.");
+      setError("장소명과 주소는 필수입니다.");
       setLoading(false);
       return;
     }
     
-    // 테이블에 있는 컴럼만 사용
+    // 테이블에 있는 컬럼만 사용
     const dataToSubmit: any = {
       name: form.name,
       address: form.address,
@@ -142,7 +147,10 @@ const [error, setError] = useState<string | null>(null);
       boarding_sub: form.boarding_sub || null,
       parking_main: form.parking_main || null,
       parking_map_url: form.parking_map_url || null,
-      parking_info: form.parking_info || null
+      parking_info: form.parking_info || null,
+      place_type: form.place_type || 'boarding',
+      image_url: form.image_url || null,
+      attraction_id: form.attraction_id || null
     };
     
     let success = false;
@@ -241,6 +249,13 @@ const [error, setError] = useState<string | null>(null);
     setError(null);
   };
 
+  // 장소 유형별 아이콘 가져오기
+  const getPlaceIcon = (type?: string) => {
+    const IconComponent = placeTypeMap[type || 'boarding']?.icon || Building;
+    const color = placeTypeMap[type || 'boarding']?.color || 'gray';
+    return <IconComponent className={`w-4 h-4 text-${color}-500`} />;
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       {/* 헤더 */}
@@ -261,55 +276,25 @@ const [error, setError] = useState<string | null>(null);
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">전체 탑승지</p>
-              <p className="text-2xl font-bold text-gray-900">{places.length}</p>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        {Object.entries(placeTypeMap).map(([key, value]) => {
+          const count = places.filter(p => p.place_type === key).length;
+          const IconComponent = value.icon;
+          return (
+            <div key={key} className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">{value.label}</p>
+                  <p className="text-2xl font-bold text-gray-900">{count}</p>
+                </div>
+                <IconComponent className={`w-8 h-8 text-${value.color}-500`} />
+              </div>
             </div>
-            <MapPin className="w-8 h-8 text-blue-500" />
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">버스 탑승지</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {places.filter(p => p.boarding_main).length}
-              </p>
-            </div>
-            <Bus className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">주차장 정보</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {places.filter(p => p.parking_main).length}
-              </p>
-            </div>
-            <Car className="w-8 h-8 text-purple-500" />
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">지도 연결</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {places.filter(p => p.parking_map_url).length}
-              </p>
-            </div>
-            <Map className="w-8 h-8 text-orange-500" />
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      {/* 필터 및 검색 - place_type 컴럼 추가 후 활성화
+      {/* 필터 및 검색 */}
       <div className="bg-white rounded-lg p-4 mb-6 space-y-4">
         <div className="flex gap-2">
           <button
@@ -332,26 +317,11 @@ const [error, setError] = useState<string | null>(null);
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {value}
+              {value.label}
             </button>
           ))}
         </div>
         
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="장소명 또는 주소로 검색..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-      */}
-      
-      {/* 검색만 표시 */}
-      <div className="bg-white rounded-lg p-4 mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
@@ -369,7 +339,7 @@ const [error, setError] = useState<string | null>(null);
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-2 border-blue-500">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">
-              {editingId ? "탑승지 수정" : "새 탑승지 추가"}
+              {editingId ? "장소 수정" : "새 장소 추가"}
             </h3>
             <button
               onClick={resetForm}
@@ -381,7 +351,6 @@ const [error, setError] = useState<string | null>(null);
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* 장소 유형 선택 - DB에 컴럼 추가 후 활성화
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   장소 유형 <span className="text-red-500">*</span>
@@ -394,13 +363,12 @@ const [error, setError] = useState<string | null>(null);
                   required
                 >
                   {Object.entries(placeTypeMap).map(([key, value]) => (
-                    <option key={key} value={key}>{value}</option>
+                    <option key={key} value={key}>{value.label}</option>
                   ))}
                 </select>
               </div>
-              */}
               
-              {/* form.place_type === 'tourist_spot' && (
+              {form.place_type === 'tourist_spot' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     관광지 선택
@@ -419,7 +387,7 @@ const [error, setError] = useState<string | null>(null);
                     ))}
                   </select>
                 </div>
-              ) */}
+              )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -434,7 +402,12 @@ const [error, setError] = useState<string | null>(null);
                     name="name"
                     value={form.name}
                     onChange={handleChange}
-                    placeholder="예: 신논현역 9번출구"
+                    placeholder={
+                      form.place_type === 'boarding' ? "예: 신논현역 9번출구" :
+                      form.place_type === 'restaurant' ? "예: 강남 맛집" :
+                      form.place_type === 'tourist_spot' ? "예: 남산타워" :
+                      "장소명을 입력하세요"
+                    }
                     required
                   />
                 </div>
@@ -459,35 +432,40 @@ const [error, setError] = useState<string | null>(null);
             </div>
             
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  버스 탑승지 주 안내
-                </label>
-                <div className="relative">
-                  <Bus className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
-                  <textarea
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    name="boarding_main"
-                    value={form.boarding_main}
-                    onChange={handleChange}
-                    placeholder="예: 9번 출구 앞 버스 정류장"
-                    rows={2}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  버스 탑승지 보조 안내
-                </label>
-                <input
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  name="boarding_sub"
-                  value={form.boarding_sub}
-                  onChange={handleChange}
-                  placeholder="추가 안내사항"
-                />
-              </div>
+              {/* 탑승지일 때만 버스 탑승 안내 표시 */}
+              {form.place_type === 'boarding' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      버스 탑승지 주 안내
+                    </label>
+                    <div className="relative">
+                      <Bus className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
+                      <textarea
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        name="boarding_main"
+                        value={form.boarding_main}
+                        onChange={handleChange}
+                        placeholder="예: 9번 출구 앞 버스 정류장"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      버스 탑승지 보조 안내
+                    </label>
+                    <input
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      name="boarding_sub"
+                      value={form.boarding_sub}
+                      onChange={handleChange}
+                      placeholder="추가 안내사항"
+                    />
+                  </div>
+                </>
+              )}
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -562,18 +540,18 @@ const [error, setError] = useState<string | null>(null);
         </div>
       )}
 
-      {/* 탑승지 목록 */}
+      {/* 장소 목록 */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {loading && !showForm ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            <p className="mt-2 text-gray-500">탑승지 목록을 불러오는 중...</p>
+            <p className="mt-2 text-gray-500">장소 목록을 불러오는 중...</p>
           </div>
         ) : filteredPlaces.length === 0 ? (
           <div className="text-center py-12">
             <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">
-              {searchTerm ? "검색 결과가 없습니다." : "등록된 탑승지가 없습니다."}
+              {searchTerm ? "검색 결과가 없습니다." : "등록된 장소가 없습니다."}
             </p>
             {!searchTerm && (
               <button
@@ -581,7 +559,7 @@ const [error, setError] = useState<string | null>(null);
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                첫 탑승지 추가하기
+                첫 장소 추가하기
               </button>
             )}
           </div>
@@ -613,8 +591,12 @@ const [error, setError] = useState<string | null>(null);
                     <td className="px-6 py-4">
                       <div>
                         <div className="flex items-center gap-2">
+                          {getPlaceIcon(place.place_type)}
                           <span className="text-sm font-medium text-gray-900">
                             {place.name}
+                          </span>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            {placeTypeMap[place.place_type || 'boarding']?.label}
                           </span>
                         </div>
                         <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
@@ -624,7 +606,7 @@ const [error, setError] = useState<string | null>(null);
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {place.boarding_main ? (
+                      {place.place_type === 'boarding' && place.boarding_main ? (
                         <div>
                           <div className="text-sm text-gray-900">
                             {place.boarding_main}
@@ -636,7 +618,9 @@ const [error, setError] = useState<string | null>(null);
                           )}
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-400">-</span>
+                        <span className="text-sm text-gray-400">
+                          {place.place_type !== 'boarding' ? '해당없음' : '-'}
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4">

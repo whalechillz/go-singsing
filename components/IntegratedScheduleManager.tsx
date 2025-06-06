@@ -73,22 +73,29 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
       if (scheduleError) throw scheduleError;
 
-      // 각 일정의 관광지 정보 추가
+      // 각 일정의 관광지 정보 추가 - tour_attraction_options 테이블 활용
       const schedulesWithAttractions = await Promise.all(
         (scheduleData || []).map(async (schedule) => {
-          const itemsWithAttractions = await Promise.all(
-            (schedule.schedule_items || []).map(async (item: any) => {
-              if (item.attraction_id) {
-                const { data: attractionData } = await supabase
-                  .from('tourist_attractions')
-                  .select('*')
-                  .eq('id', item.attraction_id)
-                  .single();
-                return { ...item, attraction: attractionData };
-              }
-              return item;
-            })
-          );
+          // tour_attraction_options에서 해당 일정의 관광지 정보 가져오기
+          const { data: attractionOptions } = await supabase
+            .from('tour_attraction_options')
+            .select(`
+              *,
+              tourist_attractions (*)
+            `)
+            .eq('schedule_id', schedule.id);
+
+          // schedule_items에 attraction 정보 추가
+          const itemsWithAttractions = (schedule.schedule_items || []).map((item: any) => {
+            const option = attractionOptions?.find(opt => 
+              opt.tourist_attractions?.name === item.content
+            );
+            if (option) {
+              return { ...item, attraction: option.tourist_attractions };
+            }
+            return item;
+          });
+
           return { ...schedule, schedule_items: itemsWithAttractions };
         })
       );

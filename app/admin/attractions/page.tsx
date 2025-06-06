@@ -94,6 +94,8 @@ export default function AttractionsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log('Selected file:', file.name, file.size, file.type);
+
     // 파일 유효성 검사
     const validation = validateImageFile(file);
     if (!validation.valid) {
@@ -111,16 +113,19 @@ export default function AttractionsPage() {
     // 이미지 업로드
     setUploadingImage(true);
     try {
+      console.log('Starting upload...');
       const { url, error } = await uploadImage(file, 'tourist-attractions');
       if (error) {
-        alert('이미지 업로드에 실패했습니다');
+        console.error('Upload failed:', error);
+        alert(`이미지 업로드에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
         setImagePreview('');
       } else if (url) {
+        console.log('Upload successful, URL:', url);
         setFormData(prev => ({ ...prev, main_image_url: url }));
       }
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('이미지 업로드 중 오류가 발생했습니다');
+    } catch (error: any) {
+      console.error('Upload exception:', error);
+      alert(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     } finally {
       setUploadingImage(false);
     }
@@ -623,11 +628,22 @@ export default function AttractionsPage() {
                             return;
                           }
                           
-                          const { url, error } = await uploadImage(file, 'tourist-attractions', 'additional');
-                          if (url) {
-                            updateArrayField('image_urls', index, url);
-                          } else {
-                            alert('이미지 업로드에 실패했습니다');
+                          // 업로드 중 표시
+                          updateArrayField('image_urls', index, '업로드 중...');
+                          
+                          try {
+                            const { url, error } = await uploadImage(file, 'tourist-attractions', 'additional');
+                            if (url) {
+                              updateArrayField('image_urls', index, url);
+                            } else {
+                              updateArrayField('image_urls', index, '');
+                              console.error('Upload error:', error);
+                              alert(`이미지 업로드 실패: ${error?.message || '알 수 없는 오류'}`);
+                            }
+                          } catch (err: any) {
+                            updateArrayField('image_urls', index, '');
+                            console.error('Upload exception:', err);
+                            alert(`업로드 중 오류: ${err.message || '알 수 없는 오류'}`);
                           }
                         }}
                         className="hidden"
