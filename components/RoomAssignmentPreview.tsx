@@ -1,41 +1,23 @@
 "use client";
-import { useState, useEffect } from "react";
-import { X, Printer, Download, FileText } from "lucide-react";
+import { X, Printer, Download } from "lucide-react";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   html: string;
-  type: 'customer' | 'staff';
+  type: 'staff';
   initialDriverName?: string;
   initialDriverPhone?: string;
 };
 
-const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type, initialDriverName, initialDriverPhone }) => {
-  const [driverName, setDriverName] = useState(initialDriverName || '기사님');
-  const [driverPhone, setDriverPhone] = useState(initialDriverPhone || '010-0000-0000');
-  
-  // props가 변경되면 state 업데이트
-  useEffect(() => {
-    if (initialDriverName) setDriverName(initialDriverName);
-    if (initialDriverPhone) setDriverPhone(initialDriverPhone);
-  }, [initialDriverName, initialDriverPhone]);
-  
+const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type }) => {
   if (!isOpen) return null;
-
-  // 기사 정보 업데이트
-  const updateDriverInfo = () => {
-    const updatedHtml = html
-      .replace(/담당: .+<\/p>/, `담당: ${driverName}</p>`)
-      .replace(/연락처: [\d-]+<\/p>/, `연락처: ${driverPhone}</p>`);
-    return updatedHtml;
-  };
 
   // 인쇄 기능
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(updateDriverInfo());
+      printWindow.document.write(html);
       printWindow.document.close();
       printWindow.print();
     }
@@ -43,12 +25,11 @@ const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type, i
 
   // 다운로드 기능
   const handleDownload = () => {
-    const updatedHtml = updateDriverInfo();
-    const blob = new Blob([updatedHtml], { type: 'text/html' });
+    const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `객실배정표_${type === 'customer' ? '고객용' : '스탭용'}_${new Date().toISOString().split('T')[0]}.html`;
+    a.download = `객실배정표_내부용_${new Date().toISOString().split('T')[0]}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -61,7 +42,7 @@ const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type, i
         {/* 헤더 */}
         <div className="flex justify-between items-center p-4 border-b">
           <h3 className="text-lg font-bold">
-            객실 배정표 미리보기 ({type === 'customer' ? '고객용' : '스탭용'})
+            객실 배정표 미리보기 (내부용)
           </h3>
           <button
             onClick={onClose}
@@ -71,37 +52,10 @@ const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type, i
           </button>
         </div>
 
-        {/* 기사 정보 입력 */}
-        <div className="p-4 bg-gray-50 border-b">
-          <div className="text-sm text-gray-600 mb-2">📝 출력 전 담당 기사 정보를 확인하고 수정하실 수 있습니다</div>
-          <div className="flex gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">담당 기사:</label>
-              <input
-              type="text"
-              value={driverName}
-              onChange={(e) => setDriverName(e.target.value)}
-              className="border rounded px-2 py-1 text-sm"
-              placeholder="기사님 성함"
-            />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">연락처:</label>
-              <input
-                type="text"
-                value={driverPhone}
-                onChange={(e) => setDriverPhone(e.target.value)}
-                className="border rounded px-2 py-1 text-sm"
-                placeholder="010-0000-0000"
-              />
-            </div>
-          </div>
-        </div>
-
         {/* 미리보기 영역 */}
         <div className="flex-1 overflow-auto p-4">
           <iframe
-            srcDoc={updateDriverInfo()}
+            srcDoc={html}
             className="w-full h-full border rounded"
             style={{ minHeight: '600px' }}
           />

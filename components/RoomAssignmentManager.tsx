@@ -60,7 +60,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [assigning, setAssigning] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
   const [unassignedSearch, setUnassignedSearch] = useState("");
-  const [previewType, setPreviewType] = useState<'customer' | 'staff'>('customer');
+  const [previewType, setPreviewType] = useState<'staff'>('staff');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
 
@@ -170,7 +170,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   };
 
   // 미리보기 HTML 생성
-  const generatePreviewHTML = (type: 'customer' | 'staff', driverName?: string, driverPhone?: string) => {
+  const generatePreviewHTML = (type: 'staff', driverName?: string, driverPhone?: string) => {
     const assignedParticipants = participants.filter(p => p.room_id);
     const sortedParticipants = [...assignedParticipants].sort((a, b) => {
       const roomA = rooms.find(r => r.id === a.room_id);
@@ -195,7 +195,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       };
       tourPeriod = `${formatDate(startDate)}~${formatDate(endDate)}`;
     }
-    const isStaff = type === 'staff';
     const currentDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
     
     // 기사 정보 결정 (우선순위: 전달받은 값 > 스태프 정보 > 투어 정보 > 기본값)
@@ -210,21 +209,15 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
 
       let row = `<tr class="team-row">
         <td>${index + 1}</td>
-        <td>${p.name}</td>`;
-      
-      if (isStaff) {
-        row += `<td>${p.phone || ''}</td>`;
-      }
+        <td>${p.name}</td>
+        <td>${p.phone || ''}</td>`;
       
       if (isFirstInRoom) {
         row += `
         <td rowspan="${roomRowspan}">${p.team_name || ''}</td>
         <td rowspan="${roomRowspan}">${roomRowspan}</td>
-        <td rowspan="${roomRowspan}">${room?.room_number || '미배정'}</td>`;
-        if (isStaff) {
-          row += `
+        <td rowspan="${roomRowspan}">${room?.room_number || '미배정'}</td>
         <td rowspan="${roomRowspan}">${p.note || ''}</td>`;
-        }
       }
       
       row += `
@@ -241,12 +234,12 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     const totalRooms = rooms.filter(r => r.capacity > 0).length;
     const occupiedRoomCount = roomStats.filter(rs => rs.assigned > 0).length;
 
-    return isStaff ? `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>팀명단 / 객실배정 (스탭용)</title>
+  <title>팀명단 / 객실배정 (내부용)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
     body { background-color: #FFFFFF; color: #2D3748; line-height: 1.6; padding: 10px; }
@@ -270,13 +263,10 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   <div class="container">
     <div class="header-container">
       <div class="title-section">
-        <h1>팀명단 / 객실배정 (스탭용)</h1>
+        <h1>팀명단 / 객실배정 (내부용)</h1>
         <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
       </div>
-      <div class="info-section">
-        <p>담당: ${finalDriverName}</p>
-        <p>연락처: ${finalDriverPhone}</p>
-      </div>
+
     </div>
     <div style="margin-bottom: 20px; padding: 15px; background-color: #f1f5f9; border: 2px solid #64748b; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
       <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #94a3b8; padding-bottom: 10px;">
@@ -287,14 +277,10 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           <p style="font-weight: bold; margin-bottom: 5px; color: #1e40af;">투어 참가자 객실</p>
           <p>총 ${totalRooms}객 중 ${occupiedRoomCount}객 사용</p>
         </div>
-        <div style="flex: 1; min-width: 150px; background-color: #ffffff; padding: 10px; border-radius: 4px; border-left: 4px solid #10b981;">
-          <p style="font-weight: bold; margin-bottom: 5px; color: #065f46;">비고</p>
-          <p>출발 전까지 객실 조정 가능</p>
-        </div>
       </div>
     </div>
     
-    <p class="staff-note">※ 이 명단은 스탭용으로 고객 연락처 정보가 포함되어 있습니다.</p>
+    <p class="staff-note">※ 이 명단은 내부용으로 고객 연락처 정보가 포함되어 있습니다.</p>
     <div class="table-container">
       <table>
         <thead>
@@ -312,122 +298,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           ${participantRows}
         </tbody>
       </table>
-    </div>
-    
-    <div style="margin-top: 20px; padding: 12px; background-color: #f8f9fa; border: 1px solid #DEE2E6; border-radius: 4px; font-size: 14px;">
-      <p style="font-weight: bold; margin-bottom: 8px;">비상연락처</p>
-      <p>투어 태보험: 010-9999-8888</p>
-      <p>시설 프론트: 064-123-4567</p>
-      <p>긴급 의료: 119</p>
-    </div>
-    
-    <div style="margin-top: 10px; text-align: center; font-size: 12px; color: #666;">
-      <p>발행일: ${currentDate} | 싱싱골프투어 내부용</p>
-    </div>
-  </div>
-</body>
-</html>` : `<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>팀명단 / 객실배정 (고객용)</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
-    body { background-color: #f5f7fa; color: #2D3748; line-height: 1.6; padding: 10px; }
-    .container { width: 100%; max-width: 850px; margin: 0 auto; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 20px; }
-    .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #3182ce; }
-    .title-section { flex: 1; }
-    .info-section { text-align: right; padding: 8px 12px; background-color: #ebf8ff; border-radius: 4px; border: 1px solid #bee3f8; margin-left: 15px; }
-    .info-section p { margin: 0; line-height: 1.5; font-size: 14px; }
-    h1 { color: #2c5282; font-size: 22px; margin-bottom: 8px; }
-    .subtitle { font-size: 16px; font-weight: 500; color: #4A5568; margin-bottom: 6px; }
-    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: center; }
-    th { background-color: #EBF8FF; font-weight: bold; color: #2C5282; }
-    .team-row { background-color: rgba(235, 248, 255, 0.3); }
-    tbody tr:hover { background-color: #F7FAFC; }
-    .notice { padding: 15px; background-color: #FFF5F5; border: 1px solid #FED7D7; border-radius: 6px; font-size: 14px; margin-bottom: 20px; }
-    .notice-title { font-weight: bold; color: #E53E3E; margin-bottom: 8px; }
-    .notice-list { list-style-type: disc; margin-left: 20px; }
-    .notice-list li { margin-bottom: 5px; }
-    .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #E2E8F0; color: #718096; font-size: 13px; }
-    @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header-container">
-      <div class="title-section">
-        <h1>팀명단 / 객실배정</h1>
-        <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
-      </div>
-      <div class="info-section">
-        <p>담당: ${finalDriverName}</p>
-        <p>연락처: ${finalDriverPhone}</p>
-      </div>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>NO.</th>
-            <th>성명</th>
-            <th>팀명/동호회</th>
-            <th>인원</th>
-            <th>객실</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${participantRows}
-        </tbody>
-      </table>
-    </div>
-    
-    <div class="summary" style="background-color: #f0f9ff; border: 1px solid #bae6fd; margin-bottom: 20px;">
-      <div class="summary-title" style="color: #0369a1;">투어 요약</div>
-      <p><strong>참가 인원:</strong> 총 ${sortedParticipants.length}명</p>
-      <p><strong>객실 현황:</strong> ${occupiedRoomCount}개 객실 사용 (총 ${totalRooms}개 중)</p>
-      <p><strong>담당 기사:</strong> ${finalDriverName} (${finalDriverPhone})</p>
-    </div>
-    
-    <div class="notice">
-      <div class="notice-title">객실 이용 안내</div>
-      <ul class="notice-list">
-        <li><strong>체크인:</strong> 오후 3시부터 가능</li>
-        <li><strong>체크아웃:</strong> 10시 이전 (골프 이용고객의 경우 퇴실 당일 골프예약시간 이전)</li>
-        <li><strong>기본 제공:</strong> 샴푸, 린스, 비누, 바디워시, 로션, 스킨, 드라이기, 커피포트</li>
-        <li><strong>준비 필요:</strong> 칫솔, 치약, 면도기, 휴대폰 충전기</li>
-        <li><strong>추가 사항:</strong> 건조대 필요 시 프론트에서 대여 가능</li>
-        <li>매일 1인당 생수 500ml 2병 제공 (추가 요청 시 비용 발생)</li>
-        <li>귀중품은 프론트 보관 권장 (분실 시 책임 불가)</li>
-      </ul>
-    </div>
-    
-    <div class="summary" style="background-color: #ecfdf5; border: 1px solid #86efac;">
-      <div class="summary-title" style="color: #166534;">식사 안내</div>
-      <ul class="notice-list">
-        <li>클럽하우스 운영 시간 내 이용</li>
-        <li>외부 음식 및 주류 반입 금지</li>
-        <li>미이용 시 환불 불가</li>
-        <li>패키지 외 추가 식사는 당일 결제 필수</li>
-      </ul>
-    </div>
-    <div class="notice" style="background-color: #fef3c7; border: 1px solid #fcd34d; margin-top: 20px;">
-      <div class="notice-title" style="color: #92400e;">주의사항</div>
-      <ul class="notice-list">
-        <li>객실 변경은 프론트에서만 가능합니다</li>
-        <li>흡연은 지정된 장소에서만 가능합니다</li>
-        <li>소음으로 인한 민원 발생 시 퇴실 조치될 수 있습니다</li>
-        <li>시설물 파손 시 변상 책임이 있습니다</li>
-      </ul>
-    </div>
-    
-    <div class="footer">
-      <p>즐거운 골프 여행 되시길 바랍니다.</p>
-      <p>싱싱골프투어 | 031-215-3990</p>
-      <p style="font-size: 11px; color: #94a3b8; margin-top: 10px;">발행일: ${currentDate}</p>
     </div>
   </div>
 </body>
@@ -483,23 +353,13 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-gray-900">객실별 참가자 그룹핑</h2>
-        <div className="flex gap-2">
-          <select
-            value={previewType}
-            onChange={(e) => setPreviewType(e.target.value as 'customer' | 'staff')}
-            className="border border-gray-300 rounded px-3 py-1.5 bg-white text-gray-900 text-sm"
-          >
-            <option value="customer">고객용</option>
-            <option value="staff">스탭용</option>
-          </select>
-          <button
-            onClick={handlePreview}
-            className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
-          >
-            <Eye className="w-4 h-4" />
-            미리보기
-          </button>
-        </div>
+        <button
+          onClick={handlePreview}
+          className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+        >
+          <Eye className="w-4 h-4" />
+          내부용 미리보기
+        </button>
       </div>
 
       {loading ? (
