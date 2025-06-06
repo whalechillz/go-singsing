@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 
 
-import { Plus, Edit, Trash2, MapPin, Clock, Star, Tag, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, Clock, Star, Tag, Image as ImageIcon, Phone } from 'lucide-react';
 
 type Category = '관광명소' | '휴게소' | '맛집' | '쇼핑' | '액티비티';
 
@@ -245,67 +245,104 @@ export default function AttractionsPage() {
       {loading ? (
         <div className="text-center py-8">로딩 중...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {attractions.map(attraction => (
-            <div key={attraction.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
-              <div className="p-6">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{attraction.name}</h3>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-2 ${categoryColors[attraction.category]}`}>
-                      {attraction.category}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
+            <div key={attraction.id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+              {/* 이미지 섹션 */}
+              {attraction.images && attraction.images[0] ? (
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={attraction.images[0]} 
+                    alt={attraction.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute top-2 right-2 flex gap-1">
                     <button
-                      className="p-1 text-gray-600 hover:text-gray-900"
+                      className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-gray-600 hover:text-gray-900 hover:bg-white transition-all"
                       onClick={() => handleEdit(attraction)}
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
-                      className="p-1 text-red-600 hover:text-red-900"
+                      className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-red-600 hover:text-red-700 hover:bg-white transition-all"
                       onClick={() => handleDelete(attraction.id)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
-              <div className="px-6 pb-6">
-                {attraction.images && attraction.images[0] && (
-                  <img 
-                    src={attraction.images[0]} 
-                    alt={attraction.name}
-                    className="w-full h-48 object-cover rounded-md mb-4"
-                  />
-                )}
+              ) : (
+                <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <ImageIcon className="w-16 h-16 text-gray-400" />
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <button
+                      className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-gray-600 hover:text-gray-900 hover:bg-white transition-all"
+                      onClick={() => handleEdit(attraction)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-red-600 hover:text-red-700 hover:bg-white transition-all"
+                      onClick={() => handleDelete(attraction.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* 컨텐츠 섹션 */}
+              <div className="p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-lg font-bold text-gray-900 flex-1 line-clamp-1">{attraction.name}</h3>
+                  <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium flex-shrink-0 ${categoryColors[attraction.category]}`}>
+                    {attraction.category}
+                  </span>
+                </div>
+                
                 {attraction.description && (
-                  <p className="text-sm text-gray-600 mb-2">{attraction.description}</p>
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{attraction.description}</p>
                 )}
-                <div className="space-y-1 text-sm">
+                
+                <div className="space-y-2">
                   {attraction.address && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span>{attraction.address}</span>
+                    <div className="flex items-start gap-2 text-sm text-gray-600">
+                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
+                      <span className="line-clamp-1">{attraction.address}</span>
                     </div>
                   )}
+                  
+                  {attraction.phone && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Phone className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                      <span>{attraction.phone}</span>
+                    </div>
+                  )}
+                  
                   {attraction.recommended_duration && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Clock className="w-4 h-4" />
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Clock className="w-4 h-4 flex-shrink-0 text-gray-400" />
                       <span>추천 체류시간: {attraction.recommended_duration}분</span>
                     </div>
                   )}
-                  {attraction.tags && attraction.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {attraction.tags.map((tag, index) => (
-                        <span key={index} className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-                          #{tag}
-                        </span>
-                      ))}
+                  
+                  {attraction.admission_fee && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <span className="w-4 h-4 flex-shrink-0 text-gray-400 text-center">₩</span>
+                      <span>{attraction.admission_fee}</span>
                     </div>
                   )}
                 </div>
+                
+                {attraction.tags && attraction.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-4 pt-4 border-t border-gray-100">
+                    {attraction.tags.map((tag, index) => (
+                      <span key={index} className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs hover:bg-gray-200 transition-colors">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}
