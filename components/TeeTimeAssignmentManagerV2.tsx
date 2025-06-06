@@ -24,6 +24,7 @@ type TeeTime = {
   tee_time: string;
   max_players: number;
   assigned_count?: number; // 현재 배정된 인원
+  team_no?: number; // 팀 번호
 };
 
 type Tour = {
@@ -156,7 +157,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         play_date: teeTime.play_date || teeTime.date,
         golf_course: teeTime.golf_course || teeTime.course,
         max_players: teeTime.max_players || 4,
-        assigned_count: teeTimeAssignmentCount.get(teeTime.id) || 0
+        assigned_count: teeTimeAssignmentCount.get(teeTime.id) || 0,
+        team_no: teeTime.team_no || null
       })) || [];
       
       setTeeTimes(teeTimesWithCount.sort((a, b) => {
@@ -695,12 +697,17 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       return '';
     };
 
-    // 코스명 표시 함수 (색상 대신 텍스트로 구분)
+    // 코스명 표시 함수 (골프장 이름 제거)
     const formatCourseDisplay = (courseName: string) => {
-    if (!courseName) return '';
-    
-    // 코스명을 그대로 반환 (중복 태그 제거)
-    return courseName;
+      if (!courseName) return '';
+      
+      // 골프장 이름을 제거하고 코스명만 반환
+      // 예: "파인힐스 - 파인코스" -> "파인코스"
+      if (courseName.includes(' - ')) {
+        return courseName.split(' - ')[1] || courseName;
+      }
+      
+      return courseName;
     };
 
     let tablesHTML = '';
@@ -743,12 +750,13 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         tablesHTML += `
           <table>
             <tr>
-              <td colspan="3" class="${headerClass}">${course}</td>
+              <td colspan="4" class="${headerClass}">${formatCourseDisplay(course)}</td>
             </tr>
             <tr>
               <th>시간</th>
-              <th>조 구성</th>
-              <th>참가자</th>
+              <th>코스</th>
+              <th>팀</th>
+              <th>플레이어</th>
             </tr>`;
 
         courseTimes.forEach(teeTime => {
@@ -760,7 +768,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             tablesHTML += `
               <tr>
                 <td class="time-column">${teeTime.tee_time || ''}</td>
-                <td class="team-type">-</td>
+                <td class="course-column">${formatCourseDisplay(teeTime.golf_course || '')}</td>
+                <td class="team-column">-</td>
                 <td class="player-cell">배정된 참가자가 없습니다</td>
               </tr>`;
           } else {
@@ -783,7 +792,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             tablesHTML += `
               <tr>
                 <td class="time-column">${teeTime.tee_time}</td>
-                <td class="team-type">${teamGenderInfo.type || '(혼성팀)'}</td>
+                <td class="course-column">${formatCourseDisplay(teeTime.golf_course || '')}</td>
+                <td class="team-column">${teeTime.team_no || '-'}팀</td>
                 <td class="player-cell">${playerNames}</td>
               </tr>`;
           }
@@ -913,12 +923,21 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       width: 80px;
       background-color: #f8f9fa;
       font-weight: bold;
+      text-align: center;
     }
     
-    .team-type {
+    .course-column {
+      width: 100px;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .team-column {
+      width: 60px;
       background-color: #EBF8FF;
       font-weight: 500;
       color: #2B6CB0;
+      text-align: center;
     }
     
     .male {
@@ -930,8 +949,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     }
     
     .player-cell {
-      text-align: left;
-      padding-left: 12px;
+      text-align: center;
+      padding: 8px;
     }
     
     .footer {
@@ -1083,15 +1102,21 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         font-size: 12px;
       }
       
-      .team-type {
+      .course-column {
         width: 60px;
         font-size: 11px;
       }
       
+      .team-column {
+        width: 40px;
+        font-size: 11px;
+      }
+      
       .player-cell {
-        padding-left: 5px;
+        padding: 5px;
         font-size: 11px;
         line-height: 1.4;
+        text-align: center;
       }
       
       .contact-info {
