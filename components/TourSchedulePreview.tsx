@@ -704,7 +704,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       <div class="header-title">싱싱골프투어</div>
       <div class="header-subtitle">${tourData.title}</div>
       <div class="header-date">
-        ${tourData.duration || ''}${tourData.start_date && tourData.end_date ? ` / ${new Date(tourData.start_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.start_date).getDay()]})~${new Date(tourData.end_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.end_date).getDay()]})` : ''}
+        <span>${tourData.duration || ''} ${tourData.destination || ''}</span>
+        <span style="margin-left: 8px;">${tourData.start_date && tourData.end_date ? `${new Date(tourData.start_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.start_date).getDay()]})~${new Date(tourData.end_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.end_date).getDay()]})` : ''}</span>
       </div>
     </div>
     
@@ -733,7 +734,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     <span class="location-type">(${boardingPlace.district || '탑승지'})</span>
                   </div>
                   <div class="time-wrapper">
-                    <span class="time-prefix">${timePrefix}</span>
+                    <span class="time-prefix" style="font-size: inherit;">${timePrefix}</span>
                     <span class="card-time">${displayTime}</span>
                   </div>
                   <div class="card-date">${new Date(tourData.start_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '월 ').replace('.', '일')} (${['일','월','화','수','목','금','토'][new Date(tourData.start_date).getDay()]})</div>
@@ -802,7 +803,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     <span class="location-name">${waypoint.waypoint_name}</span>
                   </div>
                   <div class="time-wrapper">
-                    <span class="time-prefix">${timePrefix}</span>
+                    <span class="time-prefix" style="font-size: inherit;">${timePrefix}</span>
                     <span class="card-time waypoint-time">${displayTime}</span>
                   </div>
                   ${waypointDate ? `<div class="card-date">${waypointDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '월 ').replace('.', '일')} (${['일','월','화','수','목','금','토'][waypointDate.getDay()]})</div>` : ''}
@@ -810,7 +811,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               </div>
               
               <div class="waypoint-info">
-                <div class="waypoint-duration">정차시간: 약 ${waypoint.waypoint_duration}분</div>
+                <div class="waypoint-duration">정차시간: 약 <input type="number" value="${waypoint.waypoint_duration || 30}" min="0" max="999" style="width: 60px; padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 4px; text-align: center;" />분</div>
                 ${waypoint.waypoint_description ? `<div class="waypoint-desc">${waypoint.waypoint_description}</div>` : ''}
               </div>
             </div>
@@ -1381,7 +1382,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .header { background-color: ${operational.header}; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
     .header-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     .header-subtitle { font-size: 18px; opacity: 0.9; margin-bottom: 5px; }
-    .header-date { font-size: 14px; opacity: 0.8; }
+    .header-date { font-size: 20px; opacity: 0.9; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
     .boarding-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 25px; }
     .boarding-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
     .card-border { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #4299e1; }
@@ -1392,8 +1393,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .location-name { font-weight: bold; }
     .location-type { font-size: 14px; color: #718096; font-weight: normal; }
     .waypoint-icon { font-size: 20px; }
-    .time-wrapper { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
-    .time-prefix { font-size: 14px; color: #4a5568; }
+    .time-wrapper { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; }
+    .time-prefix { font-size: inherit; font-weight: bold; color: #e53e3e; }
     .card-time { font-size: 32px; font-weight: bold; color: #e53e3e; }
     .waypoint-time { font-size: 28px; color: #4a5568; }
     .card-date { font-size: 14px; color: #718096; margin-bottom: 10px; }
@@ -1415,6 +1416,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .route-number.tourist { background-color: #10b981; }
     .waypoint-info { background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
     .waypoint-duration { font-weight: 600; color: #4a5568; margin-bottom: 4px; }
+    .waypoint-duration input { width: 60px; padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 4px; }
     .waypoint-desc { color: #718096; font-size: 14px; margin-bottom: 4px; }
     .waypoint-date { color: #9ca3af; font-size: 13px; margin-top: 8px; }
     .common-info { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
@@ -1438,7 +1440,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       .waypoint-time { font-size: 20px !important; }
       .card-title { font-size: 18px; flex-wrap: wrap; }
       .time-wrapper { margin-bottom: 3px; }
-      .time-prefix { font-size: 12px; }
+      .time-prefix { font-size: inherit !important; }
       .card-date { font-size: 12px; }
     }
     @media print { body { padding: 0; } .container { max-width: 100%; } }
