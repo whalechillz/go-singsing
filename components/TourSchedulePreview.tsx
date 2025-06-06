@@ -49,9 +49,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   ];
 
   useEffect(() => {
-    fetchTourData();
-    fetchTourBoardingPlaces();
+    if (tourId) {
+      fetchAllData();
+    }
   }, [tourId]);
+  
+  const fetchAllData = async () => {
+    await fetchTourBoardingPlaces();
+    await fetchTourData();
+  };
 
   // URL 파라미터로 뷰 자동 선택
   useEffect(() => {
@@ -96,22 +102,68 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
       if (schedulesError) throw schedulesError;
       
+      // 경유지 정보를 다시 가져오기 (수정된 방법)
+      const { data: waypointsData } = await supabase
+        .from('singsing_tour_boarding_times')
+        .select('*')
+        .eq('tour_id', tourId)
+        .eq('is_waypoint', true)
+        .order('visit_date')
+        .order('order_no');
+
+      let enrichedWaypoints = [];
+      if (waypointsData) {
+        // 경유지 중 관광지와 매칭되는 정보 가져오기
+        enrichedWaypoints = await Promise.all(waypointsData.map(async (waypoint) => {
+          const { data: attractionData } = await supabase
+            .from('tourist_attractions')
+            .select('*')
+            .ilike('name', `%${waypoint.waypoint_name}%`)
+            .single();
+          
+          if (attractionData) {
+            waypoint.attraction_data = attractionData;
+          }
+          return waypoint;
+        }));
+      }
+      
       // 각 일정의 schedule_items에서 관광지 정보 enriching
       if (schedules) {
         for (const schedule of schedules) {
+          const scheduleDate = schedule.date || schedule.schedule_date;
+          
           if (schedule.schedule_items && Array.isArray(schedule.schedule_items)) {
             for (const item of schedule.schedule_items) {
-              // 관광지 관련 키워드 체크
-              if (item.content && (item.content.includes('송광사') || item.content.includes('관광') || item.content.includes('사찰'))) {
+              // 1. 구체적인 관광지 이름이 있는 경우
+              if (item.content && (item.content.includes('송광사') || item.content.includes('순천만'))) {
                 // tourist_attractions 테이블에서 매칭되는 정보 찾기
                 const { data: attractionData } = await supabase
                   .from('tourist_attractions')
                   .select('*')
-                  .or(`name.ilike.%${item.content}%,name.ilike.%송광사%`)
+                  .ilike('name', `%${item.content.replace('관광', '').replace('투어', '').trim()}%`)
                   .single();
                 
                 if (attractionData) {
                   item.attraction_data = attractionData;
+                }
+              }
+              // 2. "관광지 투어"라고만 되어 있는 경우, 해당 날짜의 경유지 정보 사용
+              else if (item.content && (item.content === '관광지 투어' || item.content.includes('관광지 투어'))) {
+                // 해당 날짜의 관광지 경유지 찾기
+                const dayWaypoints = enrichedWaypoints.filter(w => {
+                  const waypointDate = w.visit_date ? w.visit_date.split('T')[0] : '';
+                  const scheduleDateFormatted = scheduleDate ? scheduleDate.split('T')[0] : '';
+                  return waypointDate === scheduleDateFormatted && 
+                    w.attraction_data && 
+                    !w.waypoint_name?.includes('휴게소');
+                });
+                
+                if (dayWaypoints.length > 0) {
+                  // 첫 번째 관광지를 사용
+                  const waypoint = dayWaypoints[0];
+                  item.content = `${waypoint.waypoint_name} 관광`;
+                  item.attraction_data = waypoint.attraction_data;
                 }
               }
             }
@@ -940,31 +992,28 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     
     <div class="quick-info">
       <div class="info-item">
-        <Flag className="icon" />
         <div>
-          <strong>골프장</strong>
+          <strong>⛳ 골프장</strong>
           <p>${productData?.golf_course || ''}</p>
         </div>
       </div>
       <div class="info-item">
-        <Building className="icon" />
         <div>
-          <strong>숙소</strong>
+          <strong>🏨 숙소</strong>
           <p>${productData?.hotel || ''}</p>
         </div>
       </div>
     </div>
     
     <div class="schedule-summary">
-      ${tourData.schedules?.map((schedule: any) => `
+      ${tourData.schedules?.map((schedule: any, index: number) => `
         <div class="day-summary">
-          <div class="day-header">Day ${schedule.day_number}</div>
-          <div class="day-date">${new Date(schedule.date).toLocaleDateString('ko-KR')}</div>
+          <div class="day-header">Day ${schedule.day_number || (index + 1)} - ${new Date(schedule.date || schedule.schedule_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' })}</div>
+          <div class="day-subtitle">Day ${schedule.day_number || (index + 1)} 일정</div>
+
           <div class="main-events">
-            ${schedule.tour_schedule_items?.filter((item: any) =>
-              item.content.includes('골프') || item.content.includes('출발') || item.content.includes('도착')
-            ).map((item: any) => `
-              <div class="event">${item.time || ''} ${item.content}</div>
+            ${(schedule.schedule_items || schedule.tour_schedule_items)?.map((item: any) => `
+              <div class="event">${item.time ? item.time + ' ' : ''}${item.content}</div>
             `).join('') || ''}
           </div>
         </div>
@@ -2468,6 +2517,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       .day-summary {
         padding: 15px;
         border-bottom: 1px solid #eee;
+        text-align: left;
       }
       
       .day-summary:last-child {
@@ -2479,28 +2529,42 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         font-weight: bold;
         color: #2c5282;
         margin-bottom: 5px;
+        text-align: left;
       }
       
       .day-date {
         font-size: 14px;
         color: #666;
         margin-bottom: 10px;
+        text-align: left;
+      }
+      
+      .day-subtitle {
+        font-size: 15px;
+        color: #333;
+        margin-bottom: 10px;
+        text-align: center;
+        background: #f0f0f0;
+        padding: 5px;
+        border-radius: 4px;
       }
       
       .main-events {
         font-size: 14px;
+        text-align: left;
       }
       
       .event {
         margin-bottom: 5px;
-        padding-left: 15px;
+        padding-left: 20px;
         position: relative;
+        text-align: left;
       }
       
       .event:before {
         content: '•';
         position: absolute;
-        left: 0;
+        left: 5px;
         color: #4a6fa5;
       }
       
