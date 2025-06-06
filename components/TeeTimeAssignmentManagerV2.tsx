@@ -697,23 +697,10 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
     // 코스명 표시 함수 (색상 대신 텍스트로 구분)
     const formatCourseDisplay = (courseName: string) => {
-      if (!courseName) return '';
-      
-      // 코스명에서 핵심 단어 추출
-      let prefix = '';
-      if (courseName.includes('레이크') || courseName.includes('Lake')) {
-        prefix = '【레이크】';
-      } else if (courseName.includes('파인') || courseName.includes('Pine')) {
-        prefix = '【파인】';
-      } else if (courseName.includes('힐스') || courseName.includes('Hills')) {
-        prefix = '【힐스】';
-      } else if (courseName.includes('밸리') || courseName.includes('Valley')) {
-        prefix = '【밸리】';
-      } else if (courseName.includes('오션') || courseName.includes('Ocean')) {
-        prefix = '【오션】';
-      }
-      
-      return prefix + courseName;
+    if (!courseName) return '';
+    
+    // 코스명을 그대로 반환 (중복 태그 제거)
+    return courseName;
     };
 
     let tablesHTML = '';
@@ -725,64 +712,73 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         weekday: 'long' 
       });
 
-      let tableHTML = `
-        <h2 class="date-header">${dateStr}</h2>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>시간</th>
-                <th>골프장</th>
-                <th>NO.</th>
-                <th>성명</th>
-                <th>연락처</th>
-                <th>팀명</th>
-                <th>비고</th>
-              </tr>
-            </thead>
-            <tbody>`;
+      // 날짜 헤더 추가
+      tablesHTML += `<div class="day-header">${dateStr}</div>`;
+      tablesHTML += `<div class="table-container">`;
 
-      times.forEach(teeTime => {
-        const teeTimeParticipants = participants.filter(p => 
-          p.tee_time_assignments?.includes(teeTime.id)
-        );
-        
-        if (teeTimeParticipants.length === 0) {
-          tableHTML += `
+      // 코스별로 그룹화
+      const courseGroups = times.reduce((acc, teeTime) => {
+        const course = teeTime.golf_course || '미지정';
+        if (!acc[course]) acc[course] = [];
+        acc[course].push(teeTime);
+        return acc;
+      }, {} as Record<string, typeof times>);
+
+      // 각 코스별로 테이블 생성
+      Object.entries(courseGroups).forEach(([course, courseTimes]) => {
+        tablesHTML += `
+          <table>
             <tr>
-              <td>${teeTime.tee_time || ''}</td>
-              <td>${formatCourseDisplay(teeTime.golf_course || '')}</td>
-              <td colspan="5" class="empty-slot">배정된 참가자가 없습니다</td>
+              <td colspan="3" class="course-header">${course}</td>
+            </tr>
+            <tr>
+              <th>시간</th>
+              <th>조 구성</th>
+              <th>참가자</th>
             </tr>`;
-        } else {
-          // 팀 성별 분석
-          const teamGenderInfo = analyzeTeamGender(teeTimeParticipants);
+
+        courseTimes.forEach(teeTime => {
+          const teeTimeParticipants = participants.filter(p => 
+            p.tee_time_assignments?.includes(teeTime.id)
+          );
           
-          teeTimeParticipants.forEach((p, index) => {
-            const genderSuffix = getGenderSuffix(p);
-            
-            tableHTML += `
+          if (teeTimeParticipants.length === 0) {
+            tablesHTML += `
               <tr>
-                ${index === 0 ? `
-                  <td rowspan="${teeTimeParticipants.length}">${teeTime.tee_time || ''}</td>
-                  <td rowspan="${teeTimeParticipants.length}" style="font-weight: bold;">${formatCourseDisplay(teeTime.golf_course || '')} ${teamGenderInfo.type}</td>
-                ` : ''}
-                <td>${index + 1}</td>
-                <td>${p.name}<span style="color: ${p.gender === 'M' || p.gender === '남' ? '#3b82f6' : p.gender === 'F' || p.gender === '여' ? '#ec4899' : '#6b7280'}; font-weight: bold; margin-left: 4px;">${genderSuffix}</span></td>
-                <td>${p.phone || ''}</td>
-                <td>${p.team_name || ''}</td>
-                <td>${p.note || ''}</td>
+                <td class="time-column">${teeTime.tee_time || ''}</td>
+                <td class="team-type">-</td>
+                <td class="player-cell">배정된 참가자가 없습니다</td>
               </tr>`;
-          });
-        }
+          } else {
+            // 팀 성별 분석
+            const teamGenderInfo = analyzeTeamGender(teeTimeParticipants);
+            
+            // 참가자 이름을 한 줄로 표시
+            const playerNames = teeTimeParticipants.map(p => {
+              const genderSuffix = getGenderSuffix(p);
+              if (genderSuffix) {
+                if (p.gender === 'M' || p.gender === '남') {
+                  return `<span class="male">${p.name}${genderSuffix}</span>`;
+                } else {
+                  return `<span class="female">${p.name}${genderSuffix}</span>`;
+                }
+              }
+              return p.name;
+            }).join(' · ');
+            
+            tablesHTML += `
+              <tr>
+                <td class="time-column">${teeTime.tee_time}</td>
+                <td class="team-type">${teamGenderInfo.type || '(혼성팀)'}</td>
+                <td class="player-cell">${playerNames}</td>
+              </tr>`;
+          }
+        });
+
+        tablesHTML += `</table>`;
       });
 
-      tableHTML += `
-            </tbody>
-          </table>
-        </div>`;
-      
-      tablesHTML += tableHTML;
+      tablesHTML += `</div>`; // table-container 닫기
     });
 
     return `<!DOCTYPE html>
@@ -790,31 +786,324 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>티타임표 (내부용)</title>
+  <title>싱싱골프투어 라운딩 조별 시간표</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
-    body { background-color: #FFFFFF; color: #2D3748; line-height: 1.6; padding: 20px; }
-    .container { width: 100%; max-width: 900px; margin: 0 auto; }
-    .header-container { text-align: center; margin-bottom: 20px; }
-    h1 { color: #34699C; font-size: 22px; margin-bottom: 8px; }
-    .subtitle { font-size: 16px; font-weight: 500; color: #4A5568; margin-bottom: 15px; }
-    .date-header { color: #2C5282; font-size: 18px; margin: 20px 0 10px 0; padding: 8px; background-color: #EBF8FF; border-radius: 4px; }
-    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 30px; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { border: 1px solid #DEE2E6; padding: 8px 10px; text-align: center; }
-    th { background-color: #ECF0F1; font-weight: bold; color: #34699C; }
-    tr:hover { background-color: #F7FAFC; }
-    .empty-slot { color: #999; font-style: italic; }
-    @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans KR', 'Arial', sans-serif;
+    }
+    
+    body {
+      background-color: #FFFFFF;
+      color: #2D3748;
+      line-height: 1.6;
+      padding: 10px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    
+    /* 헤더 레이아웃 */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #DEE2E6;
+    }
+    
+    .title-section {
+      flex: 1;
+    }
+    
+    .logo-section {
+      text-align: right;
+      margin-left: 15px;
+    }
+    
+    .logo-text {
+      font-size: 22px;
+      font-weight: bold;
+      color: #34699C;
+    }
+    
+    h1 {
+      color: #34699C;
+      font-size: 24px;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    /* 일자 헤더 스타일 */
+    .day-header {
+      background-color: #f0f5fa;
+      color: #34699C;
+      padding: 10px 15px;
+      margin: 20px 0 10px 0;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 4px;
+      border: 1px solid #dee6ef;
+    }
+    
+    /* 테이블 스타일 */
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 20px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    
+    th, td {
+      border: 1px solid #DEE2E6;
+      padding: 8px;
+      text-align: center;
+    }
+    
+    th {
+      background-color: #ECF0F1;
+      font-weight: bold;
+      color: #34699C;
+    }
+    
+    .course-header {
+      background-color: #34699C;
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      padding: 10px 12px;
+      text-align: left;
+      border-radius: 4px 4px 0 0;
+    }
+    
+    .time-column {
+      width: 80px;
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    
+    .team-type {
+      background-color: #EBF8FF;
+      font-weight: 500;
+      color: #2B6CB0;
+    }
+    
+    .male {
+      color: #2C5282;
+    }
+    
+    .female {
+      color: #B83280;
+    }
+    
+    .player-cell {
+      text-align: left;
+      padding-left: 12px;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #DEE2E6;
+    }
+    
+    .heart {
+      color: #F56565;
+    }
+    
+    .contact {
+      margin-top: 5px;
+      font-weight: bold;
+    }
+    
+    .notice-box {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #fff5f5;
+      border: 1px solid #fed7d7;
+      border-radius: 6px;
+    }
+    
+    .notice-title {
+      font-weight: bold;
+      color: #e53e3e;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    
+    .notice-list {
+      list-style-type: disc;
+      padding-left: 20px;
+      margin: 0;
+    }
+    
+    .notice-list li {
+      margin-bottom: 6px;
+      color: #4a5568;
+    }
+    
+    .contact-info {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #e6fffa;
+      border: 1px solid #b2f5ea;
+      border-radius: 6px;
+    }
+    
+    .contact-title {
+      font-weight: bold;
+      color: #2c7a7b;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    
+    .contact-item {
+      padding: 8px;
+      border-radius: 4px;
+      background-color: white;
+      border: 1px solid #E2E8F0;
+    }
+    
+    .contact-name {
+      font-weight: bold;
+      color: #4A5568;
+    }
+    
+    .contact-phone {
+      color: #2D3748;
+    }
+    
+    /* 모바일 대응 */
+    @media (max-width: 600px) {
+      .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .logo-section {
+        margin-left: 0;
+        margin-top: 10px;
+        text-align: left;
+      }
+      
+      h1 {
+        font-size: 20px;
+      }
+      
+      .logo-text {
+        font-size: 18px;
+      }
+      
+      .day-header {
+        font-size: 16px;
+        padding: 8px 10px;
+      }
+      
+      table {
+        font-size: 12px;
+      }
+      
+      th, td {
+        padding: 6px 4px;
+      }
+      
+      .time-column {
+        width: 60px;
+      }
+      
+      .player-cell {
+        padding-left: 5px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- 헤더 섹션 -->
     <div class="header-container">
-      <h1>티타임표 (내부용)</h1>
-      <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
+      <div class="title-section">
+        <h1>라운딩 조별 시간표</h1>
+        <p style="color: #4A5568; font-size: 15px;">${tourTitle} / ${tourPeriod}</p>
+      </div>
+      <div class="logo-section">
+        <div class="logo-text">싱싱골프투어</div>
+      </div>
     </div>
+    
     ${tablesHTML}
+    
+    <!-- 라운딩 주의사항 -->
+    <div class="notice-box">
+      <div class="notice-title">라운딩 주의사항</div>
+      <ul class="notice-list">
+        ${tour?.notices ? tour.notices.split('\n').map(notice => `<li>${notice.replace('•', '').trim()}</li>`).join('') : `
+        <li><strong>티오프 시간 준수:</strong> 티오프 15분 전까지 카트 대기선에 도착해주세요.</li>
+        <li><strong>복장 규정:</strong> 골프장 드레스 코드를 준수해주세요. (청바지, 트레이닝복 착용 금지)</li>
+        <li><strong>진행 속도:</strong> 앞 조와의 간격을 유지하여 원활한 플레이를 부탁드립니다.</li>
+        <li><strong>에티켓:</strong> 벽커 정리, 디보트 복구 등 기본 에티켓을 준수해주세요.</li>
+        `}
+      </ul>
+    </div>
+    
+    <!-- 연락처 정보 -->
+    ${(tour?.show_staff_info && staffMembers.length > 0) || tour?.show_company_phones || tour?.show_golf_phones ? `
+    <div class="contact-info">
+      <div class="contact-title">비상 연락처</div>
+      <div class="contact-grid">
+        ${staffMembers.map(staff => `
+          <div class="contact-item">
+            <div class="contact-name">${staff.name} ${staff.role}</div>
+            ${staff.phone ? `<div class="contact-phone">${staff.phone}</div>` : ''}
+          </div>
+        `).join('')}
+        ${tour?.show_company_phones && (tour?.company_phone || tour?.company_mobile) ? `
+          <div class="contact-item">
+            <div class="contact-name">회사 연락처</div>
+            ${tour?.company_phone ? `<div class="contact-phone">☎ ${tour.company_phone}</div>` : ''}
+            ${tour?.company_mobile ? `<div class="contact-phone">📱 ${tour.company_mobile}</div>` : ''}
+          </div>
+        ` : ''}
+        ${tour?.show_golf_phones && (tour?.golf_reservation_phone || tour?.golf_reservation_mobile) ? `
+          <div class="contact-item">
+            <div class="contact-name">골프장 예약실</div>
+            ${tour?.golf_reservation_phone ? `<div class="contact-phone">☎ ${tour.golf_reservation_phone}</div>` : ''}
+            ${tour?.golf_reservation_mobile ? `<div class="contact-phone">📱 ${tour.golf_reservation_mobile}</div>` : ''}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+    ` : ''}
+    
+    <!-- 푸터 -->
+    ${tour?.show_footer_message !== false ? `
+    <div class="footer">
+      <p><span class="heart">♥</span> ${tour?.footer_message || '즐거운 하루 되시길 바랍니다.'} <span class="heart">♥</span></p>
+      ${tour?.show_company_phones !== false ? `
+        <p class="contact">싱싱골프투어 ☎ ${tour?.company_phone || '031-215-3990'}</p>
+      ` : ''}
+    </div>
+    ` : ''}
   </div>
 </body>
 </html>`;
@@ -866,21 +1155,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     showToast('success', '데이터가 업데이트되었습니다.');
   };
 
-  // 골프장 코스별 스타일 (텍스트 기반)
-  const getCourseDisplayStyle = (course: string) => {
-    if (course.includes('레이크') || course.includes('Lake')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #3b82f6;';
-    } else if (course.includes('파인') || course.includes('Pine')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #10b981;';
-    } else if (course.includes('힐스') || course.includes('Hills')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #f59e0b;';
-    } else if (course.includes('밸리') || course.includes('Valley')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #8b5cf6;';
-    } else if (course.includes('오션') || course.includes('Ocean')) {
-      return 'font-weight: bold; text-decoration: underline; text-decoration-color: #06b6d4;';
-    }
-    return 'font-weight: bold;';
-  };
+
 
   return (
     <div className="mb-8 relative">
@@ -919,7 +1194,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
           >
             <Eye className="w-4 h-4" />
-            내부용 미리보기
+            라운딩 시간표 미리보기
           </button>
         </div>
       </div>
@@ -1101,21 +1376,14 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                               {teeTime.tee_time}
                             </span>
                             {/* 코스별 구분 표시 개선 */}
-                            <span className="px-2 py-1 rounded text-sm" style={{backgroundColor: '#f3f4f6'}}>
-                              <span style={{
-                                fontWeight: 'bold',
-                                ...(teeTime.golf_course?.includes('레이크') && { color: '#3b82f6' }),
-                                ...(teeTime.golf_course?.includes('파인') && { color: '#10b981' }),
-                                ...(teeTime.golf_course?.includes('힐스') && { color: '#f59e0b' }),
-                                ...(teeTime.golf_course?.includes('밸리') && { color: '#8b5cf6' }),
-                                ...(teeTime.golf_course?.includes('오션') && { color: '#06b6d4' }),
-                              }}>
-                                {teeTime.golf_course?.includes('레이크') && '【레이크】'}
-                                {teeTime.golf_course?.includes('파인') && '【파인】'}
-                                {teeTime.golf_course?.includes('힐스') && '【힐스】'}
-                                {teeTime.golf_course?.includes('밸리') && '【밸리】'}
-                                {teeTime.golf_course?.includes('오션') && '【오션】'}
-                              </span>
+                            <span className="px-2 py-1 rounded text-sm font-medium" style={{
+                              backgroundColor: '#f3f4f6',
+                              ...(teeTime.golf_course?.includes('레이크') && { color: '#3b82f6' }),
+                              ...(teeTime.golf_course?.includes('파인') && { color: '#10b981' }),
+                              ...(teeTime.golf_course?.includes('힐스') && { color: '#f59e0b' }),
+                              ...(teeTime.golf_course?.includes('밸리') && { color: '#8b5cf6' }),
+                              ...(teeTime.golf_course?.includes('오션') && { color: '#06b6d4' }),
+                            }}>
                               {teeTime.golf_course}
                             </span>
                           </div>
