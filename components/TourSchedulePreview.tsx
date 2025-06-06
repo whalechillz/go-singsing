@@ -1306,70 +1306,331 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const getCustomerScheduleStyles = () => {
     const { contractual } = DOCUMENT_COLOR_SCHEME;
     return `
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
-    body { background-color: #f5f7fa; color: #343a40; padding: 0; }
-    .container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .header { background-color: ${contractual.header}; color: white; padding: 20px 15px; text-align: center; }
-    .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-    .company-info { font-size: 13px; opacity: 0.9; }
-    .section { padding: 0; margin-bottom: 15px; }
-    .section-title { font-size: 16px; font-weight: bold; margin: 0 15px; padding: 15px 0 10px 0; color: #2d3748; border-bottom: 2px solid ${contractual.border}; margin-bottom: 15px; }
-    .product-info-box { margin: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .info-row { display: flex; border-bottom: 1px solid #e2e8f0; }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8f9fa; 
+      color: #2c3e50; 
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .container { 
+      max-width: 900px; 
+      margin: 0 auto; 
+      background: white; 
+      box-shadow: 0 4px 20px rgba(44, 82, 130, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    /* 헤더 영역 - 브랜드 컬러 적용 */
+    .header { 
+      background: linear-gradient(135deg, #2c5282 0%, #4a6fa5 100%);
+      color: white; 
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      transform: rotate(45deg);
+    }
+    .logo { 
+      font-size: 28px; 
+      font-weight: 700; 
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+      position: relative;
+    }
+    .company-info { 
+      font-size: 14px; 
+      opacity: 0.95;
+      line-height: 1.5;
+    }
+    
+    /* 섹션 스타일 */
+    .section { 
+      padding: 0; 
+      margin-bottom: 24px; 
+    }
+    .section-title { 
+      font-size: 18px; 
+      font-weight: 700; 
+      margin: 0 24px; 
+      padding: 20px 0 12px 0; 
+      color: #2c5282; 
+      border-bottom: 2px solid #e8ecf1;
+      letter-spacing: -0.3px;
+    }
+    
+    /* 상품 정보 박스 - 개선된 디자인 */
+    .product-info-box { 
+      margin: 20px 24px; 
+      border-radius: 12px; 
+      overflow: hidden; 
+      box-shadow: 0 2px 12px rgba(44, 82, 130, 0.06);
+      border: 1px solid #e8ecf1;
+    }
+    .info-row { 
+      display: flex; 
+      border-bottom: 1px solid #f1f4f7;
+      transition: background-color 0.2s ease;
+    }
+    .info-row:hover {
+      background-color: #fafbfc;
+    }
     .info-row:last-child { border-bottom: none; }
-    .info-label { width: 120px; padding: 12px 15px; background-color: #edf2f7; font-weight: bold; font-size: 14px; }
-    .info-value { flex: 1; padding: 12px 15px; font-size: 14px; }
-    .important { font-weight: 600; color: #2d3748; }
-    .notice-box { margin: 15px; background-color: #f8f9fa; border-left: 3px solid #4299e1; border-radius: 6px; padding: 14px 16px; }
-    .reservation-box { margin: 15px; background-color: #e7f3ff; border: 1px solid #4299e1; border-radius: 8px; padding: 20px; }
+    .info-label { 
+      width: 140px; 
+      padding: 14px 18px; 
+      background-color: #f8f9fb; 
+      font-weight: 500; 
+      font-size: 14px;
+      color: #4a5568;
+      border-right: 1px solid #e8ecf1;
+    }
+    .info-value { 
+      flex: 1; 
+      padding: 14px 18px; 
+      font-size: 14px;
+      color: #2c3e50;
+    }
+    .important { 
+      font-weight: 600; 
+      color: #2c5282;
+      font-size: 15px;
+    }
+    
+    /* 공지사항 박스 - 브랜드 컬러 활용 */
+    .notice-box { 
+      margin: 20px 24px; 
+      background-color: #f8fbff; 
+      border-left: 4px solid #4a6fa5; 
+      border-radius: 8px; 
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(74, 111, 165, 0.08);
+    }
+    .reservation-box { 
+      margin: 20px 24px; 
+      background: linear-gradient(135deg, #f0f6ff 0%, #e8f2ff 100%);
+      border: 1px solid #d3e3f4; 
+      border-radius: 10px; 
+      padding: 24px;
+      box-shadow: 0 3px 12px rgba(74, 111, 165, 0.12);
+    }
     .reservation-list { list-style: none; padding: 0; }
-    .reservation-list li { padding: 8px 0; color: #2c5282; font-size: 14px; border-bottom: 1px solid #d3e4f4; }
+    .reservation-list li { 
+      padding: 10px 0; 
+      color: #2c5282; 
+      font-size: 14px; 
+      border-bottom: 1px solid #e3ecf7;
+      transition: padding-left 0.2s ease;
+    }
+    .reservation-list li:hover {
+      padding-left: 8px;
+    }
     .reservation-list li:last-child { border-bottom: none; }
-    .reservation-list li:before { content: "•"; margin-right: 8px; color: #4299e1; font-weight: bold; }
-    .notice-title { font-weight: bold; color: #2b6cb0; margin-bottom: 10px; }
-    .notice-list { list-style: none; }
-    .notice-list li { padding: 4px 0; color: #4A5568; font-size: 14px; }
-    .notice-list li:before { content: "•"; margin-right: 8px; color: #4299e1; }
-    .notice-item { margin-bottom: 10px; font-size: 14px; }
-    .notice-item strong { color: #2b6cb0; }
-    .usage-section { margin: 15px; }
-    .usage-item { margin-bottom: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .usage-header { background: ${contractual.header}; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
-    .usage-content { color: #4A5568; font-size: 14px; line-height: 1.6; padding: 15px; background-color: white; }
-    .day-schedule { background: white; border-radius: 8px; margin: 0 15px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .day-title { background: ${contractual.header}; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; margin-bottom: 2px; }
-    .day-round { font-weight: bold; }
-    .day-content { padding: 15px; }
-    .schedule-content { margin-bottom: 15px; color: #4a5568; font-size: 14px; }
-    .schedule-content p { margin-top: 8px; }
-    .schedule-timeline { margin: 10px 0; }
-    .timeline-item { display: flex; align-items: center; margin-bottom: 16px; padding: 12px 16px; border-radius: 8px; background-color: #f8f9fa; transition: all 0.2s; }
-    .timeline-item:hover { background-color: #f3f4f6; transform: translateX(2px); }
-    .timeline-icon { font-size: 18px; margin-right: 12px; flex-shrink: 0; }
-    .timeline-content { flex: 1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; line-height: 1.6; }
-    .timeline-time { font-weight: bold; color: #4299e1; font-size: 16px; white-space: nowrap; }
-    .timeline-text { color: #4a5568; font-size: 14px; line-height: 1.6; }
-    /* 색상 최소화 - 골프만 강조, 식사는 아주 연한 베이지 */
-    .timeline-item.golf { background-color: #e6f4ea; }
-    .timeline-item.meal { background-color: #fdf9f3; }
-    .timeline-item.departure { background-color: #f8f9fa; }
-    .timeline-item.transit { background-color: #f8f9fa; }
-    .timeline-item.rest { background-color: #f8f9fa; }
-    .timeline-item.arrival { background-color: #f8f9fa; }
-    .timeline-item.shopping { background-color: #f8f9fa; }
-    .timeline-item.tour { background-color: #f8f9fa; }
-    .schedule-description { color: #4a5568; line-height: 1.6; }
-    .meal-info { display: flex; background: #edf2f7; padding: 10px; border-radius: 6px; justify-content: space-around; }
-    .meal { text-align: center; flex: 1; }
-    .meal-status { font-weight: bold; margin-top: 4px; }
-    .meal-menu-section { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
-    .meal-menu-title { font-weight: bold; color: #2c5282; margin-bottom: 5px; font-size: 13px; }
-    .meal-menu-item { font-size: 13px; color: #4a5568; padding: 2px 0; }
-    .included { color: #2F855A; }
-    .not-included { color: #C53030; }
-    .other-notice { margin: 15px; padding: 15px; background-color: #fffaf0; border: 1px solid #feb2b2; border-radius: 6px; color: #7b341e; font-size: 14px; }
-    .footer { text-align: center; padding: 20px; background-color: #f8f9fa; font-size: 14px; }
-    @media print { body { padding: 0; } .container { box-shadow: none; } }
+    .reservation-list li:before { 
+      content: "▸"; 
+      margin-right: 10px; 
+      color: #4a6fa5; 
+      font-weight: bold; 
+    }
+    
+    /* 일정 카드 - 모던한 디자인 */
+    .day-schedule { 
+      background: white; 
+      border-radius: 12px; 
+      margin: 0 24px 20px; 
+      box-shadow: 0 3px 15px rgba(44, 82, 130, 0.08);
+      border: 1px solid #e8ecf1;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .day-schedule:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(44, 82, 130, 0.12);
+    }
+    .day-title { 
+      background: linear-gradient(135deg, #2c5282 0%, #3a5f8f 100%);
+      color: white; 
+      padding: 14px 20px; 
+      font-weight: 600; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      font-size: 16px;
+      letter-spacing: -0.2px;
+    }
+    .day-round { 
+      font-weight: 500;
+      font-size: 14px;
+      opacity: 0.95;
+    }
+    .day-content { 
+      padding: 20px; 
+    }
+    
+    /* 타임라인 아이템 - 개선된 시각화 */
+    .schedule-timeline { margin: 16px 0; }
+    .timeline-item { 
+      display: flex; 
+      align-items: center; 
+      margin-bottom: 12px; 
+      padding: 14px 18px; 
+      border-radius: 10px; 
+      background-color: #f8f9fb; 
+      border: 1px solid #e8ecf1;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .timeline-item:hover { 
+      background-color: #f0f4f8;
+      border-color: #d3dce6;
+      transform: translateX(4px);
+    }
+    .timeline-icon { 
+      font-size: 20px; 
+      margin-right: 14px; 
+      flex-shrink: 0;
+      filter: saturate(1.2);
+    }
+    .timeline-time { 
+      font-weight: 600; 
+      color: #2c5282; 
+      font-size: 15px; 
+      white-space: nowrap;
+      margin-right: 12px;
+    }
+    .timeline-text { 
+      color: #4a5568; 
+      font-size: 14px; 
+      line-height: 1.5;
+    }
+    
+    /* 특별 타임라인 아이템 스타일 */
+    .timeline-item.golf { 
+      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f1 100%);
+      border-color: #c8e6c9;
+    }
+    .timeline-item.golf:hover {
+      background: linear-gradient(135deg, #dcedc8 0%, #e8f5e9 100%);
+    }
+    .timeline-item.meal { 
+      background-color: #fffbf0;
+      border-color: #ffe0b2;
+    }
+    
+    /* 식사 정보 - 시각적 개선 */
+    .meal-info { 
+      display: flex; 
+      background: linear-gradient(135deg, #f5f7fa 0%, #f0f3f7 100%);
+      padding: 16px; 
+      border-radius: 10px; 
+      justify-content: space-around;
+      margin-top: 20px;
+      border: 1px solid #e3e7ed;
+    }
+    .meal { 
+      text-align: center; 
+      flex: 1;
+      padding: 8px;
+    }
+    .meal-status { 
+      font-weight: 600; 
+      margin-top: 6px;
+      font-size: 18px;
+    }
+    .included { color: #27ae60; }
+    .not-included { color: #e74c3c; }
+    
+    /* 식사 메뉴 섹션 */
+    .meal-menu-section { 
+      margin-top: 16px; 
+      padding: 14px 16px; 
+      background: #fafbfc; 
+      border-radius: 8px;
+      border: 1px solid #e8ecf1;
+    }
+    .meal-menu-title { 
+      font-weight: 600; 
+      color: #2c5282; 
+      margin-bottom: 8px; 
+      font-size: 14px;
+    }
+    .meal-menu-item { 
+      font-size: 13px; 
+      color: #5a6c7d; 
+      padding: 4px 0;
+      padding-left: 12px;
+      position: relative;
+    }
+    .meal-menu-item:before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #a0aec0;
+    }
+    
+    /* 이용 안내 섹션 */
+    .usage-section { margin: 20px 24px; }
+    .usage-item { 
+      margin-bottom: 20px; 
+      border-radius: 10px; 
+      overflow: hidden; 
+      box-shadow: 0 2px 10px rgba(44, 82, 130, 0.06);
+      border: 1px solid #e8ecf1;
+      transition: transform 0.2s ease;
+    }
+    .usage-item:hover {
+      transform: translateY(-2px);
+    }
+    .usage-header { 
+      background: linear-gradient(135deg, #2c5282 0%, #3a5f8f 100%);
+      color: white; 
+      padding: 12px 18px; 
+      font-weight: 600; 
+      font-size: 15px;
+      letter-spacing: -0.2px;
+    }
+    .usage-content { 
+      color: #4a5568; 
+      font-size: 14px; 
+      line-height: 1.8; 
+      padding: 18px; 
+      background-color: white;
+    }
+    
+    /* 푸터 */
+    .footer { 
+      text-align: center; 
+      padding: 28px; 
+      background: linear-gradient(135deg, #f8f9fb 0%, #f0f3f7 100%);
+      font-size: 14px;
+      color: #5a6c7d;
+      border-top: 1px solid #e8ecf1;
+    }
+    .footer p {
+      margin: 4px 0;
+    }
+    
+    /* 프린트 스타일 */
+    @media print { 
+      body { padding: 0; background: white; } 
+      .container { box-shadow: none; border-radius: 0; }
+      .day-schedule:hover { transform: none; box-shadow: none; }
+    }
     `;
   };
 

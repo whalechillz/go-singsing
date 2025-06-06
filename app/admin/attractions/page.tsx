@@ -2,29 +2,37 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-
-
-
 import { Plus, Edit, Trash2, MapPin, Clock, Star, Tag, Image as ImageIcon, Phone } from 'lucide-react';
 
-type Category = '관광명소' | '휴게소' | '맛집' | '쇼핑' | '액티비티';
+type Category = 'tourist_spot' | 'rest_area' | 'restaurant' | 'shopping' | 'activity';
 
 interface TouristAttraction {
-  id: number;
+  id: string; // UUID로 변경
   name: string;
   category: Category;
   description?: string;
   address?: string;
-  phone?: string;
-  opening_hours?: string;
-  admission_fee?: string;
+  contact_info?: string; // phone에서 contact_info로 변경
+  operating_hours?: string;
+  main_image_url?: string;
+  image_urls?: string[];
   recommended_duration?: number;
-  images?: string[];
   features?: string[];
   tags?: string[];
+  region?: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
+
+// 카테고리 한글 매핑
+const categoryMap: Record<Category, string> = {
+  'tourist_spot': '관광명소',
+  'rest_area': '휴게소',
+  'restaurant': '맛집',
+  'shopping': '쇼핑',
+  'activity': '액티비티'
+};
 
 export default function AttractionsPage() {
   const [attractions, setAttractions] = useState<TouristAttraction[]>([]);
@@ -36,16 +44,18 @@ export default function AttractionsPage() {
   // Form states
   const [formData, setFormData] = useState({
     name: '',
-    category: '관광명소' as Category,
+    category: 'tourist_spot' as Category,
     description: '',
     address: '',
-    phone: '',
-    opening_hours: '',
-    admission_fee: '',
+    contact_info: '',
+    operating_hours: '',
+    main_image_url: '',
     recommended_duration: 60,
-    images: [''],
+    image_urls: [''],
     features: [''],
-    tags: ['']
+    tags: [''],
+    region: '',
+    is_active: true
   });
 
   useEffect(() => {
@@ -81,16 +91,28 @@ export default function AttractionsPage() {
     
     try {
       const dataToSubmit = {
-        ...formData,
-        images: formData.images.filter(img => img.trim()),
+        name: formData.name,
+        category: formData.category,
+        description: formData.description || null,
+        address: formData.address || null,
+        contact_info: formData.contact_info || null,
+        operating_hours: formData.operating_hours || null,
+        main_image_url: formData.main_image_url || null,
+        image_urls: formData.image_urls.filter(img => img.trim()),
         features: formData.features.filter(feat => feat.trim()),
-        tags: formData.tags.filter(tag => tag.trim())
+        tags: formData.tags.filter(tag => tag.trim()),
+        region: formData.region || null,
+        is_active: formData.is_active,
+        recommended_duration: formData.recommended_duration
       };
       
       if (editingAttraction) {
         const { error } = await supabase
           .from('tourist_attractions')
-          .update(dataToSubmit)
+          .update({
+            ...dataToSubmit,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', editingAttraction.id);
         
         if (error) throw error;
@@ -109,11 +131,11 @@ export default function AttractionsPage() {
       fetchAttractions();
     } catch (error) {
       console.error('Error saving attraction:', error);
-      alert('저장에 실패했습니다');
+      alert('저장에 실패했습니다: ' + (error as any).message);
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('정말 삭제하시겠습니까?')) return;
     
     try {
@@ -138,13 +160,15 @@ export default function AttractionsPage() {
       category: attraction.category,
       description: attraction.description || '',
       address: attraction.address || '',
-      phone: attraction.phone || '',
-      opening_hours: attraction.opening_hours || '',
-      admission_fee: attraction.admission_fee || '',
+      contact_info: attraction.contact_info || '',
+      operating_hours: attraction.operating_hours || '',
+      main_image_url: attraction.main_image_url || '',
       recommended_duration: attraction.recommended_duration || 60,
-      images: attraction.images?.length ? attraction.images : [''],
+      image_urls: attraction.image_urls?.length ? attraction.image_urls : [''],
       features: attraction.features?.length ? attraction.features : [''],
-      tags: attraction.tags?.length ? attraction.tags : ['']
+      tags: attraction.tags?.length ? attraction.tags : [''],
+      region: attraction.region || '',
+      is_active: attraction.is_active
     });
     setIsModalOpen(true);
   };
@@ -153,34 +177,36 @@ export default function AttractionsPage() {
     setEditingAttraction(null);
     setFormData({
       name: '',
-      category: '관광명소',
+      category: 'tourist_spot',
       description: '',
       address: '',
-      phone: '',
-      opening_hours: '',
-      admission_fee: '',
+      contact_info: '',
+      operating_hours: '',
+      main_image_url: '',
       recommended_duration: 60,
-      images: [''],
+      image_urls: [''],
       features: [''],
-      tags: ['']
+      tags: [''],
+      region: '',
+      is_active: true
     });
   };
 
-  const addArrayField = (field: 'images' | 'features' | 'tags') => {
+  const addArrayField = (field: 'image_urls' | 'features' | 'tags') => {
     setFormData(prev => ({
       ...prev,
       [field]: [...prev[field], '']
     }));
   };
 
-  const updateArrayField = (field: 'images' | 'features' | 'tags', index: number, value: string) => {
+  const updateArrayField = (field: 'image_urls' | 'features' | 'tags', index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].map((item, i) => i === index ? value : item)
     }));
   };
 
-  const removeArrayField = (field: 'images' | 'features' | 'tags', index: number) => {
+  const removeArrayField = (field: 'image_urls' | 'features' | 'tags', index: number) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index)
@@ -188,11 +214,11 @@ export default function AttractionsPage() {
   };
 
   const categoryColors: Record<Category, string> = {
-    '관광명소': 'bg-blue-100 text-blue-800',
-    '휴게소': 'bg-gray-100 text-gray-800',
-    '맛집': 'bg-orange-100 text-orange-800',
-    '쇼핑': 'bg-purple-100 text-purple-800',
-    '액티비티': 'bg-green-100 text-green-800'
+    'tourist_spot': 'bg-blue-100 text-blue-800',
+    'rest_area': 'bg-gray-100 text-gray-800',
+    'restaurant': 'bg-orange-100 text-orange-800',
+    'shopping': 'bg-purple-100 text-purple-800',
+    'activity': 'bg-green-100 text-green-800'
   };
 
   return (
@@ -226,17 +252,17 @@ export default function AttractionsPage() {
         >
           전체
         </button>
-        {(['관광명소', '휴게소', '맛집', '쇼핑', '액티비티'] as Category[]).map(category => (
+        {(Object.entries(categoryMap) as [Category, string][]).map(([key, value]) => (
           <button
-            key={category}
+            key={key}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              selectedCategory === category
+              selectedCategory === key
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
-            onClick={() => setSelectedCategory(category)}
+            onClick={() => setSelectedCategory(key)}
           >
-            {category}
+            {value}
           </button>
         ))}
       </div>
@@ -249,10 +275,10 @@ export default function AttractionsPage() {
           {attractions.map(attraction => (
             <div key={attraction.id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
               {/* 이미지 섹션 */}
-              {attraction.images && attraction.images[0] ? (
+              {attraction.main_image_url ? (
                 <div className="relative h-48 overflow-hidden">
                   <img 
-                    src={attraction.images[0]} 
+                    src={attraction.main_image_url} 
                     alt={attraction.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
@@ -296,7 +322,7 @@ export default function AttractionsPage() {
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-bold text-gray-900 flex-1 line-clamp-1">{attraction.name}</h3>
                   <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium flex-shrink-0 ${categoryColors[attraction.category]}`}>
-                    {attraction.category}
+                    {categoryMap[attraction.category]}
                   </span>
                 </div>
                 
@@ -312,10 +338,10 @@ export default function AttractionsPage() {
                     </div>
                   )}
                   
-                  {attraction.phone && (
+                  {attraction.contact_info && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="w-4 h-4 flex-shrink-0 text-gray-400" />
-                      <span>{attraction.phone}</span>
+                      <span>{attraction.contact_info}</span>
                     </div>
                   )}
                   
@@ -323,13 +349,6 @@ export default function AttractionsPage() {
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Clock className="w-4 h-4 flex-shrink-0 text-gray-400" />
                       <span>추천 체류시간: {attraction.recommended_duration}분</span>
-                    </div>
-                  )}
-                  
-                  {attraction.admission_fee && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <span className="w-4 h-4 flex-shrink-0 text-gray-400 text-center">₩</span>
-                      <span>{attraction.admission_fee}</span>
                     </div>
                   )}
                 </div>
@@ -351,7 +370,7 @@ export default function AttractionsPage() {
 
       {/* 추가/수정 모달 */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold mb-4">
               {editingAttraction ? '관광지 수정' : '새 관광지 추가'}
@@ -376,11 +395,9 @@ export default function AttractionsPage() {
                     value={formData.category}
                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as Category }))}
                   >
-                    <option value="관광명소">관광명소</option>
-                    <option value="휴게소">휴게소</option>
-                    <option value="맛집">맛집</option>
-                    <option value="쇼핑">쇼핑</option>
-                    <option value="액티비티">액티비티</option>
+                    {Object.entries(categoryMap).map(([key, value]) => (
+                      <option key={key} value={key}>{value}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -406,11 +423,11 @@ export default function AttractionsPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-1">전화번호</label>
+                  <label className="block text-sm font-medium mb-1">연락처</label>
                   <input
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    value={formData.contact_info}
+                    onChange={(e) => setFormData(prev => ({ ...prev, contact_info: e.target.value }))}
                   />
                 </div>
               </div>
@@ -420,17 +437,18 @@ export default function AttractionsPage() {
                   <label className="block text-sm font-medium mb-1">운영시간</label>
                   <input
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.opening_hours}
-                    onChange={(e) => setFormData(prev => ({ ...prev, opening_hours: e.target.value }))}
+                    value={formData.operating_hours}
+                    onChange={(e) => setFormData(prev => ({ ...prev, operating_hours: e.target.value }))}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-1">입장료</label>
+                  <label className="block text-sm font-medium mb-1">지역</label>
                   <input
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.admission_fee}
-                    onChange={(e) => setFormData(prev => ({ ...prev, admission_fee: e.target.value }))}
+                    value={formData.region}
+                    onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
+                    placeholder="예: 전남 순천"
                   />
                 </div>
                 
@@ -440,27 +458,38 @@ export default function AttractionsPage() {
                     type="number"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.recommended_duration}
-                    onChange={(e) => setFormData(prev => ({ ...prev, recommended_duration: parseInt(e.target.value) }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, recommended_duration: parseInt(e.target.value) || 60 }))}
                   />
                 </div>
               </div>
 
-              {/* 이미지 URL */}
+              {/* 대표 이미지 URL */}
               <div>
-                <label className="block text-sm font-medium mb-1">이미지 URL</label>
-                {formData.images.map((image, index) => (
+                <label className="block text-sm font-medium mb-1">대표 이미지 URL</label>
+                <input
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.main_image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, main_image_url: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+
+              {/* 추가 이미지 URLs */}
+              <div>
+                <label className="block text-sm font-medium mb-1">추가 이미지 URL</label>
+                {formData.image_urls.map((image, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={image}
-                      onChange={(e) => updateArrayField('images', index, e.target.value)}
+                      onChange={(e) => updateArrayField('image_urls', index, e.target.value)}
                       placeholder="https://..."
                     />
                     <button
                       type="button"
                       className="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-                      onClick={() => removeArrayField('images', index)}
-                      disabled={formData.images.length === 1}
+                      onClick={() => removeArrayField('image_urls', index)}
+                      disabled={formData.image_urls.length === 1}
                     >
                       삭제
                     </button>
@@ -469,7 +498,7 @@ export default function AttractionsPage() {
                 <button
                   type="button"
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 mt-2 flex items-center gap-2"
-                  onClick={() => addArrayField('images')}
+                  onClick={() => addArrayField('image_urls')}
                 >
                   <Plus className="w-4 h-4" />
                   이미지 추가
@@ -536,6 +565,20 @@ export default function AttractionsPage() {
                   <Plus className="w-4 h-4" />
                   태그 추가
                 </button>
+              </div>
+
+              {/* 활성 상태 */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                />
+                <label htmlFor="is_active" className="text-sm font-medium">
+                  활성 상태 (체크하면 선택 가능한 관광지로 표시됩니다)
+                </label>
               </div>
 
               <div className="flex justify-end gap-4 pt-4">
