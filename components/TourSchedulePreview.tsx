@@ -703,89 +703,88 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       <div class="header-subtitle">${tourData.title}</div>
     </div>
     
-    <div class="boarding-cards">
-      ${tourBoardingPlaces.map((place: any, index: number) => {
-        const boardingPlace = place.boarding_place;
-        if (!boardingPlace) return '';
-        
-        return `
-        <div class="boarding-card">
-          <div class="card-border"></div>
-          <div class="card-content">
-            <div class="card-title">${boardingPlace.name}</div>
-            <div class="card-time">${place.departure_time ? place.departure_time.slice(0, 5) : '미정'}</div>
-            <div class="card-date">${new Date(tourData.start_date).toLocaleDateString('ko-KR')}</div>
-            <div class="card-info">
-              <div class="info-parking">주차: ${boardingPlace.parking_info || '무료'}</div>
-              <div class="info-arrival">${place.arrival_time ? place.arrival_time.slice(0, 5) : getArrivalTime(place.departure_time)} 도착</div>
-            </div>
-            
-            ${boardingPlace.boarding_main || boardingPlace.boarding_sub || boardingPlace.parking_main ? `
-              <div class="location-info">
-                ${boardingPlace.boarding_main ? `
-                  <div class="location-section">
-                    <p class="location-title">버스탑승지</p>
-                    <p class="location-main">${boardingPlace.boarding_main}</p>
-                    ${boardingPlace.boarding_sub ? `<p class="location-sub">${boardingPlace.boarding_sub}</p>` : ''}
-                  </div>
-                ` : ''}
-                
-                ${boardingPlace.parking_main ? `
-                  <div class="location-section">
-                    <p class="location-title">주차장 오는길</p>
-                    <p class="location-main">${boardingPlace.parking_main}</p>
-                    ${boardingPlace.parking_map_url ? `
-                      <a href="${boardingPlace.parking_map_url}" class="map-link" target="_blank">네이버 지도에서 보기</a>
-                    ` : ''}
-                  </div>
-                ` : ''}
-              </div>
-            ` : ''}
-          </div>
-        </div>
-        `;
-      }).join('') || '<p class="text-center py-8">탑승지 정보가 없습니다.</p>'}
-    </div>
-    
-    ${/* 개선된 경유지 정보 카드 형식 */''}
-    ${(tourBoardingPlaces.length > 0 || tourWaypoints.length > 0) ? `
+    ${/* 통합된 경로 카드 (탑승지 + 경유지) */''}
     <div class="route-section">
       <h3 class="section-title">이동 경로 및 정차 정보</h3>
-      <div class="route-cards">
+      <div class="boarding-cards">
         ${tourBoardingPlaces.map((place: any, index: number) => {
           const boardingPlace = place.boarding_place;
           if (!boardingPlace) return '';
+          
           return `
-            <div class="route-card boarding-stop">
-              <div class="route-number">${index + 1}</div>
-              <div class="route-content">
-                <div class="route-time">${place.departure_time ? place.departure_time.slice(0, 5) : '미정'}</div>
-                <div class="route-place">${boardingPlace.name}</div>
-                <div class="route-type">출발</div>
+          <div class="boarding-card route-stop">
+            <div class="card-border"></div>
+            <div class="card-content">
+              <div class="route-header">
+                <div class="route-number">${index + 1}</div>
+                <div class="route-info-main">
+                  <div class="card-title">${boardingPlace.name}</div>
+                  <div class="card-time">${place.departure_time ? place.departure_time.slice(0, 5) : '미정'}</div>
+                  <div class="route-badge boarding-badge">탑승지</div>
+                </div>
               </div>
+              
+              <div class="card-info">
+                <div class="info-parking">주차: ${boardingPlace.parking_info || '무료'}</div>
+                <div class="info-arrival">${place.arrival_time ? place.arrival_time.slice(0, 5) : getArrivalTime(place.departure_time)} 도착</div>
+              </div>
+              
+              ${boardingPlace.boarding_main || boardingPlace.boarding_sub || boardingPlace.parking_main ? `
+                <div class="location-info">
+                  ${boardingPlace.boarding_main ? `
+                    <div class="location-section">
+                      <p class="location-title">버스탑승지</p>
+                      <p class="location-main">${boardingPlace.boarding_main}</p>
+                      ${boardingPlace.boarding_sub ? `<p class="location-sub">${boardingPlace.boarding_sub}</p>` : ''}
+                    </div>
+                  ` : ''}
+                  
+                  ${boardingPlace.parking_main ? `
+                    <div class="location-section">
+                      <p class="location-title">주차장 오는길</p>
+                      <p class="location-main">${boardingPlace.parking_main}</p>
+                      ${boardingPlace.parking_map_url ? `
+                        <a href="${boardingPlace.parking_map_url}" class="map-link" target="_blank">네이버 지도에서 보기</a>
+                      ` : ''}
+                    </div>
+                  ` : ''}
+                </div>
+              ` : ''}
             </div>
+          </div>
           `;
         }).join('')}
         
         ${tourWaypoints.map((waypoint: any, waypointIndex: number) => {
           const orderNumber = tourBoardingPlaces.length + waypointIndex + 1;
+          const isRestStop = waypoint.waypoint_name?.includes('휴게소');
+          const isTourist = waypoint.waypoint_name?.includes('송광사') || waypoint.waypoint_name?.includes('관광');
+          
           return `
-            <div class="route-card waypoint">
-              <div class="route-number">${orderNumber}</div>
-              <div class="route-content">
-                <div class="route-time">${waypoint.waypoint_time ? waypoint.waypoint_time.slice(0, 5) : '미정'}</div>
-                <div class="route-place">${waypoint.waypoint_name}</div>
-                <div class="route-info">
-                  <span class="route-duration">약 ${waypoint.waypoint_duration}분</span>
-                  ${waypoint.waypoint_description ? `<span class="route-desc">${waypoint.waypoint_description}</span>` : ''}
+          <div class="boarding-card waypoint-stop">
+            <div class="card-border ${isRestStop ? 'rest-stop' : isTourist ? 'tourist-stop' : ''}"></div>
+            <div class="card-content">
+              <div class="route-header">
+                <div class="route-number ${isRestStop ? 'rest' : isTourist ? 'tourist' : ''}">${orderNumber}</div>
+                <div class="route-info-main">
+                  <div class="card-title">${waypoint.waypoint_name}</div>
+                  <div class="card-time">${waypoint.waypoint_time ? waypoint.waypoint_time.slice(0, 5) : '미정'}</div>
+                  <div class="route-badge ${isRestStop ? 'rest-badge' : isTourist ? 'tourist-badge' : 'waypoint-badge'}">
+                    ${isRestStop ? '휴게소' : isTourist ? '관광지' : '경유지'}
+                  </div>
                 </div>
               </div>
+              
+              <div class="waypoint-info">
+                <div class="waypoint-duration">정차시간: 약 ${waypoint.waypoint_duration}분</div>
+                ${waypoint.waypoint_description ? `<div class="waypoint-desc">${waypoint.waypoint_description}</div>` : ''}
+              </div>
             </div>
+          </div>
           `;
         }).join('')}
       </div>
     </div>
-    ` : ''}
     
     <div class="common-info">
       ${documentFooters.boarding_guide?.['탑승 주의사항'] ? `
@@ -1348,11 +1347,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .header { background-color: ${operational.header}; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
     .header-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     .header-subtitle { font-size: 16px; opacity: 0.9; }
-    .boarding-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px; }
+    .boarding-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 25px; }
     .boarding-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
     .card-border { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #4299e1; }
+    .card-border.rest-stop { background: #f59e0b; }
+    .card-border.tourist-stop { background: #10b981; }
     .card-content { padding: 20px 20px 20px 26px; }
-    .card-title { font-size: 20px; font-weight: bold; color: ${operational.header}; margin-bottom: 15px; }
+    .card-title { font-size: 20px; font-weight: bold; color: ${operational.header}; margin-bottom: 8px; }
     .card-time { font-size: 32px; font-weight: bold; color: #e53e3e; margin-bottom: 5px; }
     .card-date { font-size: 16px; color: #4a5568; margin-bottom: 10px; }
     .card-info { display: flex; gap: 15px; margin-top: 15px; font-size: 14px; }
@@ -1365,6 +1366,23 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .location-main { font-weight: 600; color: #2d3748; margin-bottom: 2px; }
     .location-sub { color: #718096; font-size: 13px; }
     .map-link { display: inline-block; background-color: #4299e1; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-top: 5px; font-size: 13px; }
+    /* 통합된 카드 스타일 */
+    .route-header { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 15px; }
+    .route-info-main { flex: 1; }
+    .route-number { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; color: white; background-color: #4299e1; border-radius: 8px; flex-shrink: 0; }
+    .route-number.rest { background-color: #f59e0b; }
+    .route-number.tourist { background-color: #10b981; }
+    .route-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500; margin-top: 8px; }
+    .boarding-badge { background-color: #e0e7ff; color: #4338ca; }
+    .rest-badge { background-color: #fef3c7; color: #92400e; }
+    .tourist-badge { background-color: #d1fae5; color: #065f46; }
+    .waypoint-badge { background-color: #f3e8ff; color: #7c3aed; }
+    .waypoint-info { background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
+    .waypoint-duration { font-weight: 600; color: #4a5568; margin-bottom: 4px; }
+    .waypoint-desc { color: #718096; font-size: 14px; }
+    .route-stop .card-time { font-size: 28px; }
+    .waypoint-stop .card-time { font-size: 24px; color: #4a5568; }
+    .waypoint-stop .card-title { font-size: 18px; }
     .common-info { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
     .section-title { font-size: 18px; font-weight: bold; color: ${operational.header}; margin-bottom: 15px; }
     .notice-content { white-space: pre-line; color: #4a5568; margin-bottom: 15px; }
@@ -1376,29 +1394,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .contact-phone { font-size: 16px; color: #4a5568; margin: 5px 0; }
     /* 경로 섹션 스타일 */
     .route-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    .route-cards { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
-    .route-card { display: flex; align-items: center; gap: 20px; padding: 15px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; transition: all 0.2s ease; }
-    .route-card:hover { background-color: #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    /* 둥근모서리 사각형 숫자 */
-    .route-number { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; color: white; border-radius: 8px; flex-shrink: 0; }
-    .boarding-stop .route-number { background-color: #4299e1; }
-    .waypoint .route-number { background-color: #9333ea; }
-    .route-content { flex: 1; display: flex; align-items: center; gap: 20px; }
-    .route-time { font-size: 20px; font-weight: bold; color: #1a202c; min-width: 60px; }
-    .route-place { font-size: 16px; font-weight: 600; color: #2d3748; flex: 1; }
-    .route-type { background-color: #e0e7ff; color: #4338ca; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; }
-    .route-info { display: flex; gap: 10px; align-items: center; }
-    .route-duration { background-color: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 14px; }
-    .route-desc { color: #6b7280; font-size: 14px; }
+    .footer { text-align: center; padding: 15px; background-color: ${operational.header}; color: white; border-radius: 10px; margin-top: 20px; }
     /* 모바일 대응 */
     @media (max-width: 640px) { 
-      .route-card { flex-direction: column; align-items: flex-start; gap: 10px; } 
-      .route-content { width: 100%; flex-direction: column; align-items: flex-start; gap: 10px; } 
-      .route-number { width: 32px; height: 32px; font-size: 16px; } 
-      .route-time { font-size: 18px; } 
-      .route-place { font-size: 15px; } 
+      .boarding-cards { grid-template-columns: 1fr; }
+      .route-header { flex-direction: column; gap: 10px; }
+      .route-number { width: 32px; height: 32px; font-size: 16px; }
+      .card-time { font-size: 24px !important; }
+      .card-title { font-size: 18px; }
     }
-    .footer { text-align: center; padding: 15px; background-color: ${operational.header}; color: white; border-radius: 10px; margin-top: 20px; }
     @media print { body { padding: 0; } .container { max-width: 100%; } }
     `;
   };
