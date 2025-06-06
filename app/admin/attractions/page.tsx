@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit, Trash2, MapPin, Clock, Star, Tag, Image as ImageIcon, Phone } from 'lucide-react';
+import { uploadImage, deleteImage, validateImageFile } from '@/utils/imageUpload';
+import { Plus, Edit, Trash2, MapPin, Clock, Star, Tag, Image as ImageIcon, Phone, Upload, X as XIcon } from 'lucide-react';
 
 type Category = 'tourist_spot' | 'rest_area' | 'restaurant' | 'shopping' | 'activity';
 
@@ -40,6 +41,9 @@ export default function AttractionsPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAttraction, setEditingAttraction] = useState<TouristAttraction | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -83,6 +87,54 @@ export default function AttractionsPage() {
       alert('관광지 목록을 불러오는데 실패했습니다');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 파일 유효성 검사
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      alert(validation.error);
+      return;
+    }
+
+    // 미리보기 표시
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // 이미지 업로드
+    setUploadingImage(true);
+    try {
+      const { url, error } = await uploadImage(file, 'tourist-attractions');
+      if (error) {
+        alert('이미지 업로드에 실패했습니다');
+        setImagePreview('');
+      } else if (url) {
+        setFormData(prev => ({ ...prev, main_image_url: url }));
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('이미지 업로드 중 오류가 발생했습니다');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = async () => {
+    if (formData.main_image_url && formData.main_image_url.includes('supabase')) {
+      // Supabase Storage에서 삭제
+      await deleteImage(formData.main_image_url);
+    }
+    setFormData(prev => ({ ...prev, main_image_url: '' }));
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -170,6 +222,7 @@ export default function AttractionsPage() {
       region: attraction.region || '',
       is_active: attraction.is_active
     });
+    setImagePreview(attraction.main_image_url || '');
     setIsModalOpen(true);
   };
 
@@ -190,6 +243,10 @@ export default function AttractionsPage() {
       region: '',
       is_active: true
     });
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const addArrayField = (field: 'image_urls' | 'features' | 'tags') => {
@@ -282,6 +339,13 @@ export default function AttractionsPage() {
                     alt={attraction.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
+                  {/* 추가 이미지 수 표시 */}
+                  {attraction.image_urls && attraction.image_urls.length > 0 && attraction.image_urls[0] && (
+                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                      <ImageIcon className="w-3 h-3" />
+                      {attraction.image_urls.filter(url => url).length + 1}
+                    </div>
+                  )}
                   <div className="absolute top-2 right-2 flex gap-1">
                     <button
                       className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-gray-600 hover:text-gray-900 hover:bg-white transition-all"
@@ -463,36 +527,134 @@ export default function AttractionsPage() {
                 </div>
               </div>
 
-              {/* 대표 이미지 URL */}
+              {/* 대표 이미지 */}
               <div>
-                <label className="block text-sm font-medium mb-1">대표 이미지 URL</label>
-                <input
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.main_image_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, main_image_url: e.target.value }))}
-                  placeholder="https://..."
-                />
+                <label className="block text-sm font-medium mb-1">대표 이미지</label>
+                <div className="space-y-2">
+                  {/* 이미지 미리보기 */}
+                  {(imagePreview || formData.main_image_url) && (
+                    <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+                      <img 
+                        src={imagePreview || formData.main_image_url} 
+                        alt="미리보기"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <XIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* 파일 업로드 */}
+                  <div className="flex gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="flex-1 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer flex items-center justify-center gap-2 text-gray-600 hover:text-gray-700"
+                    >
+                      {uploadingImage ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                          업로드 중...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          이미지 업로드
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  
+                  {/* URL 직접 입력 */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">또는</span>
+                    <input
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={formData.main_image_url}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, main_image_url: e.target.value }));
+                        setImagePreview(e.target.value);
+                      }}
+                      placeholder="이미지 URL 직접 입력"
+                      disabled={uploadingImage}
+                    />
+                  </div>
+                  
+                  <p className="text-xs text-gray-500">
+                    JPG, PNG, WEBP 형식, 최대 5MB
+                  </p>
+                </div>
               </div>
 
               {/* 추가 이미지 URLs */}
               <div>
-                <label className="block text-sm font-medium mb-1">추가 이미지 URL</label>
+                <label className="block text-sm font-medium mb-1">추가 이미지</label>
                 {formData.image_urls.map((image, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
-                    <input
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={image}
-                      onChange={(e) => updateArrayField('image_urls', index, e.target.value)}
-                      placeholder="https://..."
-                    />
-                    <button
-                      type="button"
-                      className="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-                      onClick={() => removeArrayField('image_urls', index)}
-                      disabled={formData.image_urls.length === 1}
-                    >
-                      삭제
-                    </button>
+                  <div key={index} className="mb-2">
+                    <div className="flex gap-2">
+                      <input
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={image}
+                        onChange={(e) => updateArrayField('image_urls', index, e.target.value)}
+                        placeholder="이미지 URL 또는 파일 업로드"
+                      />
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          
+                          const validation = validateImageFile(file);
+                          if (!validation.valid) {
+                            alert(validation.error);
+                            return;
+                          }
+                          
+                          const { url, error } = await uploadImage(file, 'tourist-attractions', 'additional');
+                          if (url) {
+                            updateArrayField('image_urls', index, url);
+                          } else {
+                            alert('이미지 업로드에 실패했습니다');
+                          }
+                        }}
+                        className="hidden"
+                        id={`additional-image-${index}`}
+                      />
+                      <label
+                        htmlFor={`additional-image-${index}`}
+                        className="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 cursor-pointer flex items-center"
+                      >
+                        <Upload className="w-4 h-4" />
+                      </label>
+                      <button
+                        type="button"
+                        className="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                        onClick={() => removeArrayField('image_urls', index)}
+                        disabled={formData.image_urls.length === 1}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                    {image && (
+                      <img 
+                        src={image} 
+                        alt={`추가 이미지 ${index + 1}`}
+                        className="mt-2 w-full h-32 object-cover rounded-lg"
+                      />
+                    )}
                   </div>
                 ))}
                 <button
