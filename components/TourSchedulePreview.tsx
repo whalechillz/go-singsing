@@ -1311,7 +1311,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           </tbody>
         </table>
       </div>
-    `).join('')}
+    `;
+    }).join('')}
 
     ${tourData.staff?.length > 0 ? `
       <div class="staff-info">
@@ -1675,23 +1676,832 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   };
 
   const getBoardingGuideStyles = () => {
-    return DOCUMENT_COLOR_SCHEME.customer.boarding;
+    return `
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+      
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+      }
+      
+      .route-section {
+        margin-bottom: 30px;
+      }
+      
+      .route-header-box {
+        text-align: center;
+        padding: 20px;
+        background: #2c5282;
+        color: white;
+        margin-bottom: 30px;
+        border-radius: 10px;
+      }
+      
+      .route-header-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      
+      .route-header-subtitle {
+        font-size: 18px;
+        margin-bottom: 5px;
+      }
+      
+      .route-header-date {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+      
+      .boarding-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      
+      .boarding-card {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .card-border {
+        height: 5px;
+        background: #4a6fa5;
+      }
+      
+      .card-border.rest-stop {
+        background: #F59E0B;
+      }
+      
+      .card-border.tourist-stop {
+        background: #10B981;
+      }
+      
+      .card-content {
+        padding: 20px;
+      }
+      
+      .route-header {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+      }
+      
+      .route-number {
+        width: 40px;
+        height: 40px;
+        background: #4a6fa5;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-weight: bold;
+        font-size: 18px;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+      
+      .route-number.rest {
+        background: #F59E0B;
+      }
+      
+      .route-number.tourist {
+        background: #10B981;
+      }
+      
+      .route-info-main {
+        flex: 1;
+      }
+      
+      .card-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .location-name {
+        color: #2c5282;
+      }
+      
+      .location-type {
+        font-size: 14px;
+        color: #666;
+        font-weight: normal;
+      }
+      
+      .time-wrapper {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        margin-bottom: 5px;
+      }
+      
+      .time-prefix {
+        font-size: 14px;
+        color: #666;
+      }
+      
+      .card-time {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c5282;
+      }
+      
+      .card-time.waypoint-time {
+        color: #4a6fa5;
+      }
+      
+      .card-date {
+        font-size: 14px;
+        color: #666;
+      }
+      
+      .card-info {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+        margin: 15px 0;
+      }
+      
+      .info-parking, .info-arrival {
+        font-size: 14px;
+        color: #555;
+      }
+      
+      .location-info {
+        margin-top: 15px;
+      }
+      
+      .location-section {
+        margin-bottom: 15px;
+      }
+      
+      .location-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: #4a6fa5;
+        margin-bottom: 5px;
+      }
+      
+      .location-main {
+        font-size: 14px;
+        line-height: 1.6;
+        color: #333;
+        margin-bottom: 5px;
+      }
+      
+      .location-sub {
+        font-size: 13px;
+        color: #666;
+        margin-left: 20px;
+      }
+      
+      .map-link {
+        display: inline-block;
+        margin-top: 5px;
+        padding: 5px 10px;
+        background: #4a6fa5;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 12px;
+      }
+      
+      .waypoint-icon {
+        font-size: 20px;
+      }
+      
+      .waypoint-info {
+        margin-top: 15px;
+      }
+      
+      .waypoint-duration {
+        font-size: 14px;
+        color: #4a6fa5;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      
+      .waypoint-desc {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.6;
+      }
+      
+      /* 관광지 이미지 스타일 */
+      .attraction-image-container {
+        margin: -20px -20px 15px -20px;
+        height: 200px;
+        overflow: hidden;
+      }
+      
+      .attraction-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .attraction-info {
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+      
+      .attraction-desc {
+        font-size: 14px;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+      
+      .attraction-features {
+        margin: 10px 0;
+      }
+      
+      .feature-tag {
+        display: inline-block;
+        padding: 4px 10px;
+        margin: 2px 4px 2px 0;
+        background: #e7f3ff;
+        color: #2c5282;
+        border-radius: 15px;
+        font-size: 12px;
+      }
+      
+      .attraction-address {
+        font-size: 13px;
+        color: #666;
+        margin-top: 10px;
+      }
+      
+      .common-info {
+        margin-top: 40px;
+      }
+      
+      .section-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c5282;
+        margin-bottom: 15px;
+      }
+      
+      .notice-list {
+        margin: 0;
+        padding-left: 20px;
+      }
+      
+      .notice-item {
+        margin-bottom: 8px;
+        line-height: 1.6;
+      }
+      
+      .contact-box {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        text-align: center;
+      }
+      
+      .contact-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
+      
+      .contact-phone {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 5px;
+      }
+      
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #ddd;
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+      }
+      
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        
+        .container {
+          max-width: 100%;
+          padding: 20px;
+        }
+        
+        .boarding-card {
+          page-break-inside: avoid;
+        }
+        
+        .attraction-image-container {
+          height: 150px;
+        }
+      }
+    `;
   };
 
   const getRoomAssignmentStyles = () => {
-    return DOCUMENT_COLOR_SCHEME.customer.roomAssignment;
+    return `
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+      }
+      
+      .header {
+        text-align: center;
+        padding-bottom: 30px;
+        border-bottom: 3px solid #2c5282;
+        margin-bottom: 30px;
+      }
+      
+      .header h1 {
+        font-size: 28px;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
+      
+      .content {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+      }
+      
+      .room-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .room-header {
+        background: #4a6fa5;
+        color: white;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .room-number {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      
+      .room-type {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+      
+      .room-capacity {
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 2px 8px;
+        border-radius: 12px;
+      }
+      
+      .room-body {
+        padding: 15px;
+      }
+      
+      .empty-room {
+        text-align: center;
+        color: #999;
+        padding: 20px;
+        font-style: italic;
+      }
+      
+      .participant-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      .participant-table th {
+        background: #f8f9fa;
+        padding: 8px;
+        text-align: left;
+        font-size: 13px;
+        color: #666;
+        border-bottom: 1px solid #ddd;
+      }
+      
+      .participant-table td {
+        padding: 8px;
+        font-size: 13px;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .participant-table tr:last-child td {
+        border-bottom: none;
+      }
+      
+      .text-center {
+        text-align: center;
+      }
+      
+      @media print {
+        .container {
+          max-width: 100%;
+          padding: 20px;
+        }
+        
+        .room-card {
+          page-break-inside: avoid;
+        }
+      }
+    `;
   };
 
   const getTeeTimeStyles = () => {
-    return DOCUMENT_COLOR_SCHEME.customer.teeTime;
+    return `
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+      }
+      
+      .header {
+        text-align: center;
+        padding-bottom: 30px;
+        border-bottom: 3px solid #2c5282;
+        margin-bottom: 30px;
+      }
+      
+      .header h1 {
+        font-size: 28px;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
+      
+      .header p {
+        font-size: 16px;
+        color: #666;
+        margin: 5px 0;
+      }
+      
+      .tee-time-section {
+        margin-bottom: 30px;
+      }
+      
+      .tee-time-section h2 {
+        font-size: 20px;
+        color: #2c5282;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e7f3ff;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      th {
+        background: #4a6fa5;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: bold;
+      }
+      
+      td {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+      }
+      
+      tr:nth-child(even) {
+        background: #f8f9fa;
+      }
+      
+      .players-cell {
+        line-height: 1.8;
+      }
+      
+      .player-name {
+        font-weight: 500;
+      }
+      
+      @media print {
+        .container {
+          max-width: 100%;
+          padding: 20px;
+        }
+        
+        .tee-time-section {
+          page-break-inside: avoid;
+        }
+      }
+    `;
   };
 
   const getStaffDocumentStyles = () => {
-    return DOCUMENT_COLOR_SCHEME.staff.boarding;
+    return `
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+      }
+      
+      .header {
+        text-align: center;
+        padding-bottom: 30px;
+        border-bottom: 3px solid #2c5282;
+        margin-bottom: 30px;
+      }
+      
+      .header h1 {
+        font-size: 28px;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
+      
+      .header p {
+        font-size: 16px;
+        color: #666;
+        margin: 5px 0;
+      }
+      
+      .summary {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        color: #2c5282;
+      }
+      
+      .location-section {
+        margin-bottom: 30px;
+      }
+      
+      .location-section h2 {
+        font-size: 20px;
+        color: #2c5282;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e7f3ff;
+      }
+      
+      .participant-table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .participant-table th {
+        background: #4a6fa5;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: bold;
+      }
+      
+      .participant-table td {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .participant-table tr:nth-child(even) {
+        background: #f8f9fa;
+      }
+      
+      .text-center {
+        text-align: center;
+      }
+      
+      .staff-info {
+        margin-top: 40px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+      
+      .staff-info h3 {
+        font-size: 18px;
+        color: #2c5282;
+        margin-bottom: 15px;
+      }
+      
+      .staff-info p {
+        font-size: 14px;
+        margin: 5px 0;
+      }
+      
+      @media print {
+        .container {
+          max-width: 100%;
+          padding: 20px;
+        }
+        
+        .location-section {
+          page-break-inside: avoid;
+        }
+      }
+    `;
   };
 
   const getSimplifiedStyles = () => {
-    return DOCUMENT_COLOR_SCHEME.customer.simplified;
+    return `
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+      }
+      
+      .header {
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #2c5282;
+        margin-bottom: 20px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
+      
+      .header p {
+        font-size: 16px;
+        color: #666;
+      }
+      
+      .quick-info {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+      
+      .info-item {
+        flex: 1;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        text-align: center;
+      }
+      
+      .info-item strong {
+        display: block;
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 5px;
+      }
+      
+      .info-item p {
+        font-size: 16px;
+        color: #2c5282;
+        font-weight: bold;
+        margin: 0;
+      }
+      
+      .schedule-summary {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      
+      .day-summary {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .day-summary:last-child {
+        border-bottom: none;
+      }
+      
+      .day-header {
+        font-size: 16px;
+        font-weight: bold;
+        color: #2c5282;
+        margin-bottom: 5px;
+      }
+      
+      .day-date {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+      }
+      
+      .main-events {
+        font-size: 14px;
+      }
+      
+      .event {
+        margin-bottom: 5px;
+        padding-left: 15px;
+        position: relative;
+      }
+      
+      .event:before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: #4a6fa5;
+      }
+      
+      .notices {
+        margin-top: 30px;
+        padding: 20px;
+        background: #fff8dc;
+        border: 1px solid #ffd700;
+        border-radius: 8px;
+      }
+      
+      .notices p {
+        font-size: 14px;
+        margin: 0 0 10px 0;
+      }
+      
+      .notices p:last-child {
+        margin-bottom: 0;
+      }
+      
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #ddd;
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+      }
+      
+      @media print {
+        .container {
+          max-width: 100%;
+          padding: 20px;
+        }
+      }
+    `;
   };
 
   if (loading) {
