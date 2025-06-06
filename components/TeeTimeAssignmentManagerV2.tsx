@@ -75,7 +75,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     setTimeout(() => setToastMessage(null), 3000);
   };
   const [unassignedSearch, setUnassignedSearch] = useState("");
-  const [previewType, setPreviewType] = useState<'staff'>('staff');
+  const [previewType, setPreviewType] = useState<'internal'>('internal');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
   const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
@@ -648,7 +648,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   };
 
   // 미리보기 HTML 생성
-  const generatePreviewHTML = (type: 'staff') => {
+  const generatePreviewHTML = (type: 'internal') => {
     // 날짜별로 티타임 그룹화
     const teeTimesByDateForPreview = teeTimes.reduce((acc, tt) => {
       const date = tt.play_date;
@@ -659,8 +659,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
     const tourTitle = tour?.tour_title || "투어명";
     const tourPeriod = tour?.tour_period || "투어 기간";
-
-    // 스탭진 정보는 제거
 
     // 팀 구성 분석 함수
     const analyzeTeamGender = (teamParticipants: Participant[]) => {
@@ -792,17 +790,14 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>라운딩 시간표 (내부용)</title>
+  <title>티타임표 (내부용)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
     body { background-color: #FFFFFF; color: #2D3748; line-height: 1.6; padding: 20px; }
     .container { width: 100%; max-width: 900px; margin: 0 auto; }
-    .header-container { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #DEE2E6; }
-    .title-section { flex: 1; }
-    .info-section { text-align: right; padding: 8px 12px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #DEE2E6; margin-left: 15px; }
-    .info-section p { margin: 0; line-height: 1.5; font-size: 14px; }
+    .header-container { text-align: center; margin-bottom: 20px; }
     h1 { color: #34699C; font-size: 22px; margin-bottom: 8px; }
-    .subtitle { font-size: 16px; font-weight: 500; color: #4A5568; margin-bottom: 6px; }
+    .subtitle { font-size: 16px; font-weight: 500; color: #4A5568; margin-bottom: 15px; }
     .date-header { color: #2C5282; font-size: 18px; margin: 20px 0 10px 0; padding: 8px; background-color: #EBF8FF; border-radius: 4px; }
     .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 30px; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -810,21 +805,15 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     th { background-color: #ECF0F1; font-weight: bold; color: #34699C; }
     tr:hover { background-color: #F7FAFC; }
     .empty-slot { color: #999; font-style: italic; }
-    .staff-note { color: #e53e3e; font-weight: bold; text-align: center; margin-bottom: 15px; padding: 8px; background-color: #fff5f5; border-radius: 4px; border: 1px solid #fed7d7; }
-    .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #E2E8F0; color: #718096; font-size: 13px; }
-    .contact-info { margin-top: 5px; }
     @media (max-width: 600px) { table { font-size: 12px; } th, td { padding: 6px 4px; } }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header-container">
-      <div class="title-section">
-        <h1>라운딩 시간표 (내부용)</h1>
-        <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
-      </div>
+      <h1>티타임표 (내부용)</h1>
+      <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
     </div>
-    <p class="staff-note">※ 이 명단은 내부용으로 고객 연락처 정보가 포함되어 있습니다.</p>
     ${tablesHTML}
   </div>
 </body>

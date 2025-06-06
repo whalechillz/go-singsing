@@ -5,7 +5,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   html: string;
-  type: 'staff';
+  type: 'internal';
 };
 
 const TeeTimePreview: React.FC<Props> = ({ isOpen, onClose, html, type }) => {

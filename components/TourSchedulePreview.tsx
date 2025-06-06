@@ -33,7 +33,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [roomAssignmentHTML, setRoomAssignmentHTML] = useState<string>('');
   const [roomAssignmentStaffHTML, setRoomAssignmentStaffHTML] = useState<string>('');
   const [teeTimeHTML, setTeeTimeHTML] = useState<string>('');
-  const [teeTimeStaffHTML, setTeeTimeStaffHTML] = useState<string>('');
   const [tourBoardingPlaces, setTourBoardingPlaces] = useState<any[]>([]);
   const [tourWaypoints, setTourWaypoints] = useState<any[]>([]);
   const searchParams = useSearchParams();
@@ -365,9 +364,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         
         console.log('플레이어 정보가 포함된 티타임 데이터:', teeTimesWithPlayers);
         
-        const customerHTML = generateTeeTimeHTML(teeTimesWithPlayers, false);
-        console.log('고객용 HTML 생성됨:', customerHTML.length);
-        setTeeTimeHTML(customerHTML); // 고객용만
+        const customerHTML = generateTeeTimeHTML(teeTimesWithPlayers);
+        console.log('HTML 생성됨:', customerHTML.length);
+        setTeeTimeHTML(customerHTML); // 전화번호 없는 버전
       } else {
         console.log('티타임 데이터가 없습니다');
         setTeeTimeHTML('<div class="no-data">티타임 데이터가 없습니다.</div>');
@@ -1080,7 +1079,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   };
 
   // 티타임표 HTML 생성
-  const generateTeeTimeHTML = (teeTimes: any[], isStaff: boolean = false) => {
+  const generateTeeTimeHTML = (teeTimes: any[]) => {
     const teeTimesByDate = teeTimes.reduce((acc, teeTime) => {
       const date = teeTime.date || teeTime.play_date;
       if (!acc[date]) acc[date] = [];
@@ -1095,7 +1094,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${tourData.title} - 티타임표${isStaff ? ' (스탭용)' : ''}</title>
+  <title>${tourData.title} - 티타임표</title>
   <style>
     ${getTeeTimeStyles()}
   </style>
@@ -1103,7 +1102,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <body>
   <div class="container">
     <div class="header">
-      <h1>티타임표${isStaff ? ' (스탭용)' : ''}</h1>
+      <h1>티타임표</h1>
       <p>${tourData.title}</p>
       <p>${productData?.golf_course || ''}</p>
     </div>
@@ -1118,7 +1117,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <th width="100">코스</th>
               <th width="60">팀</th>
               <th>플레이어</th>
-                ${isStaff ? '<th>연락처</th>' : ''}
             </tr>
           </thead>
           <tbody>
@@ -1200,7 +1198,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                         <span class="player-name">${participant.name}</span>
                         ${genderMark ? `<span style="color: ${genderColor}; font-weight: bold; margin-left: 4px;">${genderMark}</span>` : ''}
                       </td>
-                      ${isStaff ? `<td>${participant.phone || '-'}</td>` : ''}
                     </tr>
                   `;
                 }).join('');
@@ -1228,7 +1225,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     <td class="players-cell">
                       ${playerNames.length > 0 ? playerNames.join(', ') : '-'}
                     </td>
-                    ${isStaff ? '<td>-</td>' : ''}
                   </tr>
                 `;
               }
