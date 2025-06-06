@@ -763,6 +763,62 @@ export interface Database {
           courses?: string[] | null
         }
       }
+      singsing_tour_boarding_times: {
+        Row: {
+          id: string
+          tour_id: string
+          boarding_place_id: string | null
+          arrival_time: string | null
+          departure_time: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+          order_no: number
+          is_waypoint: boolean
+          waypoint_name: string | null
+          waypoint_duration: number | null
+          waypoint_description: string | null
+          visit_date: string | null
+          waypoint_type: 'rest_area' | 'mart' | 'tourist_spot' | 'restaurant' | null
+          image_url: string | null
+        }
+        Insert: {
+          id?: string
+          tour_id: string
+          boarding_place_id?: string | null
+          arrival_time?: string | null
+          departure_time?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+          order_no?: number
+          is_waypoint?: boolean
+          waypoint_name?: string | null
+          waypoint_duration?: number | null
+          waypoint_description?: string | null
+          visit_date?: string | null
+          waypoint_type?: 'rest_area' | 'mart' | 'tourist_spot' | 'restaurant' | null
+          image_url?: string | null
+        }
+        Update: {
+          id?: string
+          tour_id?: string
+          boarding_place_id?: string | null
+          arrival_time?: string | null
+          departure_time?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+          order_no?: number
+          is_waypoint?: boolean
+          waypoint_name?: string | null
+          waypoint_duration?: number | null
+          waypoint_description?: string | null
+          visit_date?: string | null
+          waypoint_type?: 'rest_area' | 'mart' | 'tourist_spot' | 'restaurant' | null
+          image_url?: string | null
+        }
+      }
       singsing_tour_staff: {
         Row: {
           id: string
