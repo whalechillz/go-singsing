@@ -163,15 +163,16 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const fetchTourBoardingPlaces = async () => {
     try {
-      // 가는 날 탑승지만 가져오기 (가는 날 = start_date)
+      // 투어 전체 기간 정보 가져오기
       const { data: tourInfo } = await supabase
         .from('singsing_tours')
-        .select('start_date')
+        .select('start_date, end_date')
         .eq('id', tourId)
         .single();
 
       if (!tourInfo) return;
 
+      // 가는 날 탑승지만 가져오기 (탑승지는 첫날만)
       const { data, error } = await supabase
         .from('singsing_tour_boarding_times')
         .select(`
@@ -189,16 +190,17 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         setTourBoardingPlaces(data || []);
       }
 
-      // 경유지 정보도 가져오기
+      // 전체 투어 기간의 모든 경유지 정보 가져오기
       const { data: waypoints } = await supabase
         .from('singsing_tour_boarding_times')
         .select('*')
         .eq('tour_id', tourId)
         .eq('is_waypoint', true)
-        .eq('visit_date', tourInfo.start_date.split('T')[0])
+        .order('visit_date')
         .order('order_no');
 
       if (waypoints) {
+        console.log('전체 경유지 정보:', waypoints);
         setTourWaypoints(waypoints);
       }
     } catch (error) {
@@ -758,7 +760,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         ${tourWaypoints.map((waypoint: any, waypointIndex: number) => {
           const orderNumber = tourBoardingPlaces.length + waypointIndex + 1;
           const isRestStop = waypoint.waypoint_name?.includes('휴게소');
-          const isTourist = waypoint.waypoint_name?.includes('송광사') || waypoint.waypoint_name?.includes('관광');
+          const isTourist = waypoint.waypoint_name?.includes('송광사') || waypoint.waypoint_name?.includes('관광') || waypoint.waypoint_name?.includes('사찰');
+          
+          // 날짜 표시
+          const waypointDate = waypoint.visit_date ? new Date(waypoint.visit_date) : null;
+          const startDate = new Date(tourData.start_date);
+          const dayNumber = waypointDate ? Math.floor((waypointDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 0;
           
           return `
           <div class="boarding-card waypoint-stop">
@@ -771,6 +778,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   <div class="card-time">${waypoint.waypoint_time ? waypoint.waypoint_time.slice(0, 5) : '미정'}</div>
                   <div class="route-badge ${isRestStop ? 'rest-badge' : isTourist ? 'tourist-badge' : 'waypoint-badge'}">
                     ${isRestStop ? '휴게소' : isTourist ? '관광지' : '경유지'}
+                    ${dayNumber > 1 ? ` (${dayNumber}일차)` : ''}
                   </div>
                 </div>
               </div>
@@ -778,6 +786,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <div class="waypoint-info">
                 <div class="waypoint-duration">정차시간: 약 ${waypoint.waypoint_duration}분</div>
                 ${waypoint.waypoint_description ? `<div class="waypoint-desc">${waypoint.waypoint_description}</div>` : ''}
+                ${waypointDate && dayNumber > 1 ? `<div class="waypoint-date">${waypointDate.toLocaleDateString('ko-KR')}</div>` : ''}
               </div>
             </div>
           </div>
@@ -1379,7 +1388,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .waypoint-badge { background-color: #f3e8ff; color: #7c3aed; }
     .waypoint-info { background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
     .waypoint-duration { font-weight: 600; color: #4a5568; margin-bottom: 4px; }
-    .waypoint-desc { color: #718096; font-size: 14px; }
+    .waypoint-desc { color: #718096; font-size: 14px; margin-bottom: 4px; }
+    .waypoint-date { color: #9ca3af; font-size: 13px; margin-top: 8px; }
     .route-stop .card-time { font-size: 28px; }
     .waypoint-stop .card-time { font-size: 24px; color: #4a5568; }
     .waypoint-stop .card-title { font-size: 18px; }
