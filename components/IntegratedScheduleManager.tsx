@@ -1,16 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit2, Trash2, Save, X, Calendar } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, Clock, Hotel, Tag } from 'lucide-react';
 
 interface IntegratedScheduleManagerProps {
   tourId: string;
 }
+
+interface ScheduleItem {
+  time?: string;
+  content: string;
+  attraction_id?: string;
+  attraction?: any;
+}
+
+// 카테고리 한글 매핑
+const categoryMap: Record<string, string> = {
+  'tourist_spot': '관광명소',
+  'rest_area': '휴게소',
+  'restaurant': '맛집',
+  'shopping': '쇼핑',
+  'activity': '액티비티'
+};
 
 export default function IntegratedScheduleManager({ tourId }: IntegratedScheduleManagerProps) {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
   const [scheduleText, setScheduleText] = useState('');
+  const [attractions, setAttractions] = useState<any[]>([]);
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [editMode, setEditMode] = useState<'text' | 'items'>('text');
   const [mealInfo, setMealInfo] = useState<any>({
     meal_breakfast: false,
     meal_lunch: false,
@@ -23,7 +42,23 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
   useEffect(() => {
     fetchData();
+    fetchAttractions();
   }, [tourId]);
+
+  const fetchAttractions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tourist_attractions')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setAttractions(data || []);
+    } catch (error) {
+      console.error('Error fetching attractions:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -38,6 +73,26 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
       if (scheduleError) throw scheduleError;
 
+      // 각 일정의 관광지 정보 추가
+      const schedulesWithAttractions = await Promise.all(
+        (scheduleData || []).map(async (schedule) => {
+          const itemsWithAttractions = await Promise.all(
+            (schedule.schedule_items || []).map(async (item: any) => {
+              if (item.attraction_id) {
+                const { data: attractionData } = await supabase
+                  .from('tourist_attractions')
+                  .select('*')
+                  .eq('id', item.attraction_id)
+                  .single();
+                return { ...item, attraction: attractionData };
+              }
+              return item;
+            })
+          );
+          return { ...schedule, schedule_items: itemsWithAttractions };
+        })
+      );
+
       // 투어 정보 가져오기
       const { data: tourData, error: tourError } = await supabase
         .from('singsing_tours')
@@ -47,7 +102,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
       if (tourError) throw tourError;
 
-      setSchedules(scheduleData || []);
+      setSchedules(schedulesWithAttractions);
 
       // tour_product 정보도 가져오기
       if (tourData?.tour_product_id) {
@@ -78,22 +133,29 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
         return;
       }
 
-      // 텍스트를 일정 항목으로 파싱
-      const items = scheduleText.split('\n')
-        .filter(line => line.trim())
-        .map(line => {
-          const colonIndex = line.indexOf(':');
-          if (colonIndex > -1) {
+      // 편집 모드에 따라 일정 항목 준비
+      let items: ScheduleItem[];
+      if (editMode === 'text') {
+        // 텍스트 모드: 텍스트를 파싱
+        items = scheduleText.split('\n')
+          .filter(line => line.trim())
+          .map(line => {
+            const colonIndex = line.indexOf(':');
+            if (colonIndex > -1) {
+              return {
+                time: line.substring(0, colonIndex).trim(),
+                content: line.substring(colonIndex + 1).trim()
+              };
+            }
             return {
-              time: line.substring(0, colonIndex).trim(),
-              content: line.substring(colonIndex + 1).trim()
+              time: '',
+              content: line.trim()
             };
-          }
-          return {
-            time: '',
-            content: line.trim()
-          };
-        });
+          });
+      } else {
+        // 아이템 모드: scheduleItems 사용
+        items = scheduleItems.filter(item => item.content.trim());
+      }
 
       const scheduleData: any = {
         tour_id: tourId,
@@ -140,6 +202,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
       setEditingSchedule(null);
       setScheduleText('');
+      setScheduleItems([]);
       setMealInfo({
         meal_breakfast: false,
         meal_lunch: false,
@@ -174,8 +237,13 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
   const handleEditSchedule = (schedule: any) => {
     setEditingSchedule(schedule);
-    // schedule_items를 텍스트로 변환
-    const text = schedule.schedule_items?.map((item: any) => 
+    
+    // schedule_items 설정
+    const items = schedule.schedule_items || [];
+    setScheduleItems(items);
+    
+    // schedule_items를 텍스트로도 변환
+    const text = items.map((item: any) => 
       item.time ? `${item.time}: ${item.content}` : item.content
     ).join('\n') || '';
     setScheduleText(text);
@@ -200,6 +268,8 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
       schedule_items: []
     });
     setScheduleText('');
+    setScheduleItems([]);
+    setEditMode('text');
     setMealInfo({
       meal_breakfast: false,
       meal_lunch: false,
@@ -208,6 +278,41 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
       menu_lunch: '',
       menu_dinner: ''
     });
+  };
+
+  // 일정 항목 추가
+  const addScheduleItem = () => {
+    setScheduleItems([...scheduleItems, { time: '', content: '' }]);
+  };
+
+  // 일정 항목 수정
+  const updateScheduleItem = (index: number, field: keyof ScheduleItem, value: string) => {
+    const updated = [...scheduleItems];
+    updated[index] = { ...updated[index], [field]: value };
+    setScheduleItems(updated);
+  };
+
+  // 일정 항목 삭제
+  const removeScheduleItem = (index: number) => {
+    setScheduleItems(scheduleItems.filter((_, i) => i !== index));
+  };
+
+  // 관광지 선택
+  const selectAttraction = (index: number, attractionId: string) => {
+    const updated = [...scheduleItems];
+    if (attractionId) {
+      const attraction = attractions.find(a => a.id === attractionId);
+      updated[index] = { 
+        ...updated[index], 
+        attraction_id: attractionId,
+        attraction: attraction,
+        content: attraction?.name || updated[index].content
+      };
+    } else {
+      delete updated[index].attraction_id;
+      delete updated[index].attraction;
+    }
+    setScheduleItems(updated);
   };
 
   if (loading) {
@@ -280,17 +385,96 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">일정 항목</label>
-                <textarea
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="시간: 내용 형식으로 입력 (한 줄에 하나씩)&#10;예) 08:00: 호텔 조식&#10;    09:00: 골프장 출발"
-                  rows={5}
-                  value={scheduleText}
-                  onChange={(e) => setScheduleText(e.target.value)}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  각 줄에 "시간: 내용" 형식으로 입력하세요. 시간은 선택사항입니다.
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium">일정 항목</label>
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                        editMode === 'text' 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                      onClick={() => setEditMode('text')}
+                    >
+                      텍스트 입력
+                    </button>
+                    <button
+                      type="button"
+                      className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                        editMode === 'items' 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                      onClick={() => setEditMode('items')}
+                    >
+                      개별 관리
+                    </button>
+                  </div>
+                </div>
+
+                {editMode === 'text' ? (
+                  <>
+                    <textarea
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="시간: 내용 형식으로 입력 (한 줄에 하나씩)&#10;예) 08:00: 호텔 조식&#10;    09:00: 골프장 출발"
+                      rows={5}
+                      value={scheduleText}
+                      onChange={(e) => setScheduleText(e.target.value)}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      각 줄에 "시간: 내용" 형식으로 입력하세요. 시간은 선택사항입니다.
+                    </p>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    {scheduleItems.map((item, index) => (
+                      <div key={index} className="flex gap-2 items-start bg-white p-3 rounded-md border">
+                        <input
+                          type="text"
+                          className="w-24 px-2 py-1 border rounded text-sm"
+                          placeholder="시간"
+                          value={item.time || ''}
+                          onChange={(e) => updateScheduleItem(index, 'time', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="flex-1 px-2 py-1 border rounded text-sm"
+                          placeholder="일정 내용"
+                          value={item.content}
+                          onChange={(e) => updateScheduleItem(index, 'content', e.target.value)}
+                        />
+                        <select
+                          className="w-48 px-2 py-1 border rounded text-sm"
+                          value={item.attraction_id || ''}
+                          onChange={(e) => selectAttraction(index, e.target.value)}
+                        >
+                          <option value="">관광지 선택 (선택사항)</option>
+                          {attractions.map(attraction => (
+                            <option key={attraction.id} value={attraction.id}>
+                              [{categoryMap[attraction.category]}] {attraction.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="p-1 text-red-500 hover:bg-red-50 rounded"
+                          onClick={() => removeScheduleItem(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="w-full py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-500 hover:border-gray-400 hover:text-gray-600 flex items-center justify-center gap-2"
+                      onClick={addScheduleItem}
+                    >
+                      <Plus className="w-4 h-4" />
+                      일정 항목 추가
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -383,6 +567,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                   onClick={() => {
                     setEditingSchedule(null);
                     setScheduleText('');
+                    setScheduleItems([]);
                     setMealInfo({
                       meal_breakfast: false,
                       meal_lunch: false,
@@ -408,7 +593,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
         <div className="space-y-2">
           {schedules.map((schedule) => (
-            <div key={schedule.id} className="border rounded-lg p-4">
+            <div key={schedule.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h4 className="font-semibold">
@@ -416,8 +601,17 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                   </h4>
                   <ul className="mt-2 space-y-1 text-sm text-gray-600">
                     {schedule.schedule_items?.map((item: any, idx: number) => (
-                      <li key={idx}>
-                        {item.time && <span className="font-medium">{item.time}:</span>} {item.content}
+                      <li key={idx} className="flex items-start gap-2">
+                        <div className="flex-1">
+                          {item.time && <span className="font-medium">{item.time}:</span>} {item.content}
+                        </div>
+                        {item.attraction && (
+                          <div className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
+                            <MapPin className="w-3 h-3" />
+                            <span className="text-gray-600">{categoryMap[item.attraction.category]}</span>
+                            <span className="font-medium">{item.attraction.name}</span>
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>

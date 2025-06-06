@@ -28,24 +28,38 @@ type BoardingPlace = {
   parking_info?: string;
   place_type?: 'boarding' | 'rest_area' | 'mart' | 'tourist_spot' | 'restaurant';
   image_url?: string;
+  attraction_id?: string;
+  attraction?: any;
+};
+
+const placeTypeMap: Record<string, string> = {
+  'boarding': '탑승지',
+  'rest_area': '휴게소',
+  'mart': '마트',
+  'tourist_spot': '관광지',
+  'restaurant': '맛집'
 };
 
 const BoardingPlaceManagerEnhanced: React.FC = () => {
-  const [places, setPlaces] = useState<BoardingPlace[]>([]);
-  const [form, setForm] = useState<Omit<BoardingPlace, "id" | "created_at">>({ 
-    name: "", 
-    address: "", 
-    boarding_main: "", 
-    boarding_sub: "", 
-    parking_main: "", 
-    parking_map_url: "",
-    parking_info: ""
-  });
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const [places, setPlaces] = useState<BoardingPlace[]>([]);
+const [form, setForm] = useState<Omit<BoardingPlace, "id" | "created_at">>({
+name: "",
+address: "",
+boarding_main: "",
+boarding_sub: "",
+parking_main: "",
+parking_map_url: "",
+parking_info: "",
+  place_type: "boarding",
+  attraction_id: ""
+});
+const [editingId, setEditingId] = useState<string | null>(null);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [attractions, setAttractions] = useState<any[]>([]);
+  const [selectedType, setSelectedType] = useState<string>('all');
 
   // 목록 조회
   const fetchPlaces = async () => {
@@ -60,19 +74,53 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
     setLoading(false);
   };
 
+  // 관광지 목록 조회
+  const fetchAttractions = async () => {
+    const { data, error } = await supabase
+      .from("tourist_attractions")
+      .select("*")
+      .eq("is_active", true)
+      .order("name");
+    
+    if (error) console.error("Error fetching attractions:", error);
+    else setAttractions(data || []);
+  };
+
   useEffect(() => { 
-    fetchPlaces(); 
+    fetchPlaces();
+    fetchAttractions();
   }, []);
 
   // 필터링된 장소 목록
-  const filteredPlaces = places.filter(place =>
-    place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    place.address.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPlaces = places.filter(place => {
+    const matchesSearch = place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      place.address.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = selectedType === 'all' || place.place_type === selectedType;
+    return matchesSearch && matchesType;
+  });
 
   // 입력값 변경
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === 'place_type' && value === 'tourist_spot') {
+      // 관광지 타입 선택시 관광지 선택 필드 활성화
+      setForm({ ...form, [name]: value });
+    } else if (name === 'attraction_id') {
+      // 관광지 선택시 해당 정보로 자동 채우기
+      const attraction = attractions.find(a => a.id === value);
+      if (attraction) {
+        setForm({
+          ...form,
+          attraction_id: value,
+          name: attraction.name,
+          address: attraction.address || form.address
+        });
+      } else {
+        setForm({ ...form, [name]: value });
+      }
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   // 추가/수정
@@ -144,7 +192,9 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
       boarding_sub: place.boarding_sub || "",
       parking_main: place.parking_main || "",
       parking_map_url: place.parking_map_url || "",
-      parking_info: place.parking_info || ""
+      parking_info: place.parking_info || "",
+      place_type: place.place_type || "boarding",
+      attraction_id: place.attraction_id || ""
     });
     setShowForm(true);
   };
@@ -159,7 +209,9 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
       boarding_sub: "", 
       parking_main: "", 
       parking_map_url: "",
-      parking_info: ""
+      parking_info: "",
+      place_type: "boarding",
+      attraction_id: ""
     });
     setShowForm(false);
     setError(null);
@@ -233,13 +285,39 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
         </div>
       </div>
 
-      {/* 검색 */}
-      <div className="bg-white rounded-lg p-4 mb-6">
+      {/* 필터 및 검색 */}
+      <div className="bg-white rounded-lg p-4 mb-6 space-y-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setSelectedType('all')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              selectedType === 'all' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            전체
+          </button>
+          {Object.entries(placeTypeMap).map(([key, value]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedType(key)}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                selectedType === key
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+        
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="탑승지명 또는 주소로 검색..."
+            placeholder="장소명 또는 주소로 검색..."
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -263,10 +341,50 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  장소 유형 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  name="place_type"
+                  value={form.place_type}
+                  onChange={handleChange}
+                  required
+                >
+                  {Object.entries(placeTypeMap).map(([key, value]) => (
+                    <option key={key} value={key}>{value}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {form.place_type === 'tourist_spot' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    관광지 선택
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    name="attraction_id"
+                    value={form.attraction_id}
+                    onChange={handleChange}
+                  >
+                    <option value="">직접 입력</option>
+                    {attractions.map(attraction => (
+                      <option key={attraction.id} value={attraction.id}>
+                        {attraction.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  탑승지명 <span className="text-red-500">*</span>
+                  장소명 <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -432,7 +550,7 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    탑승지 정보
+                    장소 정보
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     버스 탑승 안내
@@ -453,8 +571,19 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
                   <tr key={place.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {place.name}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-900">
+                            {place.name}
+                          </span>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            place.place_type === 'boarding' ? 'bg-blue-100 text-blue-800' :
+                            place.place_type === 'rest_area' ? 'bg-gray-100 text-gray-800' :
+                            place.place_type === 'tourist_spot' ? 'bg-green-100 text-green-800' :
+                            place.place_type === 'restaurant' ? 'bg-orange-100 text-orange-800' :
+                            'bg-purple-100 text-purple-800'
+                          }`}>
+                            {placeTypeMap[place.place_type || 'boarding']}
+                          </span>
                         </div>
                         <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                           <MapPin className="w-3 h-3" />
