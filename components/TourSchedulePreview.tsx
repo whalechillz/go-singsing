@@ -1244,8 +1244,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           </tbody>
         </table>
       </div>
-    `;
-    }).join('')}
+    `).join('')}
   </div>
 </body>
 </html>`;
