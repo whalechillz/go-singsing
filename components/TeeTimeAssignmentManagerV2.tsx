@@ -800,7 +800,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>싱싱골프투어 라운딩 조별 시간표</title>
+  <title>싱싱골프투어 티타임표</title>
   <style>
     * {
       margin: 0;
@@ -1111,7 +1111,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     <!-- 헤더 섹션 -->
     <div class="header-container">
       <div class="title-section">
-        <h1>라운딩 조별 시간표</h1>
+        <h1>티타임표</h1>
         <p style="color: #4A5568; font-size: 15px;">${tourTitle} / ${tourPeriod}</p>
       </div>
       <div class="logo-section">
@@ -1225,7 +1225,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
           >
             <Eye className="w-4 h-4" />
-            라운딩 시간표 미리보기
+            티타임표 미리보기
           </button>
         </div>
       </div>
