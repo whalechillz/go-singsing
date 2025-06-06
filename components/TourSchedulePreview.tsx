@@ -187,24 +187,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       if (error) {
         console.error('Error fetching tour boarding places:', error);
       } else {
-        // 송광사 관광지 정보 가져오기
-        const enrichedData = await Promise.all((data || []).map(async (place) => {
-          if (place.boarding_place?.name?.includes('송광사')) {
-            // 송광사 관광지 정보 조회
-            const { data: attractionData } = await supabase
-              .from('tourist_attractions')
-              .select('*')
-              .ilike('name', '%송광사%')
-              .single();
-            
-            if (attractionData && place.boarding_place) {
-              place.boarding_place.attraction_data = attractionData;
-            }
-          }
-          return place;
-        }));
-        
-        setTourBoardingPlaces(enrichedData);
+        setTourBoardingPlaces(data || []);
       }
 
       // 전체 투어 기간의 모든 경유지 정보 가져오기
@@ -217,8 +200,23 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .order('order_no');
 
       if (waypoints) {
-        console.log('전체 경유지 정보:', waypoints);
-        setTourWaypoints(waypoints);
+        // 경유지 중 관광지와 매칭되는 정보 가져오기
+        const enrichedWaypoints = await Promise.all(waypoints.map(async (waypoint) => {
+          // waypoint_name이 tourist_attractions 테이블에 있는지 확인
+          const { data: attractionData } = await supabase
+            .from('tourist_attractions')
+            .select('*')
+            .ilike('name', `%${waypoint.waypoint_name}%`)
+            .single();
+          
+          if (attractionData) {
+            waypoint.attraction_data = attractionData;
+          }
+          return waypoint;
+        }));
+        
+        console.log('전체 경유지 정보:', enrichedWaypoints);
+        setTourWaypoints(enrichedWaypoints);
       }
     } catch (error) {
       console.error('Error in fetchTourBoardingPlaces:', error);
@@ -734,19 +732,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           const displayHour = hour > 12 ? hour - 12 : hour;
           const displayTime = departureTime !== '미정' ? `${displayHour}:${departureTime.split(':')[1]}` : '미정';
           
-          // 송광사인 경우 관광지 이미지 표시
-          const isSongkwangsa = boardingPlace.name?.includes('송광사');
-          const attractionImage = boardingPlace.attraction_data?.image_url;
+          // 관광지 이미지 표시 (제거)
           
           return `
           <div class="boarding-card route-stop">
             <div class="card-border"></div>
             <div class="card-content">
-              ${isSongkwangsa && attractionImage ? `
-                <div class="attraction-image-container">
-                  <img src="${attractionImage}" alt="${boardingPlace.name}" class="attraction-image" />
-                </div>
-              ` : ''}
               <div class="route-header">
                 <div class="route-number">${index + 1}</div>
                 <div class="route-info-main">
@@ -816,6 +807,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div class="boarding-card waypoint-stop">
             <div class="card-border ${isRestStop ? 'rest-stop' : isTourist ? 'tourist-stop' : ''}"></div>
             <div class="card-content">
+              ${waypoint.attraction_data?.main_image_url || waypoint.attraction_data?.image_urls?.[0] ? `
+                <div class="attraction-image-container">
+                  <img src="${waypoint.attraction_data.main_image_url || waypoint.attraction_data.image_urls[0]}" alt="${waypoint.waypoint_name}" class="attraction-image" />
+                </div>
+              ` : ''}
               <div class="route-header">
                 <div class="route-number ${isRestStop ? 'rest' : isTourist ? 'tourist' : ''}">${orderNumber}</div>
                 <div class="route-info-main">
@@ -832,8 +828,19 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               </div>
               
               <div class="waypoint-info">
-                <div class="waypoint-duration">정차시간: 약 ${waypoint.waypoint_duration || 30}분</div>
+                <div class="waypoint-duration">정차시간: 약 ${waypoint.waypoint_duration || waypoint.attraction_data?.recommended_duration || 30}분</div>
                 ${waypoint.waypoint_description ? `<div class="waypoint-desc">${waypoint.waypoint_description}</div>` : ''}
+                ${waypoint.attraction_data ? `
+                  <div class="attraction-info">
+                    ${waypoint.attraction_data.description ? `<div class="attraction-desc">${waypoint.attraction_data.description}</div>` : ''}
+                    ${waypoint.attraction_data.features?.length > 0 ? `
+                      <div class="attraction-features">
+                        ${waypoint.attraction_data.features.map((feature: string) => `<span class="feature-tag">${feature}</span>`).join('')}
+                      </div>
+                    ` : ''}
+                    ${waypoint.attraction_data.address ? `<div class="attraction-address">📍 ${waypoint.attraction_data.address}</div>` : ''}
+                  </div>
+                ` : ''}
               </div>
             </div>
           </div>
