@@ -703,6 +703,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div class="header">
       <div class="header-title">싱싱골프투어</div>
       <div class="header-subtitle">${tourData.title}</div>
+      <div class="header-date">
+        ${tourData.duration || ''}${tourData.start_date && tourData.end_date ? ` / ${new Date(tourData.start_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.start_date).getDay()]})~${new Date(tourData.end_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.end_date).getDay()]})` : ''}
+      </div>
     </div>
     
     ${/* 통합된 경로 카드 (탑승지 + 경유지) */''}
@@ -712,6 +715,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         ${tourBoardingPlaces.map((place: any, index: number) => {
           const boardingPlace = place.boarding_place;
           if (!boardingPlace) return '';
+          const departureTime = place.departure_time ? place.departure_time.slice(0, 5) : '미정';
+          const hour = departureTime !== '미정' ? parseInt(departureTime.split(':')[0]) : 0;
+          const timePrefix = hour < 12 ? '오전' : '오후';
+          const displayHour = hour > 12 ? hour - 12 : hour;
+          const displayTime = departureTime !== '미정' ? `${displayHour}:${departureTime.split(':')[1]}` : '미정';
           
           return `
           <div class="boarding-card route-stop">
@@ -720,9 +728,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <div class="route-header">
                 <div class="route-number">${index + 1}</div>
                 <div class="route-info-main">
-                  <div class="card-title">${boardingPlace.name}</div>
-                  <div class="card-time">${place.departure_time ? place.departure_time.slice(0, 5) : '미정'}</div>
-                  <div class="route-badge boarding-badge">탑승지</div>
+                  <div class="card-title">
+                    <span class="location-name">${boardingPlace.name}</span>
+                    <span class="location-type">(${boardingPlace.district || '탑승지'})</span>
+                  </div>
+                  <div class="time-wrapper">
+                    <span class="time-prefix">${timePrefix}</span>
+                    <span class="card-time">${displayTime}</span>
+                  </div>
+                  <div class="card-date">${new Date(tourData.start_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '월 ').replace('.', '일')} (${['일','월','화','수','목','금','토'][new Date(tourData.start_date).getDay()]})</div>
                 </div>
               </div>
               
@@ -735,7 +749,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                 <div class="location-info">
                   ${boardingPlace.boarding_main ? `
                     <div class="location-section">
-                      <p class="location-title">버스탑승지</p>
+                      <p class="location-title">📍 버스탑승지</p>
                       <p class="location-main">${boardingPlace.boarding_main}</p>
                       ${boardingPlace.boarding_sub ? `<p class="location-sub">${boardingPlace.boarding_sub}</p>` : ''}
                     </div>
@@ -743,7 +757,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   
                   ${boardingPlace.parking_main ? `
                     <div class="location-section">
-                      <p class="location-title">주차장 오는길</p>
+                      <p class="location-title">📍 주차장 오는길</p>
                       <p class="location-main">${boardingPlace.parking_main}</p>
                       ${boardingPlace.parking_map_url ? `
                         <a href="${boardingPlace.parking_map_url}" class="map-link" target="_blank">네이버 지도에서 보기</a>
@@ -767,6 +781,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           const startDate = new Date(tourData.start_date);
           const dayNumber = waypointDate ? Math.floor((waypointDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 0;
           
+          const waypointTime = waypoint.waypoint_time ? waypoint.waypoint_time.slice(0, 5) : '미정';
+          const hour = waypointTime !== '미정' ? parseInt(waypointTime.split(':')[0]) : 0;
+          const timePrefix = hour < 12 ? '오전' : '오후';
+          const displayHour = hour > 12 ? hour - 12 : hour;
+          const displayTime = waypointTime !== '미정' ? `${displayHour}:${waypointTime.split(':')[1]}` : '미정';
+          
+          // 아이콘 설정
+          const icon = isRestStop ? '☕' : isTourist ? '🏛️' : '📍';
+          
           return `
           <div class="boarding-card waypoint-stop">
             <div class="card-border ${isRestStop ? 'rest-stop' : isTourist ? 'tourist-stop' : ''}"></div>
@@ -774,19 +797,21 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <div class="route-header">
                 <div class="route-number ${isRestStop ? 'rest' : isTourist ? 'tourist' : ''}">${orderNumber}</div>
                 <div class="route-info-main">
-                  <div class="card-title">${waypoint.waypoint_name}</div>
-                  <div class="card-time">${waypoint.waypoint_time ? waypoint.waypoint_time.slice(0, 5) : '미정'}</div>
-                  <div class="route-badge ${isRestStop ? 'rest-badge' : isTourist ? 'tourist-badge' : 'waypoint-badge'}">
-                    ${isRestStop ? '휴게소' : isTourist ? '관광지' : '경유지'}
-                    ${dayNumber > 1 ? ` (${dayNumber}일차)` : ''}
+                  <div class="card-title">
+                    <span class="waypoint-icon">${icon}</span>
+                    <span class="location-name">${waypoint.waypoint_name}</span>
                   </div>
+                  <div class="time-wrapper">
+                    <span class="time-prefix">${timePrefix}</span>
+                    <span class="card-time waypoint-time">${displayTime}</span>
+                  </div>
+                  ${waypointDate ? `<div class="card-date">${waypointDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '월 ').replace('.', '일')} (${['일','월','화','수','목','금','토'][waypointDate.getDay()]})</div>` : ''}
                 </div>
               </div>
               
               <div class="waypoint-info">
                 <div class="waypoint-duration">정차시간: 약 ${waypoint.waypoint_duration}분</div>
                 ${waypoint.waypoint_description ? `<div class="waypoint-desc">${waypoint.waypoint_description}</div>` : ''}
-                ${waypointDate && dayNumber > 1 ? `<div class="waypoint-date">${waypointDate.toLocaleDateString('ko-KR')}</div>` : ''}
               </div>
             </div>
           </div>
@@ -1355,44 +1380,43 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .container { max-width: 800px; margin: 0 auto; }
     .header { background-color: ${operational.header}; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
     .header-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-    .header-subtitle { font-size: 16px; opacity: 0.9; }
+    .header-subtitle { font-size: 18px; opacity: 0.9; margin-bottom: 5px; }
+    .header-date { font-size: 14px; opacity: 0.8; }
     .boarding-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 25px; }
     .boarding-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
     .card-border { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #4299e1; }
     .card-border.rest-stop { background: #f59e0b; }
     .card-border.tourist-stop { background: #10b981; }
     .card-content { padding: 20px 20px 20px 26px; }
-    .card-title { font-size: 20px; font-weight: bold; color: ${operational.header}; margin-bottom: 8px; }
-    .card-time { font-size: 32px; font-weight: bold; color: #e53e3e; margin-bottom: 5px; }
-    .card-date { font-size: 16px; color: #4a5568; margin-bottom: 10px; }
+    .card-title { font-size: 20px; font-weight: bold; color: ${operational.header}; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .location-name { font-weight: bold; }
+    .location-type { font-size: 14px; color: #718096; font-weight: normal; }
+    .waypoint-icon { font-size: 20px; }
+    .time-wrapper { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
+    .time-prefix { font-size: 14px; color: #4a5568; }
+    .card-time { font-size: 32px; font-weight: bold; color: #e53e3e; }
+    .waypoint-time { font-size: 28px; color: #4a5568; }
+    .card-date { font-size: 14px; color: #718096; margin-bottom: 10px; }
     .card-info { display: flex; gap: 15px; margin-top: 15px; font-size: 14px; }
     .info-parking { background-color: #ebf8ff; color: #2B6CB0; padding: 5px 10px; border-radius: 4px; }
     .info-arrival { background-color: #fff5f5; color: #e53e3e; padding: 5px 10px; border-radius: 4px; }
     .location-info { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; flex-direction: column; gap: 15px; }
     .location-section { background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
-    .location-title { font-weight: 600; color: #2d3748; margin-bottom: 5px; display: flex; align-items: center; }
-    .location-title:before { content: "📍"; margin-right: 5px; }
+    .location-title { font-weight: 600; color: #2d3748; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
     .location-main { font-weight: 600; color: #2d3748; margin-bottom: 2px; }
     .location-sub { color: #718096; font-size: 13px; }
     .map-link { display: inline-block; background-color: #4299e1; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-top: 5px; font-size: 13px; }
     /* 통합된 카드 스타일 */
     .route-header { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 15px; }
     .route-info-main { flex: 1; }
-    .route-number { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; color: white; background-color: #4299e1; border-radius: 8px; flex-shrink: 0; }
+    /* 원형 번호 */
+    .route-number { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; color: white; background-color: #4299e1; border-radius: 50%; flex-shrink: 0; }
     .route-number.rest { background-color: #f59e0b; }
     .route-number.tourist { background-color: #10b981; }
-    .route-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500; margin-top: 8px; }
-    .boarding-badge { background-color: #e0e7ff; color: #4338ca; }
-    .rest-badge { background-color: #fef3c7; color: #92400e; }
-    .tourist-badge { background-color: #d1fae5; color: #065f46; }
-    .waypoint-badge { background-color: #f3e8ff; color: #7c3aed; }
     .waypoint-info { background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
     .waypoint-duration { font-weight: 600; color: #4a5568; margin-bottom: 4px; }
     .waypoint-desc { color: #718096; font-size: 14px; margin-bottom: 4px; }
     .waypoint-date { color: #9ca3af; font-size: 13px; margin-top: 8px; }
-    .route-stop .card-time { font-size: 28px; }
-    .waypoint-stop .card-time { font-size: 24px; color: #4a5568; }
-    .waypoint-stop .card-title { font-size: 18px; }
     .common-info { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
     .section-title { font-size: 18px; font-weight: bold; color: ${operational.header}; margin-bottom: 15px; }
     .notice-content { white-space: pre-line; color: #4a5568; margin-bottom: 15px; }
@@ -1411,7 +1435,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       .route-header { flex-direction: column; gap: 10px; }
       .route-number { width: 32px; height: 32px; font-size: 16px; }
       .card-time { font-size: 24px !important; }
-      .card-title { font-size: 18px; }
+      .waypoint-time { font-size: 20px !important; }
+      .card-title { font-size: 18px; flex-wrap: wrap; }
+      .time-wrapper { margin-bottom: 3px; }
+      .time-prefix { font-size: 12px; }
+      .card-date { font-size: 12px; }
     }
     @media print { body { padding: 0; } .container { max-width: 100%; } }
     `;
