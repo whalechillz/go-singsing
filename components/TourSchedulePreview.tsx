@@ -703,6 +703,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const getCustomerBoardingHTML = () => {
     const notices = documentNotices.customer_boarding || [];
     
+    // 도착 시간 계산 함수
+    const getArrivalTime = (departureTime: string) => {
+      if (!departureTime || departureTime === '미정') return '미정';
+      const [hour, minute] = departureTime.split(':').map(Number);
+      const arrivalHour = hour + 1;
+      return `${arrivalHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    };
+    
     return `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -1033,13 +1041,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         </div>
         `;
       }).join('')}
-      
-
     </div>
-    
-
-    
-
   </div>
 </body>
 </html>`;
@@ -1118,42 +1120,42 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   
                   // 개별 성별 표시 (혼성팀에서 소수 성별만)
                   const getGenderMark = () => {
-                  if (!participant.gender) return '';
-                  
-                  const maleCount = sortedPlayers.filter((p: any) => 
-                  p.singsing_participants?.gender === 'M' || p.singsing_participants?.gender === '남'
-                  ).length;
-                  const femaleCount = sortedPlayers.filter((p: any) => 
-                  p.singsing_participants?.gender === 'F' || p.singsing_participants?.gender === '여'
-                  ).length;
-                  
-                  if (maleCount > 0 && femaleCount > 0) {
-                  if (maleCount < femaleCount && (participant.gender === 'M' || participant.gender === '남')) {
-                  return '(남)';
-                  } else if (femaleCount < maleCount && (participant.gender === 'F' || participant.gender === '여')) {
-                  return '(여)';
-                  }
-                  }
-                  return '';
+                    if (!participant.gender) return '';
+                    
+                    const maleCount = sortedPlayers.filter((p: any) => 
+                      p.singsing_participants?.gender === 'M' || p.singsing_participants?.gender === '남'
+                    ).length;
+                    const femaleCount = sortedPlayers.filter((p: any) => 
+                      p.singsing_participants?.gender === 'F' || p.singsing_participants?.gender === '여'
+                    ).length;
+                    
+                    if (maleCount > 0 && femaleCount > 0) {
+                      if (maleCount < femaleCount && (participant.gender === 'M' || participant.gender === '남')) {
+                        return '(남)';
+                      } else if (femaleCount < maleCount && (participant.gender === 'F' || participant.gender === '여')) {
+                        return '(여)';
+                      }
+                    }
+                    return '';
                   };
                   
                   const genderMark = getGenderMark();
                   const genderColor = (participant.gender === 'M' || participant.gender === '남') ? '#3b82f6' : 
-                  (participant.gender === 'F' || participant.gender === '여') ? '#ec4899' : 
-                  '#6b7280';
-              
-              const courseStyle = 
-                (teeTime.course || teeTime.golf_course)?.includes('레이크') || (teeTime.course || teeTime.golf_course)?.includes('Lake') 
-                  ? 'background-color: #DBEAFE; color: #1E40AF;' 
-                  : (teeTime.course || teeTime.golf_course)?.includes('힐스') || (teeTime.course || teeTime.golf_course)?.includes('Hills')
-                  ? 'background-color: #D1FAE5; color: #065F46;'
-                  : (teeTime.course || teeTime.golf_course)?.includes('밸리') || (teeTime.course || teeTime.golf_course)?.includes('Valley')
-                  ? 'background-color: #EDE9FE; color: #5B21B6;'
-                  : (teeTime.course || teeTime.golf_course)?.includes('오션') || (teeTime.course || teeTime.golf_course)?.includes('Ocean')
-                  ? 'background-color: #CFFAFE; color: #065F46;'
-                  : (teeTime.course || teeTime.golf_course)?.includes('클럽') || (teeTime.course || teeTime.golf_course)?.includes('Club')
-                  ? 'background-color: #FED7AA; color: #C2410C;'
-                  : 'background-color: #F3F4F6; color: #374151;';
+                    (participant.gender === 'F' || participant.gender === '여') ? '#ec4899' : 
+                    '#6b7280';
+                  
+                  const courseStyle = 
+                    (teeTime.course || teeTime.golf_course)?.includes('레이크') || (teeTime.course || teeTime.golf_course)?.includes('Lake') 
+                      ? 'background-color: #DBEAFE; color: #1E40AF;' 
+                      : (teeTime.course || teeTime.golf_course)?.includes('힐스') || (teeTime.course || teeTime.golf_course)?.includes('Hills')
+                      ? 'background-color: #D1FAE5; color: #065F46;'
+                      : (teeTime.course || teeTime.golf_course)?.includes('밸리') || (teeTime.course || teeTime.golf_course)?.includes('Valley')
+                      ? 'background-color: #EDE9FE; color: #5B21B6;'
+                      : (teeTime.course || teeTime.golf_course)?.includes('오션') || (teeTime.course || teeTime.golf_course)?.includes('Ocean')
+                      ? 'background-color: #CFFAFE; color: #065F46;'
+                      : (teeTime.course || teeTime.golf_course)?.includes('클럽') || (teeTime.course || teeTime.golf_course)?.includes('Club')
+                      ? 'background-color: #FED7AA; color: #C2410C;'
+                      : 'background-color: #F3F4F6; color: #374151;';
                   
                   return `
                     <tr>
@@ -1185,7 +1187,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     : (teeTime.course || teeTime.golf_course)?.includes('클럽') || (teeTime.course || teeTime.golf_course)?.includes('Club')
                     ? 'background-color: #FED7AA; color: #C2410C;'
                     : 'background-color: #F3F4F6; color: #374151;';
-                    
+                
                 return `
                   <tr>
                     <td>${teeTime.tee_time}</td>
@@ -1198,4 +1200,184 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   </tr>
                 `;
               }
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `).join('')}
+  </div>
+</body>
+</html>`;
+  };
+
+  // 스탭용 탑승안내서 HTML 생성
+  const generateStaffHTML = (participants: any[]) => {
+    // 탑승지별로 참가자 그룹화
+    const participantsByLocation = participants.reduce((acc, participant) => {
+      const location = participant.pickup_location || '미정';
+      if (!acc[location]) acc[location] = [];
+      acc[location].push(participant);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${tourData.title} - 스탭용 탑승명단</title>
+  <style>
+    ${getStaffDocumentStyles()}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>스탭용 탑승명단</h1>
+      <p>${tourData.title}</p>
+      <p>${new Date(tourData.start_date).toLocaleDateString('ko-KR')} ~ ${new Date(tourData.end_date).toLocaleDateString('ko-KR')}</p>
+    </div>
+
+    <div class="summary">
+      <p>총 참가자: ${participants.length}명</p>
+    </div>
+
+    ${Object.entries(participantsByLocation).map(([location, locationParticipants]) => `
+      <div class="location-section">
+        <h2>${location} (${locationParticipants.length}명)</h2>
+        <table class="participant-table">
+          <thead>
+            <tr>
+              <th width="40">No</th>
+              <th width="80">성명</th>
+              <th width="120">연락처</th>
+              <th width="100">팀</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${locationParticipants.map((participant, index) => `
+              <tr>
+                <td class="text-center">${index + 1}</td>
+                <td class="text-center">${participant.name}</td>
+                <td class="text-center">${participant.phone}</td>
+                <td class="text-center">${participant.team_name || '-'}</td>
+                <td>${participant.special_notes || '-'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `).join('')}
+
+    ${tourData.staff?.length > 0 ? `
+      <div class="staff-info">
+        <h3>스탭 정보</h3>
+        ${tourData.staff.map((staff: any) => `
+          <p>${staff.role}: ${staff.name} (${staff.phone})</p>
+        `).join('')}
+      </div>
+    ` : ''}
+  </div>
+</body>
+</html>`;
+  };
+
+  // 스타일 함수들
+  const getCustomerScheduleStyles = () => {
+    return DOCUMENT_COLOR_SCHEME.customer.schedule;
+  };
+
+  const getBoardingGuideStyles = () => {
+    return DOCUMENT_COLOR_SCHEME.customer.boarding;
+  };
+
+  const getRoomAssignmentStyles = () => {
+    return DOCUMENT_COLOR_SCHEME.customer.roomAssignment;
+  };
+
+  const getTeeTimeStyles = () => {
+    return DOCUMENT_COLOR_SCHEME.customer.teeTime;
+  };
+
+  const getStaffDocumentStyles = () => {
+    return DOCUMENT_COLOR_SCHEME.staff.boarding;
+  };
+
+  const getSimplifiedStyles = () => {
+    return DOCUMENT_COLOR_SCHEME.customer.simplified;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+          <p>문서를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* 문서 탭 */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex space-x-4 overflow-x-auto">
+              {DOCUMENT_TYPES.map((doc) => (
+                <button
+                  key={doc.id}
+                  onClick={() => setActiveTab(doc.id)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
+                    activeTab === doc.id
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <span className="mr-2">{doc.icon}</span>
+                  {doc.label}
+                </button>
+              ))}
+            </div>
             
+            {/* 액션 버튼 */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handlePrint}
+                className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
+                title="인쇄"
+              >
+                <Printer className="w-5 h-5" />
+              </button>
+              <button
+                onClick={handleDownload}
+                className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
+                title="다운로드"
+              >
+                <Download className="w-5 h-5" />
+              </button>
+              <button
+                onClick={handleShare}
+                className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
+                title="공유"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 문서 내용 */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          <div className="p-8">
+            <div dangerouslySetInnerHTML={{ __html: getDocumentHTML() }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
