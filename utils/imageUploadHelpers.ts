@@ -1,3 +1,32 @@
+import { supabase } from '@/lib/supabaseClient';
+
+// 단일 이미지 업로드 함수
+export const uploadImage = async (
+  file: File,
+  bucket: string = 'tourist-attractions',
+  folder: string = ''
+): Promise<{ url: string | null; error: Error | null }> => {
+  try {
+    const fileName = `${folder ? folder + '/' : ''}${Date.now()}-${file.name}`;
+    
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, file);
+    
+    if (error) {
+      return { url: null, error };
+    }
+    
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+    
+    return { url: publicUrl, error: null };
+  } catch (error) {
+    return { url: null, error: error as Error };
+  }
+};
+
 // 순차적 업로드 헬퍼 함수
 export const uploadMultipleImages = async (
   files: File[],
