@@ -30,6 +30,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('customer_schedule');
   const [staffDocumentHTML, setStaffDocumentHTML] = useState<string>('');
+  const [roomAssignmentHTML, setRoomAssignmentHTML] = useState<string>('');
   const [roomAssignmentStaffHTML, setRoomAssignmentStaffHTML] = useState<string>('');
   const [teeTimeHTML, setTeeTimeHTML] = useState<string>('');
   const [teeTimeStaffHTML, setTeeTimeStaffHTML] = useState<string>('');
@@ -42,9 +43,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     { id: 'customer_schedule', label: '고객용 일정표', icon: '📋' },
     { id: 'customer_boarding', label: '고객용 탑승안내서', icon: '🚌' },
     { id: 'staff_boarding', label: '스탭용 탑승안내서', icon: '👥' },
+    { id: 'room_assignment', label: '객실 배정표 (고객용)', icon: '🏨' },
     { id: 'room_assignment_staff', label: '객실 배정표 (스탭용)', icon: '🏨' },
-    { id: 'timetable', label: '티타임표 (고객용)', icon: '⛳' },
-    { id: 'timetable-staff', label: '티타임표 (스탭용)', icon: '⛳' },
+    { id: 'timetable', label: '티타임표', icon: '⛳' },
     { id: 'simplified', label: '간편 일정표', icon: '📄' }
   ];
 
@@ -64,9 +65,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   useEffect(() => {
     if (activeTab === 'staff_boarding' && tourData) {
       fetchParticipantsForStaff();
-    } else if (activeTab === 'room_assignment_staff' && tourData) {
+    } else if (activeTab === 'room_assignment' || activeTab === 'room_assignment_staff' && tourData) {
       fetchRoomAssignments();
-    } else if ((activeTab === 'timetable' || activeTab === 'timetable-staff') && tourData) {
+    } else if (activeTab === 'timetable' && tourData) {
       fetchTeeTimes();
     }
   }, [activeTab, tourData]);
@@ -300,6 +301,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       console.log('기사 정보:', tourStaff);
       
       if (assignments && rooms) {
+        setRoomAssignmentHTML(generateRoomAssignmentHTML(assignments, rooms, tourStaff, false)); // 고객용
         setRoomAssignmentStaffHTML(generateRoomAssignmentHTML(assignments, rooms, tourStaff, true)); // 스탭용
       }
     } catch (error) {
@@ -364,20 +366,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         console.log('플레이어 정보가 포함된 티타임 데이터:', teeTimesWithPlayers);
         
         const customerHTML = generateTeeTimeHTML(teeTimesWithPlayers, false);
-        const staffHTML = generateTeeTimeHTML(teeTimesWithPlayers, true);
         console.log('고객용 HTML 생성됨:', customerHTML.length);
-        console.log('스탭용 HTML 생성됨:', staffHTML.length);
-        setTeeTimeHTML(customerHTML); // 고객용
-        setTeeTimeStaffHTML(staffHTML); // 스탭용
+        setTeeTimeHTML(customerHTML); // 고객용만
       } else {
         console.log('티타임 데이터가 없습니다');
         setTeeTimeHTML('<div class="no-data">티타임 데이터가 없습니다.</div>');
-        setTeeTimeStaffHTML('<div class="no-data">티타임 데이터가 없습니다.</div>');
       }
     } catch (error) {
       console.error('Error fetching tee times:', error);
       setTeeTimeHTML('<div class="error">티타임 데이터를 불러오는 중 오류가 발생했습니다.</div>');
-      setTeeTimeStaffHTML('<div class="error">티타임 데이터를 불러오는 중 오류가 발생했습니다.</div>');
     }
   };
 
@@ -415,12 +412,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         return getCustomerBoardingHTML();
       case 'staff_boarding':
         return staffDocumentHTML || '<div>스탭용 문서를 생성 중입니다...</div>';
+      case 'room_assignment':
+        return roomAssignmentHTML || '<div>객실 배정표를 생성 중입니다...</div>';
       case 'room_assignment_staff':
         return roomAssignmentStaffHTML || '<div>객실 배정표를 생성 중입니다...</div>';
       case 'timetable':
         return teeTimeHTML || '<div>티타임표를 생성 중입니다...</div>';
-      case 'timetable-staff':
-        return teeTimeStaffHTML || '<div>티타임표를 생성 중입니다...</div>';
       case 'simplified':
         return getSimplifiedScheduleHTML();
       default:
