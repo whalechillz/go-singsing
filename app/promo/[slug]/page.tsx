@@ -4,18 +4,19 @@ import { notFound } from 'next/navigation';
 import TourPromotionClient from './TourPromotionClient';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 // 메타데이터 생성
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
   const { data: promo } = await supabase
     .from('tour_promotion_pages')
     .select(`
       *,
       tour:singsing_tours(*)
     `)
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single();
 
   if (!promo) {
@@ -36,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TourPromotionPage({ params }: Props) {
+  const { slug } = await params;
   // 홍보 페이지 정보 가져오기
   const { data: promo, error } = await supabase
     .from('tour_promotion_pages')
@@ -49,7 +51,7 @@ export default async function TourPromotionPage({ params }: Props) {
         )
       )
     `)
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('is_public', true)
     .single();
 
