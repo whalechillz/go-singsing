@@ -11,7 +11,8 @@ import TeeTimeAssignmentManagerV2 from "@/components/TeeTimeAssignmentManagerV2"
 // 사용하지 않는 컴포넌트 import 제거됨
 import TourSchedulePreview from "@/components/TourSchedulePreview";
 import TourBoardingManager from "@/components/TourBoardingManager";
-import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock } from 'lucide-react';
+import TourPromotionManager from "@/components/TourPromotionManager";
+import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock, Megaphone } from 'lucide-react';
 
 const TABS = [
   { key: "participants", label: "참가자 관리", icon: <Users className="w-4 h-4" /> },
@@ -20,6 +21,7 @@ const TABS = [
   { key: "schedules", label: "일정 관리", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티타임 관리", icon: <Flag className="w-4 h-4" /> },
   { key: "schedule-preview", label: "문서 미리보기", icon: <FileText className="w-4 h-4" /> },
+  { key: "promotion", label: "홍보 페이지", icon: <Megaphone className="w-4 h-4" /> },
 ];
 
 type Tour = {
@@ -105,6 +107,7 @@ const TourDetailPage: React.FC = () => {
         )}
 
         {activeTab === "schedule-preview" && <TourSchedulePreview tourId={tourId} />}
+        {activeTab === "promotion" && <TourPromotionManager tourId={tourId} />}
       </div>
     </div>
   );
