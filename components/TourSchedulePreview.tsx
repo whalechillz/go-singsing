@@ -98,6 +98,29 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
       if (schedulesError) throw schedulesError;
       
+      // 각 일정의 schedule_items에서 관광지 정보 enriching
+      if (schedules) {
+        for (const schedule of schedules) {
+          if (schedule.schedule_items && Array.isArray(schedule.schedule_items)) {
+            for (const item of schedule.schedule_items) {
+              // 관광지 관련 키워드 체크
+              if (item.content && (item.content.includes('송광사') || item.content.includes('관광') || item.content.includes('사찰'))) {
+                // tourist_attractions 테이블에서 매칭되는 정보 찾기
+                const { data: attractionData } = await supabase
+                  .from('tourist_attractions')
+                  .select('*')
+                  .or(`name.ilike.%${item.content}%,name.ilike.%송광사%`)
+                  .single();
+                
+                if (attractionData) {
+                  item.attraction_data = attractionData;
+                }
+              }
+            }
+          }
+        }
+      }
+      
       console.log('Schedules data:', schedules);
       // 식사 정보 확인
       schedules?.forEach((schedule, idx) => {
@@ -1204,7 +1227,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           </tbody>
         </table>
       </div>
-    `).join('')}
+    `;
+    }).join('')}
   </div>
 </body>
 </html>`;
@@ -1242,9 +1266,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       <p>총 참가자: ${participants.length}명</p>
     </div>
 
-    ${Object.entries(participantsByLocation).map(([location, locationParticipants]) => `
+    ${Object.entries(participantsByLocation).map(([location, locationParticipants]) => {
+      const participants = locationParticipants as any[];
+      return `
       <div class="location-section">
-        <h2>${location} (${locationParticipants.length}명)</h2>
+        <h2>${location} (${participants.length}명)</h2>
         <table class="participant-table">
           <thead>
             <tr>
@@ -1256,7 +1282,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             </tr>
           </thead>
           <tbody>
-            ${locationParticipants.map((participant, index) => `
+            ${participants.map((participant: any, index: number) => `
               <tr>
                 <td class="text-center">${index + 1}</td>
                 <td class="text-center">${participant.name}</td>
