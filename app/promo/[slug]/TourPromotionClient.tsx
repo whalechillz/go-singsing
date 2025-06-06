@@ -14,9 +14,52 @@ import {
   Utensils
 } from 'lucide-react';
 
+interface Attraction {
+  id: string;
+  name: string;
+  description: string;
+  main_image_url: string | null;
+  category: string;
+  recommended_duration?: number;
+}
+
+interface AttractionOption {
+  id: string;
+  schedule_id: string;
+  attraction_id: string;
+  additional_price: number;
+  is_default: boolean;
+  order_no: number;
+  attraction?: Attraction;
+}
+
+interface Schedule {
+  id: string;
+  day_number: number;
+  date: string;
+}
+
+interface Tour {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  schedules?: Schedule[];
+}
+
+interface Promo {
+  id: string;
+  tour_id: string;
+  slug: string;
+  is_public: boolean;
+  valid_until: string | null;
+  main_image_url: string | null;
+  tour: Tour;
+}
+
 interface TourPromotionClientProps {
-  promo: any;
-  attractionOptions: any[];
+  promo: Promo;
+  attractionOptions: AttractionOption[];
 }
 
 export default function TourPromotionClient({ promo, attractionOptions }: TourPromotionClientProps) {
@@ -31,12 +74,12 @@ export default function TourPromotionClient({ promo, attractionOptions }: TourPr
     }
     acc[scheduleId].push(option);
     return acc;
-  }, {} as { [key: string]: any[] });
+  }, {} as { [key: string]: AttractionOption[] });
 
   // 총 추가 요금 계산
   const calculateTotalPrice = () => {
-    return Object.values(selectedOptions).reduce((total, optionId) => {
-      const option = attractionOptions.find(opt => opt.id === optionId);
+    return Object.values(selectedOptions).reduce((total: number, optionId: string) => {
+      const option = attractionOptions.find((opt: AttractionOption) => opt.id === optionId);
       return total + (option?.additional_price || 0);
     }, 0);
   };
@@ -117,7 +160,7 @@ export default function TourPromotionClient({ promo, attractionOptions }: TourPr
           <h3 className="text-2xl font-bold text-center mb-8">일정별 관광 옵션</h3>
           
           <div className="space-y-8">
-            {tour.schedules?.map((schedule: any) => {
+            {tour.schedules?.map((schedule) => {
               const options = optionsBySchedule[schedule.id] || [];
               if (options.length === 0) return null;
 
@@ -222,8 +265,8 @@ export default function TourPromotionClient({ promo, attractionOptions }: TourPr
             <button
               onClick={() => {
                 const message = `${tour.title} 예약 문의드립니다.\n선택한 관광지 옵션:\n${
-                  Object.entries(selectedOptions).map(([scheduleId, optionId]) => {
-                    const option = attractionOptions.find(opt => opt.id === optionId);
+                  Object.entries(selectedOptions).map(([scheduleId, optionId]: [string, string]) => {
+                    const option = attractionOptions.find((opt: AttractionOption) => opt.id === optionId);
                     return `- ${option?.attraction?.name}${option?.additional_price ? ` (+${option.additional_price.toLocaleString()}원)` : ''}`;
                   }).join('\n')
                 }\n총 추가요금: ${calculateTotalPrice().toLocaleString()}원`;
