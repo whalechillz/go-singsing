@@ -763,6 +763,97 @@ export interface Database {
           courses?: string[] | null
         }
       }
+      tourist_attractions: {
+        Row: {
+          id: string
+          name: string
+          category: 'tourist_spot' | 'rest_area' | 'restaurant' | 'shopping' | 'activity' | null
+          address: string | null
+          description: string | null
+          features: string[] | null
+          image_urls: string[] | null
+          main_image_url: string | null
+          operating_hours: string | null
+          contact_info: string | null
+          recommended_duration: number
+          tags: string[] | null
+          region: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          category?: 'tourist_spot' | 'rest_area' | 'restaurant' | 'shopping' | 'activity' | null
+          address?: string | null
+          description?: string | null
+          features?: string[] | null
+          image_urls?: string[] | null
+          main_image_url?: string | null
+          operating_hours?: string | null
+          contact_info?: string | null
+          recommended_duration?: number
+          tags?: string[] | null
+          region?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          category?: 'tourist_spot' | 'rest_area' | 'restaurant' | 'shopping' | 'activity' | null
+          address?: string | null
+          description?: string | null
+          features?: string[] | null
+          image_urls?: string[] | null
+          main_image_url?: string | null
+          operating_hours?: string | null
+          contact_info?: string | null
+          recommended_duration?: number
+          tags?: string[] | null
+          region?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      tour_schedule_tourist_options: {
+        Row: {
+          id: string
+          tour_id: string
+          schedule_id: string
+          day_number: number
+          time_slot: string | null
+          attraction_ids: string[]
+          is_required: boolean
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tour_id: string
+          schedule_id: string
+          day_number: number
+          time_slot?: string | null
+          attraction_ids: string[]
+          is_required?: boolean
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tour_id?: string
+          schedule_id?: string
+          day_number?: number
+          time_slot?: string | null
+          attraction_ids?: string[]
+          is_required?: boolean
+          notes?: string | null
+          created_at?: string
+        }
+      }
       singsing_tour_boarding_times: {
         Row: {
           id: string

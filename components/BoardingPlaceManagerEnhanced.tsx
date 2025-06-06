@@ -26,6 +26,8 @@ type BoardingPlace = {
   parking_map_url?: string;
   created_at?: string;
   parking_info?: string;
+  place_type?: 'boarding' | 'rest_area' | 'mart' | 'tourist_spot' | 'restaurant';
+  image_url?: string;
 };
 
 const BoardingPlaceManagerEnhanced: React.FC = () => {
@@ -169,15 +171,15 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">탑승지 관리</h1>
-            <p className="text-sm text-gray-500 mt-1">투어 탑승 장소와 주차 정보를 관리합니다</p>
+            <h1 className="text-2xl font-bold text-gray-900">여정 관리</h1>
+            <p className="text-sm text-gray-500 mt-1">투어 탑승지, 경유지, 관광지를 통합 관리합니다</p>
           </div>
           <button
             onClick={() => setShowForm(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            탑승지 추가
+            장소 추가
           </button>
         </div>
       </div>

@@ -811,7 +811,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               </div>
               
               <div class="waypoint-info">
-                <div class="waypoint-duration">정차시간: 약 <input type="number" value="${waypoint.waypoint_duration || 30}" min="0" max="999" style="width: 60px; padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 4px; text-align: center;" />분</div>
+                <div class="waypoint-duration">정차시간: 약 ${waypoint.waypoint_duration || 30}분</div>
                 ${waypoint.waypoint_description ? `<div class="waypoint-desc">${waypoint.waypoint_description}</div>` : ''}
               </div>
             </div>
