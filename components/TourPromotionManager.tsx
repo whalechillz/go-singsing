@@ -68,7 +68,7 @@ const TourPromotionManager: React.FC<TourPromotionManagerProps> = ({ tourId }) =
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [attractions, setAttractions] = useState<TouristAttraction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [showAttractionModal, setShowAttractionModal] = useState(false);
 
   // 초기 데이터 로드
