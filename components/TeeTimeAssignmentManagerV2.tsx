@@ -726,10 +726,24 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
       // 각 코스별로 테이블 생성
       Object.entries(courseGroups).forEach(([course, courseTimes]) => {
+        // 코스별 헤더 클래스 결정
+        let headerClass = 'course-header course-header-default';
+        if (course.includes('레이크') || course.includes('Lake')) {
+          headerClass = 'course-header course-header-lake';
+        } else if (course.includes('파인') || course.includes('Pine')) {
+          headerClass = 'course-header course-header-pine';
+        } else if (course.includes('힐스') || course.includes('Hills')) {
+          headerClass = 'course-header course-header-hills';
+        } else if (course.includes('밸리') || course.includes('Valley')) {
+          headerClass = 'course-header course-header-valley';
+        } else if (course.includes('오션') || course.includes('Ocean')) {
+          headerClass = 'course-header course-header-ocean';
+        }
+        
         tablesHTML += `
           <table>
             <tr>
-              <td colspan="3" class="course-header">${course}</td>
+              <td colspan="3" class="${headerClass}">${course}</td>
             </tr>
             <tr>
               <th>시간</th>
@@ -878,8 +892,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       color: #34699C;
     }
     
+    /* 코스별 헤더 색상 */
     .course-header {
-      background-color: #34699C;
       color: white;
       font-weight: bold;
       font-size: 15px;
@@ -887,6 +901,13 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       text-align: left;
       border-radius: 4px 4px 0 0;
     }
+    
+    .course-header-lake { background-color: #3b82f6; }
+    .course-header-pine { background-color: #10b981; }
+    .course-header-hills { background-color: #f59e0b; }
+    .course-header-valley { background-color: #8b5cf6; }
+    .course-header-ocean { background-color: #06b6d4; }
+    .course-header-default { background-color: #6b7280; }
     
     .time-column {
       width: 80px;
@@ -994,46 +1015,93 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       color: #2D3748;
     }
     
+    /* 비상연락처 박스 간소화 */
+    .contact-info {
+      margin: 20px 0;
+      padding: 12px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      text-align: center;
+    }
+    
+    .contact-title {
+      font-weight: bold;
+      color: #495057;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
     /* 모바일 대응 */
     @media (max-width: 600px) {
+      body {
+        padding: 8px;
+      }
+      
       .header-container {
         flex-direction: column;
         align-items: flex-start;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
       }
       
       .logo-section {
         margin-left: 0;
-        margin-top: 10px;
+        margin-top: 8px;
         text-align: left;
       }
       
       h1 {
-        font-size: 20px;
-      }
-      
-      .logo-text {
         font-size: 18px;
       }
       
-      .day-header {
+      .logo-text {
         font-size: 16px;
-        padding: 8px 10px;
+      }
+      
+      .day-header {
+        font-size: 14px;
+        padding: 6px 10px;
+        margin: 15px 0 8px 0;
       }
       
       table {
-        font-size: 12px;
+        font-size: 11px;
       }
       
       th, td {
-        padding: 6px 4px;
+        padding: 5px 3px;
+      }
+      
+      .course-header {
+        font-size: 13px;
+        padding: 8px 10px;
       }
       
       .time-column {
+        width: 50px;
+        font-size: 12px;
+      }
+      
+      .team-type {
         width: 60px;
+        font-size: 11px;
       }
       
       .player-cell {
         padding-left: 5px;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+      
+      .contact-info {
+        margin: 15px 0;
+        padding: 10px;
+      }
+      
+      .contact-phone {
+        font-size: 13px;
+        font-weight: bold;
       }
     }
   </style>
@@ -1053,55 +1121,18 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     
     ${tablesHTML}
     
-    <!-- 라운딩 주의사항 -->
-    <div class="notice-box">
-      <div class="notice-title">라운딩 주의사항</div>
-      <ul class="notice-list">
-        ${tour?.notices ? tour.notices.split('\n').map(notice => `<li>${notice.replace('•', '').trim()}</li>`).join('') : `
-        <li><strong>티오프 시간 준수:</strong> 티오프 15분 전까지 카트 대기선에 도착해주세요.</li>
-        <li><strong>복장 규정:</strong> 골프장 드레스 코드를 준수해주세요. (청바지, 트레이닝복 착용 금지)</li>
-        <li><strong>진행 속도:</strong> 앞 조와의 간격을 유지하여 원활한 플레이를 부탁드립니다.</li>
-        <li><strong>에티켓:</strong> 벽커 정리, 디보트 복구 등 기본 에티켓을 준수해주세요.</li>
-        `}
-      </ul>
-    </div>
-    
-    <!-- 연락처 정보 -->
-    ${(tour?.show_staff_info && staffMembers.length > 0) || tour?.show_company_phones || tour?.show_golf_phones ? `
+    <!-- 비상 연락처 (기사님만) -->
+    ${staffMembers.filter(staff => staff.role.includes('기사')).length > 0 ? `
     <div class="contact-info">
       <div class="contact-title">비상 연락처</div>
       <div class="contact-grid">
-        ${staffMembers.map(staff => `
+        ${staffMembers.filter(staff => staff.role.includes('기사')).map(staff => `
           <div class="contact-item">
             <div class="contact-name">${staff.name} ${staff.role}</div>
             ${staff.phone ? `<div class="contact-phone">${staff.phone}</div>` : ''}
           </div>
         `).join('')}
-        ${tour?.show_company_phones && (tour?.company_phone || tour?.company_mobile) ? `
-          <div class="contact-item">
-            <div class="contact-name">회사 연락처</div>
-            ${tour?.company_phone ? `<div class="contact-phone">☎ ${tour.company_phone}</div>` : ''}
-            ${tour?.company_mobile ? `<div class="contact-phone">📱 ${tour.company_mobile}</div>` : ''}
-          </div>
-        ` : ''}
-        ${tour?.show_golf_phones && (tour?.golf_reservation_phone || tour?.golf_reservation_mobile) ? `
-          <div class="contact-item">
-            <div class="contact-name">골프장 예약실</div>
-            ${tour?.golf_reservation_phone ? `<div class="contact-phone">☎ ${tour.golf_reservation_phone}</div>` : ''}
-            ${tour?.golf_reservation_mobile ? `<div class="contact-phone">📱 ${tour.golf_reservation_mobile}</div>` : ''}
-          </div>
-        ` : ''}
       </div>
-    </div>
-    ` : ''}
-    
-    <!-- 푸터 -->
-    ${tour?.show_footer_message !== false ? `
-    <div class="footer">
-      <p><span class="heart">♥</span> ${tour?.footer_message || '즐거운 하루 되시길 바랍니다.'} <span class="heart">♥</span></p>
-      ${tour?.show_company_phones !== false ? `
-        <p class="contact">싱싱골프투어 ☎ ${tour?.company_phone || '031-215-3990'}</p>
-      ` : ''}
     </div>
     ` : ''}
   </div>
@@ -1375,14 +1406,19 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                               <Clock className="w-4 h-4 inline mr-1" />
                               {teeTime.tee_time}
                             </span>
-                            {/* 코스별 구분 표시 개선 */}
-                            <span className="px-2 py-1 rounded text-sm font-medium" style={{
-                              backgroundColor: '#f3f4f6',
-                              ...(teeTime.golf_course?.includes('레이크') && { color: '#3b82f6' }),
-                              ...(teeTime.golf_course?.includes('파인') && { color: '#10b981' }),
-                              ...(teeTime.golf_course?.includes('힐스') && { color: '#f59e0b' }),
-                              ...(teeTime.golf_course?.includes('밸리') && { color: '#8b5cf6' }),
-                              ...(teeTime.golf_course?.includes('오션') && { color: '#06b6d4' }),
+                            {/* 코스별 구분 표시 개선 - 배경색 추가 */}
+                            <span className="px-3 py-1.5 rounded text-sm font-bold text-white" style={{
+                              ...(teeTime.golf_course?.includes('레이크') && { backgroundColor: '#3b82f6' }),
+                              ...(teeTime.golf_course?.includes('파인') && { backgroundColor: '#10b981' }),
+                              ...(teeTime.golf_course?.includes('힐스') && { backgroundColor: '#f59e0b' }),
+                              ...(teeTime.golf_course?.includes('밸리') && { backgroundColor: '#8b5cf6' }),
+                              ...(teeTime.golf_course?.includes('오션') && { backgroundColor: '#06b6d4' }),
+                              ...(!teeTime.golf_course?.includes('레이크') && 
+                                  !teeTime.golf_course?.includes('파인') && 
+                                  !teeTime.golf_course?.includes('힐스') && 
+                                  !teeTime.golf_course?.includes('밸리') && 
+                                  !teeTime.golf_course?.includes('오션') && 
+                                  { backgroundColor: '#6b7280' })
                             }}>
                               {teeTime.golf_course}
                             </span>
