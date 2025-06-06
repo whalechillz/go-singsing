@@ -1,25 +1,10 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/lib/supabaseClient';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+
 import { Plus, Edit, Trash2, MapPin, Clock, Star, Tag, Image as ImageIcon } from 'lucide-react';
 
 type Category = '관광명소' | '휴게소' | '맛집' | '쇼핑' | '액티비티';
@@ -211,31 +196,48 @@ export default function AttractionsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">관광지 관리</h1>
-        <Button onClick={() => { resetForm(); setIsModalOpen(true); }}>
-          <Plus className="w-4 h-4 mr-2" />
-          새 관광지 추가
-        </Button>
+    <div className="max-w-7xl mx-auto p-6">
+      {/* 헤더 */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">관광지 관리</h1>
+            <p className="text-sm text-gray-500 mt-1">투어 중 방문할 관광지, 휴게소, 맛집 등을 관리합니다</p>
+          </div>
+          <button
+            onClick={() => { resetForm(); setIsModalOpen(true); }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            새 관광지 추가
+          </button>
+        </div>
       </div>
 
       {/* 카테고리 필터 */}
-      <div className="flex gap-2">
-        <Button
-          variant={selectedCategory === 'all' ? 'default' : 'outline'}
+      <div className="flex gap-2 mb-6">
+        <button
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            selectedCategory === 'all' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
           onClick={() => setSelectedCategory('all')}
         >
           전체
-        </Button>
+        </button>
         {(['관광명소', '휴게소', '맛집', '쇼핑', '액티비티'] as Category[]).map(category => (
-          <Button
+          <button
             key={category}
-            variant={selectedCategory === category ? 'default' : 'outline'}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              selectedCategory === category
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
             onClick={() => setSelectedCategory(category)}
           >
             {category}
-          </Button>
+          </button>
         ))}
       </div>
 
@@ -245,34 +247,32 @@ export default function AttractionsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {attractions.map(attraction => (
-            <Card key={attraction.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
+            <div key={attraction.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+              <div className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{attraction.name}</CardTitle>
+                    <h3 className="text-lg font-semibold text-gray-900">{attraction.name}</h3>
                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-2 ${categoryColors[attraction.category]}`}>
                       {attraction.category}
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
+                    <button
+                      className="p-1 text-gray-600 hover:text-gray-900"
                       onClick={() => handleEdit(attraction)}
                     >
                       <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
+                    </button>
+                    <button
+                      className="p-1 text-red-600 hover:text-red-900"
                       onClick={() => handleDelete(attraction.id)}
                     >
                       <Trash2 className="w-4 h-4" />
-                    </Button>
+                    </button>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div className="px-6 pb-6">
                 {attraction.images && attraction.images[0] && (
                   <img 
                     src={attraction.images[0]} 
@@ -306,8 +306,8 @@ export default function AttractionsPage() {
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -324,7 +324,8 @@ export default function AttractionsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">이름 *</label>
-                  <Input
+                  <input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     required
@@ -333,27 +334,24 @@ export default function AttractionsPage() {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">카테고리 *</label>
-                  <Select
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.category}
-                    onValueChange={(value: Category) => setFormData(prev => ({ ...prev, category: value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as Category }))}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="관광명소">관광명소</SelectItem>
-                      <SelectItem value="휴게소">휴게소</SelectItem>
-                      <SelectItem value="맛집">맛집</SelectItem>
-                      <SelectItem value="쇼핑">쇼핑</SelectItem>
-                      <SelectItem value="액티비티">액티비티</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="관광명소">관광명소</option>
+                    <option value="휴게소">휴게소</option>
+                    <option value="맛집">맛집</option>
+                    <option value="쇼핑">쇼핑</option>
+                    <option value="액티비티">액티비티</option>
+                  </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">설명</label>
-                <Textarea
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
@@ -363,7 +361,8 @@ export default function AttractionsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">주소</label>
-                  <Input
+                  <input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.address}
                     onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                   />
@@ -371,7 +370,8 @@ export default function AttractionsPage() {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">전화번호</label>
-                  <Input
+                  <input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.phone}
                     onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                   />
@@ -381,7 +381,8 @@ export default function AttractionsPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">운영시간</label>
-                  <Input
+                  <input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.opening_hours}
                     onChange={(e) => setFormData(prev => ({ ...prev, opening_hours: e.target.value }))}
                   />
@@ -389,7 +390,8 @@ export default function AttractionsPage() {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">입장료</label>
-                  <Input
+                  <input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.admission_fee}
                     onChange={(e) => setFormData(prev => ({ ...prev, admission_fee: e.target.value }))}
                   />
@@ -397,8 +399,9 @@ export default function AttractionsPage() {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">추천 체류시간 (분)</label>
-                  <Input
+                  <input
                     type="number"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.recommended_duration}
                     onChange={(e) => setFormData(prev => ({ ...prev, recommended_duration: parseInt(e.target.value) }))}
                   />
@@ -410,30 +413,30 @@ export default function AttractionsPage() {
                 <label className="block text-sm font-medium mb-1">이미지 URL</label>
                 {formData.images.map((image, index) => (
                   <div key={index} className="flex gap-2 mb-2">
-                    <Input
+                    <input
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={image}
                       onChange={(e) => updateArrayField('images', index, e.target.value)}
                       placeholder="https://..."
                     />
-                    <Button
+                    <button
                       type="button"
-                      variant="outline"
+                      className="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
                       onClick={() => removeArrayField('images', index)}
                       disabled={formData.images.length === 1}
                     >
                       삭제
-                    </Button>
+                    </button>
                   </div>
                 ))}
-                <Button
+                <button
                   type="button"
-                  variant="outline"
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 mt-2 flex items-center gap-2"
                   onClick={() => addArrayField('images')}
-                  className="mt-2"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4" />
                   이미지 추가
-                </Button>
+                </button>
               </div>
 
               {/* 특징 */}
@@ -441,30 +444,30 @@ export default function AttractionsPage() {
                 <label className="block text-sm font-medium mb-1">특징</label>
                 {formData.features.map((feature, index) => (
                   <div key={index} className="flex gap-2 mb-2">
-                    <Input
+                    <input
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={feature}
                       onChange={(e) => updateArrayField('features', index, e.target.value)}
                       placeholder="예: 템플스테이 체험 가능"
                     />
-                    <Button
+                    <button
                       type="button"
-                      variant="outline"
+                      className="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
                       onClick={() => removeArrayField('features', index)}
                       disabled={formData.features.length === 1}
                     >
                       삭제
-                    </Button>
+                    </button>
                   </div>
                 ))}
-                <Button
+                <button
                   type="button"
-                  variant="outline"
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 mt-2 flex items-center gap-2"
                   onClick={() => addArrayField('features')}
-                  className="mt-2"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4" />
                   특징 추가
-                </Button>
+                </button>
               </div>
 
               {/* 태그 */}
@@ -472,46 +475,49 @@ export default function AttractionsPage() {
                 <label className="block text-sm font-medium mb-1">태그</label>
                 {formData.tags.map((tag, index) => (
                   <div key={index} className="flex gap-2 mb-2">
-                    <Input
+                    <input
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={tag}
                       onChange={(e) => updateArrayField('tags', index, e.target.value)}
                       placeholder="예: 사찰, 포토존"
                     />
-                    <Button
+                    <button
                       type="button"
-                      variant="outline"
+                      className="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
                       onClick={() => removeArrayField('tags', index)}
                       disabled={formData.tags.length === 1}
                     >
                       삭제
-                    </Button>
+                    </button>
                   </div>
                 ))}
-                <Button
+                <button
                   type="button"
-                  variant="outline"
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 mt-2 flex items-center gap-2"
                   onClick={() => addArrayField('tags')}
-                  className="mt-2"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4" />
                   태그 추가
-                </Button>
+                </button>
               </div>
 
               <div className="flex justify-end gap-4 pt-4">
-                <Button
+                <button
                   type="button"
-                  variant="outline"
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
                   onClick={() => {
                     setIsModalOpen(false);
                     resetForm();
                   }}
                 >
                   취소
-                </Button>
-                <Button type="submit">
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
                   {editingAttraction ? '수정' : '추가'}
-                </Button>
+                </button>
               </div>
             </form>
           </div>
