@@ -30,7 +30,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('customer_schedule');
   const [staffDocumentHTML, setStaffDocumentHTML] = useState<string>('');
-  const [roomAssignmentHTML, setRoomAssignmentHTML] = useState<string>('');
   const [roomAssignmentStaffHTML, setRoomAssignmentStaffHTML] = useState<string>('');
   const [teeTimeHTML, setTeeTimeHTML] = useState<string>('');
   const [teeTimeStaffHTML, setTeeTimeStaffHTML] = useState<string>('');
@@ -43,7 +42,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     { id: 'customer_schedule', label: '고객용 일정표', icon: '📋' },
     { id: 'customer_boarding', label: '고객용 탑승안내서', icon: '🚌' },
     { id: 'staff_boarding', label: '스탭용 탑승안내서', icon: '👥' },
-    { id: 'room_assignment', label: '객실 배정표 (고객용)', icon: '🏨' },
     { id: 'room_assignment_staff', label: '객실 배정표 (스탭용)', icon: '🏨' },
     { id: 'timetable', label: '티타임표 (고객용)', icon: '⛳' },
     { id: 'timetable-staff', label: '티타임표 (스탭용)', icon: '⛳' },
@@ -66,7 +64,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   useEffect(() => {
     if (activeTab === 'staff_boarding' && tourData) {
       fetchParticipantsForStaff();
-    } else if ((activeTab === 'room_assignment' || activeTab === 'room_assignment_staff') && tourData) {
+    } else if (activeTab === 'room_assignment_staff' && tourData) {
       fetchRoomAssignments();
     } else if ((activeTab === 'timetable' || activeTab === 'timetable-staff') && tourData) {
       fetchTeeTimes();
@@ -302,7 +300,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       console.log('기사 정보:', tourStaff);
       
       if (assignments && rooms) {
-        setRoomAssignmentHTML(generateRoomAssignmentHTML(assignments, rooms, tourStaff, false)); // 고객용
         setRoomAssignmentStaffHTML(generateRoomAssignmentHTML(assignments, rooms, tourStaff, true)); // 스탭용
       }
     } catch (error) {
@@ -418,8 +415,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         return getCustomerBoardingHTML();
       case 'staff_boarding':
         return staffDocumentHTML || '<div>스탭용 문서를 생성 중입니다...</div>';
-      case 'room_assignment':
-        return roomAssignmentHTML || '<div>객실 배정표를 생성 중입니다...</div>';
       case 'room_assignment_staff':
         return roomAssignmentStaffHTML || '<div>객실 배정표를 생성 중입니다...</div>';
       case 'timetable':
@@ -1029,7 +1024,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   <div class="container">
     <div class="header">
       <h1>객실 배정표${isStaff ? ' (스탭용)' : ''}</h1>
-      <p style="font-size: 20px; font-weight: bold; margin: 10px 0;">${tourData.title}</p>
+      <p>${tourData.title}</p>
     </div>
     
     <div class="content">
@@ -1071,7 +1066,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                       <td class="text-center">${participant.name}</td>
                       ${isStaff ? `<td class="text-center">${participant.phone || '-'}</td>` : ''}
                       <td class="text-center">${participant.team_name || '-'}</td>
-                      ${isStaff ? `<td>${participant.note || '-'}</td>` : ''}
+                      ${isStaff ? `<td>${participant.special_notes || '-'}</td>` : ''}
                     </tr>
                   `).join('')}
                 </tbody>
@@ -2028,76 +2023,92 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const getRoomAssignmentStyles = () => {
     return `
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+      
       body {
         margin: 0;
         padding: 0;
         font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         line-height: 1.6;
         color: #333;
-        font-size: 14px;
+        font-size: 12px;
       }
       
       .container {
-        max-width: 900px;
+        width: 100%;
+        max-width: 210mm;
         margin: 0 auto;
         background: white;
-        padding: 30px;
+        padding: 0;
       }
       
       .header {
         text-align: center;
-        padding-bottom: 30px;
-        border-bottom: 3px solid #2c5282;
-        margin-bottom: 30px;
+        padding: 20px;
+        background: #e6eef7;
+        margin-bottom: 20px;
       }
       
       .header h1 {
-        font-size: 28px;
-        color: #2c5282;
-        margin-bottom: 10px;
+        font-size: 22px;
+        color: #4a6fa5;
+        margin: 0 0 10px 0;
+        font-weight: bold;
+      }
+      
+      .header p {
+        font-size: 16px;
+        color: #555;
+        margin: 0;
+        font-weight: 500;
       }
       
       .content {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 0 10px;
       }
       
       .room-card {
         border: 1px solid #ddd;
-        border-radius: 8px;
+        border-radius: 5px;
         overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background: white;
+        page-break-inside: avoid;
       }
       
       .room-header {
-        background: #4a6fa5;
-        color: white;
-        padding: 15px;
+        background: #a1b7d1;
+        color: #2c5282;
+        padding: 10px 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-weight: bold;
       }
       
       .room-number {
-        font-size: 18px;
+        font-size: 14px;
         font-weight: bold;
       }
       
       .room-type {
-        font-size: 14px;
-        opacity: 0.9;
+        font-size: 12px;
       }
       
       .room-capacity {
-        font-size: 14px;
-        background: rgba(255, 255, 255, 0.2);
-        padding: 2px 8px;
-        border-radius: 12px;
+        font-size: 12px;
+        background: rgba(255, 255, 255, 0.5);
+        padding: 2px 6px;
+        border-radius: 10px;
       }
       
       .room-body {
-        padding: 15px;
+        padding: 0;
       }
       
       .empty-room {
@@ -2105,26 +2116,30 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         color: #999;
         padding: 20px;
         font-style: italic;
+        font-size: 12px;
       }
       
       .participant-table {
         width: 100%;
         border-collapse: collapse;
+        font-size: 11px;
       }
       
       .participant-table th {
         background: #f8f9fa;
-        padding: 8px;
-        text-align: left;
-        font-size: 13px;
-        color: #666;
+        padding: 6px;
+        text-align: center;
+        font-size: 11px;
+        color: #555;
         border-bottom: 1px solid #ddd;
+        font-weight: bold;
       }
       
       .participant-table td {
-        padding: 8px;
-        font-size: 13px;
+        padding: 6px;
+        font-size: 11px;
         border-bottom: 1px solid #eee;
+        text-align: center;
       }
       
       .participant-table tr:last-child td {
@@ -2136,13 +2151,41 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       }
       
       @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        
         .container {
-          max-width: 100%;
-          padding: 20px;
+          padding: 0;
+        }
+        
+        .content {
+          gap: 10px;
         }
         
         .room-card {
           page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        
+        .header {
+          background: #e6eef7 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        
+        .room-header {
+          background: #a1b7d1 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+      
+      @media screen {
+        .container {
+          padding: 20px;
+          max-width: 900px;
         }
       }
     `;
