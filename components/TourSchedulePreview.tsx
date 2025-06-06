@@ -703,15 +703,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div class="header">
       <div class="header-title">싱싱골프투어</div>
       <div class="header-subtitle">${tourData.title}</div>
-      <div class="header-date">
-        <span>${tourData.duration || ''} ${tourData.destination || ''}</span>
-        <span style="margin-left: 8px;">${tourData.start_date && tourData.end_date ? `${new Date(tourData.start_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.start_date).getDay()]})~${new Date(tourData.end_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.end_date).getDay()]})` : ''}</span>
-      </div>
     </div>
     
     ${/* 통합된 경로 카드 (탑승지 + 경유지) */''}
     <div class="route-section">
-      <h3 class="section-title">이동 경로 및 정차 정보</h3>
+      <div class="route-header-box">
+        <div class="route-header-title">싱싱골프투어</div>
+        <div class="route-header-subtitle">${tourData.duration || ''} ${tourData.destination || ''}</div>
+        <div class="route-header-date">${tourData.start_date && tourData.end_date ? `${new Date(tourData.start_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.start_date).getDay()]})~${new Date(tourData.end_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '/').replace('.', '')}(${['일','월','화','수','목','금','토'][new Date(tourData.end_date).getDay()]})` : ''}</div>
+      </div>
       <div class="boarding-cards">
         ${tourBoardingPlaces.map((place: any, index: number) => {
           const boardingPlace = place.boarding_place;
@@ -1381,8 +1381,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .container { max-width: 800px; margin: 0 auto; }
     .header { background-color: ${operational.header}; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
     .header-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-    .header-subtitle { font-size: 18px; opacity: 0.9; margin-bottom: 5px; }
-    .header-date { font-size: 20px; opacity: 0.9; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
+    .header-subtitle { font-size: 26px; font-weight: bold; margin-bottom: 5px; }
     .boarding-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 25px; }
     .boarding-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
     .card-border { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #4299e1; }
@@ -1430,6 +1429,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     .contact-phone { font-size: 16px; color: #4a5568; margin: 5px 0; }
     /* 경로 섹션 스타일 */
     .route-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    .route-header-box { background: #4299e1; color: white; padding: 25px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+    .route-header-title { font-size: 22px; margin-bottom: 8px; }
+    .route-header-subtitle { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
+    .route-header-date { font-size: 24px; }
     .footer { text-align: center; padding: 15px; background-color: ${operational.header}; color: white; border-radius: 10px; margin-top: 20px; }
     /* 모바일 대응 */
     @media (max-width: 640px) { 
