@@ -1191,6 +1191,19 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               
               const teamGenderType = teamGenderAnalysis();
               
+              // 시간 표시 수정 (초 제거)
+              const formatTime = (time: string) => {
+                if (!time) return '-';
+                return time.substring(0, 5); // HH:MM만 표시
+              };
+              
+              // 코스 이름만 표시 (골프장 이름 제거)
+              const formatCourseName = (course: string) => {
+                if (!course) return '-';
+                const parts = course.split(' - ');
+                return parts.length > 1 ? parts[1] : course;
+              };
+              
               // 티타임에 플레이어가 있는 경우
               if (sortedPlayers.length > 0) {
                 return sortedPlayers.map((player: any, index: number) => {
@@ -1223,20 +1236,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     (participant.gender === 'F' || participant.gender === '여') ? '#ec4899' : 
                     '#6b7280';
                   
-                  // 시간 표시 수정 (초 제거)
-              const formatTime = (time: string) => {
-                if (!time) return '-';
-                return time.substring(0, 5); // HH:MM만 표시
-              };
-              
-              // 코스 이름만 표시 (골프장 이름 제거)
-              const formatCourseName = (course: string) => {
-                if (!course) return '-';
-                const parts = course.split(' - ');
-                return parts.length > 1 ? parts[1] : course;
-              };
-              
-              const courseStyle = 
+                  const courseStyle = 
                     (teeTime.course || teeTime.golf_course)?.includes('레이크') || (teeTime.course || teeTime.golf_course)?.includes('Lake') 
                       ? 'background-color: #DBEAFE; color: #1E40AF;' 
                       : (teeTime.course || teeTime.golf_course)?.includes('힐스') || (teeTime.course || teeTime.golf_course)?.includes('Hills')
@@ -1266,6 +1266,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               } else {
                 // 티타임에 플레이어가 없는 경우 (기존 players 필드 사용)
                 const playerNames = teeTime.players ? JSON.parse(teeTime.players) : [];
+                
+                // 시간 표시 수정 (초 제거) - 여기서도 함수 사용
+                const formatTime = (time: string) => {
+                  if (!time) return '-';
+                  return time.substring(0, 5); // HH:MM만 표시
+                };
+                
+                // 코스 이름만 표시 (골프장 이름 제거) - 여기서도 함수 사용
+                const formatCourseName = (course: string) => {
+                  if (!course) return '-';
+                  const parts = course.split(' - ');
+                  return parts.length > 1 ? parts[1] : course;
+                };
+                
                 const courseStyle = 
                   (teeTime.course || teeTime.golf_course)?.includes('레이크') || (teeTime.course || teeTime.golf_course)?.includes('Lake') 
                     ? 'background-color: #DBEAFE; color: #1E40AF;' 
