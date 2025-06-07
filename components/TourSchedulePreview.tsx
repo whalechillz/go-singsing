@@ -40,14 +40,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   // 문서 타입 정의
   const DOCUMENT_TYPES = [
-    { id: 'customer_schedule', label: '고객용 일정표', icon: '📋' },
-    { id: 'customer_boarding', label: '고객용 탑승안내서', icon: '🚌' },
-    { id: 'staff_boarding', label: '스탭용 탑승안내서', icon: '👥' },
-    { id: 'room_assignment', label: '객실 배정표 (고객용)', icon: '🏨' },
-    { id: 'room_assignment_staff', label: '객실 배정표 (스탭용)', icon: '🏨' },
+    { id: 'customer_schedule', label: '일정표', icon: '📋' },
+    { id: 'customer_boarding', label: '탑승안내 (고객용)', icon: '🚌' },
+    { id: 'staff_boarding', label: '탑승안내 (스탭용)', icon: '👥' },
+    { id: 'room_assignment', label: '객실배정 (고객용)', icon: '🏨' },
+    { id: 'room_assignment_staff', label: '객실배정 (스탭용)', icon: '🏨' },
     { id: 'customer_timetable', label: '티타임표 (고객용)', icon: '⛳' },
-    { id: 'staff_timetable', label: '티타임표 (내부용)', icon: '⛳' },
-    { id: 'simplified', label: '간편 일정표', icon: '📄' }
+    { id: 'staff_timetable', label: '티타임표 (스탭용)', icon: '⛳' },
+    { id: 'simplified', label: '간편일정', icon: '📄' }
   ];
 
   useEffect(() => {
@@ -431,7 +431,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         console.log('플레이어 정보가 포함된 티타임 데이터:', teeTimesWithPlayers);
         
         const customerHTML = generateTeeTimeHTML(teeTimesWithPlayers, false); // 고객용
-        const staffHTML = generateTeeTimeHTML(teeTimesWithPlayers, true); // 내부용
+        const staffHTML = generateTeeTimeHTML(teeTimesWithPlayers, true); // 스탭용
         console.log('HTML 생성됨:', customerHTML.length, staffHTML.length);
         setTeeTimeCustomerHTML(customerHTML);
         setTeeTimeStaffHTML(staffHTML);
@@ -505,7 +505,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${tourData.title} - 고객용 일정표</title>
+  <title>${tourData.title} - 일정표</title>
   <style>
     ${getCustomerScheduleStyles()}
   </style>
@@ -1163,7 +1163,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     ${isStaff ? `
     <div class="internal-info">
       <p style="color: #e74c3c; font-weight: bold;">※ 콤프룸은 붉은색으로 표시되어 있습니다.</p>
-      <p>※ 이 문서는 내부용으로 고객에게 제공하지 마세요.</p>
+      <p>※ 이 문서는 스탭용으로 고객에게 제공하지 마세요.</p>
     </div>
     ` : ''}
   </div>
@@ -1195,7 +1195,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <body>
   <div class="container">
     ${isStaff ? `
-    <!-- 내부용 헤더 섹션 -->
+    <!-- 스탭용 헤더 섹션 -->
     <div class="header-container">
       <div class="header-content">
         <div class="title-section">
@@ -1236,7 +1236,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     
     ${Object.entries(teeTimesByDate).map(([date, times]: [string, any]) => {
       if (isStaff) {
-        // 내부용 스타일
+        // 스탭용 스타일
         const dateStr = new Date(date).toLocaleDateString('ko-KR', { 
           year: 'numeric', 
           month: 'long', 
