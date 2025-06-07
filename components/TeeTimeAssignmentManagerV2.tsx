@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Users, Check, AlertCircle, Clock, Calendar, CheckSquare, X, UserCheck, RefreshCw, ArrowUpDown } from "lucide-react";
 
-
 type Participant = {
   id: string;
   name: string;
@@ -12,8 +11,8 @@ type Participant = {
   note: string;
   status: string;
   tour_id: string;
-  gender?: string; // 성별 필드 추가 ('M' | 'F' | '남' | '여')
-  tee_time_assignments?: string[]; // 배정된 티타임 ID들
+  gender?: string;
+  tee_time_assignments?: string[];
 };
 
 type TeeTime = {
@@ -23,28 +22,22 @@ type TeeTime = {
   golf_course: string;
   tee_time: string;
   max_players: number;
-  assigned_count?: number; // 현재 배정된 인원
-  team_no?: number; // 팀 번호
+  assigned_count?: number;
+  team_no?: number;
 };
 
 type Tour = {
   id: string;
   tour_title: string;
   tour_period: string;
-  
-  // 문서 표시 옵션
   show_staff_info?: boolean;
   show_footer_message?: boolean;
   show_company_phones?: boolean;
   show_golf_phones?: boolean;
-  
-  // 연락처 정보
   company_phone?: string;
   company_mobile?: string;
   golf_reservation_phone?: string;
   golf_reservation_mobile?: string;
-  
-  // 푸터 및 주의사항
   footer_message?: string;
   notices?: string;
 };
@@ -59,6 +52,13 @@ type StaffMember = {
 
 type Props = { tourId: string; refreshKey?: number };
 
+// 코스명 간소화 함수
+const simplifyCourseName = (fullName: string): string => {
+  // "골프장명 - 코스명" 형태에서 코스명만 추출
+  const parts = fullName.split(' - ');
+  return parts.length > 1 ? parts[1] : fullName;
+};
+
 const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
@@ -70,7 +70,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   
-  // 토스트 메시지 표시 함수
   const showToast = (type: 'success' | 'error', message: string) => {
     setToastMessage({ type, message });
     setTimeout(() => setToastMessage(null), 3000);
@@ -87,12 +86,11 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   const [selectedGroupParticipants, setSelectedGroupParticipants] = useState<string[]>([]);
   const [adjustments, setAdjustments] = useState<{ [date: string]: { from: string; to: string } }>({});
 
-  // 데이터 fetch - 다대다 관계 처리 (완전히 새로 작성)
+  // 데이터 fetch
   const fetchData = async () => {
     setLoading(true);
     setError("");
     try {
-      // 1. 참가자 데이터 가져오기 (이 투어만)
       const { data: participantsData, error: participantsError } = await supabase
         .from("singsing_participants")
         .select("*")
@@ -101,13 +99,11 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       
       if (participantsError) throw participantsError;
       
-      // 성별 정보를 포함한 참가자 데이터
       const participantsWithGender = (participantsData || []).map(p => ({
         ...p,
         gender: p.gender || null
       }));
       
-      // 2. 티타임 데이터 가져오기
       const { data: teeTimesData, error: teeTimesError } = await supabase
         .from("singsing_tee_times")
         .select("*")
@@ -115,7 +111,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         
       if (teeTimesError) throw teeTimesError;
       
-      // 3. 티타임 배정 정보 가져오기 (중복 제거된 데이터)
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from("singsing_participant_tee_times")
         .select("participant_id, tee_time_id")
@@ -125,7 +120,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         console.log("배정 데이터 조회 오류:", assignmentsError);
       }
       
-      // 4. 중복 제거된 배정 정보만 사용
       const assignmentMap = new Map<string, Set<string>>();
       assignmentsData?.forEach(assignment => {
         if (!assignmentMap.has(assignment.participant_id)) {
@@ -134,7 +128,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         assignmentMap.get(assignment.participant_id)?.add(assignment.tee_time_id);
       });
       
-      // 5. 참가자별 티타임 배정 정보 매핑
       const participantsWithAssignments = participantsData?.map(participant => ({
         ...participant,
         tee_time_assignments: Array.from(assignmentMap.get(participant.id) || [])
@@ -142,7 +135,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       
       setParticipants(participantsWithAssignments);
       
-      // 6. 티타임별 배정 인원 계산 (중복 제거)
       const teeTimeAssignmentCount = new Map<string, number>();
       assignmentsData?.forEach(assignment => {
         const count = teeTimeAssignmentCount.get(assignment.tee_time_id) || 0;
@@ -166,7 +158,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         return 0;
       }));
       
-      // 7. 투어 및 스탭 데이터 가져오기
       const { data: tourData, error: tourError } = await supabase
         .from("singsing_tours")
         .select("*")
@@ -218,18 +209,15 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       for (const adjustment of adjustments) {
         const { date, fromTeeTimeId, toTeeTimeId } = adjustment;
         
-        if (fromTeeTimeId === toTeeTimeId) continue; // 변경사항 없으면 스킵
+        if (fromTeeTimeId === toTeeTimeId) continue;
         
-        // 해당 티타임의 참가자들 이동
         for (const participantId of selectedGroupParticipants) {
-          // 기존 배정 삭제
           await supabase
             .from("singsing_participant_tee_times")
             .delete()
             .eq("participant_id", participantId)
             .eq("tee_time_id", fromTeeTimeId);
             
-          // 새 배정 추가
           await supabase
             .from("singsing_participant_tee_times")
             .insert({
@@ -239,7 +227,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         }
       }
       
-      // 전체 데이터 새로고침
       await fetchData();
       
       showToast('success', '그룹 일정이 조정되었습니다.');
@@ -263,7 +250,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         return;
       }
 
-      // 이동할 참가자 찾기
       const participantsToMove = participants.filter(p => 
         p.tee_time_assignments?.includes(fromTeeTimeId)
       );
@@ -273,23 +259,19 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         return;
       }
 
-      // 대상 티타임의 여유 공간 확인
       const availableSpace = toTeeTime.max_players - (toTeeTime.assigned_count || 0);
       if (availableSpace < participantsToMove.length) {
         showToast('error', `대상 티타임에 충분한 공간이 없습니다. (필요: ${participantsToMove.length}명, 가능: ${availableSpace}명)`);
         return;
       }
 
-      // 각 참가자에 대해 배정 업데이트
       for (const participant of participantsToMove) {
-        // 기존 배정 삭제
         await supabase
           .from("singsing_participant_tee_times")
           .delete()
           .eq("participant_id", participant.id)
           .eq("tee_time_id", fromTeeTimeId);
 
-        // 새 배정 추가
         await supabase
           .from("singsing_participant_tee_times")
           .insert({
@@ -298,7 +280,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           });
       }
 
-      // 로컬 상태 업데이트
       setParticipants(prev => prev.map(p => {
         if (participantsToMove.some(pm => pm.id === p.id)) {
           const newAssignments = p.tee_time_assignments?.filter(id => id !== fromTeeTimeId) || [];
@@ -308,7 +289,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         return p;
       }));
 
-      // 티타임 카운트 업데이트
       setTeeTimes(prev => prev.map(tt => {
         if (tt.id === fromTeeTimeId) {
           return { ...tt, assigned_count: 0 };
@@ -339,7 +319,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         .filter(tt => tt.play_date === date)
         .map(tt => tt.id);
 
-      // 해당 날짜의 모든 배정 삭제
       const { error } = await supabase
         .from("singsing_participant_tee_times")
         .delete()
@@ -347,7 +326,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
       if (error) throw error;
 
-      // 로컬 상태 즉시 업데이트
       setParticipants(prev => prev.map(p => ({
         ...p,
         tee_time_assignments: p.tee_time_assignments?.filter(id => 
@@ -355,7 +333,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         ) || []
       })));
 
-      // 티타임 카운트 초기화
       setTeeTimes(prev => prev.map(tt => {
         if (dateTeeTimeIds.includes(tt.id)) {
           return { ...tt, assigned_count: 0 };
@@ -373,12 +350,11 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
   useEffect(() => { if (tourId) fetchData(); }, [tourId, refreshKey]);
 
-  // 티타임 배정/해제 (안전하게 수정)
+  // 티타임 배정/해제
   const handleToggleTeeTimeAssignment = async (participantId: string, teeTimeId: string) => {
     try {
       setAssigning(participantId);
       
-      // 현재 배정 상태 확인
       const { data: existingAssignment } = await supabase
         .from("singsing_participant_tee_times")
         .select("*")
@@ -387,7 +363,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         .maybeSingle();
       
       if (existingAssignment) {
-        // 배정 해제
         const { error } = await supabase
           .from("singsing_participant_tee_times")
           .delete()
@@ -396,7 +371,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         
         if (error) throw error;
         
-        // 즉시 로컬 상태 업데이트 (미배정 참가자 즉시 표시)
         setParticipants(prev => prev.map(p => {
           if (p.id === participantId) {
             const updatedAssignments = p.tee_time_assignments?.filter(id => id !== teeTimeId) || [];
@@ -408,7 +382,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           return p;
         }));
         
-        // 티타임 카운트도 즉시 업데이트
         setTeeTimes(prev => prev.map(tt => {
           if (tt.id === teeTimeId) {
             return {
@@ -419,21 +392,18 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           return tt;
         }));
         
-        // 성공 메시지
         const participant = participants.find(p => p.id === participantId);
         showToast('success', `${participant?.name || '참가자'}님의 배정이 해제되었습니다.`);
         setAssignSuccess(participantId);
         setTimeout(() => setAssignSuccess(null), 1200);
         
       } else {
-        // 배정 추가
         const teeTime = teeTimes.find(t => t.id === teeTimeId);
         if (teeTime && (teeTime.assigned_count || 0) >= teeTime.max_players) {
           showToast('error', '이 티타임은 정원이 가득 찼습니다.');
           return;
         }
         
-        // 삽입 (중복 방지)
         const { error } = await supabase
           .from("singsing_participant_tee_times")
           .insert({ 
@@ -442,10 +412,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           });
         
         if (error) {
-          // 중복 키 오류는 무시
           if (error.code === '23505') {
             console.log('이미 배정됨');
-            // 이미 배정된 경우 데이터 새로고침
             await fetchData();
             return;
           } else {
@@ -453,7 +421,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           }
         }
         
-        // 즉시 로컬 상태 업데이트 (배정 즉시 표시)
         setParticipants(prev => prev.map(p => {
           if (p.id === participantId) {
             const currentAssignments = p.tee_time_assignments || [];
@@ -467,7 +434,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           return p;
         }));
         
-        // 티타임 카운트도 즉시 업데이트
         setTeeTimes(prev => prev.map(tt => {
           if (tt.id === teeTimeId) {
             return {
@@ -478,7 +444,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           return tt;
         }));
         
-        // 성공 메시지
         const participant = participants.find(p => p.id === participantId);
         const teeTimeInfo = teeTimes.find(t => t.id === teeTimeId);
         showToast('success', `${participant?.name || '참가자'}님이 ${teeTimeInfo?.tee_time || '티타임'}에 배정되었습니다.`);
@@ -486,20 +451,16 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         setTimeout(() => setAssignSuccess(null), 1200);
       }
       
-      // 백그라운드에서 전체 데이터 새로고침 제거 (로컬 상태만 사용)
-      // fetchData(); // 제거 - 로컬 상태 업데이트로 충분
-      
     } catch (error: any) {
       console.error('티타임 배정 오류:', error);
       showToast('error', `오류 발생: ${error.message}`);
-      // 오류 시에만 데이터 다시 로드
       await fetchData();
     } finally {
       setAssigning(null);
     }
   };
 
-  // 일괄 배정 (중복 방지 강화)
+  // 일괄 배정
   const handleBulkAssign = async () => {
     if (selectedForBulk.length === 0) {
       alert('참가자를 선택해주세요.');
@@ -520,7 +481,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       
       for (const participantId of selectedForBulk) {
         for (const date of targetDates) {
-          // 이미 해당 날짜에 배정되어 있는지 확인
           const { data: existingOnDate } = await supabase
             .from("singsing_participant_tee_times")
             .select("tee_time_id")
@@ -528,14 +488,12 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             .in("tee_time_id", teeTimes.filter(tt => tt.play_date === date).map(tt => tt.id));
           
           if (existingOnDate && existingOnDate.length > 0) {
-            continue; // 이미 배정됨
+            continue;
           }
           
           const dateTeeTimes = teeTimes.filter(tt => tt.play_date === date);
           
-          // 빈 자리가 있는 첫 번째 티타임 찾기
           for (const teeTime of dateTeeTimes) {
-            // 현재 배정 인원 다시 확인
             const { data: currentAssignments } = await supabase
               .from("singsing_participant_tee_times")
               .select("participant_id")
@@ -544,7 +502,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             const currentCount = currentAssignments?.length || 0;
             
             if (currentCount < teeTime.max_players) {
-              // 배정 시도
               const { error } = await supabase
                 .from("singsing_participant_tee_times")
                 .insert({
@@ -554,9 +511,8 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
               
               if (!error) {
                 totalAssigned++;
-                break; // 성공했으면 다음 날짜로
+                break;
               } else if (error.code !== '23505') {
-                // 중복 키 오류가 아닌 경우만 에러 처리
                 console.error('배정 오류:', error);
               }
             }
@@ -573,12 +529,11 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     }
   };
 
-  // 자동 배정 (중복 방지 강화)
+  // 자동 배정
   const handleSmartAutoAssign = async () => {
     if (!window.confirm('미배정 참가자를 자동으로 전체 일정에 배정하시겠습니까?')) return;
     
     try {
-      // 완전 미배정 참가자 찾기
       const unassigned = participants.filter(p => 
         !p.tee_time_assignments || p.tee_time_assignments.length === 0
       );
@@ -593,11 +548,9 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
 
       for (const participant of unassigned) {
         for (const [date, dayTeeTimes] of dateGroups) {
-          // 가장 여유있는 티타임 찾기
           let assigned = false;
           
           for (const teeTime of dayTeeTimes) {
-            // 현재 배정 인원 확인
             const { data: currentAssignments } = await supabase
               .from("singsing_participant_tee_times")
               .select("participant_id")
@@ -646,8 +599,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     return participant?.tee_time_assignments?.some(id => dateTeeTimeIds.includes(id)) || false;
   };
 
-
-
   // 날짜별로 티타임 그룹화
   const teeTimesByDate = teeTimes.reduce((acc, tt) => {
     const date = tt.play_date;
@@ -675,8 +626,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     !p.tee_time_assignments || p.tee_time_assignments.length === 0
   ).length;
 
-
-
   // 미배정 참가자 필터링
   const filteredUnassigned = participants.filter(p => 
     (!p.tee_time_assignments || p.tee_time_assignments.length === 0) && 
@@ -689,8 +638,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     await fetchData();
     showToast('success', '데이터가 업데이트되었습니다.');
   };
-
-
 
   return (
     <div className="mb-8 relative">
@@ -724,7 +671,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             <RefreshCw className="w-4 h-4" />
             새로고침
           </button>
-
         </div>
       </div>
 
@@ -904,21 +850,9 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                               <Clock className="w-4 h-4 inline mr-1" />
                               {teeTime.tee_time}
                             </span>
-                            {/* 코스별 구분 표시 개선 - 배경색 추가 */}
-                            <span className="px-3 py-1.5 rounded text-sm font-bold text-white" style={{
-                              ...(teeTime.golf_course?.includes('레이크') && { backgroundColor: '#3b82f6' }),
-                              ...(teeTime.golf_course?.includes('파인') && { backgroundColor: '#10b981' }),
-                              ...(teeTime.golf_course?.includes('힐스') && { backgroundColor: '#f59e0b' }),
-                              ...(teeTime.golf_course?.includes('밸리') && { backgroundColor: '#8b5cf6' }),
-                              ...(teeTime.golf_course?.includes('오션') && { backgroundColor: '#06b6d4' }),
-                              ...(!teeTime.golf_course?.includes('레이크') && 
-                                  !teeTime.golf_course?.includes('파인') && 
-                                  !teeTime.golf_course?.includes('힐스') && 
-                                  !teeTime.golf_course?.includes('밸리') && 
-                                  !teeTime.golf_course?.includes('오션') && 
-                                  { backgroundColor: '#6b7280' })
-                            }}>
-                              {teeTime.golf_course}
+                            {/* 코스명 간소화 및 회색 배경으로 변경 */}
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300">
+                              {simplifyCourseName(teeTime.golf_course)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -945,7 +879,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                                 <button
                                   onClick={() => {
                                     setSelectedGroupParticipants(assignedParticipants.map(p => p.id));
-                                    // 현재 배정된 티타임 초기화
                                     const initialAdjustments: { [date: string]: { from: string; to: string } } = {};
                                     Object.keys(teeTimesByDate).forEach(date => {
                                       const dateTeeTimeIds = teeTimes
@@ -1022,9 +955,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                             <div className="flex flex-wrap gap-1">
                               {participants
                                 .filter(p => {
-                                  // 이미 이 티타임에 배정된 사람 제외
                                   if (p.tee_time_assignments?.includes(teeTime.id)) return false;
-                                  // 같은 날짜의 다른 티타임에 이미 배정된 사람 제외
                                   const sameDateTeeTimeIds = teeTimes
                                     .filter(tt => tt.play_date === teeTime.play_date)
                                     .map(tt => tt.id);
@@ -1033,7 +964,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                                   );
                                   return !alreadyAssignedToDate;
                                 })
-                                .slice(0, 5) // 최대 5명만 표시
+                                .slice(0, 5)
                                 .map(p => (
                                   <button
                                     key={p.id}
@@ -1087,7 +1018,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {filteredUnassigned.map(p => {
-                  // 참가자가 배정되지 않은 날짜 찾기
                   const assignedDates = new Set(
                     p.tee_time_assignments?.map(id => 
                       teeTimes.find(tt => tt.id === id)?.play_date
@@ -1231,7 +1161,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                     <div className="font-medium text-blue-900">현재 선택된 티타임</div>
                     <div className="mt-1">
                       {new Date(sourceTeeTime.play_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })} - 
-                      {sourceTeeTime.tee_time} ({sourceTeeTime.golf_course})
+                      {sourceTeeTime.tee_time} ({simplifyCourseName(sourceTeeTime.golf_course)})
                     </div>
                     <div className="mt-2 text-sm text-blue-700">
                       이동할 참가자: {sourceParticipants.map(p => p.name).join(', ')}
@@ -1246,7 +1176,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                           {new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
                         </div>
                         {times
-                          .filter(tt => tt.id !== selectedTeeTime) // 현재 선택된 티타임 제외
+                          .filter(tt => tt.id !== selectedTeeTime)
                           .map(teeTime => {
                             const currentCount = teeTime.assigned_count || 0;
                             const availableSpace = teeTime.max_players - currentCount;
@@ -1270,7 +1200,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                                 <div className="flex justify-between items-center">
                                   <div>
                                     <span className="font-medium">{teeTime.tee_time}</span>
-                                    <span className="ml-2 text-sm text-gray-600">({teeTime.golf_course})</span>
+                                    <span className="ml-2 text-sm text-gray-600">({simplifyCourseName(teeTime.golf_course)})</span>
                                   </div>
                                   <div className="text-sm">
                                     {currentCount}/{teeTime.max_players}명
@@ -1313,7 +1243,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             </div>
             
             {(() => {
-              // 선택된 참가자 정보
               const selectedParticipantDetails = participants.filter(p => 
                 selectedGroupParticipants.includes(p.id)
               );
@@ -1351,13 +1280,11 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                             const currentId = adjustments[date]?.from;
                             
                             if (index === 0) {
-                              // 첫날은 이른 시간
                               const earlyTime = times[0];
                               if (earlyTime) {
                                 newAdjustments[date] = { from: currentId || '', to: earlyTime.id };
                               }
                             } else {
-                              // 나머지는 늦은 시간
                               const lateTime = times[times.length - 1];
                               if (lateTime) {
                                 newAdjustments[date] = { from: currentId || '', to: lateTime.id };
@@ -1402,7 +1329,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                             const times = teeTimesByDate[date].sort((a, b) => a.tee_time.localeCompare(b.tee_time));
                             const currentId = adjustments[date]?.from;
                             
-                            // 날짜마다 점진적으로 늦게
                             const targetIndex = Math.min(index * 2, times.length - 1);
                             const targetTime = times[targetIndex];
                             
@@ -1444,7 +1370,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                               <div className="text-sm text-gray-600 mb-1">현재 티타임</div>
                               <div className="font-medium">
                                 {currentTeeTime ? (
-                                  `${currentTeeTime.tee_time} (${currentTeeTime.golf_course})`
+                                  `${currentTeeTime.tee_time} (${simplifyCourseName(currentTeeTime.golf_course)})`
                                 ) : (
                                   '미배정'
                                 )}
@@ -1484,7 +1410,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
                                       value={tt.id}
                                       disabled={!canAccommodate}
                                     >
-                                      {tt.tee_time} ({tt.golf_course}) - {currentCount}/{tt.max_players}명
+                                      {tt.tee_time} ({simplifyCourseName(tt.golf_course)}) - {currentCount}/{tt.max_players}명
                                       {!canAccommodate && ' (공간 부족)'}
                                     </option>
                                   );
@@ -1541,8 +1467,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       )}
       
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-      
-
     </div>
   );
 };
