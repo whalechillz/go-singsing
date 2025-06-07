@@ -63,6 +63,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [previewType, setPreviewType] = useState<'staff'>('staff');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // 데이터 fetch
   const fetchData = async () => {
@@ -353,13 +354,27 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-gray-900">객실별 참가자 그룹핑</h2>
-        <button
-          onClick={handlePreview}
-          className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
-        >
-          <Eye className="w-4 h-4" />
-          내부용 미리보기
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              setIsRefreshing(true);
+              await fetchData();
+              setIsRefreshing(false);
+            }}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? '새로고침 중...' : '새로고침'}
+          </button>
+          <button
+            onClick={handlePreview}
+            className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+          >
+            <Eye className="w-4 h-4" />
+            내부용 미리보기
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -515,14 +530,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         type={previewType}
         initialDriverName={tourStaff?.name || tour?.driver_name || '기사님'}
         initialDriverPhone={tourStaff?.phone || tour?.driver_phone || '010-0000-0000'}
-        onRefresh={async () => {
-          await fetchData();
-          // 데이터 새로고침 후 미리보기 HTML도 다시 생성
-          const defaultDriverName = tourStaff?.name || tour?.driver_name || '기사님';
-          const defaultDriverPhone = tourStaff?.phone || '010-0000-0000';
-          const html = generatePreviewHTML(previewType, defaultDriverName, defaultDriverPhone);
-          setPreviewHtml(html);
-        }}
       />
     </div>
   );

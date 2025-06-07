@@ -1,6 +1,5 @@
 "use client";
-import { useState } from "react";
-import { X, Printer, Download, RefreshCw } from "lucide-react";
+import { X, Printer, Download } from "lucide-react";
 
 type Props = {
   isOpen: boolean;
@@ -9,12 +8,9 @@ type Props = {
   type: 'staff';
   initialDriverName?: string;
   initialDriverPhone?: string;
-  onRefresh?: () => void;
 };
 
-const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type, onRefresh }) => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
+const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type }) => {
   if (!isOpen) return null;
 
   // 인쇄 기능
@@ -56,31 +52,22 @@ const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type, o
           </button>
         </div>
 
-        {/* 미리보기 영역 */}
-        <div className="flex-1 overflow-auto p-4">
-          <iframe
-            srcDoc={html}
-            className="w-full h-full border rounded"
-            style={{ minHeight: '600px' }}
-          />
+        {/* 미리보기 영역 - 상하 스크롤 개선 */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full w-full p-4">
+            <iframe
+              srcDoc={html}
+              className="w-full h-full border rounded"
+              style={{ 
+                minHeight: 'calc(100vh - 200px)',
+                height: 'calc(100vh - 200px)'
+              }}
+            />
+          </div>
         </div>
 
         {/* 액션 버튼 */}
         <div className="flex justify-end gap-2 p-4 border-t bg-gray-50">
-          {onRefresh && (
-            <button
-              onClick={async () => {
-                setIsRefreshing(true);
-                await onRefresh();
-                setIsRefreshing(false);
-              }}
-              disabled={isRefreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? '새로고침 중...' : '새로고침'}
-            </button>
-          )}
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
