@@ -515,6 +515,14 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         type={previewType}
         initialDriverName={tourStaff?.name || tour?.driver_name || '기사님'}
         initialDriverPhone={tourStaff?.phone || tour?.driver_phone || '010-0000-0000'}
+        onRefresh={async () => {
+          await fetchData();
+          // 데이터 새로고침 후 미리보기 HTML도 다시 생성
+          const defaultDriverName = tourStaff?.name || tour?.driver_name || '기사님';
+          const defaultDriverPhone = tourStaff?.phone || '010-0000-0000';
+          const html = generatePreviewHTML(previewType, defaultDriverName, defaultDriverPhone);
+          setPreviewHtml(html);
+        }}
       />
     </div>
   );

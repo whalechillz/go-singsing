@@ -1,5 +1,6 @@
 "use client";
-import { X, Printer, Download } from "lucide-react";
+import { useState } from "react";
+import { X, Printer, Download, RefreshCw } from "lucide-react";
 
 type Props = {
   isOpen: boolean;
@@ -8,9 +9,12 @@ type Props = {
   type: 'staff';
   initialDriverName?: string;
   initialDriverPhone?: string;
+  onRefresh?: () => void;
 };
 
-const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type }) => {
+const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type, onRefresh }) => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
   if (!isOpen) return null;
 
   // 인쇄 기능
@@ -63,6 +67,20 @@ const RoomAssignmentPreview: React.FC<Props> = ({ isOpen, onClose, html, type })
 
         {/* 액션 버튼 */}
         <div className="flex justify-end gap-2 p-4 border-t bg-gray-50">
+          {onRefresh && (
+            <button
+              onClick={async () => {
+                setIsRefreshing(true);
+                await onRefresh();
+                setIsRefreshing(false);
+              }}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? '새로고침 중...' : '새로고침'}
+            </button>
+          )}
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
