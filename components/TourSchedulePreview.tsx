@@ -698,7 +698,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                         // 더 간단한 방법: simplifyCourseName 사용
                         if (displayContent.includes(' - ')) {
                           const parts = displayContent.split(' ');
-                          const courseNamePart = parts.find(p => p.includes(' - '));
+                          const courseNamePart = parts.find((p: string) => p.includes(' - '));
                           if (courseNamePart) {
                             const simplified = simplifyCourseName(courseNamePart);
                             displayContent = displayContent.replace(courseNamePart, simplified);
