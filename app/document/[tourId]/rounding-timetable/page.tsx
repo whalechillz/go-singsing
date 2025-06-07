@@ -104,9 +104,9 @@ const RoundingTimetableDoc = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">{formatTimeHHMM(g.tee_time)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            getTeamType(g.players) === '여성팀'
+                            getTeamType(g.players) === '(여성팀)'
                               ? 'bg-pink-100 text-pink-800'
-                              : getTeamType(g.players) === '남성팀'
+                              : getTeamType(g.players) === '(남성팀)'
                               ? 'bg-blue-100 text-blue-800'
                               : 'bg-green-100 text-green-800'
                           }`}>
