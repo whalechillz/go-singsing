@@ -1401,7 +1401,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   const playerNames = sortedPlayers.map((p: any) => {
                     const participant = p.singsing_participants;
                     return participant ? participant.name : '';
-                  }).filter(name => name).join(', ');
+                  }).filter((name: string) => name).join(', ');
                   
                   return `
                     <div class="tee-time-row">
