@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { simplifyCourseName } from "@/lib/utils";
 import { Plus, X, Calendar, Clock, Trash2 } from "lucide-react";
 
 type TeeTime = {
@@ -21,14 +22,6 @@ type TeeTimeForm = {
 };
 
 type Props = { tourId: string; onDataChange?: () => void };
-
-// 코스명 간소화 함수
-const simplifyCourseName = (fullName: string): string => {
-  if (!fullName) return '';
-  // "골프장명 - 코스명" 형태에서 코스명만 추출
-  const parts = fullName.split(' - ');
-  return parts.length > 1 ? parts[1] : fullName;
-};
 
 const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);

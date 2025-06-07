@@ -2,6 +2,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { simplifyCourseName } from "@/lib/utils";
 
 const RoundingTimetableDoc = () => {
   const { tourId } = useParams();
@@ -32,20 +33,6 @@ const RoundingTimetableDoc = () => {
     if (hasMale && hasFemale) return "(혼성팀)";
     if (hasMale) return "(남성팀)";
     return "(여성팀)";
-  };
-
-  // 코스명 가공 함수 (골프장 이름 제거)
-  const formatCourseName = (course: string) => {
-    if (!course) return "";
-    
-    // "골프장명 - 코스명" 형태에서 코스명만 추출
-    const parts = course.split(' - ');
-    if (parts.length > 1) {
-      // 코스명만 반환
-      return parts[1];
-    }
-    
-    return course;
   };
 
   useEffect(() => {
@@ -90,7 +77,7 @@ const RoundingTimetableDoc = () => {
             </div>
             {Object.entries(courses).map(([course, groups], courseIndex) => (
               <div key={course} className="mb-4 bg-white rounded-lg shadow overflow-hidden">
-                <div className="bg-blue-600 text-white px-4 py-2 font-medium">{formatCourseName(course)}</div>
+                <div className="bg-blue-600 text-white px-4 py-2 font-medium">{simplifyCourseName(course)}</div>
                 <table className="min-w-full">
                   <thead className="bg-gray-50">
                     <tr>

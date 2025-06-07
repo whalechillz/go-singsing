@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { simplifyCourseName } from "@/lib/utils";
 import { Users, Check, AlertCircle, Clock, Calendar, CheckSquare, X, UserCheck, RefreshCw, ArrowUpDown } from "lucide-react";
 
 type Participant = {
@@ -51,13 +52,6 @@ type StaffMember = {
 };
 
 type Props = { tourId: string; refreshKey?: number };
-
-// 코스명 간소화 함수
-const simplifyCourseName = (fullName: string): string => {
-  // "골프장명 - 코스명" 형태에서 코스명만 추출
-  const parts = fullName.split(' - ');
-  return parts.length > 1 ? parts[1] : fullName;
-};
 
 const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);

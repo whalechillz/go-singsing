@@ -1,19 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { simplifyCourseName } from '@/lib/utils';
 import { AlertCircle, CheckCircle, Trash2, Users } from 'lucide-react';
 
 interface Props {
   tourId: string;
   onComplete?: () => void;
 }
-
-// 코스명 간소화 함수
-const simplifyCourseName = (fullName: string): string => {
-  // "골프장명 - 코스명" 형태에서 코스명만 추출
-  const parts = fullName.split(' - ');
-  return parts.length > 1 ? parts[1] : fullName;
-};
 
 export const TeeTimeParticipantCleaner: React.FC<Props> = ({ tourId, onComplete }) => {
   const [duplicates, setDuplicates] = useState<any[]>([]);

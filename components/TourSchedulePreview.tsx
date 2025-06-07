@@ -1,20 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { simplifyCourseName } from '@/lib/utils';
 import { Download, Share2, Printer, Calendar, MapPin, Phone, Clock, Users, FileText, Eye, Home, Car, Flag, Building } from 'lucide-react';
 import { BRAND_COLORS, DOCUMENT_COLOR_SCHEME } from '@/design-system/brand-colors';
 
 interface TourSchedulePreviewProps {
   tourId: string;
 }
-
-// 코스명 간소화 함수
-const simplifyCourseName = (fullName: string): string => {
-  if (!fullName) return '';
-  // "골프장명 - 코스명" 형태에서 코스명만 추출
-  const parts = fullName.split(' - ');
-  return parts.length > 1 ? parts[1] : fullName;
-};
 
 // 텍스트를 파싱하여 "제목: 내용" 형식을 볼드 처리하는 함수
 const formatTextWithBold = (text: string): string => {
