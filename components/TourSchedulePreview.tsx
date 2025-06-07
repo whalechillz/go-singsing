@@ -1054,6 +1054,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     }, {} as Record<string, any>);
 
     const notices = documentNotices.room_assignment || [];
+    
+    // 스탭용일 때 기사님 정보 표시
+    const driverInfo = isStaff && tourStaff ? {
+      name: tourStaff.name,
+      phone: tourStaff.phone,
+      room: tourStaff.room_number || '별도 배정'
+    } : null;
 
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -1082,12 +1089,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       }).map(room => {
         const roomParticipants = participantsByRoom[room.id] || [];
         const isEmpty = roomParticipants.length === 0;
+        const isCompRoom = room.room_type?.includes('콤프') || room.room_type?.includes('COMP') || room.is_comp;
         
         return `
-        <div class="room-card">
-          <div class="room-header">
+        <div class="room-card ${isCompRoom ? 'comp-room' : ''}">
+          <div class="room-header ${isCompRoom ? 'comp-header' : ''}">
             <span class="room-number">${room.room_number || `객실 ${room.room_seq || ''}`}</span>
-            <span class="room-type">${room.room_type}</span>
+            <span class="room-type">${room.room_type}${isCompRoom && isStaff ? ' (콤프)' : ''}</span>
             <span class="room-capacity">${roomParticipants.length}/${room.capacity}명</span>
           </div>
           <div class="room-body">
@@ -1097,11 +1105,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <table class="participant-table">
                 <thead>
                   <tr>
-                    <th style="width: 40px;">No</th>
+                    ${isStaff ? '<th width="30">No</th>' : '<th width="40">No</th>'}
                     <th>성명</th>
-                    ${isStaff ? '<th style="width: 120px;">연락처</th>' : ''}
-                    <th style="width: 100px;">팀</th>
-                    ${isStaff ? '<th>비고</th>' : ''}
+                    ${isStaff ? '<th width="110">연락처</th>' : ''}
+                    <th width="80">팀</th>
+                    ${isStaff ? '<th width="100">비고</th>' : ''}
                   </tr>
                 </thead>
                 <tbody>
@@ -1111,7 +1119,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                       <td class="text-center">${participant.name}</td>
                       ${isStaff ? `<td class="text-center">${participant.phone || '-'}</td>` : ''}
                       <td class="text-center">${participant.team_name || '-'}</td>
-                      ${isStaff ? `<td>${participant.special_notes || '-'}</td>` : ''}
+                      ${isStaff ? `<td class="text-center">${participant.special_notes || '-'}</td>` : ''}
                     </tr>
                   `).join('')}
                 </tbody>
@@ -1122,6 +1130,22 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         `;
       }).join('')}
     </div>
+    
+    ${isStaff && driverInfo ? `
+    <div class="internal-info">
+      <h3>기사님 정보</h3>
+      <p><strong>성명:</strong> ${driverInfo.name}</p>
+      <p><strong>연락처:</strong> ${driverInfo.phone || '-'}</p>
+      <p><strong>객실:</strong> ${driverInfo.room}</p>
+    </div>
+    ` : ''}
+    
+    ${isStaff ? `
+    <div class="internal-info">
+      <p style="color: #e74c3c; font-weight: bold;">※ 콤프룸은 붉은색으로 표시되어 있습니다.</p>
+      <p>※ 이 문서는 내부용으로 고객에게 제공하지 마세요.</p>
+    </div>
+    ` : ''}
   </div>
 </body>
 </html>`;
@@ -2093,22 +2117,22 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const getRoomAssignmentStyles = () => {
     return `
       @page {
-        size: A4;
-        margin: 15mm;
+        size: A4 portrait;
+        margin: 10mm;
       }
       
       body {
         margin: 0;
         padding: 0;
         font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        line-height: 1.6;
+        line-height: 1.5;
         color: #333;
-        font-size: 12px;
+        font-size: 11px;
       }
       
       .container {
         width: 100%;
-        max-width: 210mm;
+        max-width: 190mm;
         margin: 0 auto;
         background: white;
         padding: 0;
@@ -2116,20 +2140,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       
       .header {
         text-align: center;
-        padding: 20px;
+        padding: 15px;
         background: #e6eef7;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
       }
       
       .header h1 {
-        font-size: 22px;
+        font-size: 20px;
         color: #4a6fa5;
-        margin: 0 0 10px 0;
+        margin: 0 0 8px 0;
         font-weight: bold;
       }
       
       .header p {
-        font-size: 16px;
+        font-size: 14px;
         color: #555;
         margin: 0;
         font-weight: 500;
@@ -2137,43 +2161,55 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       
       .content {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        padding: 0 10px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        padding: 0 5px;
       }
       
       .room-card {
         border: 1px solid #ddd;
-        border-radius: 5px;
+        border-radius: 4px;
         overflow: hidden;
         background: white;
         page-break-inside: avoid;
+        height: fit-content;
+      }
+      
+      .room-card.comp-room {
+        border: 2px solid #e74c3c;
       }
       
       .room-header {
         background: #a1b7d1;
         color: #2c5282;
-        padding: 10px 12px;
+        padding: 8px 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         font-weight: bold;
       }
       
+      .room-header.comp-header {
+        background: #e74c3c;
+        color: white;
+      }
+      
       .room-number {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: bold;
       }
       
       .room-type {
-        font-size: 12px;
+        font-size: 11px;
+        flex: 1;
+        text-align: center;
       }
       
       .room-capacity {
-        font-size: 12px;
-        background: rgba(255, 255, 255, 0.5);
-        padding: 2px 6px;
-        border-radius: 10px;
+        font-size: 11px;
+        background: rgba(255, 255, 255, 0.3);
+        padding: 2px 5px;
+        border-radius: 8px;
       }
       
       .room-body {
@@ -2183,32 +2219,35 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       .empty-room {
         text-align: center;
         color: #999;
-        padding: 20px;
+        padding: 15px;
         font-style: italic;
-        font-size: 12px;
+        font-size: 11px;
       }
       
       .participant-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 11px;
+        font-size: 10px;
       }
       
       .participant-table th {
         background: #f8f9fa;
-        padding: 6px;
+        padding: 4px 3px;
         text-align: center;
-        font-size: 11px;
+        font-size: 10px;
         color: #555;
         border-bottom: 1px solid #ddd;
         font-weight: bold;
       }
       
       .participant-table td {
-        padding: 6px;
-        font-size: 11px;
+        padding: 4px 3px;
+        font-size: 10px;
         border-bottom: 1px solid #eee;
         text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       
       .participant-table tr:last-child td {
@@ -2219,7 +2258,33 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         text-align: center;
       }
       
+      /* 내부용 표시 */
+      .internal-info {
+        margin: 15px 5px;
+        padding: 10px;
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 4px;
+      }
+      
+      .internal-info h3 {
+        margin: 0 0 8px 0;
+        font-size: 12px;
+        color: #856404;
+      }
+      
+      .internal-info p {
+        margin: 3px 0;
+        font-size: 11px;
+        color: #856404;
+      }
+      
       @media print {
+        @page {
+          size: A4 portrait;
+          margin: 10mm;
+        }
+        
         body {
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
@@ -2227,10 +2292,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         
         .container {
           padding: 0;
+          max-width: 190mm;
         }
         
         .content {
-          gap: 10px;
+          gap: 8px;
+          grid-template-columns: repeat(3, 1fr);
         }
         
         .room-card {
@@ -2249,12 +2316,22 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
+        
+        .room-header.comp-header {
+          background: #e74c3c !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
       }
       
       @media screen {
         .container {
           padding: 20px;
-          max-width: 900px;
+          max-width: 1200px;
+        }
+        
+        .content {
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         }
       }
     `;
