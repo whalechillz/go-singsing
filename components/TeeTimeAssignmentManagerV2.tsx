@@ -765,10 +765,13 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
           );
           
           if (teeTimeParticipants.length === 0) {
+            // 시간 형식 수정 (초 제거)
+              const formattedTime = teeTime.tee_time ? teeTime.tee_time.substring(0, 5) : '';
+            
             tablesHTML += `
-              <tr>
-                <td class="time-column">${teeTime.tee_time || ''}</td>
-                <td class="course-column">${formatCourseDisplay(teeTime.golf_course || '')}</td>
+            <tr>
+            <td class="time-column">${formattedTime}</td>
+              <td class="course-column">${formatCourseDisplay(teeTime.golf_course || '')}</td>
                 <td class="team-column">-</td>
                 <td class="player-cell">배정된 참가자가 없습니다</td>
               </tr>`;
@@ -789,11 +792,14 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
               return p.name;
             }).join(' · ');
             
+            // 시간 형식 수정 (초 제거)
+            const formattedTime = teeTime.tee_time ? teeTime.tee_time.substring(0, 5) : '';
+            
             tablesHTML += `
               <tr>
-                <td class="time-column">${teeTime.tee_time}</td>
+                <td class="time-column">${formattedTime}</td>
                 <td class="course-column">${formatCourseDisplay(teeTime.golf_course || '')}</td>
-                <td class="team-column">${teeTime.team_no || '-'}팀</td>
+                <td class="team-column">${teamGenderInfo.type}</td>
                 <td class="player-cell">${playerNames}</td>
               </tr>`;
           }
@@ -1054,79 +1060,108 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     /* 모바일 대응 */
     @media (max-width: 600px) {
       body {
-        padding: 8px;
+        padding: 5px;
+      }
+      
+      .container {
+        padding: 0;
       }
       
       .header-container {
         flex-direction: column;
         align-items: flex-start;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
       }
       
       .logo-section {
         margin-left: 0;
-        margin-top: 8px;
+        margin-top: 5px;
         text-align: left;
       }
       
       h1 {
-        font-size: 18px;
+        font-size: 16px;
+        margin-bottom: 3px;
       }
       
       .logo-text {
-        font-size: 16px;
+        font-size: 14px;
       }
       
       .day-header {
-        font-size: 14px;
-        padding: 6px 10px;
-        margin: 15px 0 8px 0;
+        font-size: 13px;
+        padding: 5px 8px;
+        margin: 10px 0 5px 0;
       }
       
       table {
-        font-size: 11px;
+        font-size: 10px;
+        margin-bottom: 10px;
       }
       
       th, td {
-        padding: 5px 3px;
+        padding: 4px 2px;
       }
       
       .course-header {
-        font-size: 13px;
-        padding: 8px 10px;
+        font-size: 12px;
+        padding: 6px 8px;
       }
       
       .time-column {
-        width: 50px;
-        font-size: 12px;
+        width: 45px;
+        font-size: 11px;
+        padding: 4px 2px;
       }
       
       .course-column {
-        width: 60px;
-        font-size: 11px;
+        width: 55px;
+        font-size: 10px;
+        padding: 4px 2px;
       }
       
       .team-column {
-        width: 40px;
-        font-size: 11px;
+        width: 50px;
+        font-size: 10px;
+        padding: 4px 2px;
+        word-break: keep-all;
       }
       
       .player-cell {
-        padding: 5px;
-        font-size: 11px;
-        line-height: 1.4;
-        text-align: center;
+        padding: 4px 3px;
+        font-size: 10px;
+        line-height: 1.3;
+        text-align: left;
+        word-break: keep-all;
       }
       
       .contact-info {
-        margin: 15px 0;
-        padding: 10px;
+        margin: 10px 0;
+        padding: 8px;
+      }
+      
+      .contact-title {
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      
+      .contact-item {
+        padding: 5px;
+      }
+      
+      .contact-name {
+        font-size: 11px;
       }
       
       .contact-phone {
-        font-size: 13px;
+        font-size: 11px;
         font-weight: bold;
+      }
+      
+      /* 스크롤 방지 */
+      .table-container {
+        overflow-x: visible;
       }
     }
   </style>

@@ -1223,7 +1223,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     (participant.gender === 'F' || participant.gender === '여') ? '#ec4899' : 
                     '#6b7280';
                   
-                  const courseStyle = 
+                  // 시간 표시 수정 (초 제거)
+              const formatTime = (time: string) => {
+                if (!time) return '-';
+                return time.substring(0, 5); // HH:MM만 표시
+              };
+              
+              // 코스 이름만 표시 (골프장 이름 제거)
+              const formatCourseName = (course: string) => {
+                if (!course) return '-';
+                const parts = course.split(' - ');
+                return parts.length > 1 ? parts[1] : course;
+              };
+              
+              const courseStyle = 
                     (teeTime.course || teeTime.golf_course)?.includes('레이크') || (teeTime.course || teeTime.golf_course)?.includes('Lake') 
                       ? 'background-color: #DBEAFE; color: #1E40AF;' 
                       : (teeTime.course || teeTime.golf_course)?.includes('힐스') || (teeTime.course || teeTime.golf_course)?.includes('Hills')
@@ -1237,17 +1250,17 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                       : 'background-color: #F3F4F6; color: #374151;';
                   
                   return `
-                    <tr>
-                      ${index === 0 ? `
-                        <td rowspan="${sortedPlayers.length}">${teeTime.tee_time}</td>
-                        <td rowspan="${sortedPlayers.length}" style="${courseStyle} font-weight: bold;">${teeTime.course || teeTime.golf_course} ${teamGenderType}</td>
-                        <td rowspan="${sortedPlayers.length}">${teeTime.team_no}팀</td>
-                      ` : ''}
-                      <td class="players-cell">
-                        <span class="player-name">${participant.name}</span>
-                        ${genderMark ? `<span style="color: ${genderColor}; font-weight: bold; margin-left: 4px;">${genderMark}</span>` : ''}
-                      </td>
-                    </tr>
+                  <tr>
+                  ${index === 0 ? `
+                  <td rowspan="${sortedPlayers.length}">${formatTime(teeTime.tee_time)}</td>
+                  <td rowspan="${sortedPlayers.length}" style="${courseStyle} font-weight: bold;">${formatCourseName(teeTime.course || teeTime.golf_course)}</td>
+                  <td rowspan="${sortedPlayers.length}">${teamGenderType}</td>
+                  ` : ''}
+                  <td class="players-cell">
+                  <span class="player-name">${participant.name}</span>
+                  ${genderMark ? `<span style="color: ${genderColor}; font-weight: bold; margin-left: 4px;">${genderMark}</span>` : ''}
+                  </td>
+                  </tr>
                   `;
                 }).join('');
               } else {
@@ -1267,14 +1280,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                     : 'background-color: #F3F4F6; color: #374151;';
                 
                 return `
-                  <tr>
-                    <td>${teeTime.tee_time}</td>
-                    <td style="${courseStyle} font-weight: bold;">${teeTime.course || teeTime.golf_course}</td>
-                    <td>${teeTime.team_no}팀</td>
-                    <td class="players-cell">
-                      ${playerNames.length > 0 ? playerNames.join(', ') : '-'}
-                    </td>
-                  </tr>
+                <tr>
+                <td>${formatTime(teeTime.tee_time)}</td>
+                <td style="${courseStyle} font-weight: bold;">${formatCourseName(teeTime.course || teeTime.golf_course)}</td>
+                <td>-</td>
+                <td class="players-cell">
+                ${playerNames.length > 0 ? playerNames.join(', ') : '-'}
+                </td>
+                </tr>
                 `;
               }
             }).join('')}

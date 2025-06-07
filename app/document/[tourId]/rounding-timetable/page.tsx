@@ -18,7 +18,7 @@ const RoundingTimetableDoc = () => {
     return `${date.getMonth() + 1}월 ${date.getDate()}일 (${dayOfWeek})`;
   };
 
-  // 시간 포맷 함수 추가
+  // 시간 포맷 함수 추가 (초 제거)
   const formatTimeHHMM = (time: string) => {
     if (!time) return "";
     return time.length >= 5 ? time.slice(0, 5) : time;
@@ -29,20 +29,19 @@ const RoundingTimetableDoc = () => {
     if (!Array.isArray(players) || players.length === 0) return "-";
     const hasMale = players.some(p => p.includes("(남)"));
     const hasFemale = players.some(p => p.includes("(여)"));
-    if (hasMale && hasFemale) return "혼성팀";
-    if (hasMale) return "남성팀";
-    return "여성팀";
+    if (hasMale && hasFemale) return "(혼성팀)";
+    if (hasMale) return "(남성팀)";
+    return "(여성팀)";
   };
 
-  // 코스명 가공 함수
+  // 코스명 가공 함수 (골프장 이름 제거)
   const formatCourseName = (course: string) => {
     if (!course) return "";
     
     const parts = course.split(' - ');
     if (parts.length === 2) {
-      const golfCourseName = parts[0].replace(' CC', '').replace(' GC', '').replace(' 골프클럽', '');
-      const courseName = parts[1].replace(' 코스', '').replace('코스', '');
-      return `${golfCourseName} - ${courseName}`;
+      // 코스명만 반환
+      return parts[1].replace(' 코스', '').replace('코스', '');
     }
     
     return course;
