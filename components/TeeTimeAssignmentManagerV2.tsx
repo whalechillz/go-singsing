@@ -1,4 +1,19 @@
-"use client";
+    
+    <!-- 전체 요약 -->
+    <div class="date-summary">
+      <div class="summary-header">
+        <p class="summary-title">전체 티타임 현황</p>
+      </div>
+      <div class="summary-content">
+        ${dateSummaries.map(summary => `
+          <div class="summary-item">
+            <p class="summary-item-title">${new Date(summary.date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</p>
+            <p>티타임: ${summary.teeTimeCount}개</p>
+            <p>참가자: ${summary.totalPlayers}/${summary.totalCapacity}명</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>"use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X, UserCheck, RefreshCw, ArrowUpDown } from "lucide-react";
@@ -136,6 +151,23 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         }
         assignmentMap.get(assignment.participant_id)?.add(assignment.tee_time_id);
       });
+
+    // 각 날짜별 통계 계산
+    const dateSummaries = Object.entries(teeTimesByDateForPreview).map(([date, times]) => {
+      const totalPlayers = times.reduce((sum, tt) => {
+        const assignedCount = participants.filter(p => p.tee_time_assignments?.includes(tt.id)).length;
+        return sum + assignedCount;
+      }, 0);
+      
+      const totalCapacity = times.reduce((sum, tt) => sum + tt.max_players, 0);
+      
+      return {
+        date,
+        totalPlayers,
+        totalCapacity,
+        teeTimeCount: times.length
+      };
+    });
       
       // 5. 참가자별 티타임 배정 정보 매핑
       const participantsWithAssignments = participantsData?.map(participant => ({
@@ -735,15 +767,15 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       Object.entries(courseGroups).forEach(([course, courseTimes]) => {
         // 코스별 헤더 클래스 결정
         let headerClass = 'course-header course-header-default';
-        if (course.includes('레이크') || course.includes('Lake')) {
+        if (course.includes('레이크') || course.includes('Lake') || course.includes('lake')) {
           headerClass = 'course-header course-header-lake';
-        } else if (course.includes('파인') || course.includes('Pine')) {
+        } else if (course.includes('파인') || course.includes('Pine') || course.includes('pine')) {
           headerClass = 'course-header course-header-pine';
-        } else if (course.includes('힐스') || course.includes('Hills')) {
+        } else if (course.includes('힐스') || course.includes('Hills') || course.includes('hills')) {
           headerClass = 'course-header course-header-hills';
-        } else if (course.includes('밸리') || course.includes('Valley')) {
+        } else if (course.includes('밸리') || course.includes('Valley') || course.includes('valley')) {
           headerClass = 'course-header course-header-valley';
-        } else if (course.includes('오션') || course.includes('Ocean')) {
+        } else if (course.includes('오션') || course.includes('Ocean') || course.includes('ocean')) {
           headerClass = 'course-header course-header-ocean';
         }
         
@@ -818,350 +850,532 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>싱싱골프투어 티타임표</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+    
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Noto Sans KR', 'Arial', sans-serif;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
     }
     
     body {
-      background-color: #FFFFFF;
-      color: #2D3748;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      color: #2d3436;
       line-height: 1.6;
-      padding: 10px;
+      padding: 20px 10px;
+      min-height: 100vh;
     }
     
     .container {
       width: 100%;
-      max-width: 980px;
+      max-width: 1200px;
       margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.8s ease-out;
     }
     
-    /* 헤더 레이아웃 */
+    /* 헤더 스타일 */
     .header-container {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+    }
+    
+    .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #DEE2E6;
+      position: relative;
+      z-index: 1;
     }
     
-    .title-section {
-      flex: 1;
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    h1::before {
+      content: '⛳';
+      font-size: 36px;
+      animation: fadeIn 1s ease-out;
+    }
+    
+    .subtitle {
+      font-size: 18px;
+      font-weight: 400;
+      opacity: 0.95;
     }
     
     .logo-section {
       text-align: right;
-      margin-left: 15px;
     }
     
     .logo-text {
-      font-size: 22px;
-      font-weight: bold;
-      color: #34699C;
-    }
-    
-    h1 {
-      color: #34699C;
       font-size: 24px;
-      margin-bottom: 5px;
-      font-weight: 600;
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     }
     
-    /* 일자 헤더 스타일 */
+    /* 날짜 헤더 */
     .day-header {
-      background-color: #f0f5fa;
-      color: #34699C;
-      padding: 10px 15px;
-      margin: 20px 0 10px 0;
+      background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+      color: white;
+      padding: 15px 25px;
+      margin: 30px 0 20px 0;
       font-size: 18px;
-      font-weight: bold;
-      border-radius: 4px;
-      border: 1px solid #dee6ef;
+      font-weight: 600;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(72, 198, 239, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .day-header::before {
+      content: '📅';
+      font-size: 20px;
+    }
+    
+    /* 테이블 컨테이너 */
+    .table-container {
+      display: grid;
+      gap: 20px;
+      margin-bottom: 30px;
     }
     
     /* 테이블 스타일 */
-    .table-container {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      margin-bottom: 20px;
-    }
-    
     table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: 14px;
-      margin-bottom: 20px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      animation: slideIn 0.6s ease-out;
     }
     
     th, td {
-      border: 1px solid #DEE2E6;
-      padding: 8px;
+      padding: 12px 15px;
       text-align: center;
+      border-bottom: 1px solid #f0f0f0;
     }
     
     th {
-      background-color: #ECF0F1;
-      font-weight: bold;
-      color: #34699C;
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    tr:last-child td {
+      border-bottom: none;
+    }
+    
+    tr:hover {
+      background-color: #f8f9ff;
+      transition: background-color 0.3s ease;
     }
     
     /* 코스별 헤더 색상 */
     .course-header {
       color: white;
-      font-weight: bold;
-      font-size: 15px;
-      padding: 10px 12px;
-      text-align: left;
-      border-radius: 4px 4px 0 0;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 15px 20px;
+      text-align: center;
+      letter-spacing: 0.5px;
     }
     
-    .course-header-lake { background-color: #3b82f6; }
-    .course-header-pine { background-color: #10b981; }
-    .course-header-hills { background-color: #f59e0b; }
-    .course-header-valley { background-color: #8b5cf6; }
-    .course-header-ocean { background-color: #06b6d4; }
-    .course-header-default { background-color: #6b7280; }
+    .course-header-lake { 
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
     
+    .course-header-pine { 
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .course-header-hills { 
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .course-header-valley { 
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    }
+    
+    .course-header-ocean { 
+      background: linear-gradient(135deg, #3d84a8 0%, #48b1bf 100%);
+    }
+    
+    .course-header-default { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* 컬럼 스타일 */
     .time-column {
-      width: 80px;
-      background-color: #f8f9fa;
-      font-weight: bold;
-      text-align: center;
+      width: 90px;
+      background: #f8f9ff;
+      font-weight: 600;
+      color: #5a67d8;
+      font-size: 15px;
     }
     
     .course-column {
-      width: 100px;
-      text-align: center;
+      width: 120px;
       font-weight: 500;
+      color: #4a5568;
     }
     
     .team-column {
-      width: 60px;
-      background-color: #EBF8FF;
+      width: 90px;
+      background: #fef5e7;
       font-weight: 500;
-      color: #2B6CB0;
-      text-align: center;
+      color: #e67e22;
+      font-size: 13px;
     }
     
+    /* 성별 스타일 */
     .male {
-      color: #2C5282;
+      color: #3498db;
+      font-weight: 600;
     }
     
     .female {
-      color: #B83280;
+      color: #e74c3c;
+      font-weight: 600;
     }
     
     .player-cell {
       text-align: center;
-      padding: 8px;
+      padding: 12px 20px;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: nowrap;
     }
     
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #DEE2E6;
+    .player-name {
+      display: inline-block;
+      margin: 0 2px;
     }
     
-    .heart {
-      color: #F56565;
+    /* 통계 요약 */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
     }
     
-    .contact {
-      margin-top: 5px;
-      font-weight: bold;
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      border-left: 4px solid;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeIn 0.5s ease-out backwards;
     }
     
-    .notice-box {
-      margin: 20px 0;
-      padding: 15px;
-      background-color: #fff5f5;
-      border: 1px solid #fed7d7;
-      border-radius: 6px;
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     }
     
-    .notice-title {
-      font-weight: bold;
-      color: #e53e3e;
-      margin-bottom: 10px;
-      font-size: 16px;
+    .stat-card:nth-of-type(1) { border-left-color: #4facfe; }
+    .stat-card:nth-of-type(2) { border-left-color: #43e97b; }
+    .stat-card:nth-of-type(3) { border-left-color: #fa709a; }
+    .stat-card:nth-of-type(4) { border-left-color: #a8edea; }
+    
+    .stat-title {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 8px;
+      font-weight: 500;
     }
     
-    .notice-list {
-      list-style-type: disc;
-      padding-left: 20px;
-      margin: 0;
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2d3436;
+      margin-bottom: 4px;
     }
     
-    .notice-list li {
-      margin-bottom: 6px;
-      color: #4a5568;
+    .stat-detail {
+      font-size: 12px;
+      color: #95a5a6;
     }
     
+    /* 연락처 정보 */
     .contact-info {
-      margin: 20px 0;
-      padding: 15px;
-      background-color: #e6fffa;
-      border: 1px solid #b2f5ea;
-      border-radius: 6px;
+      margin: 30px 0;
+      padding: 25px;
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(252, 182, 159, 0.3);
     }
     
     .contact-title {
-      font-weight: bold;
-      color: #2c7a7b;
-      margin-bottom: 10px;
-      font-size: 16px;
+      font-weight: 700;
+      color: #2d3436;
+      margin-bottom: 15px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .contact-title::before {
+      content: '📞';
+      font-size: 20px;
     }
     
     .contact-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
     }
     
     .contact-item {
-      padding: 8px;
-      border-radius: 4px;
-      background-color: white;
-      border: 1px solid #E2E8F0;
+      padding: 15px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease;
+    }
+    
+    .contact-item:hover {
+      transform: translateY(-2px);
     }
     
     .contact-name {
-      font-weight: bold;
-      color: #4A5568;
+      font-weight: 600;
+      color: #2d3436;
+      margin-bottom: 5px;
+      font-size: 15px;
     }
     
     .contact-phone {
-      color: #2D3748;
-    }
-    
-    /* 비상연락처 박스 간소화 */
-    .contact-info {
-      margin: 20px 0;
-      padding: 12px;
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 6px;
-      text-align: center;
-    }
-    
-    .contact-title {
-      font-weight: bold;
-      color: #495057;
-      margin-bottom: 8px;
+      color: #5a67d8;
+      font-weight: 500;
       font-size: 14px;
     }
     
+    /* 푸터 */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      color: white;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .footer-message {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+    
+    .footer-detail {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
     /* 모바일 대응 */
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       body {
-        padding: 5px;
+        padding: 10px;
       }
       
       .container {
-        padding: 0;
+        padding: 20px;
+        border-radius: 15px;
       }
       
       .header-container {
-        flex-direction: column;
-        align-items: flex-start;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
+        padding: 20px;
       }
       
-      .logo-section {
-        margin-left: 0;
-        margin-top: 5px;
-        text-align: left;
+      .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
       }
       
       h1 {
-        font-size: 16px;
-        margin-bottom: 3px;
+        font-size: 24px;
       }
       
-      .logo-text {
+      .subtitle {
         font-size: 14px;
       }
       
+      .logo-text {
+        font-size: 18px;
+      }
+      
       .day-header {
-        font-size: 13px;
-        padding: 5px 8px;
-        margin: 10px 0 5px 0;
+        font-size: 14px;
+        padding: 10px 15px;
       }
       
       table {
-        font-size: 10px;
-        margin-bottom: 10px;
+        font-size: 11px;
       }
       
       th, td {
-        padding: 4px 2px;
+        padding: 8px 5px;
       }
       
       .course-header {
-        font-size: 12px;
-        padding: 6px 8px;
+        font-size: 13px;
+        padding: 10px;
       }
       
       .time-column {
-        width: 45px;
-        font-size: 11px;
-        padding: 4px 2px;
+        width: 60px;
+        font-size: 12px;
       }
       
       .course-column {
-        width: 55px;
-        font-size: 10px;
-        padding: 4px 2px;
+        width: 70px;
+        font-size: 11px;
       }
       
       .team-column {
-        width: 50px;
-        font-size: 10px;
-        padding: 4px 2px;
-        word-break: keep-all;
+        width: 60px;
+        font-size: 11px;
       }
       
       .player-cell {
-        padding: 4px 3px;
-        font-size: 10px;
-        line-height: 1.3;
-        text-align: left;
-        word-break: keep-all;
-      }
-      
-      .contact-info {
-        margin: 10px 0;
-        padding: 8px;
-      }
-      
-      .contact-title {
-        font-size: 12px;
-        margin-bottom: 5px;
-      }
-      
-      .contact-item {
-        padding: 5px;
-      }
-      
-      .contact-name {
+        padding: 8px 10px;
         font-size: 11px;
+        white-space: normal;
       }
       
-      .contact-phone {
-        font-size: 11px;
-        font-weight: bold;
+      .stats-container {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
       }
       
-      /* 스크롤 방지 */
-      .table-container {
-        overflow-x: visible;
+      .stat-card {
+        padding: 15px;
+      }
+      
+      .stat-value {
+        font-size: 22px;
+      }
+    }
+    
+    /* 프린트 스타일 */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      
+      .container {
+        background: white;
+        box-shadow: none;
+        padding: 10px;
+        border-radius: 0;
+        max-width: 100%;
+      }
+      
+      .header-container,
+      .day-header,
+      .course-header,
+      .contact-info,
+      .footer {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .stats-container {
+        page-break-inside: avoid;
+      }
+      
+      table {
+        page-break-inside: auto;
+      }
+      
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      
+      .day-header {
+        page-break-after: avoid;
+      }
+      
+      .footer {
+        margin-top: 20px;
       }
     }
   </style>
@@ -1170,13 +1384,34 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   <div class="container">
     <!-- 헤더 섹션 -->
     <div class="header-container">
-      <div class="title-section">
-        <h1>티타임표</h1>
-        <p style="color: #4A5568; font-size: 15px;">${tourTitle} / ${tourPeriod}</p>
+      <div class="header-content">
+        <div class="title-section">
+          <h1>티타임표</h1>
+          <p class="subtitle">${tourTitle} / ${tourPeriod}</p>
+        </div>
+        <div class="logo-section">
+          <div class="logo-text">싱싱골프투어</div>
+        </div>
       </div>
-      <div class="logo-section">
-        <div class="logo-text">싱싱골프투어</div>
-      </div>
+    </div>
+    
+    <!-- 전체 통계 -->
+    <div class="stats-container">
+      ${Object.entries(teeTimesByDateForPreview).map(([date, times]) => {
+        const totalPlayers = times.reduce((sum, tt) => {
+          const assignedCount = participants.filter(p => p.tee_time_assignments?.includes(tt.id)).length;
+          return sum + assignedCount;
+        }, 0);
+        const totalCapacity = times.reduce((sum, tt) => sum + tt.max_players, 0);
+        
+        return `
+          <div class="stat-card">
+            <div class="stat-title">${new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
+            <div class="stat-value">${totalPlayers}/${totalCapacity}</div>
+            <div class="stat-detail">티타임 ${times.length}개</div>
+          </div>
+        `;
+      }).join('')}
     </div>
     
     ${tablesHTML}
@@ -1195,6 +1430,12 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       </div>
     </div>
     ` : ''}
+    
+    <!-- 푸터 -->
+    <div class="footer">
+      <div class="footer-message">♡ 즐거운 라운딩 되세요! ♡</div>
+      <div class="footer-detail">싱싱골프투어와 함께하는 특별한 하루</div>
+    </div>
   </div>
 </body>
 </html>`;
