@@ -227,7 +227,19 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       setTourData({
         ...tour,
         schedules: schedules,
-        staff: tour.singsing_tour_staff || []
+        staff: tour.singsing_tour_staff || [],
+        // 티타임표에 필요한 필드 추가
+        tour_period: tour.tour_period || `${tour.start_date} ~ ${tour.end_date}`,
+        show_staff_info: tour.show_staff_info ?? true,
+        show_footer_message: tour.show_footer_message ?? true,
+        show_company_phones: tour.show_company_phones ?? true,
+        show_golf_phones: tour.show_golf_phones ?? true,
+        company_phone: tour.company_phone || '031-215-3990',
+        company_mobile: tour.company_mobile || '010-3332-9020',
+        golf_reservation_phone: tour.golf_reservation_phone || '',
+        golf_reservation_mobile: tour.golf_reservation_mobile || '',
+        footer_message: tour.footer_message || '♡ 즐거운 하루 되시길 바랍니다. ♡',
+        notices: tour.notices || '• 집합시간: 티오프 시간 30분 전 골프장 도착\n• 준비사항: 골프복, 골프화, 모자, 선글라스\n• 카트배정: 4인 1카트 원칙\n• 날씨대비: 우산, 우의 등 개인 준비'
       });
     } catch (error) {
       console.error('Error fetching tour data:', error);
@@ -1175,7 +1187,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${tourData.title} - 티타임표${isStaff ? ' (내부용)' : ''}</title>
+  <title>${tourData.title} - 티타임 안내</title>
   <style>
     ${isStaff ? getStaffTeeTimeStyles() : getTeeTimeStyles()}
   </style>
@@ -1215,10 +1227,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       }).join('')}
     </div>
     ` : `
+    <!-- 헤더 -->
     <div class="header">
-      <h1>티타임표</h1>
-      <p>${tourData.title}</p>
-      <p>${productData?.golf_course || ''}</p>
+      <h1>${tourData.title}</h1>
+      <p>${tourData.tour_period || `${new Date(tourData.start_date).toLocaleDateString('ko-KR')} ~ ${new Date(tourData.end_date).toLocaleDateString('ko-KR')}`}</p>
     </div>
     `}
     
@@ -1344,162 +1356,110 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           </div>
         `;
       } else {
-        // 기존 고객용 스타일
+        // 고객용 버전
+        const dateStr = new Date(date).toLocaleDateString('ko-KR', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          weekday: 'long' 
+        });
+        
+        // 코스별로 그룹화
+        const courseGroups = times.reduce((acc: any, teeTime: any) => {
+          const course = teeTime.golf_course || teeTime.course || '미지정';
+          if (!acc[course]) acc[course] = [];
+          acc[course].push(teeTime);
+          return acc;
+        }, {} as Record<string, typeof times>);
+        
+        // 코스명 표시 함수 (골프장 이름 제거)
+        const formatCourseDisplay = (courseName: string) => {
+          if (!courseName) return '';
+          if (courseName.includes(' - ')) {
+            return courseName.split(' - ')[1] || courseName;
+          }
+          return courseName;
+        };
+        
         return `
-      <div class="tee-time-section">
-        <h2>${new Date(date).toLocaleDateString('ko-KR')}</h2>
-        <table>
-          <thead>
-            <tr>
-              <th width="80">시간</th>
-              <th width="100">코스</th>
-              <th width="60">팀</th>
-              <th>플레이어</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${times.map((teeTime: any) => {
-              // 티타임에 배정된 참가자 정보
-              const players = teeTime.singsing_tee_time_players || [];
-              const sortedPlayers = players.sort((a: any, b: any) => (a.order_no || 0) - (b.order_no || 0));
-              
-              // 팀 성별 분석
-              const teamGenderAnalysis = () => {
-                const maleCount = sortedPlayers.filter((p: any) => 
-                  p.singsing_participants?.gender === 'M' || p.singsing_participants?.gender === '남'
-                ).length;
-                const femaleCount = sortedPlayers.filter((p: any) => 
-                  p.singsing_participants?.gender === 'F' || p.singsing_participants?.gender === '여'
-                ).length;
-                
-                if (maleCount > 0 && femaleCount > 0) return '(혼성팀)';
-                if (maleCount > 0) return '(남성팀)';
-                if (femaleCount > 0) return '(여성팀)';
-                return '';
-              };
-              
-              const teamGenderType = teamGenderAnalysis();
-              
-              // 시간 표시 수정 (초 제거)
-              const formatTime = (time: string) => {
-                if (!time) return '-';
-                return time.substring(0, 5); // HH:MM만 표시
-              };
-              
-              // 코스 이름만 표시 (골프장 이름 제거)
-              const formatCourseName = (course: string) => {
-                if (!course) return '-';
-                const parts = course.split(' - ');
-                return parts.length > 1 ? parts[1] : course;
-              };
-              
-              // 티타임에 플레이어가 있는 경우
-              if (sortedPlayers.length > 0) {
-                return sortedPlayers.map((player: any, index: number) => {
-                  const participant = player.singsing_participants;
-                  if (!participant) return '';
+          <div class="schedule-card">
+            <div class="date-header">${dateStr}</div>
+            
+            ${Object.entries(courseGroups).map(([course, courseTimes]: [string, any]) => `
+              <div class="tee-time-table" style="margin-bottom: 16px;">
+                <div class="tee-time-header">${formatCourseDisplay(course)}</div>
+                ${courseTimes.map((teeTime: any) => {
+                  const players = teeTime.singsing_tee_time_players || [];
+                  const sortedPlayers = players.sort((a: any, b: any) => (a.order_no || 0) - (b.order_no || 0));
+                  const formattedTime = teeTime.tee_time ? teeTime.tee_time.substring(0, 5) : '';
                   
-                  // 개별 성별 표시 (혼성팀에서 소수 성별만)
-                  const getGenderMark = () => {
-                    if (!participant.gender) return '';
-                    
-                    const maleCount = sortedPlayers.filter((p: any) => 
-                      p.singsing_participants?.gender === 'M' || p.singsing_participants?.gender === '남'
-                    ).length;
-                    const femaleCount = sortedPlayers.filter((p: any) => 
-                      p.singsing_participants?.gender === 'F' || p.singsing_participants?.gender === '여'
-                    ).length;
-                    
-                    if (maleCount > 0 && femaleCount > 0) {
-                      if (maleCount < femaleCount && (participant.gender === 'M' || participant.gender === '남')) {
-                        return '(남)';
-                      } else if (femaleCount < maleCount && (participant.gender === 'F' || participant.gender === '여')) {
-                        return '(여)';
-                      }
-                    }
+                  if (sortedPlayers.length === 0) {
                     return '';
-                  };
+                  }
                   
-                  const genderMark = getGenderMark();
-                  const genderColor = (participant.gender === 'M' || participant.gender === '남') ? '#3b82f6' : 
-                    (participant.gender === 'F' || participant.gender === '여') ? '#ec4899' : 
-                    '#6b7280';
-                  
-                  const courseStyle = 
-                    (teeTime.course || teeTime.golf_course)?.includes('레이크') || (teeTime.course || teeTime.golf_course)?.includes('Lake') 
-                      ? 'background-color: #DBEAFE; color: #1E40AF;' 
-                      : (teeTime.course || teeTime.golf_course)?.includes('힐스') || (teeTime.course || teeTime.golf_course)?.includes('Hills')
-                      ? 'background-color: #D1FAE5; color: #065F46;'
-                      : (teeTime.course || teeTime.golf_course)?.includes('밸리') || (teeTime.course || teeTime.golf_course)?.includes('Valley')
-                      ? 'background-color: #EDE9FE; color: #5B21B6;'
-                      : (teeTime.course || teeTime.golf_course)?.includes('오션') || (teeTime.course || teeTime.golf_course)?.includes('Ocean')
-                      ? 'background-color: #CFFAFE; color: #065F46;'
-                      : (teeTime.course || teeTime.golf_course)?.includes('클럽') || (teeTime.course || teeTime.golf_course)?.includes('Club')
-                      ? 'background-color: #FED7AA; color: #C2410C;'
-                      : 'background-color: #F3F4F6; color: #374151;';
+                  // 참가자 이름 (성별 표시 제거)
+                  const playerNames = sortedPlayers.map((p: any) => {
+                    const participant = p.singsing_participants;
+                    return participant ? participant.name : '';
+                  }).filter(name => name).join(', ');
                   
                   return `
-                  <tr>
-                  ${index === 0 ? `
-                  <td rowspan="${sortedPlayers.length}">${formatTime(teeTime.tee_time)}</td>
-                  <td rowspan="${sortedPlayers.length}" style="${courseStyle} font-weight: bold;">${formatCourseName(teeTime.course || teeTime.golf_course)}</td>
-                  <td rowspan="${sortedPlayers.length}">${teamGenderType}</td>
-                  ` : ''}
-                  <td class="players-cell">
-                  <span class="player-name">${participant.name}</span>
-                  ${genderMark ? `<span style="color: ${genderColor}; font-weight: bold; margin-left: 4px;">${genderMark}</span>` : ''}
-                  </td>
-                  </tr>
+                    <div class="tee-time-row">
+                      <div class="time-box">${formattedTime}</div>
+                      <div class="players-info">
+                        <div class="player-names">${playerNames}</div>
+                        <div class="player-count">${sortedPlayers.length}명</div>
+                      </div>
+                    </div>
                   `;
-                }).join('');
-              } else {
-                // 티타임에 플레이어가 없는 경우 (기존 players 필드 사용)
-                const playerNames = teeTime.players ? JSON.parse(teeTime.players) : [];
-                
-                // 시간 표시 수정 (초 제거) - 여기서도 함수 사용
-                const formatTime = (time: string) => {
-                  if (!time) return '-';
-                  return time.substring(0, 5); // HH:MM만 표시
-                };
-                
-                // 코스 이름만 표시 (골프장 이름 제거) - 여기서도 함수 사용
-                const formatCourseName = (course: string) => {
-                  if (!course) return '-';
-                  const parts = course.split(' - ');
-                  return parts.length > 1 ? parts[1] : course;
-                };
-                
-                const courseStyle = 
-                  (teeTime.course || teeTime.golf_course)?.includes('레이크') || (teeTime.course || teeTime.golf_course)?.includes('Lake') 
-                    ? 'background-color: #DBEAFE; color: #1E40AF;' 
-                    : (teeTime.course || teeTime.golf_course)?.includes('힐스') || (teeTime.course || teeTime.golf_course)?.includes('Hills')
-                    ? 'background-color: #D1FAE5; color: #065F46;'
-                    : (teeTime.course || teeTime.golf_course)?.includes('밸리') || (teeTime.course || teeTime.golf_course)?.includes('Valley')
-                    ? 'background-color: #EDE9FE; color: #5B21B6;'
-                    : (teeTime.course || teeTime.golf_course)?.includes('오션') || (teeTime.course || teeTime.golf_course)?.includes('Ocean')
-                    ? 'background-color: #CFFAFE; color: #065F46;'
-                    : (teeTime.course || teeTime.golf_course)?.includes('클럽') || (teeTime.course || teeTime.golf_course)?.includes('Club')
-                    ? 'background-color: #FED7AA; color: #C2410C;'
-                    : 'background-color: #F3F4F6; color: #374151;';
-                
-                return `
-                <tr>
-                <td>${formatTime(teeTime.tee_time)}</td>
-                <td style="${courseStyle} font-weight: bold;">${formatCourseName(teeTime.course || teeTime.golf_course)}</td>
-                <td>-</td>
-                <td class="players-cell">
-                ${playerNames.length > 0 ? playerNames.join(', ') : '-'}
-                </td>
-                </tr>
-                `;
-              }
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
+                }).join('')}
+              </div>
+            `).join('')}
+          </div>
+        `;
       }
     }).join('')}
+    
+    ${!isStaff ? `
+    <!-- 연락처 정보 -->
+    ${tourData.show_company_phones && (tourData.company_phone || tourData.company_mobile) ? `
+    <div class="contact-section">
+      <div class="contact-title">문의처</div>
+      <div class="contact-grid">
+        ${tourData.company_phone ? `
+          <div class="contact-card">
+            <div class="contact-name">싱싱골프투어</div>
+            <a href="tel:${tourData.company_phone}" class="contact-phone">${tourData.company_phone}</a>
+          </div>
+        ` : ''}
+        ${tourData.company_mobile ? `
+          <div class="contact-card">
+            <div class="contact-name">담당자</div>
+            <a href="tel:${tourData.company_mobile}" class="contact-phone">${tourData.company_mobile}</a>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+    ` : ''}
+    
+    <!-- 안내사항 -->
+    ${tourData.notices ? `
+    <div class="info-section">
+      <div class="info-title">안내사항</div>
+      <ul class="info-list">
+        ${tourData.notices.split('\n').map((notice: string) => 
+          notice.trim() ? `<li>${notice.replace(/^[•·\-]\s*/, '')}</li>` : ''
+        ).join('')}
+      </ul>
+    </div>
+    ` : ''}
+    
+    <!-- 푸터 -->
+    <div class="footer">
+      <div class="footer-message">${tourData.footer_message || '즐거운 라운딩 되세요!'}</div>
+      <div class="footer-brand">싱싱골프투어</div>
+    </div>
+    ` : ''}
     
     ${isStaff ? `
     <!-- 비상 연락처 (기사님만) -->
@@ -3048,91 +3008,325 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const getTeeTimeStyles = () => {
     return `
-      body {
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+      
+      * {
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
         font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
         line-height: 1.6;
-        color: #333;
-        font-size: 14px;
+        padding: 0;
       }
       
       .container {
-        max-width: 800px;
+        width: 100%;
+        max-width: 900px;
         margin: 0 auto;
-        background: white;
-        padding: 30px;
+        background: #ffffff;
+        padding: 20px;
       }
       
+      /* 헤더 */
       .header {
         text-align: center;
-        padding-bottom: 30px;
-        border-bottom: 3px solid #2c5282;
-        margin-bottom: 30px;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white;
+        border-radius: 20px;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .header::before {
+        content: '⛳';
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 80px;
+        opacity: 0.1;
       }
       
       .header h1 {
         font-size: 28px;
-        color: #2c5282;
+        font-weight: 700;
         margin-bottom: 10px;
       }
       
       .header p {
         font-size: 16px;
-        color: #666;
-        margin: 5px 0;
+        opacity: 0.95;
       }
       
-      .tee-time-section {
-        margin-bottom: 30px;
+      /* 일정 카드 */
+      .schedule-card {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #e2e8f0;
       }
       
-      .tee-time-section h2 {
+      .date-header {
         font-size: 20px;
-        color: #2c5282;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #e7f3ff;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
       
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      .date-header::before {
+        content: '📅';
+        font-size: 24px;
       }
       
-      th {
-        background: #4a6fa5;
+      /* 티타임 테이블 */
+      .tee-time-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      
+      .tee-time-header {
+        background: #3b82f6;
         color: white;
-        padding: 12px;
-        text-align: left;
-        font-weight: bold;
+        padding: 12px 20px;
+        font-weight: 600;
+        font-size: 15px;
       }
       
-      td {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
+      .tee-time-row {
+        display: flex;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        align-items: center;
+        transition: background-color 0.2s;
       }
       
-      tr:nth-child(even) {
-        background: #f8f9fa;
+      .tee-time-row:hover {
+        background-color: #f8fafc;
       }
       
-      .players-cell {
-        line-height: 1.8;
+      .tee-time-row:last-child {
+        border-bottom: none;
       }
       
-      .player-name {
+      .time-box {
+        background: #eff6ff;
+        color: #1e40af;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        margin-right: 20px;
+        min-width: 80px;
+        text-align: center;
+      }
+      
+      .players-info {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      
+      .player-names {
+        font-size: 15px;
+        color: #334155;
         font-weight: 500;
       }
       
+      .player-count {
+        background: #e0e7ff;
+        color: #3730a3;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      
+      /* 연락처 정보 */
+      .contact-section {
+        background: #f0f9ff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 40px;
+        text-align: center;
+      }
+      
+      .contact-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0369a1;
+        margin-bottom: 16px;
+      }
+      
+      .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+      
+      .contact-card {
+        background: white;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      
+      .contact-name {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 4px;
+      }
+      
+      .contact-phone {
+        color: #3b82f6;
+        font-size: 15px;
+        text-decoration: none;
+      }
+      
+      /* 안내사항 */
+      .info-section {
+        background: #fef3c7;
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 24px;
+      }
+      
+      .info-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .info-title::before {
+        content: '📌';
+        font-size: 20px;
+      }
+      
+      .info-list {
+        list-style: none;
+        padding: 0;
+      }
+      
+      .info-list li {
+        color: #78350f;
+        font-size: 14px;
+        padding: 4px 0;
+        padding-left: 20px;
+        position: relative;
+      }
+      
+      .info-list li::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: #f59e0b;
+        font-weight: bold;
+      }
+      
+      /* 푸터 */
+      .footer {
+        text-align: center;
+        margin-top: 40px;
+        padding: 30px;
+        background: #1e293b;
+        color: white;
+        border-radius: 16px;
+      }
+      
+      .footer-message {
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+      
+      .footer-brand {
+        font-size: 14px;
+        opacity: 0.8;
+      }
+      
+      /* 모바일 최적화 */
+      @media (max-width: 640px) {
+        .container {
+          padding: 16px;
+        }
+        
+        .header {
+          padding: 30px 20px;
+          border-radius: 16px;
+        }
+        
+        .header h1 {
+          font-size: 24px;
+        }
+        
+        .schedule-card {
+          padding: 20px;
+        }
+        
+        .date-header {
+          font-size: 18px;
+        }
+        
+        .tee-time-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        
+        .time-box {
+          margin-right: 0;
+          margin-bottom: 8px;
+        }
+        
+        .players-info {
+          width: 100%;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        
+        .contact-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      
+      /* 프린트 최적화 */
       @media print {
+        body {
+          background: white;
+        }
+        
         .container {
           max-width: 100%;
           padding: 20px;
         }
         
-        .tee-time-section {
+        .header,
+        .schedule-card,
+        .contact-section,
+        .info-section,
+        .footer {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
           page-break-inside: avoid;
         }
       }
