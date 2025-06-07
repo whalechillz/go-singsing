@@ -8,6 +8,14 @@ interface TourSchedulePreviewProps {
   tourId: string;
 }
 
+// 코스명 간소화 함수
+const simplifyCourseName = (fullName: string): string => {
+  if (!fullName) return '';
+  // "골프장명 - 코스명" 형태에서 코스명만 추출
+  const parts = fullName.split(' - ');
+  return parts.length > 1 ? parts[1] : fullName;
+};
+
 // 텍스트를 파싱하여 "제목: 내용" 형식을 볼드 처리하는 함수
 const formatTextWithBold = (text: string): string => {
   if (!text) return '';
@@ -627,7 +635,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div class="day-schedule">
             <div class="day-title">
               <div>Day ${idx + 1} - ${new Date(schedule.date || schedule.schedule_date).toLocaleDateString('ko-KR')}</div>
-              <div class="day-round">${schedule.title || ''}</div>
+              <div class="day-round">${schedule.title ? simplifyCourseName(schedule.title) : ''}</div>
             </div>
             <div class="day-content">
               <div class="schedule-content">
