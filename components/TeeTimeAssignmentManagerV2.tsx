@@ -1,19 +1,4 @@
-    
-    <!-- 전체 요약 -->
-    <div class="date-summary">
-      <div class="summary-header">
-        <p class="summary-title">전체 티타임 현황</p>
-      </div>
-      <div class="summary-content">
-        ${dateSummaries.map(summary => `
-          <div class="summary-item">
-            <p class="summary-item-title">${new Date(summary.date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</p>
-            <p>티타임: ${summary.teeTimeCount}개</p>
-            <p>참가자: ${summary.totalPlayers}/${summary.totalCapacity}명</p>
-          </div>
-        `).join('')}
-      </div>
-    </div>"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Users, Check, AlertCircle, Eye, Clock, Calendar, Phone, User, FileText, CheckSquare, X, UserCheck, RefreshCw, ArrowUpDown } from "lucide-react";
@@ -151,23 +136,6 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
         }
         assignmentMap.get(assignment.participant_id)?.add(assignment.tee_time_id);
       });
-
-    // 각 날짜별 통계 계산
-    const dateSummaries = Object.entries(teeTimesByDateForPreview).map(([date, times]) => {
-      const totalPlayers = times.reduce((sum, tt) => {
-        const assignedCount = participants.filter(p => p.tee_time_assignments?.includes(tt.id)).length;
-        return sum + assignedCount;
-      }, 0);
-      
-      const totalCapacity = times.reduce((sum, tt) => sum + tt.max_players, 0);
-      
-      return {
-        date,
-        totalPlayers,
-        totalCapacity,
-        teeTimeCount: times.length
-      };
-    });
       
       // 5. 참가자별 티타임 배정 정보 매핑
       const participantsWithAssignments = participantsData?.map(participant => ({
