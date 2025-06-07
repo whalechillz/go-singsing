@@ -76,7 +76,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
     setTimeout(() => setToastMessage(null), 3000);
   };
   const [unassignedSearch, setUnassignedSearch] = useState("");
-  const [previewType, setPreviewType] = useState<'internal'>('internal');
+  const [previewType, setPreviewType] = useState<'internal' | 'customer'>('internal');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
   const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
@@ -650,7 +650,7 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   };
 
   // 미리보기 HTML 생성
-  const generatePreviewHTML = (type: 'internal') => {
+  const generatePreviewHTML = (type: 'internal' | 'customer') => {
     // 날짜별로 티타임 그룹화
     const teeTimesByDateForPreview = teeTimes.reduce((acc, tt) => {
       const date = tt.play_date;
@@ -811,6 +811,444 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
       tablesHTML += `</div>`; // table-container 닫기
     });
 
+    // 고객용 버전
+    if (type === 'customer') {
+      return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${tourTitle} - 티타임 안내</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #1a1a1a;
+      line-height: 1.6;
+      padding: 0;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 20px;
+    }
+    
+    /* 헤더 */
+    .header {
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      color: white;
+      border-radius: 20px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header::before {
+      content: '⛳';
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 80px;
+      opacity: 0.1;
+    }
+    
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 16px;
+      opacity: 0.95;
+    }
+    
+    /* 일정 카드 */
+    .schedule-card {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .date-header {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .date-header::before {
+      content: '📅';
+      font-size: 24px;
+    }
+    
+    /* 티타임 테이블 */
+    .tee-time-table {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .tee-time-header {
+      background: #3b82f6;
+      color: white;
+      padding: 12px 20px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    
+    .tee-time-row {
+      display: flex;
+      padding: 16px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+    
+    .tee-time-row:hover {
+      background-color: #f8fafc;
+    }
+    
+    .tee-time-row:last-child {
+      border-bottom: none;
+    }
+    
+    .time-box {
+      background: #eff6ff;
+      color: #1e40af;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      margin-right: 20px;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .players-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .player-names {
+      font-size: 15px;
+      color: #334155;
+      font-weight: 500;
+    }
+    
+    .player-count {
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    
+    /* 연락처 정보 */
+    .contact-section {
+      background: #f0f9ff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 40px;
+      text-align: center;
+    }
+    
+    .contact-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0369a1;
+      margin-bottom: 16px;
+    }
+    
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .contact-card {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .contact-name {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+    
+    .contact-phone {
+      color: #3b82f6;
+      font-size: 15px;
+      text-decoration: none;
+    }
+    
+    /* 안내사항 */
+    .info-section {
+      background: #fef3c7;
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+    }
+    
+    .info-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #92400e;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .info-title::before {
+      content: '📌';
+      font-size: 20px;
+    }
+    
+    .info-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .info-list li {
+      color: #78350f;
+      font-size: 14px;
+      padding: 4px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    
+    .info-list li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #f59e0b;
+      font-weight: bold;
+    }
+    
+    /* 푸터 */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 30px;
+      background: #1e293b;
+      color: white;
+      border-radius: 16px;
+    }
+    
+    .footer-message {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .footer-brand {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    
+    /* 모바일 최적화 */
+    @media (max-width: 640px) {
+      .container {
+        padding: 16px;
+      }
+      
+      .header {
+        padding: 30px 20px;
+        border-radius: 16px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+      }
+      
+      .schedule-card {
+        padding: 20px;
+      }
+      
+      .date-header {
+        font-size: 18px;
+      }
+      
+      .tee-time-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      
+      .time-box {
+        margin-right: 0;
+        margin-bottom: 8px;
+      }
+      
+      .players-info {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* 프린트 최적화 */
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .container {
+        max-width: 100%;
+        padding: 20px;
+      }
+      
+      .header,
+      .schedule-card,
+      .contact-section,
+      .info-section,
+      .footer {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 헤더 -->
+    <div class="header">
+      <h1>${tourTitle}</h1>
+      <p>${tourPeriod}</p>
+    </div>
+    
+    <!-- 일정별 티타임 -->
+    ${Object.entries(teeTimesByDateForPreview).map(([date, times]) => {
+      const dateStr = new Date(date).toLocaleDateString('ko-KR', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        weekday: 'long' 
+      });
+      
+      // 코스별로 그룹화
+      const courseGroups = times.reduce((acc, teeTime) => {
+        const course = teeTime.golf_course || '미지정';
+        if (!acc[course]) acc[course] = [];
+        acc[course].push(teeTime);
+        return acc;
+      }, {} as Record<string, typeof times>);
+      
+      return `
+        <div class="schedule-card">
+          <div class="date-header">${dateStr}</div>
+          
+          ${Object.entries(courseGroups).map(([course, courseTimes]) => `
+            <div class="tee-time-table" style="margin-bottom: 16px;">
+              <div class="tee-time-header">${formatCourseDisplay(course)}</div>
+              ${courseTimes.map(teeTime => {
+                const teeTimeParticipants = participants.filter(p => 
+                  p.tee_time_assignments?.includes(teeTime.id)
+                );
+                const formattedTime = teeTime.tee_time ? teeTime.tee_time.substring(0, 5) : '';
+                
+                if (teeTimeParticipants.length === 0) {
+                  return '';
+                }
+                
+                // 참가자 이름 (성별 표시 제거)
+                const playerNames = teeTimeParticipants.map(p => p.name).join(', ');
+                
+                return `
+                  <div class="tee-time-row">
+                    <div class="time-box">${formattedTime}</div>
+                    <div class="players-info">
+                      <div class="player-names">${playerNames}</div>
+                      <div class="player-count">${teeTimeParticipants.length}명</div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }).join('')}
+    
+    <!-- 연락처 정보 -->
+    ${tour?.show_company_phones && (tour.company_phone || tour.company_mobile) ? `
+    <div class="contact-section">
+      <div class="contact-title">문의처</div>
+      <div class="contact-grid">
+        ${tour.company_phone ? `
+          <div class="contact-card">
+            <div class="contact-name">싱싱골프투어</div>
+            <a href="tel:${tour.company_phone}" class="contact-phone">${tour.company_phone}</a>
+          </div>
+        ` : ''}
+        ${tour.company_mobile ? `
+          <div class="contact-card">
+            <div class="contact-name">담당자</div>
+            <a href="tel:${tour.company_mobile}" class="contact-phone">${tour.company_mobile}</a>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+    ` : ''}
+    
+    <!-- 안내사항 -->
+    ${tour?.notices ? `
+    <div class="info-section">
+      <div class="info-title">안내사항</div>
+      <ul class="info-list">
+        ${tour.notices.split('\n').map(notice => 
+          notice.trim() ? `<li>${notice.replace(/^[•·\-]\s*/, '')}</li>` : ''
+        ).join('')}
+      </ul>
+    </div>
+    ` : ''}
+    
+    <!-- 푸터 -->
+    <div class="footer">
+      <div class="footer-message">${tour?.footer_message || '즐거운 라운딩 되세요!'}</div>
+      <div class="footer-brand">싱싱골프투어</div>
+    </div>
+  </div>
+</body>
+</html>`;
+    }
+    
+    // 내부용 버전 (기존 코드)
     return `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -1489,6 +1927,14 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
             <RefreshCw className="w-4 h-4" />
             새로고침
           </button>
+          <select
+            value={previewType}
+            onChange={(e) => setPreviewType(e.target.value as 'internal' | 'customer')}
+            className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="internal">내부용</option>
+            <option value="customer">고객용</option>
+          </select>
           <button
             onClick={handlePreview}
             className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"

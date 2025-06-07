@@ -5,7 +5,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   html: string;
-  type: 'internal';
+  type: 'internal' | 'customer';
 };
 
 const TeeTimePreview: React.FC<Props> = ({ isOpen, onClose, html, type }) => {
@@ -27,7 +27,7 @@ const TeeTimePreview: React.FC<Props> = ({ isOpen, onClose, html, type }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `티타임표_내부용_${new Date().toISOString().split('T')[0]}.html`;
+    a.download = `티타임표_${type === 'internal' ? '내부용' : '고객용'}_${new Date().toISOString().split('T')[0]}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -40,7 +40,7 @@ const TeeTimePreview: React.FC<Props> = ({ isOpen, onClose, html, type }) => {
         {/* 헤더 */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800">
-            티타임표 미리보기 (내부용)
+            티타임표 미리보기 ({type === 'internal' ? '내부용' : '고객용'})
           </h3>
           <button
             onClick={onClose}
