@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, X, Calendar, Clock, Trash2 } from "lucide-react";
 
-
 type TeeTime = {
   id: string;
   tour_id: string;
@@ -12,67 +11,6 @@ type TeeTime = {
   tee_time: string;
   max_players: number;
   created_at?: string;
-};
-
-// 코스별 색상 정의 - Tailwind가 빌드시 포함하도록 명시적 클래스 사용
-const COURSE_COLORS: { [key: string]: { bg: string; border: string; tag: string } } = {
-  '파인': { 
-    bg: 'bg-green-50', 
-    border: 'border-green-300',
-    tag: 'bg-green-100 text-green-800 border-green-300'
-  },
-  '레이크': { 
-    bg: 'bg-blue-50', 
-    border: 'border-blue-300',
-    tag: 'bg-blue-100 text-blue-800 border-blue-300'
-  }, 
-  '힐스': { 
-    bg: 'bg-amber-50', 
-    border: 'border-amber-300',
-    tag: 'bg-amber-100 text-amber-800 border-amber-300'
-  },
-  '메이저': { 
-    bg: 'bg-purple-50', 
-    border: 'border-purple-300',
-    tag: 'bg-purple-100 text-purple-800 border-purple-300'
-  },
-  '클래식': { 
-    bg: 'bg-pink-50', 
-    border: 'border-pink-300',
-    tag: 'bg-pink-100 text-pink-800 border-pink-300'
-  },
-  '이스트': { 
-    bg: 'bg-indigo-50', 
-    border: 'border-indigo-300',
-    tag: 'bg-indigo-100 text-indigo-800 border-indigo-300'
-  },
-  '웨스트': { 
-    bg: 'bg-teal-50', 
-    border: 'border-teal-300',
-    tag: 'bg-teal-100 text-teal-800 border-teal-300'
-  },
-  '샤인': { 
-    bg: 'bg-yellow-50', 
-    border: 'border-yellow-300',
-    tag: 'bg-yellow-100 text-yellow-800 border-yellow-300'
-  },
-  '블루': { 
-    bg: 'bg-sky-50', 
-    border: 'border-sky-300',
-    tag: 'bg-sky-100 text-sky-800 border-sky-300'
-  },
-};
-
-// 코스명에서 색상 가져오기
-const getCourseColor = (courseName: string) => {
-  const courseKey = Object.keys(COURSE_COLORS).find(key => 
-    courseName.includes(key)
-  );
-  return courseKey ? COURSE_COLORS[courseKey] : {
-    bg: 'bg-gray-50',
-    border: 'border-gray-300',
-    tag: 'bg-gray-100 text-gray-800 border-gray-300'
-  };
 };
 
 type TeeTimeForm = {
@@ -101,7 +39,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     tee_time: "", 
     max_players: "4" 
   });
-  const [golfCourses, setGolfCourses] = useState<string[]>([]); // DB에서 가져올 때까지 빈 배열
+  const [golfCourses, setGolfCourses] = useState<string[]>([]);
   const [selectedTimes, setSelectedTimes] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
   
@@ -113,7 +51,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     startTime: "06:00",
     interval: "8", // 분 단위
     groups: "4", // 그룹 수
-    courses: ["파인", "레이크", "힐스"]
+    courses: [] as string[]
   });
 
   const fetchTeeTimes = async () => {
@@ -141,7 +79,6 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     if (!window.confirm(`선택한 ${selectedTimes.size}개의 티타임을 삭제하시겠습니까?\n배정된 참가자들은 미배정 상태가 됩니다.`)) return;
     
     try {
-      // 1. 선택된 티타임에 배정된 참가자들의 관계 삭제 (다대다 관계 테이블에서)
       const teeTimeIds = Array.from(selectedTimes);
       const { error: updateError } = await supabase
         .from("singsing_participant_tee_times")
@@ -150,7 +87,6 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       
       if (updateError) throw updateError;
       
-      // 2. 티타임 삭제
       const { error: deleteError } = await supabase
         .from("singsing_tee_times")
         .delete()
@@ -158,7 +94,6 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       
       if (deleteError) throw deleteError;
       
-      // 상태 초기화
       setSelectedTimes(new Set());
       setIsSelectMode(false);
       await fetchTeeTimes();
@@ -179,58 +114,43 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     setSelectedTimes(newSelected);
   };
 
-  // 골프 코스 목록 가져오기 - tour_products에서 실제 코스 정보 가져오기
+  // 골프 코스 목록 가져오기
   const fetchGolfCourses = async () => {
     try {
-      console.log('Fetching golf courses for tourId:', tourId);
-      
-      // 1. 투어 정보에서 tour_product_id 조회
       const { data: tour, error: tourErr } = await supabase
         .from("singsing_tours")
         .select("tour_product_id")
         .eq("id", tourId)
         .single();
       
-      console.log('Tour data:', tour, 'Error:', tourErr);
-      
       if (tourErr || !tour) {
         console.error("Tour not found", tourErr);
         return;
       }
       
-      // tour_product_id가 있으면 tour_products에서 조회
       if (tour.tour_product_id) {
-        // 2. tour_products에서 golf_course와 courses 정보 조회
         const { data: product, error: prodErr } = await supabase
           .from("tour_products")
-          .select("*") // 모든 필드를 가져와서 확인
+          .select("*")
           .eq("id", tour.tour_product_id)
           .single();
-        
-        console.log('Product data:', product, 'Error:', prodErr);
         
         if (!prodErr && product) {
           const courseList: string[] = [];
           
-          // golf_course (골프장 이름)와 courses (코스 배열)를 조합
           if (product.golf_course && product.courses && Array.isArray(product.courses)) {
             product.courses.forEach((courseName: string) => {
-              // "골프장명 - 코스명" 형태로 저장
               courseList.push(`${product.golf_course} - ${courseName}`);
             });
           } else if (product.golf_course) {
-            // courses가 없으면 골프장 이름만 사용
             courseList.push(product.golf_course);
           }
           
           if (courseList.length > 0) {
             setGolfCourses(courseList);
-            console.log('Loaded golf courses from tour_products:', courseList);
-          } else {
-            console.warn('No courses found in product:', product);
+            // 로테이션 설정에도 기본값으로 설정
+            setRotationSettings(prev => ({ ...prev, courses: courseList }));
           }
-        } else {
-          console.error("Failed to fetch from tour_products", prodErr);
         }
       }
     } catch (error) {
@@ -249,7 +169,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     const days = parseInt(rotationSettings.days);
     const groups = parseInt(rotationSettings.groups);
     const interval = parseInt(rotationSettings.interval);
-    const courses = rotationSettings.courses.length > 0 ? rotationSettings.courses : golfCourses.slice(0, 3);
+    const courses = rotationSettings.courses.length > 0 ? rotationSettings.courses : golfCourses;
     
     if (courses.length === 0) {
       setError("가용 가능한 코스가 없습니다. 먼저 투어 상품에 골프장 정보를 등록해주세요.");
@@ -306,7 +226,6 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
 
   const handleBulkAdd = async () => {
     setError("");
-    // 유효성 검사
     if (teeTimeRows.some(row => !row.play_date || !row.golf_course || !row.tee_time)) {
       setError("모든 행의 날짜, 골프장, 티타임을 입력해 주세요.");
       return;
@@ -321,21 +240,16 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
         max_players: Number(row.max_players) || 4,
       }));
       
-      console.log('Inserting tee times:', newTeeTimes);
-      
-      const { data, error } = await supabase.from("singsing_tee_times").insert(newTeeTimes);
+      const { error } = await supabase.from("singsing_tee_times").insert(newTeeTimes);
       
       if (error) {
-        console.error('Insert error:', error);
-        setError(`티타임 추가 오류: ${error.message}\n상세: ${JSON.stringify(error)}`);
+        setError(`티타임 추가 오류: ${error.message}`);
       } else {
-        console.log('Insert success:', data);
         setTeeTimeRows([{ play_date: "", golf_course: "", tee_time: "", max_players: "4" }]);
         await fetchTeeTimes();
         if (onDataChange) onDataChange();
       }
     } catch (err: any) {
-      console.error('Unexpected error:', err);
       setError(`예상치 못한 오류: ${err.message}`);
     }
   };
@@ -368,7 +282,6 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     if (!window.confirm("정말 삭제하시겠습니까? 배정된 참가자들은 미배정 상태가 됩니다.")) return;
     
     try {
-      // 먼저 해당 티타임에 배정된 참가자들의 관계 삭제 (다대다 관계 테이블에서)
       const { error: updateError } = await supabase
         .from("singsing_participant_tee_times")
         .delete()
@@ -376,7 +289,6 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       
       if (updateError) throw updateError;
       
-      // 그 다음 티타임 삭제
       const { error: deleteError } = await supabase
         .from("singsing_tee_times")
         .delete()
@@ -397,10 +309,9 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     return date instanceof Date && !isNaN(date.getTime());
   };
   
-  // 날짜별로 그룹화하고 코스별로 정렬
+  // 날짜별로 그룹화
   const teeTimesByDate = teeTimes.reduce((acc, teeTime) => {
     const date = teeTime.play_date;
-    // Invalid date 체크
     if (!date || date === 'Invalid Date' || !isValidDate(date)) {
       console.warn('Invalid date found:', teeTime);
       return acc;
@@ -410,27 +321,10 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
     return acc;
   }, {} as Record<string, TeeTime[]>);
 
-  // 코스 정렬 순서 정의
-  const COURSE_ORDER = ['파인', '레이크', '힐스', '메이저', '클래식', '이스트', '웨스트', '샤인', '블루'];
-  
-  // 코스 정렬 함수
-  const getCourseOrder = (courseName: string) => {
-    const courseKey = COURSE_ORDER.find(key => courseName.includes(key));
-    return courseKey ? COURSE_ORDER.indexOf(courseKey) : 999;
-  };
-
-  // 각 날짜의 티타임을 코스별로 그룹핑
+  // 각 날짜의 티타임을 시간순으로 정렬 (코스 정렬 제거)
   Object.keys(teeTimesByDate).forEach(date => {
     teeTimesByDate[date].sort((a, b) => {
-      // 먼저 코스 순서대로 정렬 (파인, 레이크, 힐스 순)
-      const aOrder = getCourseOrder(a.golf_course);
-      const bOrder = getCourseOrder(b.golf_course);
-      
-      if (aOrder !== bOrder) {
-        return aOrder - bOrder;
-      }
-      
-      // 같은 코스면 시간순으로 정렬
+      // 단순히 시간순으로만 정렬
       return a.tee_time.localeCompare(b.tee_time);
     });
   });
@@ -580,6 +474,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
         )}
       </div>
       
+      {/* 티타임 추가 폼 */}
       <div className="flex flex-col gap-2 mb-4">
         {teeTimeRows.map((row, idx) => (
           <div key={idx} className="flex gap-2 items-center">
@@ -650,7 +545,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
       ) : (
         <div className="space-y-4">
           {Object.entries(teeTimesByDate).map(([date, times]) => (
-            <div key={date} className="border rounded-lg p-4">
+            <div key={date} className="border rounded-lg p-4 bg-gray-50">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-4 h-4 text-gray-600" />
                 <h3 className="font-semibold text-gray-900">
@@ -674,40 +569,14 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                     return acc;
                   }, {} as Record<string, { count: number; capacity: number }>);
                   
-                  return Object.entries(courseStats).map(([course, stats]) => {
-                    const color = getCourseColor(course);
-                    const bgColor = color.tag.includes('green') ? '#d1fae5' :
-                                    color.tag.includes('blue') ? '#dbeafe' :
-                                    color.tag.includes('amber') ? '#fed7aa' :
-                                    color.tag.includes('purple') ? '#e9d5ff' :
-                                    color.tag.includes('pink') ? '#fbcfe8' :
-                                    color.tag.includes('indigo') ? '#c7d2fe' :
-                                    color.tag.includes('teal') ? '#a7f3d0' :
-                                    color.tag.includes('yellow') ? '#fde68a' :
-                                    color.tag.includes('sky') ? '#bae6fd' : '#e5e7eb';
-                    const textColor = color.tag.includes('green') ? '#065f46' :
-                                      color.tag.includes('blue') ? '#1e40af' :
-                                      color.tag.includes('amber') ? '#92400e' :
-                                      color.tag.includes('purple') ? '#6b21a8' :
-                                      color.tag.includes('pink') ? '#be185d' :
-                                      color.tag.includes('indigo') ? '#4338ca' :
-                                      color.tag.includes('teal') ? '#0f766e' :
-                                      color.tag.includes('yellow') ? '#78350f' :
-                                      color.tag.includes('sky') ? '#075985' : '#374151';
-                    return (
-                      <div 
-                        key={course}
-                        className={`px-3 py-1 rounded-full text-xs font-medium border`}
-                        style={{
-                          backgroundColor: bgColor,
-                          color: textColor,
-                          borderColor: bgColor
-                        }}
-                      >
-                        {course}: {stats.count}팀 ({stats.capacity}명)
-                      </div>
-                    );
-                  });
+                  return Object.entries(courseStats).map(([course, stats]) => (
+                    <div 
+                      key={course}
+                      className="px-3 py-1 rounded-full text-xs font-medium border bg-gray-100 text-gray-700 border-gray-300"
+                    >
+                      {course}: {stats.count}팀 ({stats.capacity}명)
+                    </div>
+                  ));
                 })()}
               </div>
               
@@ -740,131 +609,120 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                 </thead>
                 <tbody>
                   {times.map((teeTime, index) => {
+                    // 코스가 변경되는 지점 확인
                     const prevCourse = index > 0 ? times[index - 1].golf_course : null;
                     const isNewCourse = prevCourse !== teeTime.golf_course;
-                    const courseColor = getCourseColor(teeTime.golf_course);
                     
                     return (
                       <tr 
                         key={teeTime.id} 
-                        className={`${isNewCourse ? 'border-t-2' : 'border-t'} ${courseColor.border} ${courseColor.bg} ${isSelectMode ? 'hover:opacity-80 cursor-pointer' : ''}`}
-                        style={{
-                          backgroundColor: courseColor.bg.replace('bg-', '').includes('green') ? '#f0fdf4' :
-                                          courseColor.bg.replace('bg-', '').includes('blue') ? '#eff6ff' :
-                                          courseColor.bg.replace('bg-', '').includes('amber') ? '#fffbeb' :
-                                          courseColor.bg.replace('bg-', '').includes('purple') ? '#faf5ff' :
-                                          courseColor.bg.replace('bg-', '').includes('pink') ? '#fdf2f8' :
-                                          courseColor.bg.replace('bg-', '').includes('indigo') ? '#eef2ff' :
-                                          courseColor.bg.replace('bg-', '').includes('teal') ? '#f0fdfa' :
-                                          courseColor.bg.replace('bg-', '').includes('yellow') ? '#fefce8' :
-                                          courseColor.bg.replace('bg-', '').includes('sky') ? '#f0f9ff' : '#f9fafb'
-                        }}
+                        className={`${isNewCourse ? 'border-t-2 border-gray-300' : 'border-t border-gray-200'} ${isSelectMode ? 'hover:bg-gray-100 cursor-pointer' : ''}`}
                         onClick={(e) => {
                           if (isSelectMode && !(e.target as HTMLElement).closest('button, input, select')) {
                             toggleSelect(teeTime.id);
                           }
                         }}
                       >
-                      {isSelectMode && (
-                        <td className="py-1 px-2 text-center">
-                          <input
-                            type="checkbox"
-                            className="rounded"
-                            checked={selectedTimes.has(teeTime.id)}
-                            onChange={() => toggleSelect(teeTime.id)}
-                          />
+                        {isSelectMode && (
+                          <td className="py-1 px-2 text-center">
+                            <input
+                              type="checkbox"
+                              className="rounded"
+                              checked={selectedTimes.has(teeTime.id)}
+                              onChange={() => toggleSelect(teeTime.id)}
+                            />
+                          </td>
+                        )}
+                        <td className="py-1 px-2">
+                          {editingTeeTime === teeTime.id ? (
+                            <input
+                              type="time"
+                              value={editForm.tee_time}
+                              onChange={e => setEditForm({...editForm, tee_time: e.target.value})}
+                              className="border rounded px-1 py-0.5 text-sm"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-gray-500" />
+                              {teeTime.tee_time}
+                            </div>
+                          )}
                         </td>
-                      )}
-                      <td className="py-1 px-2">
-                        {editingTeeTime === teeTime.id ? (
-                          <input
-                            type="time"
-                            value={editForm.tee_time}
-                            onChange={e => setEditForm({...editForm, tee_time: e.target.value})}
-                            className="border rounded px-1 py-0.5 text-sm"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-gray-500" />
-                            {teeTime.tee_time}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-1 px-2">
-                        {editingTeeTime === teeTime.id ? (
-                          <select
-                            value={editForm.golf_course}
-                            onChange={e => setEditForm({...editForm, golf_course: e.target.value})}
-                            className="border rounded px-1 py-0.5 text-sm"
-                          >
-                            {golfCourses.map(course => (
-                              <option key={course} value={course}>{course}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          teeTime.golf_course
-                        )}
-                      </td>
-                      <td className="py-1 px-2 text-center">
-                        {editingTeeTime === teeTime.id ? (
-                          <input
-                            type="number"
-                            value={editForm.max_players}
-                            onChange={e => setEditForm({...editForm, max_players: e.target.value})}
-                            className="border rounded px-1 py-0.5 w-16 text-sm"
-                            min="1"
-                            max="4"
-                          />
-                        ) : (
-                          `${teeTime.max_players}명`
-                        )}
-                      </td>
-                      <td className="py-1 px-2">
-                        {!isSelectMode && (
-                          <div className="flex justify-center items-center gap-2">
-                            {editingTeeTime === teeTime.id ? (
-                              <>
-                              <button
-                                className="text-green-600 text-sm underline"
-                                onClick={() => handleUpdate(teeTime.id)}
-                              >
-                                저장
-                              </button>
-                              <button
-                                className="text-gray-600 text-sm underline"
-                                onClick={() => setEditingTeeTime(null)}
-                              >
-                                취소
-                              </button>
-                              </>
-                            ) : (
-                              <>
-                              <button 
-                                className="text-blue-700 underline text-sm" 
-                                onClick={() => {
-                                  setEditingTeeTime(teeTime.id);
-                                  setEditForm({ 
-                                    play_date: teeTime.play_date,
-                                    golf_course: teeTime.golf_course,
-                                    tee_time: teeTime.tee_time,
-                                    max_players: teeTime.max_players.toString()
-                                  });
-                                }} 
-                              >
-                                수정
-                              </button>
-                              <button 
-                                className="text-red-600 underline text-sm" 
-                                onClick={() => handleDelete(teeTime.id)}
-                              >
-                                삭제
-                              </button>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
+                        <td className="py-1 px-2">
+                          {editingTeeTime === teeTime.id ? (
+                            <select
+                              value={editForm.golf_course}
+                              onChange={e => setEditForm({...editForm, golf_course: e.target.value})}
+                              className="border rounded px-1 py-0.5 text-sm"
+                            >
+                              {golfCourses.map(course => (
+                                <option key={course} value={course}>{course}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="font-medium">{teeTime.golf_course}</span>
+                          )}
+                        </td>
+                        <td className="py-1 px-2 text-center">
+                          {editingTeeTime === teeTime.id ? (
+                            <input
+                              type="number"
+                              value={editForm.max_players}
+                              onChange={e => setEditForm({...editForm, max_players: e.target.value})}
+                              className="border rounded px-1 py-0.5 w-16 text-sm"
+                              min="1"
+                              max="4"
+                            />
+                          ) : (
+                            `${teeTime.max_players}명`
+                          )}
+                        </td>
+                        <td className="py-1 px-2">
+                          {!isSelectMode && (
+                            <div className="flex justify-center items-center gap-2">
+                              {editingTeeTime === teeTime.id ? (
+                                <>
+                                  <button
+                                    className="text-green-600 text-sm underline"
+                                    onClick={() => handleUpdate(teeTime.id)}
+                                  >
+                                    저장
+                                  </button>
+                                  <button
+                                    className="text-gray-600 text-sm underline"
+                                    onClick={() => setEditingTeeTime(null)}
+                                  >
+                                    취소
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button 
+                                    className="text-blue-700 underline text-sm" 
+                                    onClick={() => {
+                                      setEditingTeeTime(teeTime.id);
+                                      setEditForm({ 
+                                        play_date: teeTime.play_date,
+                                        golf_course: teeTime.golf_course,
+                                        tee_time: teeTime.tee_time,
+                                        max_players: teeTime.max_players.toString()
+                                      });
+                                    }} 
+                                  >
+                                    수정
+                                  </button>
+                                  <button 
+                                    className="text-red-600 underline text-sm" 
+                                    onClick={() => handleDelete(teeTime.id)}
+                                  >
+                                    삭제
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>
