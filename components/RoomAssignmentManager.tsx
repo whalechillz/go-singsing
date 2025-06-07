@@ -217,8 +217,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
         row += `
         <td rowspan="${roomRowspan}">${p.team_name || ''}</td>
         <td rowspan="${roomRowspan}">${roomRowspan}</td>
-        <td rowspan="${roomRowspan}">${room?.room_number || '미배정'}</td>
-        <td rowspan="${roomRowspan}">${p.note || ''}</td>`;
+        <td rowspan="${roomRowspan}">${room?.room_number || '미배정'}</td>`;
       }
       
       row += `
@@ -234,6 +233,16 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     
     const totalRooms = rooms.filter(r => r.capacity > 0).length;
     const occupiedRoomCount = roomStats.filter(rs => rs.assigned > 0).length;
+    
+    // 콤프룸 정보 계산
+    const compRoomsInfo = compRooms.map(room => {
+      const assigned = sortedParticipants.filter(p => p.room_id === room.id);
+      return {
+        room,
+        assigned: assigned.length,
+        participants: assigned
+      };
+    });
 
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -278,6 +287,14 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           <p style="font-weight: bold; margin-bottom: 5px; color: #1e40af;">투어 참가자 객실</p>
           <p>총 ${totalRooms}객 중 ${occupiedRoomCount}객 사용</p>
         </div>
+        ${compRoomsInfo.length > 0 ? `
+        <div style="flex: 1; min-width: 200px; background-color: #ffffff; padding: 10px; border-radius: 4px; border-left: 4px solid #8b5cf6;">
+          <p style="font-weight: bold; margin-bottom: 5px; color: #6b21a8;">콤프룸 현황</p>
+          ${compRoomsInfo.map(comp => `
+            <p style="margin: 2px 0; font-size: 14px;">${comp.room.room_number}호: ${comp.participants.map(p => p.name).join(', ') || '미배정'}</p>
+          `).join('')}
+        </div>
+        ` : ''}
       </div>
     </div>
     
@@ -292,7 +309,6 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
             <th>팀명/동호회</th>
             <th>인원</th>
             <th>객실</th>
-            <th>비고</th>
           </tr>
         </thead>
         <tbody>
