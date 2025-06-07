@@ -22,6 +22,14 @@ type TeeTimeForm = {
 
 type Props = { tourId: string; onDataChange?: () => void };
 
+// 코스명 간소화 함수
+const simplifyCourseName = (fullName: string): string => {
+  if (!fullName) return '';
+  // "골프장명 - 코스명" 형태에서 코스명만 추출
+  const parts = fullName.split(' - ');
+  return parts.length > 1 ? parts[1] : fullName;
+};
+
 const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [teeTimeRows, setTeeTimeRows] = useState<TeeTimeForm[]>([{ 
@@ -458,7 +466,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                   size={3}
                 >
                   {golfCourses.map(course => (
-                    <option key={course} value={course}>{course}</option>
+                    <option key={course} value={course}>{simplifyCourseName(course)}</option>
                   ))}
                 </select>
               </div>
@@ -493,7 +501,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
             >
               <option value="">골프장 선택</option>
               {golfCourses.map(course => (
-                <option key={course} value={course}>{course}</option>
+                <option key={course} value={course}>{simplifyCourseName(course)}</option>
               ))}
             </select>
             <input 
@@ -574,7 +582,7 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                       key={course}
                       className="px-3 py-1 rounded-full text-xs font-medium border bg-gray-100 text-gray-700 border-gray-300"
                     >
-                      {course}: {stats.count}팀 ({stats.capacity}명)
+                      {simplifyCourseName(course)}: {stats.count}팀 ({stats.capacity}명)
                     </div>
                   ));
                 })()}
@@ -656,11 +664,11 @@ const TeeTimeSlotManager: React.FC<Props> = ({ tourId, onDataChange }) => {
                               className="border rounded px-1 py-0.5 text-sm"
                             >
                               {golfCourses.map(course => (
-                                <option key={course} value={course}>{course}</option>
+                              <option key={course} value={course}>{simplifyCourseName(course)}</option>
                               ))}
                             </select>
                           ) : (
-                            <span className="font-medium">{teeTime.golf_course}</span>
+                            <span className="font-medium">{simplifyCourseName(teeTime.golf_course)}</span>
                           )}
                         </td>
                         <td className="py-1 px-2 text-center">

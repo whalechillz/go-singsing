@@ -682,12 +682,36 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                         iconClass = 'default';
                       }
                       
+                      // content에 골프장명이 포함된 경우 코스명만 표시
+                      let displayContent = item.content;
+                      if (item.content && (item.content.includes('라운드') || item.content.includes('골프'))) {
+                        displayContent = item.content.split(' - ').map((part: string, index: number) => {
+                          // "골프장명 - 코스명 라운드" 형태인 경우 코스명만 추출
+                          if (index === 0 && item.content.includes(' - ')) {
+                            const courseParts = part.split(' ');
+                            // 마지막 단어가 골프장 이름이 아닌 경우만 반환
+                            return '';
+                          }
+                          return part;
+                        }).filter((part: string) => part).join(' - ');
+                        
+                        // 더 간단한 방법: simplifyCourseName 사용
+                        if (displayContent.includes(' - ')) {
+                          const parts = displayContent.split(' ');
+                          const courseNamePart = parts.find(p => p.includes(' - '));
+                          if (courseNamePart) {
+                            const simplified = simplifyCourseName(courseNamePart);
+                            displayContent = displayContent.replace(courseNamePart, simplified);
+                          }
+                        }
+                      }
+                      
                       return `
                         <div class="timeline-item ${iconClass}">
                           <div class="timeline-icon">${icon}</div>
                           <div class="timeline-content">
                             ${item.time ? `<span class="timeline-time">${item.time}</span>` : ''}
-                            <span class="timeline-text">${item.content}</span>
+                            <span class="timeline-text">${displayContent}</span>
                             ${item.attraction_data ? `
                               <div class="attraction-detail">
                                 ${item.attraction_data.main_image_url || item.attraction_data.image_urls?.[0] ? `

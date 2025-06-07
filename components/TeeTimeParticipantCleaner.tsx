@@ -8,6 +8,13 @@ interface Props {
   onComplete?: () => void;
 }
 
+// 코스명 간소화 함수
+const simplifyCourseName = (fullName: string): string => {
+  // "골프장명 - 코스명" 형태에서 코스명만 추출
+  const parts = fullName.split(' - ');
+  return parts.length > 1 ? parts[1] : fullName;
+};
+
 export const TeeTimeParticipantCleaner: React.FC<Props> = ({ tourId, onComplete }) => {
   const [duplicates, setDuplicates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,7 +164,7 @@ export const TeeTimeParticipantCleaner: React.FC<Props> = ({ tourId, onComplete 
                   <th className="text-left p-2">참가자</th>
                   <th className="text-left p-2">날짜</th>
                   <th className="text-left p-2">티타임</th>
-                  <th className="text-left p-2">골프장</th>
+                  <th className="text-left p-2">코스</th>
                   <th className="text-right p-2">중복 수</th>
                 </tr>
               </thead>
@@ -167,7 +174,7 @@ export const TeeTimeParticipantCleaner: React.FC<Props> = ({ tourId, onComplete 
                     <td className="p-2">{dup.singsing_participants?.name}</td>
                     <td className="p-2">{dup.singsing_tee_times?.play_date}</td>
                     <td className="p-2">{dup.singsing_tee_times?.tee_time}</td>
-                    <td className="p-2">{dup.singsing_tee_times?.golf_course}</td>
+                    <td className="p-2">{simplifyCourseName(dup.singsing_tee_times?.golf_course || '')}</td>
                     <td className="p-2 text-right font-medium text-red-600">
                       {dup.count}개
                     </td>

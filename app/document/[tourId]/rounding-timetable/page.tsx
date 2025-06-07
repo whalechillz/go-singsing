@@ -38,10 +38,11 @@ const RoundingTimetableDoc = () => {
   const formatCourseName = (course: string) => {
     if (!course) return "";
     
+    // "골프장명 - 코스명" 형태에서 코스명만 추출
     const parts = course.split(' - ');
-    if (parts.length === 2) {
+    if (parts.length > 1) {
       // 코스명만 반환
-      return parts[1].replace(' 코스', '').replace('코스', '');
+      return parts[1];
     }
     
     return course;
