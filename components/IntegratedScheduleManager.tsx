@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, Clock, Hotel, Tag } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, Clock, Hotel, Tag, Route, ListOrdered } from 'lucide-react';
+import TourJourneyManager from './TourJourneyManager';
 
 interface IntegratedScheduleManagerProps {
   tourId: string;
@@ -23,6 +24,7 @@ const categoryMap: Record<string, string> = {
 };
 
 export default function IntegratedScheduleManager({ tourId }: IntegratedScheduleManagerProps) {
+  const [activeTab, setActiveTab] = useState<'schedule' | 'journey'>('journey');
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
@@ -332,8 +334,37 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
   return (
     <div className="space-y-6">
-      {/* 일정 관리 */}
-      <div className="space-y-4">
+      {/* 탭 네비게이션 */}
+      <div className="flex gap-2 border-b mb-6">
+        <button
+          onClick={() => setActiveTab('journey')}
+          className={`px-4 py-2 font-medium transition-colors ${
+            activeTab === 'journey'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Route className="w-4 h-4 inline mr-2" />
+          여정 관리
+        </button>
+        <button
+          onClick={() => setActiveTab('schedule')}
+          className={`px-4 py-2 font-medium transition-colors ${
+            activeTab === 'schedule'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <ListOrdered className="w-4 h-4 inline mr-2" />
+          일정 관리
+        </button>
+      </div>
+
+      {/* 탭 컨텐츠 */}
+      {activeTab === 'journey' ? (
+        <TourJourneyManager tourId={tourId} />
+      ) : (
+        <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">일정 목록</h3>
           <button
@@ -654,6 +685,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }

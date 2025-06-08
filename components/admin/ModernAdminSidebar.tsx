@@ -97,7 +97,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'tours', label: '투어 스케줄 관리', href: '/admin/tours' },
         { id: 'tour-products', label: '여행상품 관리', href: '/admin/tour-products' },
         { id: 'boarding-places', label: '탑승지 관리', href: '/admin/boarding-places' },
-        { id: 'attractions', label: '관광지 관리', href: '/admin/attractions' },
+        { id: 'attractions', label: '스팟 관리', href: '/admin/attractions' },
       ]
     },
     { 

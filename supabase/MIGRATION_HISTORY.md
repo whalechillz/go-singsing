@@ -1,12 +1,23 @@
 # 마이그레이션 히스토리
 
-## 현재 상태 (2025-06-06)
-- 마지막 적용: 20250606_add_waypoint_type_and_image.sql
-- 총 테이블 수: [확인 필요]
+## 현재 상태 (2025-06-08)
+- 마지막 적용: 20250608_final_tour_system_migration.sql
+- 총 테이블 수: 23개 (tour_journey_items 추가)
 
 ## 주요 변경사항
+### 2025-06-08
+- **투어 관리 시스템 완전 재구조화**
+  - tourist_attractions 테이블 확장
+    - 새 카테고리 추가: mart, golf_round, club_meal, others
+    - 새 컬럼 추가: sub_category, golf_course_info, meal_info, parking_info, entrance_fee, booking_required
+  - tour_journey_items 테이블 생성 (투어별 여정 관리)
+  - singsing_boarding_places 정리 (탑승지만 관리)
+  - 스팟 관리 UI 전면 개편
+  - 여정 관리 기능 추가 (타임라인/카테고리 뷰)
+
 ### 2025-06-06
 - waypoint_type, image_url 추가 (singsing_tour_boarding_times)
+- tourist_attractions 테이블 생성
 
 ### 2025-06-05
 - accommodation 컬럼 추가
@@ -30,5 +41,10 @@
 - 중복 제거: improve_schedules_structure 시리즈
 - 백업 위치: migrations_backup_20250606/
 
-## 미실행 파일
-[확인 필요]
+## 실행 필요 파일
+- 20250608_final_tour_system_migration.sql (최신)
+
+## 이전 마이그레이션 파일 정리
+- 20250608_create_tour_journey.sql → final_tour_system_migration.sql에 통합
+- 20250608_extend_tourist_attractions.sql → final_tour_system_migration.sql에 통합  
+- 20250608_cleanup_boarding_places.sql → final_tour_system_migration.sql에 통합

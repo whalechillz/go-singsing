@@ -17,7 +17,14 @@ import {
   Coffee,
   ShoppingBag,
   Camera,
-  Utensils
+  Utensils,
+  Clock,
+  List,
+  ArrowUpDown,
+  Grip,
+  ChevronUp,
+  ChevronDown,
+  Users
 } from "lucide-react";
 
 type BoardingPlace = {
@@ -34,6 +41,13 @@ type BoardingPlace = {
   image_url?: string;
   attraction_id?: string;
   attraction?: any;
+  order_index?: number;
+  arrival_time?: string;
+  stay_duration?: string;
+  distance_from_prev?: string;
+  duration_from_prev?: string;
+  passenger_count?: number;
+  notes?: string;
 };
 
 const placeTypeMap: Record<string, { label: string; icon: any; color: string }> = {
@@ -41,7 +55,7 @@ const placeTypeMap: Record<string, { label: string; icon: any; color: string }> 
   'rest_area': { label: '휴게소', icon: Coffee, color: 'green' },
   'mart': { label: '마트', icon: ShoppingBag, color: 'purple' },
   'tourist_spot': { label: '관광지', icon: Camera, color: 'orange' },
-  'restaurant': { label: '맛집', icon: Utensils, color: 'red' }
+  'restaurant': { label: '식당', icon: Utensils, color: 'red' }
 };
 
 const BoardingPlaceManagerEnhanced: React.FC = () => {
@@ -55,7 +69,14 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
     parking_map_url: "",
     parking_info: "",
     place_type: "boarding",
-    attraction_id: ""
+    attraction_id: "",
+    order_index: 0,
+    arrival_time: "",
+    stay_duration: "",
+    distance_from_prev: "",
+    duration_from_prev: "",
+    passenger_count: 0,
+    notes: ""
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -64,6 +85,7 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [attractions, setAttractions] = useState<any[]>([]);
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'timeline' | 'table'>('timeline');
 
   // 목록 조회
   const fetchPlaces = async () => {
@@ -71,6 +93,7 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
     const { data, error } = await supabase
       .from("singsing_boarding_places")
       .select("*")
+      .order("order_index", { ascending: true, nullsFirst: false })
       .order("name", { ascending: true });
     
     if (error) setError(error.message);
@@ -105,12 +128,10 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
 
   // 입력값 변경
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     if (name === 'place_type' && value === 'tourist_spot') {
-      // 관광지 타입 선택시 관광지 선택 필드 활성화
       setForm({ ...form, [name]: value });
     } else if (name === 'attraction_id') {
-      // 관광지 선택시 해당 정보로 자동 채우기
       const attraction = attractions.find(a => a.id === value);
       if (attraction) {
         setForm({
@@ -123,7 +144,10 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
         setForm({ ...form, [name]: value });
       }
     } else {
-      setForm({ ...form, [name]: value });
+      setForm({ 
+        ...form, 
+        [name]: type === 'number' ? (value === '' ? 0 : Number(value)) : value 
+      });
     }
   };
 
@@ -139,7 +163,13 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
       return;
     }
     
-    // 테이블에 있는 컬럼만 사용
+    // 새로운 장소 추가시 order_index 자동 설정
+    let orderIndex = form.order_index;
+    if (!editingId && orderIndex === 0) {
+      const maxOrder = Math.max(...places.map(p => p.order_index || 0), 0);
+      orderIndex = maxOrder + 1;
+    }
+    
     const dataToSubmit: any = {
       name: form.name,
       address: form.address,
@@ -150,7 +180,14 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
       parking_info: form.parking_info || null,
       place_type: form.place_type || 'boarding',
       image_url: form.image_url || null,
-      attraction_id: form.attraction_id || null
+      attraction_id: form.attraction_id || null,
+      order_index: orderIndex,
+      arrival_time: form.arrival_time || null,
+      stay_duration: form.stay_duration || null,
+      distance_from_prev: form.distance_from_prev || null,
+      duration_from_prev: form.duration_from_prev || null,
+      passenger_count: form.passenger_count || null,
+      notes: form.notes || null
     };
     
     let success = false;
@@ -184,17 +221,7 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
     }
     
     if (success) {
-      setForm({ 
-        name: "", 
-        address: "", 
-        boarding_main: "", 
-        boarding_sub: "", 
-        parking_main: "", 
-        parking_map_url: "",
-        parking_info: "",
-        place_type: "boarding",
-        attraction_id: ""
-      });
+      resetForm();
       fetchPlaces();
     }
     setLoading(false);
@@ -226,7 +253,14 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
       parking_map_url: place.parking_map_url || "",
       parking_info: place.parking_info || "",
       place_type: place.place_type || "boarding",
-      attraction_id: place.attraction_id || ""
+      attraction_id: place.attraction_id || "",
+      order_index: place.order_index || 0,
+      arrival_time: place.arrival_time || "",
+      stay_duration: place.stay_duration || "",
+      distance_from_prev: place.distance_from_prev || "",
+      duration_from_prev: place.duration_from_prev || "",
+      passenger_count: place.passenger_count || 0,
+      notes: place.notes || ""
     });
     setShowForm(true);
   };
@@ -243,10 +277,49 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
       parking_map_url: "",
       parking_info: "",
       place_type: "boarding",
-      attraction_id: ""
+      attraction_id: "",
+      order_index: 0,
+      arrival_time: "",
+      stay_duration: "",
+      distance_from_prev: "",
+      duration_from_prev: "",
+      passenger_count: 0,
+      notes: ""
     });
     setShowForm(false);
     setError(null);
+  };
+
+  // 순서 변경
+  const updateOrder = async (placeId: string, direction: 'up' | 'down') => {
+    const sortedPlaces = [...places].sort((a, b) => 
+      (a.order_index || 0) - (b.order_index || 0)
+    );
+    
+    const currentIndex = sortedPlaces.findIndex(p => p.id === placeId);
+    if (currentIndex === -1) return;
+    
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= sortedPlaces.length) return;
+    
+    const currentPlace = sortedPlaces[currentIndex];
+    const targetPlace = sortedPlaces[targetIndex];
+    
+    const currentOrder = currentPlace.order_index || 0;
+    const targetOrder = targetPlace.order_index || 0;
+    
+    // 순서 교환
+    await supabase
+      .from("singsing_boarding_places")
+      .update({ order_index: targetOrder })
+      .eq("id", currentPlace.id);
+      
+    await supabase
+      .from("singsing_boarding_places")
+      .update({ order_index: currentOrder })
+      .eq("id", targetPlace.id);
+      
+    fetchPlaces();
   };
 
   // 장소 유형별 아이콘 가져오기
@@ -256,6 +329,281 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
     return <IconComponent className={`w-4 h-4 text-${color}-500`} />;
   };
 
+  // 통계 계산
+  const stats = {
+    total: places.length,
+    boarding: places.filter(p => p.place_type === 'boarding').length,
+    tourist_spot: places.filter(p => p.place_type === 'tourist_spot').length,
+    restaurant: places.filter(p => p.place_type === 'restaurant').length,
+    rest_area: places.filter(p => p.place_type === 'rest_area').length,
+    totalPassengers: places.reduce((sum, p) => sum + (p.passenger_count || 0), 0)
+  };
+
+  // 타임라인 뷰 컴포넌트
+  const TimelineView = () => {
+    const sortedPlaces = [...filteredPlaces].sort((a, b) => 
+      (a.order_index || 999) - (b.order_index || 999)
+    );
+
+    return (
+      <div className="space-y-4">
+        {sortedPlaces.map((place, index) => (
+          <div key={place.id} className="relative">
+            {/* 연결선 */}
+            {index < sortedPlaces.length - 1 && (
+              <div className="absolute left-10 top-20 w-0.5 h-24 bg-gray-300">
+                {place.duration_from_prev && place.distance_from_prev && (
+                  <div className="absolute -left-16 top-1/2 text-xs text-gray-500 bg-white px-1 whitespace-nowrap">
+                    {place.duration_from_prev} • {place.distance_from_prev}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* 장소 카드 */}
+            <div className="flex gap-4 bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
+              {/* 순서 번호 */}
+              <div className={`w-12 h-12 rounded-full bg-${placeTypeMap[place.place_type || 'boarding']?.color}-100 flex items-center justify-center flex-shrink-0`}>
+                <span className={`text-${placeTypeMap[place.place_type || 'boarding']?.color}-600 font-bold`}>
+                  {place.order_index || index + 1}
+                </span>
+              </div>
+              
+              {/* 내용 */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  {getPlaceIcon(place.place_type)}
+                  <h3 className="font-semibold text-lg">{place.name}</h3>
+                  <span className={`px-2 py-1 text-xs rounded-full bg-${placeTypeMap[place.place_type || 'boarding']?.color}-100 text-${placeTypeMap[place.place_type || 'boarding']?.color}-700`}>
+                    {placeTypeMap[place.place_type || 'boarding']?.label}
+                  </span>
+                  {place.passenger_count && place.passenger_count > 0 && (
+                    <span className="flex items-center gap-1 text-sm text-gray-600">
+                      <Users className="w-4 h-4" />
+                      {place.passenger_count}명
+                    </span>
+                  )}
+                </div>
+                
+                <p className="text-sm text-gray-600 mb-2">{place.address}</p>
+                
+                <div className="flex items-center gap-4 text-sm flex-wrap">
+                  {place.arrival_time && (
+                    <span className="flex items-center gap-1 text-blue-600">
+                      <Clock className="w-4 h-4" />
+                      {place.arrival_time} 도착
+                    </span>
+                  )}
+                  {place.stay_duration && (
+                    <span className="text-gray-500">
+                      체류: {place.stay_duration}
+                    </span>
+                  )}
+                  {place.parking_info && (
+                    <span className="text-gray-500">
+                      주차비: {place.parking_info}
+                    </span>
+                  )}
+                  {place.notes && (
+                    <span className="text-gray-500 italic">
+                      {place.notes}
+                    </span>
+                  )}
+                </div>
+                
+                {/* 탑승지 정보 */}
+                {place.place_type === 'boarding' && place.boarding_main && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                    <div className="font-medium text-blue-900">탑승 안내</div>
+                    <div className="text-blue-700">{place.boarding_main}</div>
+                    {place.boarding_sub && (
+                      <div className="text-blue-600">{place.boarding_sub}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* 액션 버튼 */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-col gap-1">
+                  <button 
+                    onClick={() => updateOrder(place.id, 'up')}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    disabled={index === 0}
+                  >
+                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button 
+                    onClick={() => updateOrder(place.id, 'down')}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    disabled={index === sortedPlaces.length - 1}
+                  >
+                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+                <button 
+                  onClick={() => handleEdit(place)}
+                  className="p-2 hover:bg-gray-100 rounded"
+                >
+                  <Edit2 className="w-4 h-4 text-gray-600" />
+                </button>
+                <button 
+                  onClick={() => handleDelete(place.id)}
+                  className="p-2 hover:bg-gray-100 rounded"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // 테이블 뷰 컴포넌트
+  const TableView = () => (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead className="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              순서
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              장소 정보
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              도착/체류
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              버스 탑승 안내
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              주차장 정보
+            </th>
+            <th className="relative px-6 py-3">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {filteredPlaces.sort((a, b) => (a.order_index || 999) - (b.order_index || 999)).map((place) => (
+            <tr key={place.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 text-center">
+                <span className="text-lg font-bold text-gray-600">
+                  {place.order_index || '-'}
+                </span>
+              </td>
+              <td className="px-6 py-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    {getPlaceIcon(place.place_type)}
+                    <span className="text-sm font-medium text-gray-900">
+                      {place.name}
+                    </span>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {placeTypeMap[place.place_type || 'boarding']?.label}
+                    </span>
+                    {place.passenger_count && place.passenger_count > 0 && (
+                      <span className="flex items-center gap-1 text-xs text-gray-600">
+                        <Users className="w-3 h-3" />
+                        {place.passenger_count}명
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                    <MapPin className="w-3 h-3" />
+                    {place.address}
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4">
+                {place.arrival_time || place.stay_duration ? (
+                  <div>
+                    {place.arrival_time && (
+                      <div className="text-sm text-gray-900">
+                        도착: {place.arrival_time}
+                      </div>
+                    )}
+                    {place.stay_duration && (
+                      <div className="text-sm text-gray-500">
+                        체류: {place.stay_duration}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-400">-</span>
+                )}
+              </td>
+              <td className="px-6 py-4">
+                {place.place_type === 'boarding' && place.boarding_main ? (
+                  <div>
+                    <div className="text-sm text-gray-900">
+                      {place.boarding_main}
+                    </div>
+                    {place.boarding_sub && (
+                      <div className="text-sm text-gray-500 mt-1">
+                        {place.boarding_sub}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-400">
+                    {place.place_type !== 'boarding' ? '해당없음' : '-'}
+                  </span>
+                )}
+              </td>
+              <td className="px-6 py-4">
+                {place.parking_main || place.parking_info ? (
+                  <div>
+                    {place.parking_main && (
+                      <div className="text-sm text-gray-900">
+                        {place.parking_main}
+                      </div>
+                    )}
+                    {place.parking_info && (
+                      <div className="text-sm text-gray-600">
+                        주차비: {place.parking_info}
+                      </div>
+                    )}
+                    {place.parking_map_url && (
+                      <a
+                        href={place.parking_map_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-1"
+                      >
+                        <Map className="w-3 h-3" />
+                        지도 보기
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-400">-</span>
+                )}
+              </td>
+              <td className="px-6 py-4 text-right text-sm font-medium">
+                <button
+                  onClick={() => handleEdit(place)}
+                  className="text-blue-600 hover:text-blue-900 mr-3"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(place.id)}
+                  className="text-red-600 hover:text-red-900"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       {/* 헤더 */}
@@ -263,7 +611,7 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">여정 관리</h1>
-            <p className="text-sm text-gray-500 mt-1">투어 탑승지, 경유지, 관광지를 통합 관리합니다</p>
+            <p className="text-sm text-gray-500 mt-1">투어 일정의 모든 경유지를 순서대로 관리합니다</p>
           </div>
           <button
             onClick={() => setShowForm(true)}
@@ -276,50 +624,82 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        {Object.entries(placeTypeMap).map(([key, value]) => {
-          const count = places.filter(p => p.place_type === key).length;
-          const IconComponent = value.icon;
-          return (
-            <div key={key} className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{value.label}</p>
-                  <p className="text-2xl font-bold text-gray-900">{count}</p>
-                </div>
-                <IconComponent className={`w-8 h-8 text-${value.color}-500`} />
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="text-2xl font-bold">{stats.total}</div>
+          <div className="text-sm text-gray-600">전체</div>
+        </div>
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <div className="text-2xl font-bold text-blue-600">{stats.boarding}</div>
+          <div className="text-sm text-gray-600">탑승지</div>
+        </div>
+        <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+          <div className="text-2xl font-bold text-orange-600">{stats.tourist_spot}</div>
+          <div className="text-sm text-gray-600">관광지</div>
+        </div>
+        <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+          <div className="text-2xl font-bold text-red-600">{stats.restaurant}</div>
+          <div className="text-sm text-gray-600">식당</div>
+        </div>
+        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+          <div className="text-2xl font-bold text-green-600">{stats.rest_area}</div>
+          <div className="text-sm text-gray-600">휴게소</div>
+        </div>
+        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+          <div className="text-2xl font-bold text-purple-600">{stats.totalPassengers}</div>
+          <div className="text-sm text-gray-600">총 승객</div>
+        </div>
       </div>
 
       {/* 필터 및 검색 */}
       <div className="bg-white rounded-lg p-4 mb-6 space-y-4">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setSelectedType('all')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              selectedType === 'all' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            전체
-          </button>
-          {Object.entries(placeTypeMap).map(([key, value]) => (
+        <div className="flex gap-2 items-center">
+          <div className="flex gap-2">
             <button
-              key={key}
-              onClick={() => setSelectedType(key)}
+              onClick={() => setViewMode('timeline')}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                viewMode === 'timeline' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <Navigation className="w-4 h-4" />
+              타임라인
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                viewMode === 'table' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              테이블
+            </button>
+          </div>
+          
+          <div className="flex gap-2 ml-4">
+            <button
+              onClick={() => setSelectedType('all')}
               className={`px-4 py-2 rounded-lg transition-colors ${
-                selectedType === key
-                  ? 'bg-blue-600 text-white'
+                selectedType === 'all' 
+                  ? 'bg-gray-600 text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {value.label}
+              전체
             </button>
-          ))}
+            {Object.entries(placeTypeMap).map(([key, value]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedType(key)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  selectedType === key
+                    ? 'bg-gray-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {value.label}
+              </button>
+            ))}
+          </div>
         </div>
         
         <div className="relative">
@@ -350,7 +730,8 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 기본 정보 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   장소 유형 <span className="text-red-500">*</span>
@@ -388,6 +769,21 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
                   </select>
                 </div>
               )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  순서
+                </label>
+                <input
+                  type="number"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  name="order_index"
+                  value={form.order_index}
+                  onChange={handleChange}
+                  placeholder="자동 설정"
+                  min="0"
+                />
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -431,10 +827,65 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
               </div>
             </div>
             
-            <div className="space-y-4">
-              {/* 탑승지일 때만 버스 탑승 안내 표시 */}
-              {form.place_type === 'boarding' && (
-                <>
+            {/* 시간 정보 */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  도착 시간
+                </label>
+                <input
+                  type="time"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  name="arrival_time"
+                  value={form.arrival_time}
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  체류 시간
+                </label>
+                <input
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  name="stay_duration"
+                  value={form.stay_duration}
+                  onChange={handleChange}
+                  placeholder="예: 30분, 1시간"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  이전 장소에서 거리
+                </label>
+                <input
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  name="distance_from_prev"
+                  value={form.distance_from_prev}
+                  onChange={handleChange}
+                  placeholder="예: 50km"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  소요 시간
+                </label>
+                <input
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  name="duration_from_prev"
+                  value={form.duration_from_prev}
+                  onChange={handleChange}
+                  placeholder="예: 1시간 30분"
+                />
+              </div>
+            </div>
+            
+            {/* 탑승지 정보 */}
+            {form.place_type === 'boarding' && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       버스 탑승지 주 안내
@@ -454,19 +905,40 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      버스 탑승지 보조 안내
+                      탑승 인원
                     </label>
-                    <input
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      name="boarding_sub"
-                      value={form.boarding_sub}
-                      onChange={handleChange}
-                      placeholder="추가 안내사항"
-                    />
+                    <div className="relative">
+                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        type="number"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        name="passenger_count"
+                        value={form.passenger_count}
+                        onChange={handleChange}
+                        placeholder="0"
+                        min="0"
+                      />
+                    </div>
                   </div>
-                </>
-              )}
-              
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    버스 탑승지 보조 안내
+                  </label>
+                  <input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    name="boarding_sub"
+                    value={form.boarding_sub}
+                    onChange={handleChange}
+                    placeholder="추가 안내사항"
+                  />
+                </div>
+              </>
+            )}
+            
+            {/* 주차장 정보 */}
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   주차장 오시는 길
@@ -484,32 +956,48 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  네이버 지도 링크
-                </label>
-                <div className="relative">
-                  <Navigation className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    네이버 지도 링크
+                  </label>
+                  <div className="relative">
+                    <Navigation className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      name="parking_map_url"
+                      value={form.parking_map_url}
+                      onChange={handleChange}
+                      placeholder="https://naver.me/..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    주차비
+                  </label>
                   <input
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    name="parking_map_url"
-                    value={form.parking_map_url}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    name="parking_info"
+                    value={form.parking_info}
                     onChange={handleChange}
-                    placeholder="https://naver.me/..."
+                    placeholder="예: 7,000원 / 무료 / 10,000원 등"
                   />
                 </div>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  주차비
+                  비고
                 </label>
-                <input
+                <textarea
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  name="parking_info"
-                  value={form.parking_info}
+                  name="notes"
+                  value={form.notes}
                   onChange={handleChange}
-                  placeholder="예: 7,000원 / 무료 / 10,000원 등"
+                  placeholder="추가 메모사항"
+                  rows={2}
                 />
               </div>
             </div>
@@ -564,112 +1052,8 @@ const BoardingPlaceManagerEnhanced: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    장소 정보
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    버스 탑승 안내
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    주차장 정보
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    주차비
-                  </th>
-                  <th className="relative px-6 py-3">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPlaces.map((place) => (
-                  <tr key={place.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          {getPlaceIcon(place.place_type)}
-                          <span className="text-sm font-medium text-gray-900">
-                            {place.name}
-                          </span>
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {placeTypeMap[place.place_type || 'boarding']?.label}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                          <MapPin className="w-3 h-3" />
-                          {place.address}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {place.place_type === 'boarding' && place.boarding_main ? (
-                        <div>
-                          <div className="text-sm text-gray-900">
-                            {place.boarding_main}
-                          </div>
-                          {place.boarding_sub && (
-                            <div className="text-sm text-gray-500 mt-1">
-                              {place.boarding_sub}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">
-                          {place.place_type !== 'boarding' ? '해당없음' : '-'}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {place.parking_main ? (
-                        <div>
-                          <div className="text-sm text-gray-900">
-                            {place.parking_main}
-                          </div>
-                          {place.parking_map_url && (
-                            <a
-                              href={place.parking_map_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-1"
-                            >
-                              <Map className="w-3 h-3" />
-                              지도 보기
-                            </a>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {place.parking_info ? (
-                        <span className="text-sm text-gray-900">{place.parking_info}</span>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(place)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(place.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            {viewMode === 'timeline' ? <TimelineView /> : <TableView />}
           </div>
         )}
       </div>
