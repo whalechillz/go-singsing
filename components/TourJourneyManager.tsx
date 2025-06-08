@@ -211,9 +211,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       console.log('Data to submit:', dataToSubmit);
 
       if (editingItem?.id) {
+        // update 시에도 관계 데이터 제거
+        const { boarding_place, spot, ...updateData } = dataToSubmit as any;
+        
         const { error } = await supabase
           .from('tour_journey_items')
-          .update(dataToSubmit)
+          .update(updateData)
           .eq('id', editingItem.id);
         
         if (error) throw error;
@@ -253,7 +256,40 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
 
   const handleEdit = (item: JourneyItem) => {
     setEditingItem(item);
-    setFormData(item);
+    
+    // 폼 데이터 설정 시 유형에 따라 처리
+    let editFormData: any = {
+      tour_id: item.tour_id,
+      day_number: item.day_number,
+      order_index: item.order_index,
+      arrival_time: item.arrival_time || '',
+      departure_time: item.departure_time || '',
+      stay_duration: item.stay_duration || '',
+      distance_from_prev: item.distance_from_prev || '',
+      duration_from_prev: item.duration_from_prev || '',
+      passenger_count: item.passenger_count || 0,
+      boarding_type: item.boarding_type || '',
+      meal_type: item.meal_type || '',
+      meal_menu: item.meal_menu || '',
+      golf_info: item.golf_info || {},
+      notes: item.notes || '',
+      display_options: item.display_options || { show_image: true }
+    };
+    
+    // 탑승지와 스팟 중 하나만 설정
+    if (item.boarding_place_id) {
+      editFormData.boarding_place_id = item.boarding_place_id;
+      editFormData.spot_id = undefined;
+    } else if (item.spot_id) {
+      editFormData.spot_id = item.spot_id;
+      editFormData.boarding_place_id = undefined;
+    } else {
+      editFormData.boarding_place_id = undefined;
+      editFormData.spot_id = undefined;
+    }
+    
+    console.log('Edit form data:', editFormData);
+    setFormData(editFormData);
     setShowForm(true);
   };
 
@@ -646,7 +682,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                     setFormData({ ...formData, boarding_place_id: '', spot_id: undefined });
                   }}
                   className={`px-4 py-2 rounded-lg ${
-                    formData.boarding_place_id !== undefined && !formData.spot_id ? 'bg-blue-600 text-white' : 'bg-gray-100'
+                    formData.boarding_place_id !== undefined && formData.spot_id === undefined ? 'bg-blue-600 text-white' : 'bg-gray-100'
                   }`}
                 >
                   탑승지
@@ -657,7 +693,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                     setFormData({ ...formData, boarding_place_id: undefined, spot_id: '' });
                   }}
                   className={`px-4 py-2 rounded-lg ${
-                    formData.spot_id !== undefined && !formData.boarding_place_id ? 'bg-blue-600 text-white' : 'bg-gray-100'
+                    formData.spot_id !== undefined && formData.boarding_place_id === undefined ? 'bg-blue-600 text-white' : 'bg-gray-100'
                   }`}
                 >
                   스팟
