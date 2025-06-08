@@ -97,26 +97,39 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
       if (tourError) throw tourError;
 
-      // 일정 정보 가져오기
-      const { data: schedules, error: schedulesError } = await supabase
-        .from('singsing_schedules')
-        .select('*')
-        .eq('tour_id', tourId)
-        .order('date');
-
-      if (schedulesError) throw schedulesError;
-      
-      // 여정 아이템 가져오기
+      // 여정 아이템에서 일정 정보 가져오기
       const { data: journeyData, error: journeyError } = await supabase
         .from('tour_journey_items')
         .select('*')
         .eq('tour_id', tourId)
         .order('day_number')
         .order('order_index');
+
+      if (journeyError) throw journeyError;
       
-      if (!journeyError && journeyData) {
+      // DAY_INFO 타입의 아이템에서 날짜별 정보 추출
+      const dayInfoItems = journeyData?.filter(item => item.type === 'DAY_INFO') || [];
+      const schedules = dayInfoItems.map(dayInfo => ({
+        id: dayInfo.id,
+        tour_id: dayInfo.tour_id,
+        date: dayInfo.day_date,
+        day_number: dayInfo.day_number,
+        title: dayInfo.title || `Day ${dayInfo.day_number} 일정`,
+        meal_breakfast: dayInfo.meal_breakfast || false,
+        meal_lunch: dayInfo.meal_lunch || false,
+        meal_dinner: dayInfo.meal_dinner || false,
+        menu_breakfast: dayInfo.menu_breakfast || '',
+        menu_lunch: dayInfo.menu_lunch || '',
+        menu_dinner: dayInfo.menu_dinner || '',
+        schedule_items: []
+      }));
+      
+      // 일반 여정 아이템(DAY_INFO 제외) 처리
+      const regularItems = journeyData?.filter(item => item.type !== 'DAY_INFO') || [];
+      
+      if (regularItems.length > 0) {
         // 관계 데이터 별도 조회
-        const itemsWithRelations = await Promise.all(journeyData.map(async (item) => {
+        const itemsWithRelations = await Promise.all(regularItems.map(async (item) => {
           let boarding_place = null;
           let spot = null;
           
@@ -142,89 +155,39 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         }));
         
         setJourneyItems(itemsWithRelations);
-      }
-      
-      // 경유지 정보를 다시 가져오기 (수정된 방법)
-      const { data: waypointsData } = await supabase
-        .from('singsing_tour_boarding_times')
-        .select('*')
-        .eq('tour_id', tourId)
-        .eq('is_waypoint', true)
-        .order('visit_date')
-        .order('order_no');
-
-      let enrichedWaypoints = [];
-      if (waypointsData) {
-        // 경유지 중 관광지와 매칭되는 정보 가져오기
-        enrichedWaypoints = await Promise.all(waypointsData.map(async (waypoint) => {
-          const { data: attractionData } = await supabase
-            .from('tourist_attractions')
-            .select('*')
-            .ilike('name', `%${waypoint.waypoint_name}%`)
-            .single();
-          
-          if (attractionData) {
-            waypoint.attraction_data = attractionData;
-          }
-          return waypoint;
-        }));
-      }
-      
-      // 각 일정의 schedule_items에서 관광지 정보 enriching
-      if (schedules) {
-        for (const schedule of schedules) {
-          const scheduleDate = schedule.date || schedule.schedule_date;
-          
-          if (schedule.schedule_items && Array.isArray(schedule.schedule_items)) {
-            for (const item of schedule.schedule_items) {
-              // 1. 구체적인 관광지 이름이 있는 경우
-              if (item.content && (item.content.includes('송광사') || item.content.includes('순천만'))) {
-                // tourist_attractions 테이블에서 매칭되는 정보 찾기
-                const { data: attractionData } = await supabase
-                  .from('tourist_attractions')
-                  .select('*')
-                  .ilike('name', `%${item.content.replace('관광', '').replace('투어', '').trim()}%`)
-                  .single();
-                
-                if (attractionData) {
-                  item.attraction_data = attractionData;
-                }
-              }
-              // 2. "관광지 투어"라고만 되어 있는 경우, 해당 날짜의 경유지 정보 사용
-              else if (item.content && (item.content === '관광지 투어' || item.content.includes('관광지 투어'))) {
-                // 해당 날짜의 관광지 경유지 찾기
-                const dayWaypoints = enrichedWaypoints.filter(w => {
-                  const waypointDate = w.visit_date ? w.visit_date.split('T')[0] : '';
-                  const scheduleDateFormatted = scheduleDate ? scheduleDate.split('T')[0] : '';
-                  return waypointDate === scheduleDateFormatted && 
-                    w.attraction_data && 
-                    !w.waypoint_name?.includes('휴게소');
-                });
-                
-                if (dayWaypoints.length > 0) {
-                  // 첫 번째 관광지를 사용
-                  const waypoint = dayWaypoints[0];
-                  item.content = `${waypoint.waypoint_name} 관광`;
-                  item.attraction_data = waypoint.attraction_data;
-                }
-              }
+        
+        // 각 날짜별로 일정 아이템 생성
+        schedules.forEach(schedule => {
+          const dayItems = itemsWithRelations.filter(item => item.day_number === schedule.day_number);
+          schedule.schedule_items = dayItems.map(item => {
+            let content = '';
+            let time = item.start_time || '';
+            
+            if (item.type === 'BOARDING') {
+              content = `${item.boarding_place?.name || '탑승지'} 탑승`;
+            } else if (item.type === 'WAYPOINT') {
+              content = `${item.waypoint_name || ''} ${item.is_tourist ? '관광' : '경유'}`;
+            } else if (item.type === 'MEAL') {
+              content = `${item.meal_type === 'breakfast' ? '조식' : item.meal_type === 'lunch' ? '중식' : '석식'} - ${item.meal_menu || ''}`;
+            } else if (item.type === 'SPOT') {
+              content = `${item.spot?.name || item.waypoint_name || '관광지'} 관광`;
+            } else if (item.type === 'ARRIVAL') {
+              content = '도착';
+            } else {
+              content = item.description || '';
             }
-          }
-        }
+            
+            return {
+              time,
+              content,
+              attraction_data: item.spot
+            };
+          });
+        });
       }
       
       console.log('Schedules data:', schedules);
-      // 식사 정보 확인
-      schedules?.forEach((schedule, idx) => {
-        console.log(`Day ${idx + 1} 식사 정보:`, {
-          meal_breakfast: schedule.meal_breakfast,
-          menu_breakfast: schedule.menu_breakfast,
-          meal_lunch: schedule.meal_lunch,
-          menu_lunch: schedule.menu_lunch,
-          meal_dinner: schedule.meal_dinner,
-          menu_dinner: schedule.menu_dinner
-        });
-      });
+      console.log('Journey items:', journeyItems);
 
       // 여행상품 정보 가져오기
       if (tour.tour_product_id) {
@@ -290,7 +253,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const fetchTourBoardingPlaces = async () => {
     try {
-      // 투어 전체 기간 정보 가져오기
+      // 투어 정보 가져오기
       const { data: tourInfo } = await supabase
         .from('singsing_tours')
         .select('start_date, end_date')
@@ -299,56 +262,60 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
       if (!tourInfo) return;
 
-      // 가는 날 탑승지만 가져오기 (탑승지는 첫날만)
-      const { data, error } = await supabase
-        .from('singsing_tour_boarding_times')
+      // tour_journey_items에서 탑승지와 경유지 정보 가져오기
+      const { data: journeyItems, error } = await supabase
+        .from('tour_journey_items')
         .select(`
           *,
-          boarding_place:singsing_boarding_places (*)
+          boarding_place:singsing_boarding_places (*),
+          spot:tourist_attractions (*)
         `)
         .eq('tour_id', tourId)
-        .eq('is_waypoint', false)
-        .eq('visit_date', tourInfo.start_date.split('T')[0])
-        .order('order_no');
+        .order('day_number')
+        .order('order_index');
 
       if (error) {
-        console.error('Error fetching tour boarding places:', error);
-      } else {
-        setTourBoardingPlaces(data || []);
+        console.error('Error fetching journey items:', error);
+        return;
       }
 
-      // 전체 투어 기간의 모든 경유지 정보 가져오기
-      const { data: waypoints } = await supabase
-        .from('singsing_tour_boarding_times')
-        .select('*')
-        .eq('tour_id', tourId)
-        .eq('is_waypoint', true)
-        .order('visit_date')
-        .order('order_no');
+      // 첫날 탑승지 정보 추출
+      const boardingItems = journeyItems.filter(item => 
+        item.type === 'BOARDING' && item.day_number === 1
+      ).map(item => ({
+        id: item.id,
+        tour_id: item.tour_id,
+        departure_time: item.start_time,
+        arrival_time: item.end_time,
+        order_no: item.order_index,
+        boarding_place: item.boarding_place,
+        is_waypoint: false
+      }));
+      
+      setTourBoardingPlaces(boardingItems);
 
-      if (waypoints) {
-        // 경유지 중 관광지와 매칭되는 정보 가져오기
-        const enrichedWaypoints = await Promise.all(waypoints.map(async (waypoint) => {
-          // waypoint_name이 tourist_attractions 테이블에 있는지 확인
-          const { data: attractionData } = await supabase
-            .from('tourist_attractions')
-            .select('*')
-            .ilike('name', `%${waypoint.waypoint_name}%`)
-            .single();
-          
-          if (attractionData) {
-            waypoint.attraction_data = attractionData;
-          }
-          return waypoint;
-        }));
-        
-        console.log('전체 경유지 정보:', enrichedWaypoints);
-        setTourWaypoints(enrichedWaypoints);
-      }
+      // 경유지 정보 추출
+      const waypointItems = journeyItems.filter(item => 
+        item.type === 'WAYPOINT' || item.type === 'SPOT'
+      ).map(item => ({
+        id: item.id,
+        tour_id: item.tour_id,
+        waypoint_name: item.waypoint_name || item.spot?.name || '',
+        waypoint_time: item.start_time,
+        waypoint_duration: item.stay_duration || 30,
+        waypoint_description: item.description,
+        visit_date: item.day_date,
+        order_no: item.order_index,
+        is_waypoint: true,
+        attraction_data: item.spot
+      }));
+      
+      console.log('전체 경유지 정보:', waypointItems);
+      setTourWaypoints(waypointItems);
     } catch (error) {
       console.error('Error in fetchTourBoardingPlaces:', error);
-      // 테이블이 없을 수 있으므로 예외 처리
       setTourBoardingPlaces([]);
+      setTourWaypoints([]);
     }
   };
 
