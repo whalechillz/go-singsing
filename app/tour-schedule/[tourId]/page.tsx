@@ -9,6 +9,7 @@ import { Metadata } from "next";
 type TourData = {
   tour: any;
   schedules: any[] | null;
+  journeyItems?: any[] | null;
 }
 
 export default function ProductInfoPage() {
@@ -74,7 +75,7 @@ export default function ProductInfoPage() {
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
-        <TourScheduleInfo tour={data.tour} schedules={data.schedules || []} />
+        <TourScheduleInfo tour={data.tour} schedules={data.schedules || []} journeyItems={data.journeyItems || []} />
       </div>
     </div>
   );

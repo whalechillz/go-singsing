@@ -544,6 +544,22 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 </div>
               )}
               
+              {/* 골프 라운드 정보 */}
+              {item.golf_info && (item.golf_info.golf_club || item.golf_info.tee_time || item.golf_info.course_info) && (
+                <div className="mt-2 p-2 bg-emerald-50 rounded text-sm">
+                  <div className="font-medium text-emerald-900">골프 라운드</div>
+                  {item.golf_info.golf_club && (
+                    <div className="text-emerald-700">골프장: {item.golf_info.golf_club}</div>
+                  )}
+                  {item.golf_info.tee_time && (
+                    <div className="text-emerald-700">티타임: {item.golf_info.tee_time}</div>
+                  )}
+                  {item.golf_info.course_info && (
+                    <div className="text-emerald-700">코스: {item.golf_info.course_info}</div>
+                  )}
+                </div>
+              )}
+              
               {/* 스팟 추가 정보 */}
               {item.spot && (
                 <>
@@ -1150,6 +1166,62 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 </div>
               </div>
             )}
+
+            {/* 골프 라운드 정보 */}
+            {formData.spot_id && (() => {
+              const selectedSpot = spots.find(s => s.id === formData.spot_id);
+              const isGolfRound = selectedSpot?.category === 'golf_round';
+              
+              if (isGolfRound) {
+                return (
+                  <div className="space-y-4">
+                    <div className="bg-emerald-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-emerald-800 mb-3">골프 라운드 정보</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">골프장</label>
+                          <input
+                            type="text"
+                            className="w-full px-3 py-2 border rounded-lg"
+                            value={formData.golf_info?.golf_club || ''}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              golf_info: { ...formData.golf_info, golf_club: e.target.value }
+                            })}
+                            placeholder="예: 파인밸리CC"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">티타임</label>
+                          <input
+                            type="time"
+                            className="w-full px-3 py-2 border rounded-lg"
+                            value={formData.golf_info?.tee_time || ''}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              golf_info: { ...formData.golf_info, tee_time: e.target.value }
+                            })}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <label className="block text-sm font-medium mb-1">코스 정보</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border rounded-lg"
+                          value={formData.golf_info?.course_info || ''}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            golf_info: { ...formData.golf_info, course_info: e.target.value }
+                          })}
+                          placeholder="예: 파인/레이크/힐스 코스"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            })()}
 
             {/* 식사 정보 (식당/클럽식) */}
             {formData.spot_id && (
