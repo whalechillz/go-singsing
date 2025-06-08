@@ -313,7 +313,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       const [movedItem] = reorderedItems.splice(currentIndex, 1);
       reorderedItems.splice(targetIndex, 0, movedItem);
 
-      // 새로운 order_index 할당 및 업데이트
+      // 새로운 order_index 할당
       const updates = reorderedItems.map((item, index) => ({
         id: item.id!,
         order_index: index + 1
@@ -321,21 +321,36 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
 
       console.log('Updates to apply:', updates);
 
-      // 변경된 아이템들만 업데이트
-      for (const update of updates) {
-        const originalItem = journeyItems.find(item => item.id === update.id);
-        if (originalItem?.order_index !== update.order_index) {
-          console.log(`Updating item ${update.id}: ${originalItem?.order_index} -> ${update.order_index}`);
+      // 1. 먼저 모든 아이템을 임시 order_index로 변경 (기존 값 + 1000)
+      console.log('Step 1: Moving all items to temporary order_index...');
+      for (const item of journeyItems) {
+        const tempOrderIndex = (item.order_index || 0) + 1000;
+        console.log(`Temporarily moving item ${item.id} to order_index ${tempOrderIndex}`);
+        
+        const { error } = await supabase
+          .from('tour_journey_items')
+          .update({ order_index: tempOrderIndex })
+          .eq('id', item.id);
           
-          const { error } = await supabase
-            .from('tour_journey_items')
-            .update({ order_index: update.order_index })
-            .eq('id', update.id);
-            
-          if (error) {
-            console.error('Update error:', error);
-            throw error;
-          }
+        if (error) {
+          console.error('Temp update error:', error);
+          throw error;
+        }
+      }
+
+      // 2. 그 다음 최종 order_index로 업데이트
+      console.log('Step 2: Updating to final order_index values...');
+      for (const update of updates) {
+        console.log(`Final update for item ${update.id}: order_index = ${update.order_index}`);
+        
+        const { error } = await supabase
+          .from('tour_journey_items')
+          .update({ order_index: update.order_index })
+          .eq('id', update.id);
+          
+        if (error) {
+          console.error('Final update error:', error);
+          throw error;
         }
       }
       
