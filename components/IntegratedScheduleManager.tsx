@@ -387,7 +387,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
             </button>
           </div>
 
-        {editingSchedule && (
+          {editingSchedule && (
           <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
             <h4 className="font-semibold mb-4">
               {editingSchedule.id ? '일정 수정' : '새 일정 추가'}
@@ -639,9 +639,9 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
               </div>
             </div>
           </div>
-        )}
+          )}
 
-        <div className="space-y-2">
+          <div className="space-y-2">
           {schedules.map((schedule) => (
             <div key={schedule.id} className="bg-white border rounded-lg p-4 hover:shadow-sm transition-shadow">
               <div className="flex justify-between items-start">
@@ -693,6 +693,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
               </div>
             </div>
           ))}
+          </div>
         </div>
       ) : activeTab === 'preview' ? (
         <div className="space-y-4">
