@@ -289,12 +289,24 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   };
 
   const updateOrder = async (itemId: string, direction: 'up' | 'down') => {
+    console.log('updateOrder called:', { itemId, direction });
+    
     try {
       const currentIndex = journeyItems.findIndex(item => item.id === itemId);
-      if (currentIndex === -1) return;
+      console.log('Current index:', currentIndex);
+      
+      if (currentIndex === -1) {
+        console.error('Item not found');
+        return;
+      }
 
       const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      if (targetIndex < 0 || targetIndex >= journeyItems.length) return;
+      console.log('Target index:', targetIndex);
+      
+      if (targetIndex < 0 || targetIndex >= journeyItems.length) {
+        console.log('Target index out of bounds');
+        return;
+      }
 
       // 전체 아이템을 순서대로 재정렬
       const reorderedItems = [...journeyItems];
@@ -307,20 +319,31 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         order_index: index + 1
       }));
 
+      console.log('Updates to apply:', updates);
+
       // 변경된 아이템들만 업데이트
       for (const update of updates) {
-        if (journeyItems.find(item => item.id === update.id)?.order_index !== update.order_index) {
-          await supabase
+        const originalItem = journeyItems.find(item => item.id === update.id);
+        if (originalItem?.order_index !== update.order_index) {
+          console.log(`Updating item ${update.id}: ${originalItem?.order_index} -> ${update.order_index}`);
+          
+          const { error } = await supabase
             .from('tour_journey_items')
             .update({ order_index: update.order_index })
             .eq('id', update.id);
+            
+          if (error) {
+            console.error('Update error:', error);
+            throw error;
+          }
         }
       }
       
+      console.log('Order update complete, fetching data...');
       fetchData();
     } catch (error) {
       console.error('Error updating order:', error);
-      alert('순서 변경에 실패했습니다.');
+      alert('순서 변경에 실패했습니다.\n\n' + (error as any).message);
     }
   };
 
@@ -356,7 +379,22 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   const getIconForItem = (item: JourneyItem) => {
     const category = getCategoryFromItem(item);
     const Icon = categoryConfig[category]?.icon || MoreHorizontal;
-    return <Icon className={`w-4 h-4 text-${categoryConfig[category]?.color || 'gray'}-500`} />;
+    
+    // 정적 클래스 맵핑
+    const colorClasses: Record<string, string> = {
+      'blue': 'text-blue-500',
+      'gray': 'text-gray-500',
+      'orange': 'text-orange-500',
+      'purple': 'text-purple-500',
+      'green': 'text-green-500',
+      'indigo': 'text-indigo-500',
+      'emerald': 'text-emerald-500',
+      'rose': 'text-rose-500',
+      'slate': 'text-slate-500'
+    };
+    
+    const colorClass = colorClasses[categoryConfig[category]?.color || 'gray'] || 'text-gray-500';
+    return <Icon className={`w-4 h-4 ${colorClass}`} />;
   };
 
   // 필터링된 아이템
@@ -383,8 +421,30 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
           {/* 장소 카드 */}
           <div className="flex gap-4 bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
             {/* 순서 번호 */}
-            <div className={`w-12 h-12 rounded-full bg-${categoryConfig[getCategoryFromItem(item)]?.color || 'gray'}-100 flex items-center justify-center flex-shrink-0`}>
-              <span className={`text-${categoryConfig[getCategoryFromItem(item)]?.color || 'gray'}-600 font-bold`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+              getCategoryFromItem(item) === 'boarding' ? 'bg-blue-100' :
+              getCategoryFromItem(item) === 'tourist_spot' ? 'bg-blue-100' :
+              getCategoryFromItem(item) === 'rest_area' ? 'bg-gray-100' :
+              getCategoryFromItem(item) === 'restaurant' ? 'bg-orange-100' :
+              getCategoryFromItem(item) === 'shopping' ? 'bg-purple-100' :
+              getCategoryFromItem(item) === 'activity' ? 'bg-green-100' :
+              getCategoryFromItem(item) === 'mart' ? 'bg-indigo-100' :
+              getCategoryFromItem(item) === 'golf_round' ? 'bg-emerald-100' :
+              getCategoryFromItem(item) === 'club_meal' ? 'bg-rose-100' :
+              'bg-slate-100'
+            }`}>
+              <span className={`font-bold ${
+                getCategoryFromItem(item) === 'boarding' ? 'text-blue-600' :
+                getCategoryFromItem(item) === 'tourist_spot' ? 'text-blue-600' :
+                getCategoryFromItem(item) === 'rest_area' ? 'text-gray-600' :
+                getCategoryFromItem(item) === 'restaurant' ? 'text-orange-600' :
+                getCategoryFromItem(item) === 'shopping' ? 'text-purple-600' :
+                getCategoryFromItem(item) === 'activity' ? 'text-green-600' :
+                getCategoryFromItem(item) === 'mart' ? 'text-indigo-600' :
+                getCategoryFromItem(item) === 'golf_round' ? 'text-emerald-600' :
+                getCategoryFromItem(item) === 'club_meal' ? 'text-rose-600' :
+                'text-slate-600'
+              }`}>
                 {item.order_index}
               </span>
             </div>
@@ -396,7 +456,18 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 <h3 className="font-semibold text-lg">
                   {item.boarding_place?.name || item.spot?.name || '알 수 없음'}
                 </h3>
-                <span className={`px-2 py-1 text-xs rounded-full bg-${categoryConfig[getCategoryFromItem(item)]?.color || 'gray'}-100 text-${categoryConfig[getCategoryFromItem(item)]?.color || 'gray'}-700`}>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  getCategoryFromItem(item) === 'boarding' ? 'bg-blue-100 text-blue-700' :
+                  getCategoryFromItem(item) === 'tourist_spot' ? 'bg-blue-100 text-blue-700' :
+                  getCategoryFromItem(item) === 'rest_area' ? 'bg-gray-100 text-gray-700' :
+                  getCategoryFromItem(item) === 'restaurant' ? 'bg-orange-100 text-orange-700' :
+                  getCategoryFromItem(item) === 'shopping' ? 'bg-purple-100 text-purple-700' :
+                  getCategoryFromItem(item) === 'activity' ? 'bg-green-100 text-green-700' :
+                  getCategoryFromItem(item) === 'mart' ? 'bg-indigo-100 text-indigo-700' :
+                  getCategoryFromItem(item) === 'golf_round' ? 'bg-emerald-100 text-emerald-700' :
+                  getCategoryFromItem(item) === 'club_meal' ? 'bg-rose-100 text-rose-700' :
+                  'bg-slate-100 text-slate-700'
+                }`}>
                   {categoryConfig[getCategoryFromItem(item)]?.label || '기타'}
                 </span>
                 {/* 세부 카테고리 표시 */}
@@ -482,28 +553,40 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               <div className="flex flex-col gap-1">
                 <button 
                   onClick={() => updateOrder(item.id!, 'up')}
-                  className="p-1 hover:bg-gray-100 rounded"
+                  className={`p-2 rounded-lg transition-all ${
+                    index === 0 
+                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed' 
+                      : 'bg-white hover:bg-blue-50 hover:text-blue-600 text-gray-600 border border-gray-200'
+                  }`}
                   disabled={index === 0}
+                  title="위로 이동"
                 >
-                  <ChevronUp className="w-4 h-4 text-gray-600" />
+                  <ChevronUp className="w-5 h-5" />
                 </button>
                 <button 
                   onClick={() => updateOrder(item.id!, 'down')}
-                  className="p-1 hover:bg-gray-100 rounded"
+                  className={`p-2 rounded-lg transition-all ${
+                    index === filteredItems.length - 1
+                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed' 
+                      : 'bg-white hover:bg-blue-50 hover:text-blue-600 text-gray-600 border border-gray-200'
+                  }`}
                   disabled={index === filteredItems.length - 1}
+                  title="아래로 이동"
                 >
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                  <ChevronDown className="w-5 h-5" />
                 </button>
               </div>
               <button 
                 onClick={() => handleEdit(item)}
-                className="p-2 hover:bg-gray-100 rounded"
+                className="p-2 bg-white hover:bg-gray-100 rounded-lg border border-gray-200 transition-all"
+                title="편집"
               >
                 <Edit2 className="w-4 h-4 text-gray-600" />
               </button>
               <button 
                 onClick={() => handleDelete(item.id!)}
-                className="p-2 hover:bg-gray-100 rounded"
+                className="p-2 bg-white hover:bg-red-50 rounded-lg border border-gray-200 transition-all"
+                title="삭제"
               >
                 <Trash2 className="w-4 h-4 text-red-600" />
               </button>
@@ -657,7 +740,18 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                     </div>
                     
                     <div className="flex items-center gap-1">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-${categoryConfig[spot.category]?.color || 'gray'}-100 text-${categoryConfig[spot.category]?.color || 'gray'}-700`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
+                        spot.category === 'boarding' ? 'bg-blue-100 text-blue-700' :
+                        spot.category === 'tourist_spot' ? 'bg-blue-100 text-blue-700' :
+                        spot.category === 'rest_area' ? 'bg-gray-100 text-gray-700' :
+                        spot.category === 'restaurant' ? 'bg-orange-100 text-orange-700' :
+                        spot.category === 'shopping' ? 'bg-purple-100 text-purple-700' :
+                        spot.category === 'activity' ? 'bg-green-100 text-green-700' :
+                        spot.category === 'mart' ? 'bg-indigo-100 text-indigo-700' :
+                        spot.category === 'golf_round' ? 'bg-emerald-100 text-emerald-700' :
+                        spot.category === 'club_meal' ? 'bg-rose-100 text-rose-700' :
+                        'bg-slate-100 text-slate-700'
+                      }`}>
                         {React.createElement(categoryConfig[spot.category]?.icon || MoreHorizontal, { className: 'w-3 h-3' })}
                         <span>{categoryConfig[spot.category]?.label}</span>
                       </span>
