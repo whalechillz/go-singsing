@@ -200,7 +200,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         day_number: selectedDay,
         order_index: orderIndex,
         boarding_place_id: formData.boarding_place_id === undefined ? null : (formData.boarding_place_id || null),
-        spot_id: formData.spot_id === undefined ? null : (formData.spot_id || null)
+        spot_id: formData.spot_id === undefined ? null : (formData.spot_id || null),
+        // 시간 필드 처리 - 빈 문자열이면 null로 변환
+        arrival_time: formData.arrival_time && formData.arrival_time !== '--:--' ? formData.arrival_time : null,
+        departure_time: formData.departure_time && formData.departure_time !== '--:--' ? formData.departure_time : null,
+        // 숫자 필드 처리
+        passenger_count: formData.passenger_count || null
       };
 
       console.log('Data to submit:', dataToSubmit);
@@ -701,8 +706,9 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 <input
                   type="time"
                   className="w-full px-3 py-2 border rounded-lg"
-                  value={formData.arrival_time}
+                  value={formData.arrival_time || ''}
                   onChange={(e) => setFormData({ ...formData, arrival_time: e.target.value })}
+                  placeholder="00:00"
                 />
               </div>
               <div>
@@ -710,15 +716,17 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 <input
                   type="time"
                   className="w-full px-3 py-2 border rounded-lg"
-                  value={formData.departure_time}
+                  value={formData.departure_time || ''}
                   onChange={(e) => setFormData({ ...formData, departure_time: e.target.value })}
+                  placeholder="00:00"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">체류 시간</label>
                 <input
+                  type="text"
                   className="w-full px-3 py-2 border rounded-lg"
-                  value={formData.stay_duration}
+                  value={formData.stay_duration || ''}
                   onChange={(e) => setFormData({ ...formData, stay_duration: e.target.value })}
                   placeholder="예: 30분, 1시간"
                 />
@@ -730,8 +738,9 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               <div>
                 <label className="block text-sm font-medium mb-1">이전 장소에서 거리</label>
                 <input
+                  type="text"
                   className="w-full px-3 py-2 border rounded-lg"
-                  value={formData.distance_from_prev}
+                  value={formData.distance_from_prev || ''}
                   onChange={(e) => setFormData({ ...formData, distance_from_prev: e.target.value })}
                   placeholder="예: 50km"
                 />
@@ -739,8 +748,9 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               <div>
                 <label className="block text-sm font-medium mb-1">소요 시간</label>
                 <input
+                  type="text"
                   className="w-full px-3 py-2 border rounded-lg"
-                  value={formData.duration_from_prev}
+                  value={formData.duration_from_prev || ''}
                   onChange={(e) => setFormData({ ...formData, duration_from_prev: e.target.value })}
                   placeholder="예: 1시간 30분"
                 />
@@ -754,7 +764,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                   <label className="block text-sm font-medium mb-1">탑승 유형</label>
                   <select
                     className="w-full px-3 py-2 border rounded-lg"
-                    value={formData.boarding_type}
+                    value={formData.boarding_type || ''}
                     onChange={(e) => setFormData({ ...formData, boarding_type: e.target.value })}
                   >
                     <option value="">선택</option>
@@ -768,9 +778,10 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                   <input
                     type="number"
                     className="w-full px-3 py-2 border rounded-lg"
-                    value={formData.passenger_count}
-                    onChange={(e) => setFormData({ ...formData, passenger_count: parseInt(e.target.value) || 0 })}
+                    value={formData.passenger_count || ''}
+                    onChange={(e) => setFormData({ ...formData, passenger_count: e.target.value ? parseInt(e.target.value) : 0 })}
                     min="0"
+                    placeholder="0"
                   />
                 </div>
               </div>
@@ -783,7 +794,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                   <label className="block text-sm font-medium mb-1">식사 구분</label>
                   <select
                     className="w-full px-3 py-2 border rounded-lg"
-                    value={formData.meal_type}
+                    value={formData.meal_type || ''}
                     onChange={(e) => setFormData({ ...formData, meal_type: e.target.value })}
                   >
                     <option value="">해당없음</option>
@@ -797,8 +808,9 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                   <div>
                     <label className="block text-sm font-medium mb-1">메뉴</label>
                     <input
+                      type="text"
                       className="w-full px-3 py-2 border rounded-lg"
-                      value={formData.meal_menu}
+                      value={formData.meal_menu || ''}
                       onChange={(e) => setFormData({ ...formData, meal_menu: e.target.value })}
                       placeholder="메뉴 입력"
                     />
@@ -812,7 +824,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               <label className="block text-sm font-medium mb-1">비고</label>
               <textarea
                 className="w-full px-3 py-2 border rounded-lg"
-                value={formData.notes}
+                value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={2}
                 placeholder="추가 메모사항"
