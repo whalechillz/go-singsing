@@ -7,7 +7,7 @@ import {
   Camera, Plus, Filter, Map as MapIcon, List, 
   Bus, Users, ChevronUp, ChevronDown, Edit2, 
   Trash2, Save, X, Award, ShoppingCart, MoreHorizontal,
-  Calendar, Grip
+  Calendar, Grip, PlusCircle, Check
 } from 'lucide-react';
 
 interface TourJourneyManagerProps {
@@ -67,6 +67,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   const [editingItem, setEditingItem] = useState<JourneyItem | null>(null);
   const [viewMode, setViewMode] = useState<'timeline' | 'category' | 'map'>('timeline');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  
+  // 새 장소 추가 폼 상태
+  const [showNewBoardingPlace, setShowNewBoardingPlace] = useState(false);
+  const [showNewSpot, setShowNewSpot] = useState(false);
+  const [newBoardingPlace, setNewBoardingPlace] = useState({ name: '', address: '', boarding_main: '' });
+  const [newSpot, setNewSpot] = useState({ name: '', category: 'tourist_spot', sub_category: '', address: '', is_active: true });
 
   // 폼 데이터
   const [formData, setFormData] = useState<JourneyItem>({
@@ -338,6 +344,64 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       notes: '',
       display_options: { show_image: true }
     });
+  };
+
+  // 새 탑승지 추가
+  const handleAddBoardingPlace = async () => {
+    if (!newBoardingPlace.name || !newBoardingPlace.address) {
+      alert('탑승지명과 주소는 필수 입력항목입니다.');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('singsing_boarding_places')
+        .insert(newBoardingPlace)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // 탑승지 목록 업데이트
+      setBoardingPlaces([...boardingPlaces, data]);
+      // 폼에 자동 선택
+      setFormData({ ...formData, boarding_place_id: data.id, spot_id: undefined });
+      // 폼 초기화
+      setNewBoardingPlace({ name: '', address: '', boarding_main: '' });
+      setShowNewBoardingPlace(false);
+    } catch (error) {
+      console.error('Error adding boarding place:', error);
+      alert('탑승지 추가에 실패했습니다.');
+    }
+  };
+
+  // 새 스팟 추가
+  const handleAddSpot = async () => {
+    if (!newSpot.name || !newSpot.address) {
+      alert('스팟명과 주소는 필수 입력항목입니다.');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('tourist_attractions')
+        .insert(newSpot)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // 스팟 목록 업데이트
+      setSpots([...spots, data]);
+      // 폼에 자동 선택
+      setFormData({ ...formData, spot_id: data.id, boarding_place_id: undefined });
+      // 폼 초기화
+      setNewSpot({ name: '', category: 'tourist_spot', sub_category: '', address: '', is_active: true });
+      setShowNewSpot(false);
+    } catch (error) {
+      console.error('Error adding spot:', error);
+      alert('스팟 추가에 실패했습니다.');
+    }
   };
 
   const getCategoryFromItem = (item: JourneyItem) => {
@@ -757,6 +821,126 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                   ))}
                 </select>
               )}
+            </div>
+
+            {/* 새 장소 추가 섹션 */}
+            <div className="space-y-4">
+              <div className="text-sm text-gray-500 mt-4">또는 새로운 장소를 추가하세요:</div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 새 탑승지 추가 */}
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Bus className="w-4 h-4 text-blue-500" />
+                      새 탑승지 추가
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewBoardingPlace(!showNewBoardingPlace)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      {showNewBoardingPlace ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  
+                  {showNewBoardingPlace && (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="탑승지명"
+                        className="w-full px-3 py-2 border rounded text-sm"
+                        value={newBoardingPlace.name}
+                        onChange={(e) => setNewBoardingPlace({ ...newBoardingPlace, name: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        placeholder="주소"
+                        className="w-full px-3 py-2 border rounded text-sm"
+                        value={newBoardingPlace.address}
+                        onChange={(e) => setNewBoardingPlace({ ...newBoardingPlace, address: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        placeholder="탑승 안내 (선택)"
+                        className="w-full px-3 py-2 border rounded text-sm"
+                        value={newBoardingPlace.boarding_main}
+                        onChange={(e) => setNewBoardingPlace({ ...newBoardingPlace, boarding_main: e.target.value })}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddBoardingPlace}
+                        className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-4 h-4" />
+                        탑승지 추가
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 새 스팟 추가 */}
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-green-500" />
+                      새 스팟 추가
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewSpot(!showNewSpot)}
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      {showNewSpot ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  
+                  {showNewSpot && (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="스팟명"
+                        className="w-full px-3 py-2 border rounded text-sm"
+                        value={newSpot.name}
+                        onChange={(e) => setNewSpot({ ...newSpot, name: e.target.value })}
+                      />
+                      <select
+                        className="w-full px-3 py-2 border rounded text-sm"
+                        value={newSpot.category}
+                        onChange={(e) => setNewSpot({ ...newSpot, category: e.target.value })}
+                      >
+                        {Object.entries(categoryConfig).map(([key, config]) => (
+                          key !== 'boarding' && (
+                            <option key={key} value={key}>{config.label}</option>
+                          )
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="세부 카테고리 (선택)"
+                        className="w-full px-3 py-2 border rounded text-sm"
+                        value={newSpot.sub_category}
+                        onChange={(e) => setNewSpot({ ...newSpot, sub_category: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        placeholder="주소"
+                        className="w-full px-3 py-2 border rounded text-sm"
+                        value={newSpot.address}
+                        onChange={(e) => setNewSpot({ ...newSpot, address: e.target.value })}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddSpot}
+                        className="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-4 h-4" />
+                        스팟 추가
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* 시간 정보 */}
