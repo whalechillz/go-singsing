@@ -392,6 +392,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 <span className={`px-2 py-1 text-xs rounded-full bg-${categoryConfig[getCategoryFromItem(item)]?.color || 'gray'}-100 text-${categoryConfig[getCategoryFromItem(item)]?.color || 'gray'}-700`}>
                   {categoryConfig[getCategoryFromItem(item)]?.label || '기타'}
                 </span>
+                {/* 세부 카테고리 표시 */}
+                {item.spot?.sub_category && (
+                  <span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-700">
+                    {item.spot.sub_category}
+                  </span>
+                )}
                 {item.passenger_count && item.passenger_count > 0 && (
                   <span className="flex items-center gap-1 text-sm text-gray-600">
                     <Users className="w-4 h-4" />
@@ -523,9 +529,14 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               {items.map((item) => (
                 <div key={item.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium">
-                      {item.boarding_place?.name || item.spot?.name || '알 수 없음'}
-                    </h4>
+                    <div>
+                      <h4 className="font-medium">
+                        {item.boarding_place?.name || item.spot?.name || '알 수 없음'}
+                      </h4>
+                      {item.spot?.sub_category && (
+                        <span className="text-xs text-gray-500">{item.spot.sub_category}</span>
+                      )}
+                    </div>
                     <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                       순서: {item.order_index}
                     </span>
@@ -722,13 +733,26 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 <select
                   className="w-full px-3 py-2 border rounded-lg"
                   value={formData.spot_id || ''}
-                  onChange={(e) => setFormData({ ...formData, spot_id: e.target.value })}
+                  onChange={(e) => {
+                    const selectedSpotId = e.target.value;
+                    setFormData({ ...formData, spot_id: selectedSpotId });
+                    
+                    // 선택한 스팟의 세부 카테고리가 식사 관련인 경우 meal_type 자동 설정
+                    const selectedSpot = spots.find(s => s.id === selectedSpotId);
+                    if (selectedSpot?.sub_category) {
+                      const mealTypes = ['조식', '중식', '석식', '간식'];
+                      if (mealTypes.includes(selectedSpot.sub_category)) {
+                        setFormData(prev => ({ ...prev, spot_id: selectedSpotId, meal_type: selectedSpot.sub_category }));
+                      }
+                    }
+                  }}
                   required
                 >
                   <option value="">스팟 선택</option>
                   {spots.map(spot => (
                     <option key={spot.id} value={spot.id}>
                       [{categoryConfig[spot.category]?.label}] {spot.name}
+                      {spot.sub_category && ` - ${spot.sub_category}`}
                     </option>
                   ))}
                 </select>
