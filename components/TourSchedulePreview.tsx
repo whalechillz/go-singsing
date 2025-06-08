@@ -37,6 +37,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [teeTimeStaffHTML, setTeeTimeStaffHTML] = useState<string>('');
   const [tourBoardingPlaces, setTourBoardingPlaces] = useState<any[]>([]);
   const [tourWaypoints, setTourWaypoints] = useState<any[]>([]);
+  const [journeyItems, setJourneyItems] = useState<any[]>([]);  // 여정 아이템 추가
   const searchParams = useSearchParams();
 
   // 문서 타입 정의
@@ -104,6 +105,44 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .order('date');
 
       if (schedulesError) throw schedulesError;
+      
+      // 여정 아이템 가져오기
+      const { data: journeyData, error: journeyError } = await supabase
+        .from('tour_journey_items')
+        .select('*')
+        .eq('tour_id', tourId)
+        .order('day_number')
+        .order('order_index');
+      
+      if (!journeyError && journeyData) {
+        // 관계 데이터 별도 조회
+        const itemsWithRelations = await Promise.all(journeyData.map(async (item) => {
+          let boarding_place = null;
+          let spot = null;
+          
+          if (item.boarding_place_id) {
+            const { data } = await supabase
+              .from('singsing_boarding_places')
+              .select('*')
+              .eq('id', item.boarding_place_id)
+              .single();
+            boarding_place = data;
+          }
+          
+          if (item.spot_id) {
+            const { data } = await supabase
+              .from('tourist_attractions')
+              .select('*')
+              .eq('id', item.spot_id)
+              .single();
+            spot = data;
+          }
+          
+          return { ...item, boarding_place, spot };
+        }));
+        
+        setJourneyItems(itemsWithRelations);
+      }
       
       // 경유지 정보를 다시 가져오기 (수정된 방법)
       const { data: waypointsData } = await supabase

@@ -631,7 +631,7 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
 
         <div className="space-y-2">
           {schedules.map((schedule) => (
-            <div key={schedule.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div key={schedule.id} className="bg-white border rounded-lg p-4 hover:shadow-sm transition-shadow">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h4 className="font-semibold">
@@ -640,44 +640,42 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
                   <ul className="mt-2 space-y-1 text-sm text-gray-600">
                     {schedule.schedule_items?.map((item: any, idx: number) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <div className="flex-1">
-                          {item.time && <span className="font-medium">{item.time}:</span>} {item.content}
-                        </div>
-                        {item.attraction && (
-                          <div className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
-                            <MapPin className="w-3 h-3" />
-                            <span className="text-gray-600">{categoryMap[item.attraction.category]}</span>
-                            <span className="font-medium">{item.attraction.name}</span>
-                          </div>
-                        )}
+                        {item.time && <span className="font-medium text-gray-500">{item.time}:</span>}
+                        <span>{item.content}</span>
                       </li>
                     ))}
                   </ul>
                   {/* 식사 정보 표시 */}
-                  <div className="mt-3 flex gap-4 text-sm">
-                    <span className={`px-2 py-1 rounded ${schedule.meal_breakfast ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      조식: {schedule.meal_breakfast ? (schedule.menu_breakfast || 'O') : 'X'}
-                    </span>
-                    <span className={`px-2 py-1 rounded ${schedule.meal_lunch ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      중식: {schedule.meal_lunch ? (schedule.menu_lunch || 'O') : 'X'}
-                    </span>
-                    <span className={`px-2 py-1 rounded ${schedule.meal_dinner ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      석식: {schedule.meal_dinner ? (schedule.menu_dinner || 'O') : 'X'}
-                    </span>
+                  <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                    {schedule.meal_breakfast && (
+                      <div className="text-gray-600">
+                        <span className="font-medium">조식:</span> {schedule.menu_breakfast || '제공'}
+                      </div>
+                    )}
+                    {schedule.meal_lunch && (
+                      <div className="text-gray-600">
+                        <span className="font-medium">중식:</span> {schedule.menu_lunch || '제공'}
+                      </div>
+                    )}
+                    {schedule.meal_dinner && (
+                      <div className="text-gray-600">
+                        <span className="font-medium">석식:</span> {schedule.menu_dinner || '제공'}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <button
-                    className="p-1 hover:bg-gray-100 rounded"
+                    className="p-1.5 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700"
                     onClick={() => handleEditSchedule(schedule)}
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
-                    className="p-1 hover:bg-gray-100 rounded"
+                    className="p-1.5 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600"
                     onClick={() => handleDeleteSchedule(schedule.id)}
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
