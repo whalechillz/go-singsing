@@ -82,7 +82,7 @@ interface Tour {
   end_date: string;
 }
 
-const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
+const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
@@ -1675,4 +1675,4 @@ const PaymentManagerV3: React.FC<PaymentManagerProps> = ({ tourId }) => {
   );
 };
 
-export default PaymentManagerV3;
+export default PaymentManager;

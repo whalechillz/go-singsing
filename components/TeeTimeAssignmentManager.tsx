@@ -53,7 +53,7 @@ type StaffMember = {
 
 type Props = { tourId: string; refreshKey?: number };
 
-const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => {
+const TeeTimeAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [tour, setTour] = useState<Tour | null>(null);
@@ -1465,4 +1465,4 @@ const TeeTimeAssignmentManagerV2: React.FC<Props> = ({ tourId, refreshKey }) => 
   );
 };
 
-export default TeeTimeAssignmentManagerV2;
+export default TeeTimeAssignmentManager;

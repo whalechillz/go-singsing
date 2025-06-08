@@ -92,7 +92,7 @@ interface PaymentSummary {
 
 const DEFAULT_COLUMNS = ["선택", "이름", "연락처", "팀", "투어", "탑승지", "객실", "참여횟수", "결제상태", "상태", "메모", "관리"];
 
-const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, showColumns = DEFAULT_COLUMNS, onChange }) => {
+const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showColumns = DEFAULT_COLUMNS, onChange }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -2292,4 +2292,4 @@ const ParticipantsManagerV2: React.FC<ParticipantsManagerProps> = ({ tourId, sho
   );
 };
 
-export default ParticipantsManagerV2;
+export default ParticipantsManager;

@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState, useCallback, useEffect } from "react";
 import TeeTimeSlotManager from "@/components/TeeTimeSlotManager";
-import TeeTimeAssignmentManagerV2 from "@/components/TeeTimeAssignmentManagerV2";
+import TeeTimeAssignmentManager from "@/components/TeeTimeAssignmentManager";
 import { ParticipantDuplicateCleaner } from "@/components/ParticipantDuplicateCleaner";
 import { TeeTimeParticipantCleaner } from "@/components/TeeTimeParticipantCleaner";
 
@@ -56,7 +56,7 @@ export default function TeeTimePage() {
       )}
       
       <TeeTimeSlotManager tourId={tourId} onDataChange={handleDataChange} />
-      <TeeTimeAssignmentManagerV2 key={refreshKey} tourId={tourId} refreshKey={refreshKey} />
+      <TeeTimeAssignmentManager key={refreshKey} tourId={tourId} refreshKey={refreshKey} />
     </div>
   );
 }
