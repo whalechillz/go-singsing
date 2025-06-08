@@ -7,7 +7,7 @@ import {
   Camera, Plus, Filter, Map as MapIcon, List, 
   Bus, Users, ChevronUp, ChevronDown, Edit2, 
   Trash2, Save, X, Award, ShoppingCart, MoreHorizontal,
-  Calendar, Grip, PlusCircle, Check
+  Calendar, Grip
 } from 'lucide-react';
 
 interface TourJourneyManagerProps {
@@ -68,11 +68,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   const [viewMode, setViewMode] = useState<'timeline' | 'category' | 'map'>('timeline');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
-  // 새 장소 추가 폼 상태
-  const [showNewBoardingPlace, setShowNewBoardingPlace] = useState(false);
-  const [showNewSpot, setShowNewSpot] = useState(false);
-  const [newBoardingPlace, setNewBoardingPlace] = useState({ name: '', address: '', boarding_main: '' });
-  const [newSpot, setNewSpot] = useState({ name: '', category: 'tourist_spot', sub_category: '', address: '', is_active: true });
+
 
   // 폼 데이터
   const [formData, setFormData] = useState<JourneyItem>({
@@ -300,27 +296,39 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   };
 
   const updateOrder = async (itemId: string, direction: 'up' | 'down') => {
-    const currentIndex = journeyItems.findIndex(item => item.id === itemId);
-    if (currentIndex === -1) return;
+    try {
+      const currentIndex = journeyItems.findIndex(item => item.id === itemId);
+      if (currentIndex === -1) return;
 
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= journeyItems.length) return;
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= journeyItems.length) return;
 
-    const currentItem = journeyItems[currentIndex];
-    const targetItem = journeyItems[targetIndex];
+      // 전체 아이템을 순서대로 재정렬
+      const reorderedItems = [...journeyItems];
+      const [movedItem] = reorderedItems.splice(currentIndex, 1);
+      reorderedItems.splice(targetIndex, 0, movedItem);
 
-    // 순서 교환
-    await supabase
-      .from('tour_journey_items')
-      .update({ order_index: targetItem.order_index })
-      .eq('id', currentItem.id!);
-    
-    await supabase
-      .from('tour_journey_items')
-      .update({ order_index: currentItem.order_index })
-      .eq('id', targetItem.id!);
-    
-    fetchData();
+      // 새로운 order_index 할당 및 업데이트
+      const updates = reorderedItems.map((item, index) => ({
+        id: item.id!,
+        order_index: index + 1
+      }));
+
+      // 변경된 아이템들만 업데이트
+      for (const update of updates) {
+        if (journeyItems.find(item => item.id === update.id)?.order_index !== update.order_index) {
+          await supabase
+            .from('tour_journey_items')
+            .update({ order_index: update.order_index })
+            .eq('id', update.id);
+        }
+      }
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error updating order:', error);
+      alert('순서 변경에 실패했습니다.');
+    }
   };
 
   const resetForm = () => {
@@ -346,123 +354,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
     });
   };
 
-  // 새 탑승지 추가
-  const handleAddBoardingPlace = async () => {
-    if (!newBoardingPlace.name || !newBoardingPlace.address) {
-      alert('탑승지명과 주소는 필수 입력항목입니다.');
-      return;
-    }
 
-    try {
-      const { data, error } = await supabase
-        .from('singsing_boarding_places')
-        .insert(newBoardingPlace)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // 탑승지 목록 업데이트
-      setBoardingPlaces([...boardingPlaces, data]);
-      
-      // 여정에 자동으로 추가
-      const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
-      const newJourneyItem = {
-        tour_id: tourId,
-        day_number: selectedDay,
-        order_index: maxOrder + 1,
-        boarding_place_id: data.id,
-        spot_id: null,
-        arrival_time: null,
-        departure_time: null,
-        stay_duration: null,
-        distance_from_prev: null,
-        duration_from_prev: null,
-        passenger_count: null,
-        boarding_type: null,
-        meal_type: null,
-        meal_menu: null,
-        golf_info: null,
-        notes: null,
-        display_options: { show_image: true }
-      };
-      
-      const { error: journeyError } = await supabase
-        .from('tour_journey_items')
-        .insert(newJourneyItem);
-        
-      if (journeyError) throw journeyError;
-      
-      // 폼 초기화
-      setNewBoardingPlace({ name: '', address: '', boarding_main: '' });
-      setShowNewBoardingPlace(false);
-      
-      // 데이터 다시 불러오기
-      fetchData();
-    } catch (error) {
-      console.error('Error adding boarding place:', error);
-      alert('탑승지 추가에 실패했습니다.');
-    }
-  };
-
-  // 새 스팟 추가
-  const handleAddSpot = async () => {
-    if (!newSpot.name || !newSpot.address) {
-      alert('스팟명과 주소는 필수 입력항목입니다.');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('tourist_attractions')
-        .insert(newSpot)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // 스팟 목록 업데이트
-      setSpots([...spots, data]);
-      
-      // 여정에 자동으로 추가
-      const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
-      const newJourneyItem = {
-        tour_id: tourId,
-        day_number: selectedDay,
-        order_index: maxOrder + 1,
-        boarding_place_id: null,
-        spot_id: data.id,
-        arrival_time: null,
-        departure_time: null,
-        stay_duration: null,
-        distance_from_prev: null,
-        duration_from_prev: null,
-        passenger_count: null,
-        boarding_type: null,
-        meal_type: null,
-        meal_menu: null,
-        golf_info: null,
-        notes: null,
-        display_options: { show_image: true }
-      };
-      
-      const { error: journeyError } = await supabase
-        .from('tour_journey_items')
-        .insert(newJourneyItem);
-        
-      if (journeyError) throw journeyError;
-      
-      // 폼 초기화
-      setNewSpot({ name: '', category: 'tourist_spot', sub_category: '', address: '', is_active: true });
-      setShowNewSpot(false);
-      
-      // 데이터 다시 불러오기
-      fetchData();
-    } catch (error) {
-      console.error('Error adding spot:', error);
-      alert('스팟 추가에 실패했습니다.');
-    }
-  };
 
   const getCategoryFromItem = (item: JourneyItem) => {
     if (item.boarding_place_id) return 'boarding';
@@ -628,335 +520,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
           </div>
         </div>
       ))}
-      
-      {/* 장소 추가 섹션 */}
-      <div className="mt-8 space-y-6">
-        {/* 탑승지 섹션 */}
-        <div>
-          <h3 className="font-medium text-sm text-gray-700 mb-3 flex items-center gap-2">
-            <Bus className="w-4 h-4 text-blue-500" />
-            탑승지 추가
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {/* 새 탑승지 추가 버튼 */}
-            <div className="bg-white rounded-lg shadow-sm p-3 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer"
-                 onClick={() => setShowNewBoardingPlace(!showNewBoardingPlace)}>
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <PlusCircle className="w-6 h-6 text-blue-500 mx-auto mb-1" />
-                  <p className="text-xs text-gray-500">새 탑승지</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* 기존 탑승지 목록 */}
-            {boardingPlaces.map(place => {
-              // 이미 추가된 탑승지인지 확인
-              const isAdded = journeyItems.some(item => item.boarding_place_id === place.id);
-              
-              return (
-                <div key={place.id} 
-                     className={`bg-white rounded-lg shadow-sm p-4 border ${isAdded ? 'border-gray-300 opacity-50' : 'border-gray-200 hover:border-blue-400 hover:shadow-md cursor-pointer'} transition-all`}
-                     onClick={async () => {
-                       if (isAdded) {
-                         alert('이미 추가된 탑승지입니다.');
-                         return;
-                       }
-                       
-                       // 여정에 탑승지 추가
-                       const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
-                       const newJourneyItem = {
-                         tour_id: tourId,
-                         day_number: selectedDay,
-                         order_index: maxOrder + 1,
-                         boarding_place_id: place.id,
-                         spot_id: null,
-                         arrival_time: null,
-                         departure_time: null,
-                         stay_duration: null,
-                         distance_from_prev: null,
-                         duration_from_prev: null,
-                         passenger_count: null,
-                         boarding_type: null,
-                         meal_type: null,
-                         meal_menu: null,
-                         golf_info: null,
-                         notes: null,
-                         display_options: { show_image: true }
-                       };
-                       
-                       try {
-                         const { error } = await supabase
-                           .from('tour_journey_items')
-                           .insert(newJourneyItem);
-                           
-                         if (error) throw error;
-                         fetchData();
-                       } catch (error) {
-                         console.error('Error adding boarding place:', error);
-                         alert('탑승지 추가에 실패했습니다.');
-                       }
-                     }}>
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between">
-                      <h4 className="font-bold text-base">{place.name}</h4>
-                      {isAdded && <Check className="w-4 h-4 text-green-600" />}
-                    </div>
-                    <p className="text-sm text-gray-600">{place.address}</p>
-                    {place.boarding_main && (
-                      <p className="text-xs text-blue-600 bg-blue-50 rounded px-2 py-1">
-                        {place.boarding_main}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs text-blue-600">
-                        <Users className="w-3 h-3" />
-                        <span>탑승지</span>
-                      </div>
-                      {!isAdded && (
-                        <span className="text-xs text-gray-500">클릭하여 추가</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 스팟 섹션 */}
-        <div>
-          <h3 className="font-medium text-sm text-gray-700 mb-3 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-green-500" />
-            스팟 추가
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {/* 새 스팟 추가 버튼 */}
-            <div className="bg-white rounded-lg shadow-sm p-3 border-2 border-dashed border-gray-300 hover:border-green-400 transition-colors cursor-pointer"
-                 onClick={() => setShowNewSpot(!showNewSpot)}>
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <PlusCircle className="w-6 h-6 text-green-500 mx-auto mb-1" />
-                  <p className="text-xs text-gray-500">새 스팟</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* 기존 스팟 목록 */}
-            {spots.map(spot => {
-              // 이미 추가된 스팟인지 확인
-              const isAdded = journeyItems.some(item => item.spot_id === spot.id);
-              
-              return (
-                <div key={spot.id} 
-                     className={`bg-white rounded-lg shadow-sm overflow-hidden border ${isAdded ? 'border-gray-300 opacity-50' : 'border-gray-200 hover:border-green-400 hover:shadow-md cursor-pointer'} transition-all`}
-                     onClick={async () => {
-                       if (isAdded) {
-                         alert('이미 추가된 스팟입니다.');
-                         return;
-                       }
-                       
-                       // 여정에 스팟 추가
-                       const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
-                       const newJourneyItem = {
-                         tour_id: tourId,
-                         day_number: selectedDay,
-                         order_index: maxOrder + 1,
-                         boarding_place_id: null,
-                         spot_id: spot.id,
-                         arrival_time: null,
-                         departure_time: null,
-                         stay_duration: null,
-                         distance_from_prev: null,
-                         duration_from_prev: null,
-                         passenger_count: null,
-                         boarding_type: null,
-                         meal_type: null,
-                         meal_menu: null,
-                         golf_info: null,
-                         notes: null,
-                         display_options: { show_image: true }
-                       };
-                       
-                       try {
-                         const { error } = await supabase
-                           .from('tour_journey_items')
-                           .insert(newJourneyItem);
-                           
-                         if (error) throw error;
-                         fetchData();
-                       } catch (error) {
-                         console.error('Error adding spot:', error);
-                         alert('스팟 추가에 실패했습니다.');
-                       }
-                     }}>
-                  {/* 이미지 영역 */}
-                  {spot.image_url && (
-                    <div className="h-24 bg-gray-200 overflow-hidden">
-                      <img 
-                        src={spot.image_url} 
-                        alt={spot.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="p-3 space-y-2">
-                    <div className="flex items-start justify-between">
-                      <h4 className="font-bold text-sm leading-tight">{spot.name}</h4>
-                      {isAdded && <Check className="w-4 h-4 text-green-600 flex-shrink-0" />}
-                    </div>
-                    
-                    <div className="flex items-center gap-1">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-${categoryConfig[spot.category]?.color || 'gray'}-100 text-${categoryConfig[spot.category]?.color || 'gray'}-700`}>
-                        {React.createElement(categoryConfig[spot.category]?.icon || MoreHorizontal, { className: 'w-3 h-3' })}
-                        <span>{categoryConfig[spot.category]?.label}</span>
-                      </span>
-                      {spot.sub_category && (
-                        <span className="text-xs text-gray-500">
-                          {spot.sub_category}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <p className="text-xs text-gray-600 line-clamp-2">{spot.address}</p>
-                    
-                    {spot.description && (
-                      <p className="text-xs text-gray-500 line-clamp-2">{spot.description}</p>
-                    )}
-                    
-                    {spot.features && spot.features.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {spot.features.slice(0, 3).map((feature: string, idx: number) => (
-                          <span key={idx} className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
-                            {feature}
-                          </span>
-                        ))}
-                        {spot.features.length > 3 && (
-                          <span className="text-xs text-gray-400">+{spot.features.length - 3}</span>
-                        )}
-                      </div>
-                    )}
-                    
-                    {!isAdded && (
-                      <div className="pt-1">
-                        <span className="text-xs text-gray-500">클릭하여 추가</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* 새 탑승지 입력 폼 */}
-      {showNewBoardingPlace && (
-        <div className="bg-white rounded-lg shadow-sm p-4 border-2 border-blue-500">
-          <h4 className="font-medium mb-3 flex items-center gap-2">
-            <Bus className="w-4 h-4 text-blue-500" />
-            새 탑승지 추가
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input
-              type="text"
-              placeholder="탑승지명"
-              className="px-3 py-2 border rounded text-sm"
-              value={newBoardingPlace.name}
-              onChange={(e) => setNewBoardingPlace({ ...newBoardingPlace, name: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="주소"
-              className="px-3 py-2 border rounded text-sm"
-              value={newBoardingPlace.address}
-              onChange={(e) => setNewBoardingPlace({ ...newBoardingPlace, address: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="탑승 안내 (선택)"
-              className="px-3 py-2 border rounded text-sm"
-              value={newBoardingPlace.boarding_main}
-              onChange={(e) => setNewBoardingPlace({ ...newBoardingPlace, boarding_main: e.target.value })}
-            />
-          </div>
-          <div className="flex justify-end gap-2 mt-3">
-            <button
-              onClick={() => setShowNewBoardingPlace(false)}
-              className="px-3 py-1.5 text-gray-600 hover:text-gray-700 text-sm"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleAddBoardingPlace}
-              className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 flex items-center gap-1"
-            >
-              <Check className="w-4 h-4" />
-              추가
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 새 스팟 입력 폼 */}
-      {showNewSpot && (
-        <div className="bg-white rounded-lg shadow-sm p-4 border-2 border-green-500">
-          <h4 className="font-medium mb-3 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-green-500" />
-            새 스팟 추가
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <input
-              type="text"
-              placeholder="스팟명"
-              className="px-3 py-2 border rounded text-sm"
-              value={newSpot.name}
-              onChange={(e) => setNewSpot({ ...newSpot, name: e.target.value })}
-            />
-            <select
-              className="px-3 py-2 border rounded text-sm"
-              value={newSpot.category}
-              onChange={(e) => setNewSpot({ ...newSpot, category: e.target.value })}
-            >
-              {Object.entries(categoryConfig).map(([key, config]) => (
-                key !== 'boarding' && (
-                  <option key={key} value={key}>{config.label}</option>
-                )
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="세부 카테고리 (선택)"
-              className="px-3 py-2 border rounded text-sm"
-              value={newSpot.sub_category}
-              onChange={(e) => setNewSpot({ ...newSpot, sub_category: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="주소"
-              className="px-3 py-2 border rounded text-sm"
-              value={newSpot.address}
-              onChange={(e) => setNewSpot({ ...newSpot, address: e.target.value })}
-            />
-          </div>
-          <div className="flex justify-end gap-2 mt-3">
-            <button
-              onClick={() => setShowNewSpot(false)}
-              className="px-3 py-1.5 text-gray-600 hover:text-gray-700 text-sm"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleAddSpot}
-              className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700 flex items-center gap-1"
-            >
-              <Check className="w-4 h-4" />
-              추가
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 
