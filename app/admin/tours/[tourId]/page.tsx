@@ -2,12 +2,12 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import ParticipantsManagerV2 from "@/components/ParticipantsManagerV2";
+import ParticipantsManager from "@/components/ParticipantsManager";
 import RoomAssignmentManager from "@/components/RoomAssignmentManager";
 import RoomTypeManager from "@/components/RoomTypeManager";
 import IntegratedScheduleManager from "@/components/IntegratedScheduleManager";
 import TeeTimeSlotManager from "@/components/TeeTimeSlotManager";
-import TeeTimeAssignmentManagerV2 from "@/components/TeeTimeAssignmentManagerV2";
+import TeeTimeAssignmentManager from "@/components/TeeTimeAssignmentManager";
 // 사용하지 않는 컴포넌트 import 제거됨
 import TourSchedulePreview from "@/components/TourSchedulePreview";
 import TourBoardingManager from "@/components/TourBoardingManager";
@@ -88,7 +88,7 @@ const TourDetailPage: React.FC = () => {
       
       {/* 탭 컨텐츠 */}
       <div className="bg-white rounded-b-lg shadow-sm p-6">
-        {activeTab === "participants" && <ParticipantsManagerV2 tourId={tourId} showColumns={["이름", "연락처", "팀", "탑승지", "객실", "참여횟수", "상태", "관리"]} />}
+        {activeTab === "participants" && <ParticipantsManager tourId={tourId} showColumns={["이름", "연락처", "팀", "탑승지", "객실", "참여횟수", "상태", "관리"]} />}
         {activeTab === "boarding-places" && (
           <TourBoardingManager tourId={tourId} />
         )}
@@ -102,7 +102,7 @@ const TourDetailPage: React.FC = () => {
         {activeTab === "tee-times" && (
           <>
             <TeeTimeSlotManager tourId={tourId} onDataChange={() => setRefreshKey(prev => prev + 1)} />
-            <TeeTimeAssignmentManagerV2 tourId={tourId} refreshKey={refreshKey} />
+            <TeeTimeAssignmentManager tourId={tourId} refreshKey={refreshKey} />
           </>
         )}
 

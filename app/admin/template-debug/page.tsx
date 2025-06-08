@@ -1,6 +1,14 @@
 "use client";
 import React from "react";
-import TemplateDebugger from "@/components/memo/TemplateDebugger";
+
+// TemplateDebugger 컴포넌트가 없으므로 임시 컴포넌트 생성
+const TemplateDebugger = () => {
+  return (
+    <div className="p-4 bg-gray-100 rounded">
+      <p className="text-gray-600">템플릿 디버거 컴포넌트가 준비 중입니다.</p>
+    </div>
+  );
+};
 
 export default function TemplateDebugPage() {
   return (

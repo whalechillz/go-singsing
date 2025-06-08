@@ -1,7 +1,7 @@
 "use client";
 
-import ParticipantsManagerV2 from "@/components/ParticipantsManagerV2";
+import ParticipantsManager from "@/components/ParticipantsManager";
 
 export default function ParticipantsPage() {
-  return <ParticipantsManagerV2 />;
+  return <ParticipantsManager />;
 }
