@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, Clock, Hotel, Tag, Route, ListOrdered } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Calendar, MapPin, Clock, Hotel, Tag, Route, ListOrdered, Printer, Download } from 'lucide-react';
 import TourJourneyManager from './TourJourneyManager';
+import TourScheduleOnlyPreview from './schedule/TourScheduleOnlyPreview';
 
 interface IntegratedScheduleManagerProps {
   tourId: string;
@@ -24,7 +25,7 @@ const categoryMap: Record<string, string> = {
 };
 
 export default function IntegratedScheduleManager({ tourId }: IntegratedScheduleManagerProps) {
-  const [activeTab, setActiveTab] = useState<'schedule' | 'journey'>('journey');
+  const [activeTab, setActiveTab] = useState<'journey' | 'schedule-info' | 'preview'>('journey');
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
@@ -348,32 +349,43 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
           여정 관리
         </button>
         <button
-          onClick={() => setActiveTab('schedule')}
+          onClick={() => setActiveTab('schedule-info')}
           className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === 'schedule'
+            activeTab === 'schedule-info'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Calendar className="w-4 h-4 inline mr-2" />
+          일정 안내
+        </button>
+        <button
+          onClick={() => setActiveTab('preview')}
+          className={`px-4 py-2 font-medium transition-colors ${
+            activeTab === 'preview'
               ? 'text-blue-600 border-b-2 border-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           <ListOrdered className="w-4 h-4 inline mr-2" />
-          일정 관리
+          문서 미리보기 - 일정표
         </button>
       </div>
 
       {/* 탭 컨텐츠 */}
       {activeTab === 'journey' ? (
         <TourJourneyManager tourId={tourId} />
-      ) : (
+      ) : activeTab === 'schedule-info' ? (
         <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">일정 목록</h3>
-          <button
-            className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 flex items-center"
-            onClick={handleNewSchedule}
-          >
-            <Plus className="w-4 h-4 mr-1" /> 일정 추가
-          </button>
-        </div>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">일정 목록</h3>
+            <button
+              className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 flex items-center"
+              onClick={handleNewSchedule}
+            >
+              <Plus className="w-4 h-4 mr-1" /> 일정 추가
+            </button>
+          </div>
 
         {editingSchedule && (
           <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
@@ -682,8 +694,31 @@ export default function IntegratedScheduleManager({ tourId }: IntegratedSchedule
             </div>
           ))}
         </div>
-      </div>
-      )}
+      ) : activeTab === 'preview' ? (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">일정표 미리보기</h3>
+            <div className="flex gap-2">
+              <button
+                className="px-3 py-1.5 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600 flex items-center"
+                onClick={() => window.print()}
+              >
+                <Printer className="w-4 h-4 mr-1" /> 인쇄
+              </button>
+              <button
+                className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 flex items-center"
+                onClick={() => {
+                  // 인쇄 대화상자를 통해 PDF로 저장
+                  window.print();
+                }}
+              >
+                <Download className="w-4 h-4 mr-1" /> PDF 다운로드
+              </button>
+            </div>
+          </div>
+          <TourScheduleOnlyPreview tourId={tourId} />
+        </div>
+      ) : null}
     </div>
   );
 }
