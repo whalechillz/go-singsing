@@ -73,8 +73,8 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
     tour_id: tourId,
     day_number: selectedDay,
     order_index: 0,
-    boarding_place_id: '',
-    spot_id: '',
+    boarding_place_id: undefined,
+    spot_id: undefined,
     arrival_time: '',
     departure_time: '',
     stay_duration: '',
@@ -146,7 +146,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       const { data: places } = await supabase
         .from('singsing_boarding_places')
         .select('*')
-        .eq('place_type', 'boarding')
         .order('name');
       setBoardingPlaces(places || []);
 
@@ -168,6 +167,8 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('Form Data:', formData);
+
     try {
       // order_index 자동 설정
       let orderIndex = formData.order_index;
@@ -181,9 +182,11 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         tour_id: tourId,
         day_number: selectedDay,
         order_index: orderIndex,
-        boarding_place_id: formData.boarding_place_id || null,
-        spot_id: formData.spot_id || null
+        boarding_place_id: formData.boarding_place_id === undefined ? null : (formData.boarding_place_id || null),
+        spot_id: formData.spot_id === undefined ? null : (formData.spot_id || null)
       };
+
+      console.log('Data to submit:', dataToSubmit);
 
       if (editingItem?.id) {
         const { error } = await supabase
@@ -203,9 +206,9 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       setShowForm(false);
       resetForm();
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving journey item:', error);
-      alert('저장에 실패했습니다.');
+      alert(`저장에 실패했습니다.\n\n에러 메시지: ${error.message || error}\n\n자세한 내용은 브라우저 콘솔을 확인해주세요.`);
     }
   };
 
@@ -262,8 +265,8 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       tour_id: tourId,
       day_number: selectedDay,
       order_index: 0,
-      boarding_place_id: '',
-      spot_id: '',
+      boarding_place_id: undefined,
+      spot_id: undefined,
       arrival_time: '',
       departure_time: '',
       stay_duration: '',
@@ -617,18 +620,22 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               <div className="flex gap-2 mb-2">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, boarding_place_id: '', spot_id: '' })}
+                  onClick={() => {
+                    setFormData({ ...formData, boarding_place_id: '', spot_id: undefined });
+                  }}
                   className={`px-4 py-2 rounded-lg ${
-                    formData.boarding_place_id ? 'bg-blue-600 text-white' : 'bg-gray-100'
+                    formData.boarding_place_id !== undefined && !formData.spot_id ? 'bg-blue-600 text-white' : 'bg-gray-100'
                   }`}
                 >
                   탑승지
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, boarding_place_id: '', spot_id: '' })}
+                  onClick={() => {
+                    setFormData({ ...formData, boarding_place_id: undefined, spot_id: '' });
+                  }}
                   className={`px-4 py-2 rounded-lg ${
-                    formData.spot_id ? 'bg-blue-600 text-white' : 'bg-gray-100'
+                    formData.spot_id !== undefined && !formData.boarding_place_id ? 'bg-blue-600 text-white' : 'bg-gray-100'
                   }`}
                 >
                   스팟
@@ -636,10 +643,10 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               </div>
 
               {/* 탑승지 선택 */}
-              {formData.boarding_place_id !== undefined && !formData.spot_id && (
+              {formData.boarding_place_id !== undefined && formData.spot_id === undefined && (
                 <select
                   className="w-full px-3 py-2 border rounded-lg"
-                  value={formData.boarding_place_id}
+                  value={formData.boarding_place_id || ''}
                   onChange={(e) => setFormData({ ...formData, boarding_place_id: e.target.value })}
                   required
                 >
@@ -653,10 +660,10 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               )}
 
               {/* 스팟 선택 */}
-              {formData.spot_id !== undefined && !formData.boarding_place_id && (
+              {formData.spot_id !== undefined && formData.boarding_place_id === undefined && (
                 <select
                   className="w-full px-3 py-2 border rounded-lg"
-                  value={formData.spot_id}
+                  value={formData.spot_id || ''}
                   onChange={(e) => setFormData({ ...formData, spot_id: e.target.value })}
                   required
                 >

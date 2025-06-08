@@ -1,8 +1,11 @@
 # 마이그레이션 히스토리
 
-## 현재 상태 (2025-06-08)
-- 마지막 적용: 20250608_migration_completed.sql ✅
+## 현재 상태 (2025-06-09)
+- 마지막 적용: 20250609_create_tour_journey_items.sql ✅
 - 총 테이블 수: 23개 (tour_journey_items 추가)
+
+## 실행 필요
+- ⚠️ 20250609_create_tour_journey_items.sql - Supabase 대시보드에서 실행 필요
 
 ## 주요 변경사항
 ### 2025-06-08 ✅ 완료

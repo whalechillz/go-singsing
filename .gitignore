@@ -38,3 +38,7 @@ next-env.d.ts
 # temporary files
 *.bak
 *.tmp
+
+# backup directories
+/backup/
+backup_*/

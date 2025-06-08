@@ -910,6 +910,74 @@ export interface Database {
           image_url?: string | null
         }
       }
+      tour_journey_items: {
+        Row: {
+          id: string
+          tour_id: string
+          day_number: number
+          order_index: number
+          boarding_place_id: string | null
+          spot_id: string | null
+          arrival_time: string | null
+          departure_time: string | null
+          stay_duration: string | null
+          distance_from_prev: string | null
+          duration_from_prev: string | null
+          passenger_count: number | null
+          boarding_type: string | null
+          meal_type: string | null
+          meal_menu: string | null
+          golf_info: any | null
+          notes: string | null
+          display_options: any | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tour_id: string
+          day_number: number
+          order_index: number
+          boarding_place_id?: string | null
+          spot_id?: string | null
+          arrival_time?: string | null
+          departure_time?: string | null
+          stay_duration?: string | null
+          distance_from_prev?: string | null
+          duration_from_prev?: string | null
+          passenger_count?: number | null
+          boarding_type?: string | null
+          meal_type?: string | null
+          meal_menu?: string | null
+          golf_info?: any | null
+          notes?: string | null
+          display_options?: any | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tour_id?: string
+          day_number?: number
+          order_index?: number
+          boarding_place_id?: string | null
+          spot_id?: string | null
+          arrival_time?: string | null
+          departure_time?: string | null
+          stay_duration?: string | null
+          distance_from_prev?: string | null
+          duration_from_prev?: string | null
+          passenger_count?: number | null
+          boarding_type?: string | null
+          meal_type?: string | null
+          meal_menu?: string | null
+          golf_info?: any | null
+          notes?: string | null
+          display_options?: any | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       singsing_tour_staff: {
         Row: {
           id: string
