@@ -34,3 +34,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backup folders
+backup/
+backup_*/
+
+# temporary files
+*.bak
+*.tmp

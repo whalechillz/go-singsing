@@ -26,8 +26,8 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
-    "backup_files",
-    "backup_fixed_20250603",
+    "backup",
+    "backup_*",
     "scripts",
     "docs"
   ]
