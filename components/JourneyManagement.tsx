@@ -6,7 +6,7 @@ import {
   Camera, Plus, Filter, Map, List, Calendar, ChevronRight,
   Bus, Users, ArrowUpDown, Grip, Edit, Trash2
 } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 
 interface JourneyPlace {
   id: string;
@@ -29,8 +29,6 @@ export default function JourneyManagement() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [journeyPlaces, setJourneyPlaces] = useState<JourneyPlace[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  const supabase = createClient();
 
   const categoryConfig = {
     boarding: { icon: Bus, color: 'blue', label: '탑승지' },
