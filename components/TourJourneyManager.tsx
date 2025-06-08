@@ -100,23 +100,40 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       // 여정 아이템 조회
       const { data: items, error: itemsError } = await supabase
         .from('tour_journey_items')
-        .select(`
-          *,
-          boarding_place:boarding_place_id(
-            id, name, address, boarding_main, boarding_sub, parking_info
-          ),
-          spot:spot_id(
-            id, name, category, sub_category, address, description, 
-            main_image_url, recommended_duration, features, tags,
-            parking_info, entrance_fee, golf_course_info, meal_info
-          )
-        `)
+        .select('*')
         .eq('tour_id', tourId)
         .eq('day_number', selectedDay)
         .order('order_index');
 
       if (itemsError) throw itemsError;
-      setJourneyItems(items || []);
+      
+      // 관계 데이터 별도 조회
+      const itemsWithRelations = await Promise.all((items || []).map(async (item) => {
+        let boarding_place = null;
+        let spot = null;
+        
+        if (item.boarding_place_id) {
+          const { data } = await supabase
+            .from('singsing_boarding_places')
+            .select('*')
+            .eq('id', item.boarding_place_id)
+            .single();
+          boarding_place = data;
+        }
+        
+        if (item.spot_id) {
+          const { data } = await supabase
+            .from('tourist_attractions')
+            .select('*')
+            .eq('id', item.spot_id)
+            .single();
+          spot = data;
+        }
+        
+        return { ...item, boarding_place, spot };
+      }));
+      
+      setJourneyItems(itemsWithRelations);
 
       // 최대 일수 확인
       const { data: maxDayData } = await supabase
