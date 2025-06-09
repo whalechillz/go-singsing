@@ -10,6 +10,16 @@ interface IntegratedScheduleManagerProps {
 export default function IntegratedScheduleManager({ tourId }: IntegratedScheduleManagerProps) {
   const [loading, setLoading] = useState(false);
 
+  console.log("IntegratedScheduleManager - received tourId:", tourId);
+
+  if (!tourId) {
+    return (
+      <div className="p-8">
+        <div className="text-red-500">IntegratedScheduleManager: tourId가 전달되지 않았습니다.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* 헤더 */}
