@@ -49,7 +49,7 @@ export const formatDate = (date: string | Date, includeWeekday: boolean = true):
 export const getScheduleIcon = (content: string): { icon: string, iconClass: string } => {
   const lowerContent = content.toLowerCase();
   
-  if (lowerContent.includes('탑승') || lowerContent.includes('출발')) {
+  if (lowerContent.includes('탑승') || lowerContent.includes('출발') || lowerContent.includes('동성골프연습장')) {
     return { icon: '🚌', iconClass: 'departure' };
   } else if (lowerContent.includes('이동') || lowerContent.includes('경유')) {
     return { icon: '🚗', iconClass: 'transit' };

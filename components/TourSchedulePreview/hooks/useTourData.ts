@@ -197,6 +197,7 @@ export function useTourData(tourId: string) {
         // 각 날짜별로 일정 아이템 생성
         schedules.forEach(schedule => {
           const dayItems = itemsWithRelations.filter(item => item.day_number === schedule.day_number);
+          const dayNumber = schedule.day_number; // 일차 정보
           
           schedule.schedule_items = dayItems.map(item => {
             let content = '';
@@ -206,7 +207,7 @@ export function useTourData(tourId: string) {
               const category = item.spot.category;
               const spotName = item.spot.name;
               
-              if (category === 'boarding_place') {
+              if (category === 'boarding_place' || spotName.includes('골프연습장')) {
                 content = `${spotName} 탑승`;
               } else if (category === 'rest_area') {
                 content = `${spotName} 휴게소 (${item.stay_duration || 30}분)`;
@@ -215,13 +216,22 @@ export function useTourData(tourId: string) {
               } else if (category === 'restaurant') {
                 const mealType = item.meal_type;
                 if (mealType === 'snack' || spotName.includes('간편식')) {
-                  content = `간편식`;
+                  content = '간편식 (이동 중 제공)';
+                  if (spotName && !spotName.includes('간편식')) {
+                    content += ` ${spotName}`;
+                  }
+                } else if (spotName.includes('클럽식')) {
+                  // Pine Hills (1일차) 클럽식 중식 형식으로 표시
+                  const mealName = mealType === 'breakfast' ? '조식' : mealType === 'lunch' ? '중식' : mealType === 'dinner' ? '석식' : '';
+                  // 골프장 이름을 찾아서 표시
+                  const golfCourseName = spotName.split(' ')[0]; // 첫 단어가 보통 골프장 이름
+                  content = `${golfCourseName} (${dayNumber}일차) 클럽식 ${mealName}`;
                 } else {
-                  const mealName = mealType === 'breakfast' ? '조식' : mealType === 'lunch' ? '중식' : mealType === 'dinner' ? '석식' : spotName;
-                  content = `${mealName}${spotName ? ` - ${spotName}` : ''}`;
+                  const mealName = mealType === 'breakfast' ? '조식' : mealType === 'lunch' ? '중식' : mealType === 'dinner' ? '석식' : '';
+                  content = `${mealName}${spotName && !spotName.includes(mealName) ? ` - ${spotName}` : ''}`;
                 }
                 if (item.meal_menu) {
-                  content += ` (${item.meal_menu})`;
+                  content += ` ${item.meal_menu}`;
                 }
               } else if (category === 'golf_course') {
                 content = `${spotName} 라운드`;
@@ -233,7 +243,7 @@ export function useTourData(tourId: string) {
                 content = '도착';
               } else if (item.meal_type) {
                 if (item.meal_type === 'snack') {
-                  content = '간편식';
+                  content = '간편식 (이동 중 제공)';
                 } else {
                   const mealName = item.meal_type === 'breakfast' ? '조식' : item.meal_type === 'lunch' ? '중식' : item.meal_type === 'dinner' ? '석식' : '';
                   content = mealName;
