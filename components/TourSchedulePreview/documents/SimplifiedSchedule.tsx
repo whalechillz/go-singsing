@@ -1,6 +1,5 @@
 import { TourData, ProductData } from '../types';
 import { formatDate } from '../utils/formatters';
-import styles from '../styles/common.module.css';
 
 export function generateSimplifiedHTML(tourData: TourData | null, productData: ProductData | null): string {
   if (!tourData) return '<div>데이터를 불러올 수 없습니다.</div>';
