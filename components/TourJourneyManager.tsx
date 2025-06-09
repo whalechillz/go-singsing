@@ -87,7 +87,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
     tour_id: tourId,
     day_number: selectedDay,
     order_index: 0,
-    boarding_place_id: undefined,
     spot_id: undefined,
     arrival_time: '',
     departure_time: '',
@@ -418,11 +417,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   const handleEdit = (item: JourneyItem) => {
     setEditingItem(item);
     
-    // 폼 데이터 설정 시 유형에 따라 처리
-    let editFormData: any = {
+    // 폼 데이터 설정
+    setFormData({
       tour_id: item.tour_id,
       day_number: item.day_number,
       order_index: item.order_index,
+      spot_id: item.spot_id || undefined,
       arrival_time: item.arrival_time || '',
       departure_time: item.departure_time || '',
       stay_duration: item.stay_duration || '',
@@ -435,21 +435,8 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       golf_info: item.golf_info || {},
       notes: item.notes || '',
       display_options: item.display_options || { show_image: true }
-    };
+    });
     
-    // 탑승지와 스팟 중 하나만 설정
-    if (item.boarding_place_id) {
-      editFormData.boarding_place_id = item.boarding_place_id;
-      editFormData.spot_id = undefined;
-    } else if (item.spot_id) {
-      editFormData.spot_id = item.spot_id;
-      editFormData.boarding_place_id = undefined;
-    } else {
-      editFormData.boarding_place_id = undefined;
-      editFormData.spot_id = undefined;
-    }
-    
-    setFormData(editFormData);
     setShowForm(true);
   };
 
@@ -533,7 +520,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       tour_id: tourId,
       day_number: selectedDay,
       order_index: 0,
-      boarding_place_id: undefined,
       spot_id: undefined,
       arrival_time: '',
       departure_time: '',
@@ -1587,7 +1573,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
             </div>
 
             {/* 탑승지 추가 정보 */}
-            {formData.boarding_place_id && (
+            {formData.spot_id && (() => {
+              const selectedSpot = spots.find(s => s.id === formData.spot_id);
+              const isBoarding = selectedSpot?.category === 'boarding';
+              
+              if (isBoarding) {
+                return (
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">탑승 유형</label>
