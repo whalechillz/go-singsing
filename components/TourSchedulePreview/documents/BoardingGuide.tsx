@@ -140,7 +140,7 @@ export function generateBoardingGuideHTML(
 }
 
 function generateStaffBoardingHTML(tourData: TourData, participants: any[]): string {
-  const participantsByLocation = participants.reduce((acc, participant) => {
+  const participantsByLocation: Record<string, any[]> = participants.reduce((acc: Record<string, any[]>, participant: any) => {
     const location = participant.pickup_location || '미정';
     if (!acc[location]) acc[location] = [];
     acc[location].push(participant);
@@ -159,7 +159,7 @@ function generateStaffBoardingHTML(tourData: TourData, participants: any[]): str
         <p>총 참가자: ${participants.length}명</p>
       </div>
       
-      ${Object.entries(participantsByLocation).map(([location, locationParticipants]) => `
+      ${Object.entries(participantsByLocation).map(([location, locationParticipants]: [string, any[]]) => `
         <div class="location-section">
           <h2>${location} (${locationParticipants.length}명)</h2>
           <table class="participant-table">
@@ -173,7 +173,7 @@ function generateStaffBoardingHTML(tourData: TourData, participants: any[]): str
               </tr>
             </thead>
             <tbody>
-              ${locationParticipants.map((participant, index) => `
+              ${locationParticipants.map((participant: any, index: number) => `
                 <tr>
                   <td class="text-center">${index + 1}</td>
                   <td class="text-center">${participant.name}</td>
