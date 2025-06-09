@@ -230,7 +230,7 @@ export function generateTeeTimeHTML(
           <div class="footer-brand">싱싱골프투어</div>
         </div>
       ` : `
-        ${tourData.staff?.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `
+        ${tourData.staff && tourData.staff.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `
           <div class="contact-info">
             <div class="contact-title">비상 연락처</div>
             <div class="contact-grid">
