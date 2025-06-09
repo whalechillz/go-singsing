@@ -207,12 +207,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         
         // 각 날짜별로 일정 아이템 생성
         schedules.forEach(schedule => {
-          console.log(`Processing schedule for day ${schedule.day_number}`);
-          const dayItems = itemsWithRelations.filter(item => {
-            console.log(`Item day_number: ${item.day_number}, Schedule day_number: ${schedule.day_number}`);
-            return item.day_number === schedule.day_number;
-          });
-          console.log(`Found ${dayItems.length} items for day ${schedule.day_number}`);
+          const dayItems = itemsWithRelations.filter(item => item.day_number === schedule.day_number);
           
           schedule.schedule_items = dayItems.map(item => {
             let content = '';
@@ -239,13 +234,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             };
           });
         });
+        
+        // 여정 아이템 설정 완료
       }
-      
-      console.log('DAY_INFO items:', dayInfoItems);
-      console.log('Regular items:', regularItems);
-      console.log('Items with relations:', itemsWithRelations);
-      console.log('Final schedules data:', schedules);
-      console.log('Journey items:', journeyItems);
 
       // 여행상품 정보 가져오기
       if (tour.tour_product_id) {
@@ -256,7 +247,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           .single();
 
         if (!productError && product) {
-          console.log('Product data:', product);
           setProductData(product);
         }
       }
@@ -279,7 +269,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           setDocumentFooters(footersByType);
         }
       } catch (e) {
-        console.log('document_footers 테이블이 없거나 접근할 수 없습니다.');
+        // document_footers 테이블이 없거나 접근할 수 없음
         // 기본값 사용
         setDocumentFooters({});
       }
@@ -368,7 +358,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         attraction_data: item.spot
       }));
       
-      console.log('전체 경유지 정보:', waypointItems);
+      // 경유지 정보 설정 완료
       setTourWaypoints(waypointItems);
     } catch (error) {
       console.error('Error in fetchTourBoardingPlaces:', error);
@@ -428,7 +418,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .limit(1);
       
       const tourStaff = staffData && staffData.length > 0 ? staffData[0] : null;
-      console.log('기사 정보:', tourStaff);
+      // 기사 정보 확인
       
       if (assignments && rooms) {
         setRoomAssignmentHTML(generateRoomAssignmentHTML(assignments, rooms, tourStaff, false)); // 고객용
@@ -450,11 +440,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .order('tee_time');
 
       if (error) {
-        console.error('티타임 조회 오류:', error);
+        // 티타임 조회 오류 발생
         throw error;
       }
       
-      console.log('티타임 데이터:', teeTimes);
+      // 티타임 데이터 확인
       
       if (teeTimes && teeTimes.length > 0) {
         // 각 티타임별로 배정된 참가자 정보 가져오기
@@ -475,7 +465,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             .eq('tee_time_id', teeTime.id);
             
           if (assignError) {
-            console.error('배정 정보 조회 오류:', assignError);
+            // 배정 정보 조회 오류
           }
           
           // 티타임 데이터에 플레이어 정보 추가
@@ -493,15 +483,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           };
         }));
         
-        console.log('플레이어 정보가 포함된 티타임 데이터:', teeTimesWithPlayers);
+        // 플레이어 정보가 포함된 티타임 데이터 설정
         
         const customerHTML = generateTeeTimeHTML(teeTimesWithPlayers, false); // 고객용
         const staffHTML = generateTeeTimeHTML(teeTimesWithPlayers, true); // 스탭용
-        console.log('HTML 생성됨:', customerHTML.length, staffHTML.length);
+        // HTML 생성 완료
         setTeeTimeCustomerHTML(customerHTML);
         setTeeTimeStaffHTML(staffHTML);
       } else {
-        console.log('티타임 데이터가 없습니다');
+        // 티타임 데이터가 없음
         setTeeTimeCustomerHTML('<div class="no-data">티타임 데이터가 없습니다.</div>');
         setTeeTimeStaffHTML('<div class="no-data">티타임 데이터가 없습니다.</div>');
       }
