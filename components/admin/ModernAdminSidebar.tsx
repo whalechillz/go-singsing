@@ -61,7 +61,6 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.includes('/tee-time')) return 'tee-time';
     if (pathname.startsWith('/admin/tours')) return 'tours';
     if (pathname.startsWith('/admin/tour-products')) return 'tour-products';
-    if (pathname.startsWith('/admin/boarding-places')) return 'boarding-places';
     if (pathname.startsWith('/admin/attractions')) return 'attractions';
     if (pathname.startsWith('/admin/participants')) return 'participants-list';
     if (pathname.startsWith('/admin/payments')) return 'payments';
@@ -96,7 +95,6 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       subMenu: [
         { id: 'tours', label: '투어 스케줄 관리', href: '/admin/tours' },
         { id: 'tour-products', label: '여행상품 관리', href: '/admin/tour-products' },
-        { id: 'boarding-places', label: '탑승지 관리', href: '/admin/boarding-places' },
         { id: 'attractions', label: '스팟 관리', href: '/admin/attractions' },
       ]
     },

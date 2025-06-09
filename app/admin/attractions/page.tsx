@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 // 확장된 카테고리 타입
-type Category = 'tourist_spot' | 'rest_area' | 'restaurant' | 'shopping' | 'activity' | 'mart' | 'golf_round' | 'club_meal' | 'others';
+type Category = 'boarding' | 'tourist_spot' | 'rest_area' | 'restaurant' | 'shopping' | 'activity' | 'mart' | 'golf_round' | 'club_meal' | 'others';
 
 interface TouristAttraction {
   id: string;
@@ -45,6 +45,13 @@ const categoryConfig: Record<Category, {
   bgColor: string;
   subCategories?: string[];
 }> = {
+  'boarding': { 
+    label: '탑승지', 
+    icon: MapPin, 
+    color: 'text-teal-800',
+    bgColor: 'bg-teal-100',
+    subCategories: ['버스탑승지', '픽업장소']
+  },
   'tourist_spot': { 
     label: '관광명소', 
     icon: Camera, 
@@ -123,7 +130,7 @@ export default function SpotManagementPage() {
   // Form states
   const [formData, setFormData] = useState({
     name: '',
-    category: 'tourist_spot' as Category,
+    category: 'boarding' as Category,
     sub_category: '',
     description: '',
     address: '',
@@ -341,7 +348,7 @@ export default function SpotManagementPage() {
     setEditingAttraction(null);
     setFormData({
       name: '',
-      category: 'tourist_spot',
+      category: 'boarding',
       sub_category: '',
       description: '',
       address: '',
