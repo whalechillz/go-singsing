@@ -203,56 +203,26 @@ export function useTourData(tourId: string) {
             let content = '';
             let time = item.arrival_time || '';
             
+            // 스팟이 있으면 스팟 이름을 그대로 사용
             if (item.spot) {
-              const category = item.spot.category;
-              const spotName = item.spot.name;
+              content = item.spot.name;
               
-              if (category === 'boarding_place' || spotName.includes('골프연습장')) {
-                content = `${spotName} 탑승`;
-              } else if (category === 'rest_area') {
-                content = `${spotName} 휴게소 (${item.stay_duration || 30}분)`;
-              } else if (category === 'tourist_spot') {
-                content = `${spotName} 관광`;
-              } else if (category === 'restaurant') {
-                const mealType = item.meal_type;
-                if (mealType === 'snack' || spotName.includes('간편식')) {
-                  content = '간편식 (이동 중 제공)';
-                  if (spotName && !spotName.includes('간편식')) {
-                    content += ` ${spotName}`;
-                  }
-                } else if (spotName.includes('클럽식')) {
-                  // Pine Hills (1일차) 클럽식 중식 형식으로 표시
-                  const mealName = mealType === 'breakfast' ? '조식' : mealType === 'lunch' ? '중식' : mealType === 'dinner' ? '석식' : '';
-                  // 골프장 이름을 찾아서 표시
-                  const golfCourseName = spotName.split(' ')[0]; // 첫 단어가 보통 골프장 이름
-                  content = `${golfCourseName} (${dayNumber}일차) 클럽식 ${mealName}`;
-                } else {
-                  const mealName = mealType === 'breakfast' ? '조식' : mealType === 'lunch' ? '중식' : mealType === 'dinner' ? '석식' : '';
-                  content = `${mealName}${spotName && !spotName.includes(mealName) ? ` - ${spotName}` : ''}`;
-                }
-                if (item.meal_menu) {
-                  content += ` ${item.meal_menu}`;
-                }
-              } else if (category === 'golf_course') {
-                content = `${spotName} 라운드`;
-              } else {
-                content = spotName;
+              // 식사 메뉴가 있으면 추가
+              if (item.meal_menu) {
+                content += ` - ${item.meal_menu}`;
               }
             } else {
+              // 스팟이 없는 경우만 기본 처리
               if (item.boarding_type === 'arrival') {
                 content = '도착';
+              } else if (item.notes) {
+                content = item.notes;
               } else if (item.meal_type) {
-                if (item.meal_type === 'snack') {
-                  content = '간편식 (이동 중 제공)';
-                } else {
-                  const mealName = item.meal_type === 'breakfast' ? '조식' : item.meal_type === 'lunch' ? '중식' : item.meal_type === 'dinner' ? '석식' : '';
-                  content = mealName;
-                }
+                const mealName = item.meal_type === 'breakfast' ? '조식' : item.meal_type === 'lunch' ? '중식' : item.meal_type === 'dinner' ? '석식' : item.meal_type === 'snack' ? '간편식' : '';
+                content = mealName;
                 if (item.meal_menu) {
                   content += ` - ${item.meal_menu}`;
                 }
-              } else if (item.notes) {
-                content = item.notes;
               }
             }
             
