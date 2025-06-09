@@ -46,7 +46,35 @@ export const formatDate = (date: string | Date, includeWeekday: boolean = true):
 };
 
 // 일정 아이콘 결정 함수
-export const getScheduleIcon = (content: string): { icon: string, iconClass: string } => {
+export const getScheduleIcon = (content: string, spot?: any): { icon: string, iconClass: string } => {
+  // 스팟 정보가 있으면 카테고리에 따라 아이콘 결정
+  if (spot && spot.category) {
+    switch(spot.category) {
+      case 'boarding':
+      case 'boarding_place':
+        return { icon: '🚌', iconClass: 'departure' }; // 버스 아이콘
+      case 'tourist_spot':
+        return { icon: '📷', iconClass: 'tour' }; // 카메라 아이콘
+      case 'rest_area':
+        return { icon: '☕', iconClass: 'rest' }; // 커피 아이콘
+      case 'restaurant':
+      case 'club_meal':
+        return { icon: '🍴', iconClass: 'meal' }; // 식기 아이콘
+      case 'golf_course':
+      case 'golf_round':
+        return { icon: '⛳', iconClass: 'golf' }; // 골프 아이콘
+      case 'shopping':
+        return { icon: '🛍️', iconClass: 'shopping' }; // 쇼핑백 아이콘
+      case 'activity':
+        return { icon: '🎯', iconClass: 'tour' }; // 액티비티 아이콘
+      case 'mart':
+        return { icon: '🛒', iconClass: 'shopping' }; // 카트 아이콘
+      default:
+        break;
+    }
+  }
+  
+  // 기존 콘텐츠 문자열 기반 로직 (폴백)
   const lowerContent = content.toLowerCase();
   
   if (lowerContent.includes('탑승') || lowerContent.includes('출발') || lowerContent.includes('동성골프연습장')) {

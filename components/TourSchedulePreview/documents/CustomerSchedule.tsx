@@ -38,13 +38,21 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
                 ${schedule.schedule_items?.length ? `
                   <div class="schedule-timeline">
                     ${schedule.schedule_items.map((item: any) => {
-                      const { icon, iconClass } = getScheduleIcon(item.content);
+                      const { icon, iconClass } = getScheduleIcon(item.content, item.attraction_data);
                       return `
                         <div class="timeline-item ${iconClass}">
                           <div class="timeline-icon">${icon}</div>
                           <div class="timeline-content">
                             ${item.time ? `<span class="timeline-time">${item.time}</span>` : ''}
                             <span class="timeline-text">${item.content}</span>
+                            ${item.attraction_data && item.attraction_data.main_image_url ? `
+                              <div class="timeline-image-wrapper">
+                                <img src="${item.attraction_data.main_image_url}" alt="${item.attraction_data.name}" class="timeline-image" />
+                              </div>
+                            ` : ''}
+                            ${item.attraction_data && item.attraction_data.description ? `
+                              <div class="timeline-description">${item.attraction_data.description}</div>
+                            ` : ''}
                           </div>
                         </div>
                       `;
@@ -160,6 +168,26 @@ function getScheduleStyles(): string {
     
     .timeline-text {
       text-align: left;
+    }
+    
+    .timeline-image-wrapper {
+      margin-top: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 300px;
+    }
+    
+    .timeline-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    .timeline-description {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
     }
     
     .meal-info {
