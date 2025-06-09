@@ -24,8 +24,6 @@ interface JourneyItem {
   spot_id?: string;
   arrival_time?: string;
   departure_time?: string;
-  start_time?: string;
-  end_time?: string;
   stay_duration?: string;
   distance_from_prev?: string;
   duration_from_prev?: string;
@@ -369,9 +367,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         // type: itemType,
         boarding_place_id: formData.boarding_place_id === undefined ? null : (formData.boarding_place_id || null),
         spot_id: formData.spot_id === undefined ? null : (formData.spot_id || null),
-        // 시간 필드 매핑
-        start_time: formData.arrival_time && formData.arrival_time !== '--:--' ? formData.arrival_time : null,
-        end_time: formData.departure_time && formData.departure_time !== '--:--' ? formData.departure_time : null,
+        // 시간 필드 매핑 - start_time, end_time 제거
         arrival_time: formData.arrival_time && formData.arrival_time !== '--:--' ? formData.arrival_time : null,
         departure_time: formData.departure_time && formData.departure_time !== '--:--' ? formData.departure_time : null,
         // 숫자 필드 처리
@@ -839,8 +835,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                          // type: 'BOARDING',
                          boarding_place_id: place.id,
                          spot_id: null,
-                         start_time: null,
-                         end_time: null,
+
                          arrival_time: null,
                          departure_time: null,
                          stay_duration: null,
@@ -923,8 +918,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                          // type: itemType,
                          boarding_place_id: null,
                          spot_id: spot.id,
-                         start_time: null,
-                         end_time: null,
                          arrival_time: null,
                          departure_time: null,
                          stay_duration: null,
@@ -1193,8 +1186,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                                order_index: maxOrder + 1,
                                boarding_place_id: place.id,
                                spot_id: null,
-                               start_time: null,
-                               end_time: null,
                                arrival_time: null,
                                departure_time: null,
                                stay_duration: null,
@@ -1274,8 +1265,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                                order_index: maxOrder + 1,
                                boarding_place_id: null,
                                spot_id: spot.id,
-                               start_time: null,
-                               end_time: null,
                                arrival_time: null,
                                departure_time: null,
                                stay_duration: null,
@@ -1568,7 +1557,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
             {/* 시간 정보 */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">도착 시간</label>
+                <label className="block text-sm font-medium mb-1">도착 시간 (선택)</label>
                 <input
                   type="time"
                   className="w-full px-3 py-2 border rounded-lg"
@@ -1578,7 +1567,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">출발 시간</label>
+                <label className="block text-sm font-medium mb-1">출발 시간 (선택)</label>
                 <input
                   type="time"
                   className="w-full px-3 py-2 border rounded-lg"
@@ -1588,7 +1577,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">체류 시간</label>
+                <label className="block text-sm font-medium mb-1">체류 시간 (선택)</label>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border rounded-lg"
