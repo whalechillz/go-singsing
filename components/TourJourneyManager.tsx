@@ -7,7 +7,7 @@ import {
   Camera, Plus, Filter, Map as MapIcon, List, 
   Bus, Users, ChevronUp, ChevronDown, Edit2, 
   Trash2, Save, X, Award, ShoppingCart, MoreHorizontal,
-  Calendar, Grip, Check
+  Calendar, Grip, Check, Route
 } from 'lucide-react';
 
 interface TourJourneyManagerProps {
@@ -19,7 +19,7 @@ interface JourneyItem {
   tour_id: string;
   day_number: number;
   order_index: number;
-  type?: string;  // 'DAY_INFO' | 'BOARDING' | 'WAYPOINT' | 'MEAL' | 'SPOT' | 'ARRIVAL' 등
+  // type?: string;  // 'DAY_INFO' | 'BOARDING' | 'WAYPOINT' | 'MEAL' | 'SPOT' | 'ARRIVAL' 등
   boarding_place_id?: string;
   spot_id?: string;
   arrival_time?: string;
@@ -142,7 +142,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         .select('*')
         .eq('tour_id', tourId)
         .eq('day_number', dayNumber)
-        .eq('type', 'DAY_INFO')
+        .eq('order_index', 0)  // DAY_INFO는 항상 order_index가 0
         .single();
       
       if (dayInfo) {
@@ -190,7 +190,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         .select('*')
         .eq('tour_id', tourId)
         .eq('day_number', dayNumber)
-        .eq('type', 'DAY_INFO')
+        .eq('order_index', 0)  // DAY_INFO는 항상 order_index가 0
         .single();
       
       if (!existingDayInfo) {
@@ -201,7 +201,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
             tour_id: tourId,
             day_number: dayNumber,
             order_index: 0,
-            type: 'DAY_INFO',
+            // type: 'DAY_INFO',
             day_date: dayDate.toISOString().split('T')[0],
             title: `Day ${dayNumber} 일정`,
             meal_breakfast: false,
@@ -248,13 +248,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       // DAY_INFO 확인 및 생성
       await ensureDayInfo(selectedDay);
 
-      // 여정 아이템 조회 (DAY_INFO 제외)
+      // 여정 아이템 조회
       const { data: items, error: itemsError } = await supabase
         .from('tour_journey_items')
         .select('*')
         .eq('tour_id', tourId)
         .eq('day_number', selectedDay)
-        .neq('type', 'DAY_INFO')  // DAY_INFO 제외
         .order('order_index');
 
       console.log('Journey items query result:', { tourId, selectedDay, items, error: itemsError });
@@ -348,25 +347,25 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         orderIndex = maxOrder + 1;
       }
 
-      // type 결정
-      let itemType = 'WAYPOINT';
-      if (formData.boarding_place_id) {
-        itemType = 'BOARDING';
-      } else if (formData.spot_id) {
-        const selectedSpot = spots.find(s => s.id === formData.spot_id);
-        if (selectedSpot?.category === 'tourist_spot' || selectedSpot?.category === 'activity') {
-          itemType = 'SPOT';
-        } else if (selectedSpot?.category === 'restaurant' || selectedSpot?.category === 'club_meal') {
-          itemType = 'MEAL';
-        }
-      }
+      // type 결정 - 주석 처리
+      // let itemType = 'WAYPOINT';
+      // if (formData.boarding_place_id) {
+      //   itemType = 'BOARDING';
+      // } else if (formData.spot_id) {
+      //   const selectedSpot = spots.find(s => s.id === formData.spot_id);
+      //   if (selectedSpot?.category === 'tourist_spot' || selectedSpot?.category === 'activity') {
+      //     itemType = 'SPOT';
+      //   } else if (selectedSpot?.category === 'restaurant' || selectedSpot?.category === 'club_meal') {
+      //     itemType = 'MEAL';
+      //   }
+      // }
 
       const dataToSubmit = {
         ...formData,
         tour_id: tourId,
         day_number: selectedDay,
         order_index: orderIndex,
-        type: itemType,
+        // type: itemType,
         boarding_place_id: formData.boarding_place_id === undefined ? null : (formData.boarding_place_id || null),
         spot_id: formData.spot_id === undefined ? null : (formData.spot_id || null),
         // 시간 필드 매핑
@@ -829,7 +828,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                          tour_id: tourId,
                          day_number: selectedDay,
                          order_index: maxOrder + 1,
-                         type: 'BOARDING',
+                         // type: 'BOARDING',
                          boarding_place_id: place.id,
                          spot_id: null,
                          start_time: null,
@@ -901,19 +900,19 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                        }
                        
                        const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
-                       // type 결정
-                       let itemType = 'WAYPOINT';
-                       if (spot.category === 'tourist_spot' || spot.category === 'activity') {
-                         itemType = 'SPOT';
-                       } else if (spot.category === 'restaurant' || spot.category === 'club_meal') {
-                         itemType = 'MEAL';
-                       }
+                       // type 결정 - 주석 처리
+                       // let itemType = 'WAYPOINT';
+                       // if (spot.category === 'tourist_spot' || spot.category === 'activity') {
+                       //   itemType = 'SPOT';
+                       // } else if (spot.category === 'restaurant' || spot.category === 'club_meal') {
+                       //   itemType = 'MEAL';
+                       // }
                        
                        const newJourneyItem = {
                          tour_id: tourId,
                          day_number: selectedDay,
                          order_index: maxOrder + 1,
-                         type: itemType,
+                         // type: itemType,
                          boarding_place_id: null,
                          spot_id: spot.id,
                          start_time: null,
@@ -1195,7 +1194,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                                tour_id: tourId,
                                day_number: selectedDay,
                                order_index: maxOrder + 1,
-                               type: 'BOARDING',
                                boarding_place_id: place.id,
                                spot_id: null,
                                start_time: null,
@@ -1271,18 +1269,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                              }
                              
                              const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
-                             let itemType = 'WAYPOINT';
-                             if (spot.category === 'tourist_spot' || spot.category === 'activity') {
-                               itemType = 'SPOT';
-                             } else if (spot.category === 'restaurant' || spot.category === 'club_meal') {
-                               itemType = 'MEAL';
-                             }
+                             // type 결정 부분 제거
                              
                              const newJourneyItem = {
                                tour_id: tourId,
                                day_number: selectedDay,
                                order_index: maxOrder + 1,
-                               type: itemType,
                                boarding_place_id: null,
                                spot_id: spot.id,
                                start_time: null,
