@@ -109,7 +109,28 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       
       // DAY_INFO 타입의 아이템에서 날짜별 정보 추출
       const dayInfoItems = journeyData?.filter(item => item.type === 'DAY_INFO') || [];
-      const schedules = dayInfoItems.map(dayInfo => ({
+      
+      // Schedule 타입 정의
+      interface Schedule {
+        id: string;
+        tour_id: string;
+        date: string;
+        day_number: number;
+        title: string;
+        meal_breakfast: boolean;
+        meal_lunch: boolean;
+        meal_dinner: boolean;
+        menu_breakfast: string;
+        menu_lunch: string;
+        menu_dinner: string;
+        schedule_items: Array<{
+          time: string;
+          content: string;
+          attraction_data?: any;
+        }>;
+      }
+      
+      const schedules: Schedule[] = dayInfoItems.map(dayInfo => ({
         id: dayInfo.id,
         tour_id: dayInfo.tour_id,
         date: dayInfo.day_date,
