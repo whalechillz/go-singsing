@@ -216,6 +216,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   const fetchData = async () => {
     try {
       setLoading(true);
+      console.log('TourJourneyManager - fetchData called with tourId:', tourId);
 
       // 투어 정보 가져오기
       if (!tourInfo) {
@@ -242,6 +243,8 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         .neq('type', 'DAY_INFO')  // DAY_INFO 제외
         .order('order_index');
 
+      console.log('Journey items query result:', { tourId, selectedDay, items, error: itemsError });
+      
       if (itemsError) throw itemsError;
       
       // 관계 데이터 별도 조회
@@ -301,6 +304,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         .from('singsing_boarding_places')
         .select('*')
         .order('name');
+      console.log('Boarding places:', places);
       setBoardingPlaces(places || []);
 
       // 스팟 목록
@@ -309,6 +313,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         .select('*')
         .eq('is_active', true)
         .order('name');
+      console.log('Tourist spots:', spotData);
       setSpots(spotData || []);
 
     } catch (error) {

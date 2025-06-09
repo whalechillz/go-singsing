@@ -84,6 +84,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const fetchTourData = async () => {
     try {
       setLoading(true);
+      console.log('TourSchedulePreview - fetchTourData called with tourId:', tourId);
       
       // 투어 정보 가져오기
       const { data: tour, error: tourError } = await supabase
@@ -95,6 +96,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .eq('id', tourId)
         .single();
 
+      console.log('Tour data fetched:', { tourId, tour, error: tourError });
       if (tourError) throw tourError;
 
       // 여정 아이템에서 일정 정보 가져오기
@@ -301,6 +303,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   const fetchTourBoardingPlaces = async () => {
     try {
+      console.log('fetchTourBoardingPlaces called with tourId:', tourId);
+      
       // 투어 정보 가져오기
       const { data: tourInfo } = await supabase
         .from('singsing_tours')
@@ -308,6 +312,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .eq('id', tourId)
         .single();
 
+      console.log('Tour info:', tourInfo);
       if (!tourInfo) return;
 
       // tour_journey_items에서 탑승지와 경유지 정보 가져오기
@@ -322,6 +327,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .order('day_number')
         .order('order_index');
 
+      console.log('Journey items for boarding guide:', { tourId, journeyItems, error });
+      
       if (error) {
         console.error('Error fetching journey items:', error);
         return;
@@ -340,6 +347,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         is_waypoint: false
       }));
       
+      console.log('Boarding items extracted:', boardingItems);
       setTourBoardingPlaces(boardingItems);
 
       // 경유지 정보 추출
