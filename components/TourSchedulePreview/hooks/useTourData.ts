@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { TourData, ProductData, BoardingPlace, Waypoint, JourneyItem } from '../types';
+import { TourData, ProductData, BoardingPlace, Waypoint, JourneyItem, Schedule, ScheduleItem } from '../types';
 
 export function useTourData(tourId: string) {
   const [tourData, setTourData] = useState<TourData | null>(null);
@@ -131,7 +131,7 @@ export function useTourData(tourId: string) {
       const dayInfoItems = journeyData?.filter(item => item.order_index === 0) || [];
       
       // 스케줄 생성
-      let schedules = [];
+      let schedules: Schedule[] = [];
       
       if (dayInfoItems.length > 0) {
         schedules = dayInfoItems.map(dayInfo => ({
@@ -242,7 +242,7 @@ export function useTourData(tourId: string) {
               time,
               content,
               attraction_data: item.spot
-            };
+            } as ScheduleItem;
           });
         });
       }
