@@ -333,6 +333,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         console.error('Error fetching journey items:', error);
         return;
       }
+      
+      // 디버깅: 데이터 확인
+      if (!journeyItems || journeyItems.length === 0) {
+        console.warn('No journey items found for tour:', tourId);
+      }
 
       // 첫날 탑승지 정보 추출
       const boardingItems = journeyItems.filter(item => 

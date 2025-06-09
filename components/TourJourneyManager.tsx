@@ -105,6 +105,14 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   });
 
   useEffect(() => {
+    // Vercel 디버깅
+    console.log('[TourJourneyManager] useEffect triggered:', {
+      tourId: tourId,
+      selectedDay: selectedDay,
+      timestamp: new Date().toISOString(),
+      url: typeof window !== 'undefined' ? window.location.href : 'SSR'
+    });
+    
     if (tourId) {
       // 투어 정보 먼저 가져오기
       const loadTourInfo = async () => {
@@ -217,6 +225,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
     try {
       setLoading(true);
       console.log('TourJourneyManager - fetchData called with tourId:', tourId);
+      
+      // 디버깅: tourId 확인
+      if (!tourId) {
+        console.error('TourJourneyManager: tourId is missing!');
+        return;
+      }
 
       // 투어 정보 가져오기
       if (!tourInfo) {
@@ -1074,6 +1088,297 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // 데이터가 없을 때 안내 메시지
+  if (!loading && journeyItems.length === 0) {
+    return (
+      <div className="space-y-6">
+        {/* 헤더 */}
+        <div className="border-b pb-4 mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+            <Route className="w-5 h-5" />
+            일정 관리
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            투어의 전체 여정을 관리합니다. 날짜별 정보, 탑승지, 경유지, 관광지 등을 설정할 수 있습니다.
+          </p>
+        </div>
+
+        {/* 일자 선택 */}
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">여정 관리</h2>
+            <button
+              onClick={() => { resetForm(); setShowForm(true); }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              장소 추가
+            </button>
+          </div>
+
+          <div className="flex gap-2 mb-4">
+            {Array.from({ length: maxDays }, (_, i) => i + 1).map(day => (
+              <button
+                key={day}
+                onClick={() => setSelectedDay(day)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  selectedDay === day
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 hover:bg-gray-200'
+                }`}
+              >
+                Day {day}
+              </button>
+            ))}
+            <button
+              onClick={async () => {
+                const newDayNumber = maxDays + 1;
+                setMaxDays(newDayNumber);
+                setSelectedDay(newDayNumber);
+                if (tourInfo) {
+                  await ensureDayInfo(newDayNumber);
+                }
+              }}
+              className="px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* 빈 상태 메시지 */}
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            아직 등록된 여정이 없습니다
+          </h3>
+          <p className="text-gray-500 mb-6">
+            아래에서 탑승지나 스팟을 클릭하여 Day {selectedDay}의 여정을 구성해보세요.
+          </p>
+          
+          {/* 디버깅 정보 */}
+          <div className="text-xs text-gray-400 mt-4">
+            <p>탑승지: {boardingPlaces.length}개 로드됨</p>
+            <p>스팟: {spots.length}개 로드됨</p>
+          </div>
+          
+          {/* 기존 등록된 장소 추가 섹션 */}
+          <div className="mt-8 space-y-6 text-left">
+            {/* 탑승지 섹션 */}
+            {boardingPlaces.length > 0 && (
+              <div>
+                <h3 className="font-medium text-sm text-gray-700 mb-3 flex items-center gap-2">
+                  <Bus className="w-4 h-4 text-blue-500" />
+                  등록된 탑승지 추가
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {boardingPlaces.map(place => {
+                    const isAdded = journeyItems.some(item => item.boarding_place_id === place.id);
+                    
+                    return (
+                      <div key={place.id} 
+                           className={`bg-white rounded-lg shadow-sm overflow-hidden border ${
+                             isAdded ? 'border-gray-300 opacity-50' : 'border-gray-200 hover:border-blue-400 hover:shadow-md cursor-pointer'
+                           } transition-all`}
+                           onClick={async () => {
+                             if (isAdded) {
+                               alert('이미 추가된 탑승지입니다.');
+                               return;
+                             }
+                             
+                             const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
+                             const newJourneyItem = {
+                               tour_id: tourId,
+                               day_number: selectedDay,
+                               order_index: maxOrder + 1,
+                               type: 'BOARDING',
+                               boarding_place_id: place.id,
+                               spot_id: null,
+                               start_time: null,
+                               end_time: null,
+                               arrival_time: null,
+                               departure_time: null,
+                               stay_duration: null,
+                               distance_from_prev: null,
+                               duration_from_prev: null,
+                               passenger_count: null,
+                               boarding_type: null,
+                               meal_type: null,
+                               meal_menu: null,
+                               golf_info: null,
+                               notes: null,
+                               display_options: { show_image: true }
+                             };
+                             
+                             try {
+                               const { error } = await supabase
+                                 .from('tour_journey_items')
+                                 .insert(newJourneyItem);
+                                 
+                               if (error) throw error;
+                               fetchData();
+                             } catch (error) {
+                               console.error('Error adding boarding place:', error);
+                               alert('탑승지 추가에 실패했습니다.');
+                             }
+                           }}>
+                        <div className="p-3 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <h4 className="font-bold text-sm leading-tight">{place.name}</h4>
+                            {isAdded && <Check className="w-4 h-4 text-green-600 flex-shrink-0" />}
+                          </div>
+                          <p className="text-xs text-gray-600 line-clamp-2">{place.address}</p>
+                          {place.boarding_main && (
+                            <p className="text-xs text-blue-600 line-clamp-1">{place.boarding_main}</p>
+                          )}
+                          {!isAdded && (
+                            <div className="pt-1">
+                              <span className="text-xs text-gray-500">클릭하여 추가</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 스팟 섹션 */}
+            {spots.length > 0 && (
+              <div>
+                <h3 className="font-medium text-sm text-gray-700 mb-3 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-green-500" />
+                  등록된 스팟 추가
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {spots.map(spot => {
+                    const isAdded = journeyItems.some(item => item.spot_id === spot.id);
+                    
+                    return (
+                      <div key={spot.id} 
+                           className={`bg-white rounded-lg shadow-sm overflow-hidden border ${
+                             isAdded ? 'border-gray-300 opacity-50' : 'border-gray-200 hover:border-green-400 hover:shadow-md cursor-pointer'
+                           } transition-all`}
+                           onClick={async () => {
+                             if (isAdded) {
+                               alert('이미 추가된 스팟입니다.');
+                               return;
+                             }
+                             
+                             const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
+                             let itemType = 'WAYPOINT';
+                             if (spot.category === 'tourist_spot' || spot.category === 'activity') {
+                               itemType = 'SPOT';
+                             } else if (spot.category === 'restaurant' || spot.category === 'club_meal') {
+                               itemType = 'MEAL';
+                             }
+                             
+                             const newJourneyItem = {
+                               tour_id: tourId,
+                               day_number: selectedDay,
+                               order_index: maxOrder + 1,
+                               type: itemType,
+                               boarding_place_id: null,
+                               spot_id: spot.id,
+                               start_time: null,
+                               end_time: null,
+                               arrival_time: null,
+                               departure_time: null,
+                               stay_duration: null,
+                               distance_from_prev: null,
+                               duration_from_prev: null,
+                               passenger_count: null,
+                               boarding_type: null,
+                               meal_type: null,
+                               meal_menu: null,
+                               golf_info: null,
+                               notes: null,
+                               display_options: { show_image: true }
+                             };
+                             
+                             try {
+                               const { error } = await supabase
+                                 .from('tour_journey_items')
+                                 .insert(newJourneyItem);
+                                 
+                               if (error) throw error;
+                               fetchData();
+                             } catch (error) {
+                               console.error('Error adding spot:', error);
+                               alert('스팟 추가에 실패했습니다.');
+                             }
+                           }}>
+                        {spot.image_url && (
+                          <div className="h-24 bg-gray-200 overflow-hidden">
+                            <img 
+                              src={spot.image_url} 
+                              alt={spot.name} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        
+                        <div className="p-3 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <h4 className="font-bold text-sm leading-tight">{spot.name}</h4>
+                            {isAdded && <Check className="w-4 h-4 text-green-600 flex-shrink-0" />}
+                          </div>
+                          
+                          <div className="flex items-center gap-1">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
+                              spot.category === 'boarding' ? 'bg-blue-100 text-blue-700' :
+                              spot.category === 'tourist_spot' ? 'bg-blue-100 text-blue-700' :
+                              spot.category === 'rest_area' ? 'bg-gray-100 text-gray-700' :
+                              spot.category === 'restaurant' ? 'bg-orange-100 text-orange-700' :
+                              spot.category === 'shopping' ? 'bg-purple-100 text-purple-700' :
+                              spot.category === 'activity' ? 'bg-green-100 text-green-700' :
+                              spot.category === 'mart' ? 'bg-indigo-100 text-indigo-700' :
+                              spot.category === 'golf_round' ? 'bg-emerald-100 text-emerald-700' :
+                              spot.category === 'club_meal' ? 'bg-rose-100 text-rose-700' :
+                              'bg-slate-100 text-slate-700'
+                            }`}>
+                              {React.createElement(categoryConfig[spot.category]?.icon || MoreHorizontal, { className: 'w-3 h-3' })}
+                              <span>{categoryConfig[spot.category]?.label}</span>
+                            </span>
+                            {spot.sub_category && (
+                              <span className="text-xs text-gray-500">
+                                {spot.sub_category}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <p className="text-xs text-gray-600 line-clamp-2">{spot.address}</p>
+                          
+                          {!isAdded && (
+                            <div className="pt-1">
+                              <span className="text-xs text-gray-500">클릭하여 추가</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {boardingPlaces.length === 0 && spots.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">
+                  데이터를 불러오는 중입니다...
+                </p>
+                <p className="text-xs text-gray-400 mt-2">
+                  계속 표시되지 않으면 페이지를 새로고침해주세요.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
