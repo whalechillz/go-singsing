@@ -248,12 +248,13 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       // DAY_INFO 확인 및 생성
       await ensureDayInfo(selectedDay);
 
-      // 여정 아이템 조회
+      // 여정 아이템 조회 (DAY_INFO 제외)
       const { data: items, error: itemsError } = await supabase
         .from('tour_journey_items')
         .select('*')
         .eq('tour_id', tourId)
         .eq('day_number', selectedDay)
+        .gt('order_index', 0)  // order_index가 0보다 큰 것만 (DAY_INFO 제외)
         .order('order_index');
 
       console.log('Journey items query result:', { tourId, selectedDay, items, error: itemsError });
@@ -413,6 +414,13 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
+      // DAY_INFO 삭제 방지
+      const item = journeyItems.find(item => item.id === id);
+      if (item && item.order_index === 0) {
+        alert('DAY_INFO는 삭제할 수 없습니다.');
+        return;
+      }
+      
       const { error } = await supabase
         .from('tour_journey_items')
         .delete()
@@ -1095,17 +1103,6 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   if (!loading && journeyItems.length === 0) {
     return (
       <div className="space-y-6">
-        {/* 헤더 */}
-        <div className="border-b pb-4 mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-            <Route className="w-5 h-5" />
-            일정 관리
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            투어의 전체 여정을 관리합니다. 날짜별 정보, 탑승지, 경유지, 관광지 등을 설정할 수 있습니다.
-          </p>
-        </div>
-
         {/* 일자 선택 */}
         <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex justify-between items-center mb-4">
@@ -1377,7 +1374,17 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
 
   return (
     <div>
-      {/* 헤더 */}
+      {/* 헤더 - IntegratedScheduleManager에서 한 번만 표시하므로 여기서는 표시하지 않음 */}
+      <div className="border-b pb-4 mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <Route className="w-5 h-5" />
+          일정 관리
+        </h2>
+        <p className="text-sm text-gray-600 mt-1">
+          투어의 전체 여정을 관리합니다. 날짜별 정보, 탑승지, 경유지, 관광지 등을 설정할 수 있습니다.
+        </p>
+      </div>
+
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">여정 관리</h2>
