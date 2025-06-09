@@ -343,8 +343,8 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
       {/* 헤더 */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">탑승지 및 경유지 관리</h2>
-          <p className="text-sm text-gray-600 mt-1">이 투어의 탑승지와 경유지 정보를 관리합니다</p>
+          <h2 className="text-xl font-semibold text-gray-900">탑승지 관리</h2>
+          <p className="text-sm text-gray-600 mt-1">이 투어의 탑승지 정보를 관리합니다</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -381,7 +381,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
                 onChange={(e) => setFormData({ ...formData, is_waypoint: e.target.checked })}
                 className="rounded"
               />
-              경유지/관광지로 추가
+              경유지로 추가
             </label>
           </div>
 
@@ -484,7 +484,7 @@ export default function TourBoardingManager({ tourId }: TourBoardingManagerProps
         ) : tourBoardingPlaces.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
             <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">아직 등록된 탑승지나 경유지가 없습니다</p>
+            <p className="text-gray-500">아직 등록된 탑승지가 없습니다</p>
           </div>
         ) : (
           // 날짜별로 그룹화

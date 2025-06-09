@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // 개발 환경에서 소스맵 관련 404 에러 방지
+  productionBrowserSourceMaps: false,
+  // 개발 환경 최적화
+  swcMinify: true,
 };
 
 export default nextConfig;

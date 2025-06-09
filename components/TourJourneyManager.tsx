@@ -298,16 +298,14 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       if (maxDayData && maxDayData.length > 0) {
         setMaxDays(maxDayData[0].day_number);
       } else {
-        // 일정에서 최대 일수 가져오기
-        const { data: scheduleData } = await supabase
-          .from('singsing_schedules')
-          .select('day_number')
-          .eq('tour_id', tourId)
-          .order('day_number', { ascending: false })
-          .limit(1);
-        
-        if (scheduleData && scheduleData.length > 0) {
-          setMaxDays(scheduleData[0].day_number);
+        // 투어 정보에서 기간 계산
+        if (tourInfo && tourInfo.start_date && tourInfo.end_date) {
+          const startDate = new Date(tourInfo.start_date);
+          const endDate = new Date(tourInfo.end_date);
+          const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+          setMaxDays(daysDiff + 1); // 시작일도 포함
+        } else {
+          setMaxDays(1); // 기본값
         }
       }
 

@@ -1,13 +1,18 @@
 # 마이그레이션 히스토리
 
 ## 현재 상태 (2025-06-09)
-- 마지막 적용: 20250609_create_tour_journey_items.sql ✅
-- 총 테이블 수: 23개 (tour_journey_items 추가)
+- 마지막 적용: 20250609_cleanup_schedules_tables.sql ✅
+- 총 테이블 수: 22개 (singsing_schedules 삭제)
 
-## 실행 필요
-- ⚠️ 20250609_create_tour_journey_items.sql - Supabase 대시보드에서 실행 필요
+## 실행 완료 ✅
+- ✅ 20250609_cleanup_schedules_tables.sql - singsing_schedules 테이블 삭제 완료
 
 ## 주요 변경사항
+### 2025-06-09 ✅ 완료
+- **singsing_schedules 테이블 삭제**
+  - tour_journey_items 테이블로 완전 대체
+  - 코드에서 singsing_schedules 참조 제거
+  - 투어 기간에서 최대 일수 계산하도록 변경
 ### 2025-06-08 ✅ 완료
 - **투어 관리 시스템 완전 재구조화**
   - tourist_attractions 테이블 확장
