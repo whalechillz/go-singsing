@@ -1579,33 +1579,36 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
               
               if (isBoarding) {
                 return (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">탑승 유형</label>
-                  <select
-                    className="w-full px-3 py-2 border rounded-lg"
-                    value={formData.boarding_type || ''}
-                    onChange={(e) => setFormData({ ...formData, boarding_type: e.target.value })}
-                  >
-                    <option value="">선택</option>
-                    <option value="승차">승차</option>
-                    <option value="하차">하차</option>
-                    <option value="경유">경유</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">탑승 인원</label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border rounded-lg"
-                    value={formData.passenger_count || ''}
-                    onChange={(e) => setFormData({ ...formData, passenger_count: e.target.value ? parseInt(e.target.value) : 0 })}
-                    min="0"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">탑승 유형</label>
+                      <select
+                        className="w-full px-3 py-2 border rounded-lg"
+                        value={formData.boarding_type || ''}
+                        onChange={(e) => setFormData({ ...formData, boarding_type: e.target.value })}
+                      >
+                        <option value="">선택</option>
+                        <option value="승차">승차</option>
+                        <option value="하차">하차</option>
+                        <option value="경유">경유</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">탑승 인원</label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 border rounded-lg"
+                        value={formData.passenger_count || ''}
+                        onChange={(e) => setFormData({ ...formData, passenger_count: e.target.value ? parseInt(e.target.value) : 0 })}
+                        min="0"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
 
             {/* 골프 라운드 정보 */}
             {formData.spot_id && (() => {
@@ -1661,6 +1664,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                   </div>
                 );
               }
+              return null;
             })()}
 
             {/* 식사 정보 (식당/클럽식) */}
