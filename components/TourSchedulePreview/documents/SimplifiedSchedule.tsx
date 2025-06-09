@@ -146,12 +146,12 @@ export function generateSimplifiedHTML(tourData: TourData | null, productData: P
     </div>
     
     <div class="schedule-summary">
-      ${tourData.schedules?.map((schedule, index) => `
+      ${tourData.schedules?.map((schedule: any, index: number) => `
         <div class="day-summary">
           <div class="day-header">Day ${schedule.day_number} - ${formatDate(schedule.date)}</div>
           <div class="day-subtitle">${schedule.title}</div>
           <div class="main-events">
-            ${schedule.schedule_items?.map(item => `
+            ${schedule.schedule_items?.map((item: any) => `
               <div class="event">${item.time ? item.time + ' ' : ''}${item.content}</div>
             `).join('') || '<div class="event">일정 정보가 없습니다.</div>'}
           </div>

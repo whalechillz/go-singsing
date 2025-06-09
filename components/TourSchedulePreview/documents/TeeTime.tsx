@@ -7,7 +7,7 @@ export function generateTeeTimeHTML(
   isStaff: boolean,
   tourData: TourData
 ): string {
-  const teeTimesByDate = teeTimes.reduce((acc, teeTime) => {
+  const teeTimesByDate = teeTimes.reduce((acc: Record<string, any[]>, teeTime: any) => {
     const date = teeTime.date || teeTime.play_date;
     if (!acc[date]) acc[date] = [];
     acc[date].push(teeTime);

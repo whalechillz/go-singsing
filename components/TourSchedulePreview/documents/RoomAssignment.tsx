@@ -69,7 +69,7 @@ export function generateRoomAssignmentHTML(
                       </tr>
                     </thead>
                     <tbody>
-                      ${roomParticipants.map((participant, index) => `
+                      ${roomParticipants.map((participant: any, index: number) => `
                         <tr>
                           <td class="text-center">${index + 1}</td>
                           <td class="text-center">${participant.name}</td>

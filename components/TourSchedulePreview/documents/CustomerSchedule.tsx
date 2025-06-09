@@ -28,7 +28,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       <div class="section">
         <div class="section-title">일정 안내</div>
         <div class="schedule-section">
-          ${tourData.schedules?.map((schedule, idx) => `
+          ${tourData.schedules?.map((schedule: any, idx: number) => `
             <div class="day-schedule">
               <div class="day-title">
                 <div>Day ${idx + 1} - ${formatDate(schedule.date)}</div>
@@ -37,7 +37,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
               <div class="day-content">
                 ${schedule.schedule_items?.length ? `
                   <div class="schedule-timeline">
-                    ${schedule.schedule_items.map(item => {
+                    ${schedule.schedule_items.map((item: any) => {
                       const { icon, iconClass } = getScheduleIcon(item.content);
                       return `
                         <div class="timeline-item ${iconClass}">
