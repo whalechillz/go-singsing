@@ -50,7 +50,7 @@ export function generateBoardingGuideHTML(
                   
                   <div class="card-info">
                     <div class="info-parking">주차: ${boardingPlace.parking_info || '무료'}</div>
-                    <div class="info-arrival">${place.arrival_time ? place.arrival_time.slice(0, 5) : getArrivalTime(place.departure_time)} 도착</div>
+                    <div class="info-arrival">${place.arrival_time ? place.arrival_time.slice(0, 5) : getArrivalTime(place.departure_time || '미정')} 도착</div>
                   </div>
                   
                   ${boardingPlace.boarding_main || boardingPlace.parking_main ? `
