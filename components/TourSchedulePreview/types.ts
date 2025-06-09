@@ -89,7 +89,7 @@ export interface BoardingPlace {
     parking_map_url?: string;
     parking_info?: string;
     district?: string;
-  };
+  } | null;
   is_waypoint: boolean;
 }
 
