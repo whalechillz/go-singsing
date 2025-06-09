@@ -3,14 +3,14 @@ import { useSearchParams } from 'next/navigation';
 import { Download, Share2, Printer } from 'lucide-react';
 import { useTourData } from './hooks/useTourData';
 import { useDocumentHTML } from './hooks/useDocumentHTML';
-import { DOCUMENT_TYPES } from './types';
+import { DOCUMENT_TYPES, DocumentType } from './types';
 
 interface TourSchedulePreviewProps {
   tourId: string;
 }
 
 export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps) {
-  const [activeTab, setActiveTab] = useState('customer_schedule');
+  const [activeTab, setActiveTab] = useState<DocumentType>('customer_schedule');
   const searchParams = useSearchParams();
   
   const {
@@ -36,7 +36,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   useEffect(() => {
     const view = searchParams.get('view');
     if (view && DOCUMENT_TYPES.some(doc => doc.id === view)) {
-      setActiveTab(view);
+      setActiveTab(view as DocumentType);
     }
   }, [searchParams]);
 
