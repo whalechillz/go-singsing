@@ -214,8 +214,12 @@ export function useTourData(tourId: string) {
                 content = `${spotName} 관광`;
               } else if (category === 'restaurant') {
                 const mealType = item.meal_type;
-                const mealName = mealType === 'breakfast' ? '조식' : mealType === 'lunch' ? '중식' : '석식';
-                content = `${mealName} - ${spotName}`;
+                if (mealType === 'snack' || spotName.includes('간편식')) {
+                  content = `간편식`;
+                } else {
+                  const mealName = mealType === 'breakfast' ? '조식' : mealType === 'lunch' ? '중식' : mealType === 'dinner' ? '석식' : spotName;
+                  content = `${mealName}${spotName ? ` - ${spotName}` : ''}`;
+                }
                 if (item.meal_menu) {
                   content += ` (${item.meal_menu})`;
                 }
@@ -228,8 +232,12 @@ export function useTourData(tourId: string) {
               if (item.boarding_type === 'arrival') {
                 content = '도착';
               } else if (item.meal_type) {
-                const mealName = item.meal_type === 'breakfast' ? '조식' : item.meal_type === 'lunch' ? '중식' : '석식';
-                content = `${mealName}`;
+                if (item.meal_type === 'snack') {
+                  content = '간편식';
+                } else {
+                  const mealName = item.meal_type === 'breakfast' ? '조식' : item.meal_type === 'lunch' ? '중식' : item.meal_type === 'dinner' ? '석식' : '';
+                  content = mealName;
+                }
                 if (item.meal_menu) {
                   content += ` - ${item.meal_menu}`;
                 }

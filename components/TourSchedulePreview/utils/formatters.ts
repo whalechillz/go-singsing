@@ -53,7 +53,7 @@ export const getScheduleIcon = (content: string): { icon: string, iconClass: str
     return { icon: '🚌', iconClass: 'departure' };
   } else if (lowerContent.includes('이동') || lowerContent.includes('경유')) {
     return { icon: '🚗', iconClass: 'transit' };
-  } else if (lowerContent.includes('라운드') || lowerContent.includes('골프')) {
+  } else if (lowerContent.includes('라운드') || lowerContent.includes('골프') || lowerContent.includes('클럽식')) {
     return { icon: '⛳', iconClass: 'golf' };
   } else if (lowerContent.includes('조식') || lowerContent.includes('아침')) {
     return { icon: '🌅', iconClass: 'meal' };
@@ -61,6 +61,8 @@ export const getScheduleIcon = (content: string): { icon: string, iconClass: str
     return { icon: '🍴', iconClass: 'meal' };
   } else if (lowerContent.includes('석식') || lowerContent.includes('저녁')) {
     return { icon: '🌙', iconClass: 'meal' };
+  } else if (lowerContent.includes('간편식')) {
+    return { icon: '🥪', iconClass: 'meal' };
   } else if (lowerContent.includes('휴식') || lowerContent.includes('자유')) {
     return { icon: '🏨', iconClass: 'rest' };
   } else if (lowerContent.includes('도착')) {
@@ -69,9 +71,17 @@ export const getScheduleIcon = (content: string): { icon: string, iconClass: str
     return { icon: '🛒', iconClass: 'shopping' };
   } else if (lowerContent.includes('관광') || lowerContent.includes('투어')) {
     return { icon: '🏛️', iconClass: 'tour' };
+  } else if (lowerContent.includes('연습장')) {
+    return { icon: '🏌️', iconClass: 'golf' };
+  } else if (lowerContent.includes('숙소') || lowerContent.includes('호텔')) {
+    return { icon: '🏨', iconClass: 'rest' };
+  } else if (lowerContent.includes('공항')) {
+    return { icon: '✈️', iconClass: 'transit' };
+  } else if (lowerContent.includes('휴게소')) {
+    return { icon: '☕', iconClass: 'rest' };
   }
   
-  return { icon: '•', iconClass: 'default' };
+  return { icon: '📌', iconClass: 'default' };
 };
 
 // 코스 이름 포맷팅 함수
