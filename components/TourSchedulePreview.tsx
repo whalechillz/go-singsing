@@ -130,20 +130,48 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         }>;
       }
       
-      const schedules: Schedule[] = dayInfoItems.map(dayInfo => ({
-        id: dayInfo.id,
-        tour_id: dayInfo.tour_id,
-        date: dayInfo.day_date,
-        day_number: dayInfo.day_number,
-        title: dayInfo.title || `Day ${dayInfo.day_number} 일정`,
-        meal_breakfast: dayInfo.meal_breakfast || false,
-        meal_lunch: dayInfo.meal_lunch || false,
-        meal_dinner: dayInfo.meal_dinner || false,
-        menu_breakfast: dayInfo.menu_breakfast || '',
-        menu_lunch: dayInfo.menu_lunch || '',
-        menu_dinner: dayInfo.menu_dinner || '',
-        schedule_items: []
-      }));
+      // DAY_INFO가 없는 경우 기본 스케줄 생성
+      let schedules: Schedule[] = [];
+      
+      if (dayInfoItems.length > 0) {
+        schedules = dayInfoItems.map(dayInfo => ({
+          id: dayInfo.id,
+          tour_id: dayInfo.tour_id,
+          date: dayInfo.day_date || new Date(new Date(tour.start_date).getTime() + (dayInfo.day_number - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          day_number: dayInfo.day_number,
+          title: dayInfo.title || `Day ${dayInfo.day_number} 일정`,
+          meal_breakfast: dayInfo.meal_breakfast || false,
+          meal_lunch: dayInfo.meal_lunch || false,
+          meal_dinner: dayInfo.meal_dinner || false,
+          menu_breakfast: dayInfo.menu_breakfast || '',
+          menu_lunch: dayInfo.menu_lunch || '',
+          menu_dinner: dayInfo.menu_dinner || '',
+          schedule_items: []
+        }));
+      } else {
+        // DAY_INFO가 없으면 투어 기간에 맞춰 기본 스케줄 생성
+        const startDate = new Date(tour.start_date);
+        const endDate = new Date(tour.end_date);
+        const dayCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        for (let i = 0; i < dayCount; i++) {
+          const currentDate = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
+          schedules.push({
+            id: `temp-${i}`,
+            tour_id: tourId,
+            date: currentDate.toISOString().split('T')[0],
+            day_number: i + 1,
+            title: `Day ${i + 1} 일정`,
+            meal_breakfast: false,
+            meal_lunch: false,
+            meal_dinner: false,
+            menu_breakfast: '',
+            menu_lunch: '',
+            menu_dinner: '',
+            schedule_items: []
+          });
+        }
+      }
       
       // 일반 여정 아이템(DAY_INFO 제외) 처리
       const regularItems = journeyData?.filter(item => item.type !== 'DAY_INFO') || [];
@@ -179,7 +207,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         
         // 각 날짜별로 일정 아이템 생성
         schedules.forEach(schedule => {
-          const dayItems = itemsWithRelations.filter(item => item.day_number === schedule.day_number);
+          console.log(`Processing schedule for day ${schedule.day_number}`);
+          const dayItems = itemsWithRelations.filter(item => {
+            console.log(`Item day_number: ${item.day_number}, Schedule day_number: ${schedule.day_number}`);
+            return item.day_number === schedule.day_number;
+          });
+          console.log(`Found ${dayItems.length} items for day ${schedule.day_number}`);
+          
           schedule.schedule_items = dayItems.map(item => {
             let content = '';
             let time = item.start_time || '';
@@ -207,7 +241,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         });
       }
       
-      console.log('Schedules data:', schedules);
+      console.log('DAY_INFO items:', dayInfoItems);
+      console.log('Regular items:', regularItems);
+      console.log('Items with relations:', itemsWithRelations);
+      console.log('Final schedules data:', schedules);
       console.log('Journey items:', journeyItems);
 
       // 여행상품 정보 가져오기
@@ -651,10 +688,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div class="section">
       <div class="section-title">일정 안내</div>
       <div class="schedule-section" style="padding-top: 5px;">
-        ${tourData.schedules?.map((schedule: any, idx: number) => `
+        ${tourData.schedules && tourData.schedules.length > 0 ? tourData.schedules.map((schedule: any, idx: number) => `
           <div class="day-schedule">
             <div class="day-title">
-              <div>Day ${idx + 1} - ${new Date(schedule.date || schedule.schedule_date).toLocaleDateString('ko-KR')}</div>
+              <div>Day ${idx + 1} - ${schedule.date ? new Date(schedule.date).toLocaleDateString('ko-KR') : ''}</div>
               <div class="day-round">${schedule.title ? simplifyCourseName(schedule.title) : ''}</div>
             </div>
             <div class="day-content">
@@ -789,7 +826,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               ` : ''}
             </div>
           </div>
-        `).join('') || ''}
+        `).join('') : '<div style="padding: 20px; text-align: center; color: #666;">일정 정보가 없습니다. 여정 관리에서 일정을 추가해주세요.</div>'}
       </div>
     </div>
 
@@ -1080,7 +1117,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     <div class="schedule-summary">
       ${tourData.schedules?.map((schedule: any, index: number) => `
         <div class="day-summary">
-          <div class="day-header">Day ${schedule.day_number || (index + 1)} - ${new Date(schedule.date || schedule.schedule_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' })}</div>
+          <div class="day-header">Day ${schedule.day_number || (index + 1)} - ${schedule.date ? new Date(schedule.date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' }) : ''}</div>
           <div class="day-subtitle">Day ${schedule.day_number || (index + 1)} 일정</div>
 
           <div class="main-events">

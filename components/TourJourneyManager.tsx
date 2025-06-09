@@ -19,10 +19,13 @@ interface JourneyItem {
   tour_id: string;
   day_number: number;
   order_index: number;
+  type?: string;  // 'DAY_INFO' | 'BOARDING' | 'WAYPOINT' | 'MEAL' | 'SPOT' | 'ARRIVAL' 등
   boarding_place_id?: string;
   spot_id?: string;
   arrival_time?: string;
   departure_time?: string;
+  start_time?: string;
+  end_time?: string;
   stay_duration?: string;
   distance_from_prev?: string;
   duration_from_prev?: string;
@@ -33,6 +36,17 @@ interface JourneyItem {
   golf_info?: any;
   notes?: string;
   display_options?: any;
+  waypoint_name?: string;
+  is_tourist?: boolean;
+  description?: string;
+  day_date?: string;
+  title?: string;
+  meal_breakfast?: boolean;
+  meal_lunch?: boolean;
+  meal_dinner?: boolean;
+  menu_breakfast?: string;
+  menu_lunch?: string;
+  menu_dinner?: string;
   // 관계 데이터
   boarding_place?: any;
   spot?: any;
@@ -67,6 +81,7 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   const [editingItem, setEditingItem] = useState<JourneyItem | null>(null);
   const [viewMode, setViewMode] = useState<'timeline' | 'category' | 'map'>('timeline');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [tourInfo, setTourInfo] = useState<any>(null);
   
   // 폼 데이터
   const [formData, setFormData] = useState<JourneyItem>({
@@ -90,19 +105,141 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   });
 
   useEffect(() => {
-    fetchData();
+    if (tourId) {
+      // 투어 정보 먼저 가져오기
+      const loadTourInfo = async () => {
+        const { data: tour } = await supabase
+          .from('singsing_tours')
+          .select('*')
+          .eq('id', tourId)
+          .single();
+        
+        if (tour) {
+          setTourInfo(tour);
+        }
+      };
+      
+      loadTourInfo().then(() => {
+        fetchData();
+      });
+    }
   }, [tourId, selectedDay]);
+
+  // DAY_INFO의 식사 정보 업데이트 함수
+  const updateDayInfoMeals = async (dayNumber: number, mealType: string, menu: string) => {
+    try {
+      // 현재 DAY_INFO 가져오기
+      const { data: dayInfo } = await supabase
+        .from('tour_journey_items')
+        .select('*')
+        .eq('tour_id', tourId)
+        .eq('day_number', dayNumber)
+        .eq('type', 'DAY_INFO')
+        .single();
+      
+      if (dayInfo) {
+        let updateData: any = {};
+        
+        if (mealType === '조식') {
+          updateData.meal_breakfast = true;
+          updateData.menu_breakfast = menu;
+        } else if (mealType === '중식') {
+          updateData.meal_lunch = true;
+          updateData.menu_lunch = menu;
+        } else if (mealType === '석식') {
+          updateData.meal_dinner = true;
+          updateData.menu_dinner = menu;
+        }
+        
+        if (Object.keys(updateData).length > 0) {
+          const { error } = await supabase
+            .from('tour_journey_items')
+            .update(updateData)
+            .eq('id', dayInfo.id);
+          
+          if (error) {
+            console.error('Error updating DAY_INFO meals:', error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error in updateDayInfoMeals:', error);
+    }
+  };
+
+  // DAY_INFO 아이템 생성/업데이트 함수
+  const ensureDayInfo = async (dayNumber: number) => {
+    try {
+      // 날짜 계산
+      if (!tourInfo) return;
+      
+      const startDate = new Date(tourInfo.start_date);
+      const dayDate = new Date(startDate.getTime() + (dayNumber - 1) * 24 * 60 * 60 * 1000);
+      
+      // 기존 DAY_INFO 확인
+      const { data: existingDayInfo } = await supabase
+        .from('tour_journey_items')
+        .select('*')
+        .eq('tour_id', tourId)
+        .eq('day_number', dayNumber)
+        .eq('type', 'DAY_INFO')
+        .single();
+      
+      if (!existingDayInfo) {
+        // DAY_INFO 생성
+        const { error } = await supabase
+          .from('tour_journey_items')
+          .insert({
+            tour_id: tourId,
+            day_number: dayNumber,
+            order_index: 0,
+            type: 'DAY_INFO',
+            day_date: dayDate.toISOString().split('T')[0],
+            title: `Day ${dayNumber} 일정`,
+            meal_breakfast: false,
+            meal_lunch: false,
+            meal_dinner: false,
+            menu_breakfast: '',
+            menu_lunch: '',
+            menu_dinner: ''
+          });
+        
+        if (error) {
+          console.error('Error creating DAY_INFO:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error in ensureDayInfo:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
 
-      // 여정 아이템 조회
+      // 투어 정보 가져오기
+      if (!tourInfo) {
+        const { data: tour } = await supabase
+          .from('singsing_tours')
+          .select('*')
+          .eq('id', tourId)
+          .single();
+        
+        if (tour) {
+          setTourInfo(tour);
+        }
+      }
+
+      // DAY_INFO 확인 및 생성
+      await ensureDayInfo(selectedDay);
+
+      // 여정 아이템 조회 (DAY_INFO 제외)
       const { data: items, error: itemsError } = await supabase
         .from('tour_journey_items')
         .select('*')
         .eq('tour_id', tourId)
         .eq('day_number', selectedDay)
+        .neq('type', 'DAY_INFO')  // DAY_INFO 제외
         .order('order_index');
 
       if (itemsError) throw itemsError;
@@ -185,11 +322,24 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
     e.preventDefault();
 
     try {
-      // order_index 자동 설정
+      // order_index 자동 설정 (DAY_INFO는 0이므로 1부터 시작)
       let orderIndex = formData.order_index;
       if (!editingItem && orderIndex === 0) {
-        const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
+        const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 1), 0);
         orderIndex = maxOrder + 1;
+      }
+
+      // type 결정
+      let itemType = 'WAYPOINT';
+      if (formData.boarding_place_id) {
+        itemType = 'BOARDING';
+      } else if (formData.spot_id) {
+        const selectedSpot = spots.find(s => s.id === formData.spot_id);
+        if (selectedSpot?.category === 'tourist_spot' || selectedSpot?.category === 'activity') {
+          itemType = 'SPOT';
+        } else if (selectedSpot?.category === 'restaurant' || selectedSpot?.category === 'club_meal') {
+          itemType = 'MEAL';
+        }
       }
 
       const dataToSubmit = {
@@ -197,9 +347,12 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
         tour_id: tourId,
         day_number: selectedDay,
         order_index: orderIndex,
+        type: itemType,
         boarding_place_id: formData.boarding_place_id === undefined ? null : (formData.boarding_place_id || null),
         spot_id: formData.spot_id === undefined ? null : (formData.spot_id || null),
-        // 시간 필드 처리 - 빈 문자열이면 null로 변환
+        // 시간 필드 매핑
+        start_time: formData.arrival_time && formData.arrival_time !== '--:--' ? formData.arrival_time : null,
+        end_time: formData.departure_time && formData.departure_time !== '--:--' ? formData.departure_time : null,
         arrival_time: formData.arrival_time && formData.arrival_time !== '--:--' ? formData.arrival_time : null,
         departure_time: formData.departure_time && formData.departure_time !== '--:--' ? formData.departure_time : null,
         // 숫자 필드 처리
@@ -222,6 +375,11 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
           .insert(dataToSubmit);
         
         if (error) throw error;
+      }
+      
+      // 식사 정보가 있으면 DAY_INFO 업데이트
+      if (formData.meal_type) {
+        await updateDayInfoMeals(selectedDay, formData.meal_type, formData.meal_menu || '');
       }
 
       setShowForm(false);
@@ -652,8 +810,11 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                          tour_id: tourId,
                          day_number: selectedDay,
                          order_index: maxOrder + 1,
+                         type: 'BOARDING',
                          boarding_place_id: place.id,
                          spot_id: null,
+                         start_time: null,
+                         end_time: null,
                          arrival_time: null,
                          departure_time: null,
                          stay_duration: null,
@@ -721,12 +882,23 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                        }
                        
                        const maxOrder = Math.max(...journeyItems.map(item => item.order_index || 0), 0);
+                       // type 결정
+                       let itemType = 'WAYPOINT';
+                       if (spot.category === 'tourist_spot' || spot.category === 'activity') {
+                         itemType = 'SPOT';
+                       } else if (spot.category === 'restaurant' || spot.category === 'club_meal') {
+                         itemType = 'MEAL';
+                       }
+                       
                        const newJourneyItem = {
                          tour_id: tourId,
                          day_number: selectedDay,
                          order_index: maxOrder + 1,
+                         type: itemType,
                          boarding_place_id: null,
                          spot_id: spot.id,
+                         start_time: null,
+                         end_time: null,
                          arrival_time: null,
                          departure_time: null,
                          stay_duration: null,
@@ -932,9 +1104,14 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
             </button>
           ))}
           <button
-            onClick={() => {
-              setMaxDays(maxDays + 1);
-              setSelectedDay(maxDays + 1);
+            onClick={async () => {
+              const newDayNumber = maxDays + 1;
+              setMaxDays(newDayNumber);
+              setSelectedDay(newDayNumber);
+              // tourInfo가 있을 때만 DAY_INFO 생성
+              if (tourInfo) {
+                await ensureDayInfo(newDayNumber);
+              }
             }}
             className="px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
           >
