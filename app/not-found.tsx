@@ -10,52 +10,28 @@ export default function NotFound() {
           <div className="relative inline-block">
             <div className="absolute inset-0 bg-gradient-to-br from-pink-200 to-purple-200 rounded-full blur-2xl opacity-50 scale-110"></div>
             <div className="relative bg-white rounded-full p-12 shadow-lg">
-              {/* 골프공과 홀 아이콘 */}
-              <svg 
-                className="w-32 h-32 mx-auto text-purple-500" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={1.5} 
-                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
-                />
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={1.5} 
-                  d="M8 12h8M12 8v8"
-                />
-                <circle cx="12" cy="12" r="2" fill="currentColor" />
-              </svg>
+              {/* 꽃과 골프 아이콘 조합 */}
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-5xl">🌸</span>
+                <span className="text-6xl">⛳</span>
+                <span className="text-5xl">🌸</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 메시지 영역 */}
+        {/* 메시지 영역 - 더 임팩트 있게 */}
         <h1 className="text-4xl font-bold text-gray-800 mb-4">
-          앗, 공이 OB가 났네요! 
-          <span className="text-2xl ml-2">😊</span>
+          어머, 길을 잃으셨나요?
         </h1>
         
         <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-          찾으시는 페이지가 없어졌거나<br />
-          주소가 잘못 입력되었어요.
+          <span className="font-semibold text-purple-600">멀리건</span>처럼,<br />
+          다시 한 번 기회를 드릴게요! 🏌️‍♀️
         </p>
 
-        {/* 추가 안내 메시지 */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-md">
-          <p className="text-gray-700 text-lg">
-            걱정 마세요! 우리가 도와드릴게요.<br />
-            아래 버튼을 눌러 원하시는 곳으로 가실 수 있어요.
-          </p>
-        </div>
-
         {/* 버튼 영역 */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
           <Link 
             href="/" 
             className="group bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
@@ -74,6 +50,13 @@ export default function NotFound() {
           >
             투어 일정 보기
           </Link>
+
+          <Link 
+            href="/quote" 
+            className="bg-white text-purple-600 px-8 py-4 rounded-full text-lg font-medium border-2 border-purple-300 hover:bg-purple-50 transition-all shadow-md hover:shadow-lg"
+          >
+            단체 견적 문의
+          </Link>
         </div>
 
         {/* 추가 도움말 */}
@@ -82,15 +65,20 @@ export default function NotFound() {
             도움이 필요하신가요?
           </p>
           <a 
-            href="tel:1234-5678" 
+            href="tel:031-215-3990" 
             className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium mt-2 text-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
-            고객센터 1234-5678
+            고객센터 031-215-3990
           </a>
         </div>
+
+        {/* 하단 격려 메시지 */}
+        <p className="mt-8 text-gray-500 text-base italic">
+          "모든 위대한 골퍼도 가끔은 러프에 빠집니다"
+        </p>
 
         {/* 장식 요소들 */}
         <div className="absolute top-10 left-10 text-6xl opacity-20 text-purple-300 animate-bounce">

@@ -42,3 +42,6 @@ next-env.d.ts
 # backup directories
 /backup/
 backup_*/
+
+# deleted files
+.deleted-*
