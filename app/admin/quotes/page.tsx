@@ -15,7 +15,6 @@ interface Quote {
   end_date: string;
   price: number;
   max_participants: number;
-  quote_status: 'draft' | 'sent' | 'viewed' | 'expired' | 'accepted' | 'rejected';
   quote_expires_at: string | null;
   quote_data: any;
   created_at: string;
@@ -59,10 +58,9 @@ export default function QuotesPage() {
   };
 
   const getStatusBadge = (quote: Quote) => {
-    const status = quote.quote_status || 'draft';
     const isExpired = quote.quote_expires_at && new Date(quote.quote_expires_at) < new Date();
     
-    if (isExpired && status !== 'accepted' && status !== 'rejected') {
+    if (isExpired) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
           <Clock className="w-3 h-3" />
@@ -71,45 +69,12 @@ export default function QuotesPage() {
       );
     }
 
-    switch (status) {
-      case 'draft':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-            <Edit className="w-3 h-3" />
-            작성중
-          </span>
-        );
-      case 'sent':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-            <Send className="w-3 h-3" />
-            발송됨
-          </span>
-        );
-      case 'viewed':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-            <Eye className="w-3 h-3" />
-            열람됨
-          </span>
-        );
-      case 'accepted':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-            <Check className="w-3 h-3" />
-            수락됨
-          </span>
-        );
-      case 'rejected':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">
-            <X className="w-3 h-3" />
-            거절됨
-          </span>
-        );
-      default:
-        return null;
-    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+        <Check className="w-3 h-3" />
+        유효함
+      </span>
+    );
   };
 
   const handleCopyLink = async (quoteId: string) => {
@@ -150,7 +115,6 @@ export default function QuotesPage() {
         .from("singsing_tours")
         .update({ 
           quote_data: null,
-          quote_status: null,
           quote_expires_at: null,
           customer_name: null,
           customer_phone: null
@@ -175,7 +139,7 @@ export default function QuotesPage() {
     
     const isExpired = quote.quote_expires_at && new Date(quote.quote_expires_at) < new Date();
     if (filterStatus === "expired" && isExpired) return matchesSearch;
-    if (filterStatus === quote.quote_status) return matchesSearch;
+    if (filterStatus === "valid" && !isExpired) return matchesSearch;
     
     return false;
   });
@@ -227,13 +191,9 @@ export default function QuotesPage() {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
-            <option value="all">전체 상태</option>
-            <option value="draft">작성중</option>
-            <option value="sent">발송됨</option>
-            <option value="viewed">열람됨</option>
-            <option value="accepted">수락됨</option>
-            <option value="rejected">거절됨</option>
-            <option value="expired">만료됨</option>
+            <option value="all">전체 견적서</option>
+            <option value="valid">유효한 견적서</option>
+            <option value="expired">만료된 견적서</option>
           </select>
 
           <Link

@@ -58,7 +58,6 @@ export default function EditQuotePage() {
     
     // 견적 정보
     quote_expires_at: "",
-    quote_status: "draft" as 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected',
     quote_notes: "",
     
     // 견적 상세 데이터
@@ -146,7 +145,6 @@ export default function EditQuotePage() {
           customer_phone: data.customer_phone || "",
           customer_email: "",
           quote_expires_at: data.quote_expires_at || "",
-          quote_status: data.quote_status || "draft",
           quote_notes: data.quote_notes || "",
           quote_data: quoteData || {
             participants: {
@@ -312,7 +310,7 @@ export default function EditQuotePage() {
           customer_name: formData.customer_name || null,
           customer_phone: formData.customer_phone || null,
           quote_expires_at: formData.quote_expires_at,
-          quote_status: formData.quote_status,
+          // quote_status: formData.quote_status, // 데이터베이스에 해당 컴럼이 없음
           quote_data: formData.quote_data,
           quote_notes: formData.quote_notes || null,
           updated_at: new Date().toISOString()
@@ -816,70 +814,6 @@ export default function EditQuotePage() {
             </div>
           </div>
 
-          {/* 링크 정보 */}
-          {documentLink && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Copy className="w-5 h-5 text-gray-600" />
-                공유 링크 정보
-              </h2>
-              
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <div className="mb-3">
-                  <label className="text-sm font-medium text-gray-700">공유 링크</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="text"
-                      readOnly
-                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"
-                      value={`${window.location.origin}/q/${documentLink.public_url}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink(false)}
-                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">조회수</span>
-                    <p className="font-medium">{documentLink.view_count || 0}회</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">처음 확인</span>
-                    <p className="font-medium">
-                      {documentLink.first_viewed_at 
-                        ? new Date(documentLink.first_viewed_at).toLocaleString('ko-KR')
-                        : '미확인'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">마지막 확인</span>
-                    <p className="font-medium">
-                      {documentLink.last_viewed_at 
-                        ? new Date(documentLink.last_viewed_at).toLocaleString('ko-KR')
-                        : '미확인'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="text-sm text-gray-600">
-                <p className="flex items-center gap-1">
-                  <Info className="w-4 h-4" />
-                  링크는 견적 유효기간과 동일하게 설정됩니다.
-                </p>
-                <p className="mt-1">
-                  만료일: {formData.quote_expires_at ? new Date(formData.quote_expires_at).toLocaleDateString('ko-KR') : '설정 안함'}
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* 견적 설정 */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -902,6 +836,7 @@ export default function EditQuotePage() {
                 />
               </div>
               
+              {/*
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   견적 상태
@@ -918,6 +853,7 @@ export default function EditQuotePage() {
                   <option value="rejected">거절됨</option>
                 </select>
               </div>
+              */}
             </div>
             
             <div className="mt-4">

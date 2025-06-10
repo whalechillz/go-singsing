@@ -52,7 +52,6 @@ export default function NewQuotePage() {
     
     // 견적 정보
     quote_expires_at: "",
-    quote_status: "draft" as const,
     quote_notes: "",
     
     // 견적 상세 데이터
@@ -257,7 +256,7 @@ export default function NewQuotePage() {
           customer_name: formData.customer_name || null,
           customer_phone: formData.customer_phone || null,
           quote_expires_at: formData.quote_expires_at,
-          quote_status: formData.quote_status,
+          // quote_status: formData.quote_status, // 데이터베이스에 해당 컴럼이 없음
           quote_data: formData.quote_data,
           quote_notes: formData.quote_notes || null
         })
@@ -600,19 +599,7 @@ export default function NewQuotePage() {
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  견적 상태
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.quote_status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, quote_status: e.target.value as any }))}
-                >
-                  <option value="draft">작성중</option>
-                  <option value="sent">발송됨</option>
-                </select>
-              </div>
+
             </div>
             
             <div className="mt-4">
