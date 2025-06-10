@@ -1,43 +1,25 @@
 #!/bin/bash
 
-# Git 변경사항 커밋 스크립트
+# Git 커밋 및 푸시 스크립트
 
-echo "🚀 Git 커밋 시작..."
+echo "🚀 싱싱골프 프로젝트 배포 시작..."
 
-# 변경사항 확인
-echo "📋 변경된 파일:"
-git status --short
-
-# 모든 변경사항 추가
+# 변경사항 추가
 git add .
 
-# 커밋 메시지
-COMMIT_MSG="feat: 골프 코스 정보를 여정 관리로 이전
+# 커밋 메시지 입력
+if [ -z "$1" ]; then
+    git commit -m "feat: 60대 여성 시니어 친화적 404 페이지 추가"
+else
+    git commit -m "$1"
+fi
 
-주요 변경사항:
-1. ✅ TourJourneyManager 골프 정보 입력 기능 추가
-   - 골프 라운드 카테고리 선택 시 골프 정보 폼 표시
-   - 골프장 이름, 티타임, 코스 정보 입력 가능
-   - golf_info JSON 필드에 데이터 저장
+# GitHub에 푸시
+git push origin main
 
-2. ✅ 타임라인 뷰에 골프 정보 표시
-   - 에메랄드색 배경으로 골프 정보 출력
-   - 골프장, 티타임, 코스 정보 구분 표시
-
-3. ✅ TourScheduleInfo 골프 정보 표시 기능 추가
-   - 여정 아이템의 골프 정보 표시
-   - 문서 미리보기에서도 골프 정보 확인 가능
-
-4. ✅ 데이터 구조 개선
-   - 기존 일정 관리에서 여정 관리로 이전
-   - 파인/레이크/힐스 코스 정보 체계적 관리"
-
-# 커밋 실행
-git commit -m "$COMMIT_MSG"
-
-# 원격 저장소로 푸시
-echo "📤 원격 저장소로 푸시 중..."
-git push
-
-echo "✅ 커밋 완료!"
-echo "🌐 Vercel에서 자동 배포가 시작됩니다..."
+echo "✅ GitHub 푸시 완료!"
+echo "🔄 Vercel 자동 배포 진행 중..."
+echo "📍 배포 URL: https://go.singsinggolf.kr/"
+echo ""
+echo "⏳ 몇 분 후 아래 주소에서 확인하세요:"
+echo "   https://go.singsinggolf.kr/404"
