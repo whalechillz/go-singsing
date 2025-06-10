@@ -180,26 +180,28 @@ export default function EditQuotePage() {
     if (productId) {
       const product = tourProducts.find(p => p.id === productId);
       if (product) {
-        // 포함/불포함 사항 처리
-        const includes = product.included_items 
-          ? product.included_items.split(',').map(item => item.trim()).filter(item => item)
-          : prev.quote_data.includeExclude.includes;
-        
-        const excludes = product.excluded_items
-          ? product.excluded_items.split(',').map(item => item.trim()).filter(item => item)
-          : prev.quote_data.includeExclude.excludes;
-        
-        setFormData(prev => ({
-          ...prev,
-          title: `${product.name} 견적서`,
-          quote_data: {
-            ...prev.quote_data,
-            includeExclude: {
-              includes,
-              excludes
+        setFormData(prev => {
+          // 포함/불포함 사항 처리
+          const includes = product.included_items 
+            ? product.included_items.split(',').map(item => item.trim()).filter(item => item)
+            : prev.quote_data.includeExclude.includes;
+          
+          const excludes = product.excluded_items
+            ? product.excluded_items.split(',').map(item => item.trim()).filter(item => item)
+            : prev.quote_data.includeExclude.excludes;
+          
+          return {
+            ...prev,
+            title: `${product.name} 견적서`,
+            quote_data: {
+              ...prev.quote_data,
+              includeExclude: {
+                includes,
+                excludes
+              }
             }
-          }
-        }));
+          };
+        });
       }
     } else {
       // 상품 선택 해제 시 기본값으로 복원
