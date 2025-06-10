@@ -499,7 +499,7 @@ export default function PublicQuotePage() {
                     '그린피 및 카트비',
                     `숙박 (${duration.nights}박)`,
                     '조식 제공'
-                  ]).map((item, index) => (
+                  ]).map((item: string, index: number) => (
                     item && (
                       <li key={index} className="flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
@@ -523,7 +523,7 @@ export default function PublicQuotePage() {
                     '캐디피',
                     '중식 및 석식',
                     '여행자 보험'
-                  ]).map((item, index) => (
+                  ]).map((item: string, index: number) => (
                     item && (
                       <li key={index} className="flex items-start gap-2">
                         <X className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
