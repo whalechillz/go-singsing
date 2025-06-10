@@ -48,8 +48,8 @@ const initialForm: TourProductForm = {
     { name: "파인힐스", description: "18홀 파72" },
     { name: "레이크힐스", description: "18홀 파72" }
   ],
-  included_items: "그린피(18홀×3일), 숙박 2박, 전일정 클럽식, 카트비, 리무진 버스(상해보장), 2일차 관광",
-  excluded_items: "캐디피",
+  included_items: "그린피(18홀×3일)\n숙박 2박\n전일정 클럽식\n카트비\n리무진 버스(상해보장)\n2일차 관광",
+  excluded_items: "캐디피\n중식 및 석식\n개인 경비\n여행자 보험",
   accommodation_info: "",
   general_notices: [
     { order: 1, content: "티오프 시간: 사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
@@ -283,23 +283,35 @@ const TourProductNewPage = () => {
                 value={form.included_items}
                 onChange={handleChange}
                 placeholder="포함되는 항목들"
-                rows={2}
+                rows={3}
                 className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
-              <p className="text-sm text-gray-500 mt-1">* 기본값이 설정되어 있습니다.</p>
+              <p className="text-sm text-gray-500 mt-1">
+                * 각 항목을 줄바꿈으로 구분하면 견적서에서 개별 항목으로 표시됩니다.
+                <br/>예) 
+                <br/>그린피(18홀×3일)
+                <br/>숙박 2박
+                <br/>전일정 클럽식
+                <br/><br/>
+                * 기본값이 설정되어 있습니다.
+              </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 불포함 사항
               </label>
-              <input
+              <textarea
                 name="excluded_items"
                 value={form.excluded_items}
                 onChange={handleChange}
                 placeholder="불포함 항목들"
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                * 여러 항목은 줄바꿈으로 구분해 주세요.
+              </p>
             </div>
           </div>
 

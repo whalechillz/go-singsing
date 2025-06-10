@@ -178,28 +178,56 @@ export default function EditQuotePage() {
     if (productId) {
       const product = tourProducts.find(p => p.id === productId);
       if (product) {
-        setFormData(prev => {
-          // 포함/불포함 사항 처리
-          const includes = product.included_items 
-            ? product.included_items.split(',').map(item => item.trim()).filter(item => item)
-            : prev.quote_data.includeExclude.includes;
-          
-          const excludes = product.excluded_items
-            ? product.excluded_items.split(',').map(item => item.trim()).filter(item => item)
-            : prev.quote_data.includeExclude.excludes;
-          
-          return {
-            ...prev,
-            title: `${product.name} 견적서`,
-            quote_data: {
-              ...prev.quote_data,
-              includeExclude: {
-                includes,
-                excludes
-              }
+        // 포함 사항 처리 - 쉼표로 구분하거나, 줄바꿈으로 구분된 경우도 처리
+        let includes = [];
+        if (product.included_items) {
+          // 쉼표 또는 줄바꿈으로 분리
+          includes = product.included_items
+            .split(/[,\n]/)
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+        }
+        
+        // 포함 사항이 없으면 기본값 사용
+        if (includes.length === 0) {
+          includes = [
+            "왕복 전용버스",
+            "그린피 및 카트비",
+            "숙박",
+            "조식"
+          ];
+        }
+        
+        // 불포함 사항 처리
+        let excludes = [];
+        if (product.excluded_items) {
+          excludes = product.excluded_items
+            .split(/[,\n]/)
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+        }
+        
+        // 불포함 사항이 없으면 기본값 사용
+        if (excludes.length === 0) {
+          excludes = [
+            "개인 경비",
+            "캐디피",
+            "중식 및 석식",
+            "여행자 보험"
+          ];
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          title: `${product.name} 견적서`,
+          quote_data: {
+            ...prev.quote_data,
+            includeExclude: {
+              includes,
+              excludes
             }
-          };
-        });
+          }
+        }));
       }
     } else {
       // 상품 선택 해제 시 기본값으로 복원
