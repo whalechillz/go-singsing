@@ -49,21 +49,29 @@ export default async function ShortLinkRedirect({
     
     switch (linkData.document_type) {
       case 'customer_schedule':
-      case 'staff_schedule':
       case 'simplified':
-        return `/public-schedule/${tourId}`;
+        return `/public-document/${tourId}`;
+      
+      case 'staff_schedule':
+        return `/public-document/${tourId}?staff=true`;
       
       case 'customer_boarding':
+        return `/public-document/${tourId}#boarding`;
+      
       case 'staff_boarding':
-        return `/tour-schedule/${tourId}#boarding`;
+        return `/public-document/${tourId}?staff=true#boarding`;
       
       case 'room_assignment':
+        return `/public-document/${tourId}#room`;
+      
       case 'room_assignment_staff':
-        return `/tour-schedule/${tourId}#room`;
+        return `/public-document/${tourId}?staff=true#room`;
       
       case 'customer_timetable':
+        return `/public-document/${tourId}#timetable`;
+      
       case 'staff_timetable':
-        return `/tour-schedule/${tourId}#timetable`;
+        return `/public-document/${tourId}?staff=true#timetable`;
       
       case 'quote':
         return `/quote/${tourId}`;
