@@ -19,7 +19,8 @@ import {
   Package,
   UserCog,
   Shield,
-  Phone
+  Phone,
+  Calculator
 } from 'lucide-react';
 
 interface NavSubItem {
@@ -50,7 +51,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     'tour-management': true, 
     'memo-management': true,
     'tour-staff-management': true,
-    'customer-management': true 
+    'customer-management': true,
+    'quote-management': true 
   });
   
   // pathname에 따라 activeNav 결정
@@ -76,6 +78,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/customers')) return 'customers';
     if (pathname.startsWith('/admin/messages')) return 'messages';
     if (pathname.startsWith('/admin/campaigns')) return 'campaigns';
+    if (pathname.startsWith('/admin/quotes')) return 'quotes';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     return 'dashboard';
   };
@@ -97,6 +100,15 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'tours', label: '투어 스케줄 관리', href: '/admin/tours' },
         { id: 'tour-products', label: '여행상품 관리', href: '/admin/tour-products' },
         { id: 'attractions', label: '스팟 관리', href: '/admin/attractions' },
+      ]
+    },
+    { 
+      id: 'quote-management', 
+      label: '견적 관리', 
+      icon: <Calculator className="w-5 h-5" />,
+      subMenu: [
+        { id: 'quotes', label: '견적 목록', href: '/admin/quotes' },
+        { id: 'quote-new', label: '새 견적 작성', href: '/admin/quotes/new' },
       ]
     },
     { 

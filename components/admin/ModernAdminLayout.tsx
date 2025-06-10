@@ -35,6 +35,8 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     if (pathname.startsWith('/admin/customers')) return '고객 데이터베이스';
     if (pathname.startsWith('/admin/messages')) return '메시지 발송';
     if (pathname.startsWith('/admin/campaigns')) return '마케팅 캠페인';
+    if (pathname.startsWith('/admin/quotes')) return '견적 관리';
+    if (pathname.startsWith('/admin/color-test')) return 'color-test';
     if (pathname.startsWith('/admin/statistics')) return '통계';
     if (pathname.startsWith('/admin/settings')) return '설정';
     return '대시보드';
