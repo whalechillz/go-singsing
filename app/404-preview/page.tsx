@@ -6,7 +6,7 @@ import NotFoundFlower from '../404-designs/not-found-flower-theme'
 import NotFoundGreen from '../404-designs/not-found-green-theme'
 
 export default function PreviewPage() {
-  const [selectedDesign, setSelectedDesign] = useState('purple')
+  const [selectedDesign, setSelectedDesign] = useState<'purple' | 'flower' | 'green'>('purple')
 
   const designs = {
     purple: {
@@ -38,7 +38,7 @@ export default function PreviewPage() {
             {Object.entries(designs).map(([key, design]) => (
               <button
                 key={key}
-                onClick={() => setSelectedDesign(key)}
+                onClick={() => setSelectedDesign(key as 'purple' | 'flower' | 'green')}
                 className={`px-6 py-3 rounded-lg font-medium transition-all ${
                   selectedDesign === key
                     ? 'bg-blue-600 text-white shadow-lg'
