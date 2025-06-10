@@ -1,17 +1,25 @@
-import { TourData, BoardingPlace, Waypoint } from '../types';
+import { TourData } from '../types';
 import { htmlWrapper, getCommonStyles } from '../utils/generators';
 import { formatTime, formatDate, getArrivalTime } from '../utils/formatters';
 
 export function generateBoardingGuideHTML(
   tourData: TourData,
-  boardingPlaces: BoardingPlace[],
-  waypoints: Waypoint[],
+  journeyItems: any[], // tour_journey_items with spot relations
   isStaff: boolean,
   participants?: any[]
 ): string {
   if (isStaff && participants) {
-    return generateStaffBoardingHTML(tourData, participants);
+    return generateStaffBoardingHTML(tourData, journeyItems, participants);
   }
+  
+  // journeyItems에서 탑승지와 경유지 분리
+  const boardingItems = journeyItems.filter(item => 
+    item.spot && item.spot.category === 'boarding'
+  );
+  
+  const waypointItems = journeyItems.filter(item => 
+    item.spot && ['rest_area', 'tourist_spot', 'restaurant'].includes(item.spot.category)
+  );
   
   const content = `
     <div class="container">
@@ -23,10 +31,10 @@ export function generateBoardingGuideHTML(
         </div>
         
         <div class="boarding-cards">
-          ${boardingPlaces.map((place, index) => {
-            const boardingPlace = place.boarding_place;
-            if (!boardingPlace) return '';
-            const departureTime = place.departure_time ? place.departure_time.slice(0, 5) : '미정';
+          ${boardingItems.map((item, index) => {
+            const boardingSpot = item.spot;
+            if (!boardingSpot) return '';
+            const departureTime = item.departure_time ? item.departure_time.slice(0, 5) : '미정';
             const { timePrefix, displayTime } = formatTime(departureTime);
             
             return `
@@ -37,8 +45,8 @@ export function generateBoardingGuideHTML(
                     <div class="route-number">${index + 1}</div>
                     <div class="route-info-main">
                       <div class="card-title">
-                        <span class="location-name">${boardingPlace.name}</span>
-                        <span class="location-type">(${boardingPlace.district || '탑승지'})</span>
+                        <span class="location-name">${boardingSpot.name}</span>
+                        <span class="location-type">(탑승지)</span>
                       </div>
                       <div class="time-wrapper">
                         <span class="time-prefix">${timePrefix}</span>
@@ -49,29 +57,14 @@ export function generateBoardingGuideHTML(
                   </div>
                   
                   <div class="card-info">
-                    <div class="info-parking">주차: ${boardingPlace.parking_info || '무료'}</div>
-                    <div class="info-arrival">${place.arrival_time ? place.arrival_time.slice(0, 5) : getArrivalTime(place.departure_time || '미정')} 도착</div>
+                    <div class="info-parking">주차: ${boardingSpot.parking_info || '무료'}</div>
+                    <div class="info-arrival">${item.arrival_time ? item.arrival_time.slice(0, 5) : getArrivalTime(item.departure_time || '미정')} 도착</div>
+                    ${item.passenger_count ? `<div class="info-passenger">탑승인원: ${item.passenger_count}명</div>` : ''}
                   </div>
                   
-                  ${boardingPlace.boarding_main || boardingPlace.parking_main ? `
+                  ${boardingSpot.description ? `
                     <div class="location-info">
-                      ${boardingPlace.boarding_main ? `
-                        <div class="location-section">
-                          <p class="location-title">📍 버스탑승지</p>
-                          <p class="location-main">${boardingPlace.boarding_main}</p>
-                          ${boardingPlace.boarding_sub ? `<p class="location-sub">${boardingPlace.boarding_sub}</p>` : ''}
-                        </div>
-                      ` : ''}
-                      
-                      ${boardingPlace.parking_main ? `
-                        <div class="location-section">
-                          <p class="location-title">📍 주차장 오는길</p>
-                          <p class="location-main">${boardingPlace.parking_main}</p>
-                          ${boardingPlace.parking_map_url ? `
-                            <a href="${boardingPlace.parking_map_url}" class="map-link" target="_blank">네이버 지도에서 보기</a>
-                          ` : ''}
-                        </div>
-                      ` : ''}
+                      <p class="location-desc">${boardingSpot.description}</p>
                     </div>
                   ` : ''}
                 </div>
@@ -79,12 +72,15 @@ export function generateBoardingGuideHTML(
             `;
           }).join('')}
           
-          ${waypoints.map((waypoint, waypointIndex) => {
-            const orderNumber = boardingPlaces.length + waypointIndex + 1;
-            const isRestStop = waypoint.waypoint_name?.includes('휴게소');
-            const isTourist = waypoint.waypoint_name?.includes('관광') || waypoint.waypoint_name?.includes('사찰');
-            const icon = isRestStop ? '☕' : isTourist ? '🏛️' : '📍';
-            const { timePrefix, displayTime } = formatTime(waypoint.waypoint_time || '미정');
+          ${waypointItems.map((item, waypointIndex) => {
+            const orderNumber = boardingItems.length + waypointIndex + 1;
+            const spot = item.spot;
+            if (!spot) return '';
+            
+            const isRestStop = spot.category === 'rest_area';
+            const isTourist = spot.category === 'tourist_spot';
+            const icon = isRestStop ? '☕' : isTourist ? '🏛️' : '🍽️';
+            const { timePrefix, displayTime } = formatTime(item.arrival_time || '미정');
             
             return `
               <div class="boarding-card waypoint-stop">
@@ -95,19 +91,18 @@ export function generateBoardingGuideHTML(
                     <div class="route-info-main">
                       <div class="card-title">
                         <span class="waypoint-icon">${icon}</span>
-                        <span class="location-name">${waypoint.waypoint_name}</span>
+                        <span class="location-name">${spot.name}</span>
                       </div>
                       <div class="time-wrapper">
                         <span class="time-prefix">${timePrefix}</span>
                         <span class="card-time waypoint-time">${displayTime}</span>
                       </div>
-                      ${waypoint.visit_date ? `<div class="card-date">${formatDate(waypoint.visit_date)}</div>` : ''}
                     </div>
                   </div>
                   
                   <div class="waypoint-info">
-                    <div class="waypoint-duration">정차시간: 약 ${waypoint.waypoint_duration || 30}분</div>
-                    ${waypoint.waypoint_description ? `<div class="waypoint-desc">${waypoint.waypoint_description}</div>` : ''}
+                    <div class="waypoint-duration">체류시간: 약 ${item.stay_duration || '30분'}</div>
+                    ${spot.description ? `<div class="waypoint-desc">${spot.description}</div>` : ''}
                   </div>
                 </div>
               </div>
@@ -139,7 +134,8 @@ export function generateBoardingGuideHTML(
   return htmlWrapper(`${tourData.title} - 탑승 안내`, content);
 }
 
-function generateStaffBoardingHTML(tourData: TourData, participants: any[]): string {
+function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], participants: any[]): string {
+  // 탑승지별로 참가자 그룹화
   const participantsByLocation: Record<string, any[]> = participants.reduce((acc: Record<string, any[]>, participant: any) => {
     const location = participant.pickup_location || '미정';
     if (!acc[location]) acc[location] = [];
@@ -305,21 +301,7 @@ function getBoardingGuideStyles(): string {
     }
     
     .location-info { margin-top: 15px; }
-    .location-section { margin-bottom: 15px; }
-    .location-title { font-size: 14px; font-weight: bold; color: #4a6fa5; margin-bottom: 5px; }
-    .location-main { font-size: 14px; line-height: 1.6; color: #333; margin-bottom: 5px; }
-    .location-sub { font-size: 13px; color: #666; margin-left: 20px; }
-    
-    .map-link {
-      display: inline-block;
-      margin-top: 5px;
-      padding: 5px 10px;
-      background: #4a6fa5;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      font-size: 12px;
-    }
+    .location-desc { font-size: 14px; line-height: 1.6; color: #333; }
     
     .waypoint-icon { font-size: 20px; }
     .waypoint-info { margin-top: 15px; }

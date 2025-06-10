@@ -6,7 +6,6 @@ import {
   BedDouble, 
   Calendar, 
   Flag, 
-  Bus, 
   FileText,
   ChevronLeft,
   Home
@@ -34,19 +33,13 @@ const NAVIGATION_ITEMS = [
     path: "schedule", 
     label: "일정 관리", 
     icon: Calendar,
-    description: "일차별 상세 일정 관리"
+    description: "탑승지, 경유지, 관광지 등 여정 관리"
   },
   { 
     path: "tee-times", 
     label: "티오프 시간", 
     icon: Flag,
     description: "골프 티오프 시간 및 조 편성"
-  },
-  { 
-    path: "boarding", 
-    label: "탑승 스케줄", 
-    icon: Bus,
-    description: "버스 배정 및 탑승 관리"
   },
   { 
     path: "documents", 

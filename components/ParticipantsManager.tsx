@@ -239,10 +239,12 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   useEffect(() => {
     const fetchBoardingPlaces = async () => {
       try {
-        // 투어별/전체 구분 없이 항상 singsing_boarding_places에서 직접 불러오기
+        // tourist_attractions에서 boarding 카테고리만 가져오기
         const { data, error } = await supabase
-          .from("singsing_boarding_places")
+          .from("tourist_attractions")
           .select("id, name")
+          .eq("category", "boarding")
+          .eq("is_active", true)
           .order("name", { ascending: true });
         
         if (error) {

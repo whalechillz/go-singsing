@@ -41,13 +41,13 @@ export function useDocumentHTML({
           break;
 
         case 'customer_boarding':
-          html = generateBoardingGuideHTML(tourData, tourBoardingPlaces, tourWaypoints, false);
+          html = generateBoardingGuideHTML(tourData, journeyItems, false);
           break;
 
         case 'staff_boarding':
           // 스탭용은 참가자 정보가 필요
           const participants = await fetchParticipants();
-          html = generateBoardingGuideHTML(tourData, tourBoardingPlaces, tourWaypoints, true, participants);
+          html = generateBoardingGuideHTML(tourData, journeyItems, true, participants);
           break;
 
         case 'room_assignment':
