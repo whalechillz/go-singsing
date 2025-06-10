@@ -51,7 +51,7 @@ export default async function ShortLinkRedirect({
       case 'customer_schedule':
       case 'staff_schedule':
       case 'simplified':
-        return `/tour-schedule/${tourId}`;
+        return `/public-schedule/${tourId}`;
       
       case 'customer_boarding':
       case 'staff_boarding':

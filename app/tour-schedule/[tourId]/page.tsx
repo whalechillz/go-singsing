@@ -2,9 +2,8 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { fetchTourAndSchedules } from "./actions";
+import { fetchTourAndSchedulesClient } from "./fetchData";
 import TourScheduleInfo from "@/components/TourScheduleInfo";
-import { Metadata } from "next";
 
 type TourData = {
   tour: any;
@@ -27,11 +26,12 @@ export default function ProductInfoPage() {
       }
 
       try {
-        const result = await fetchTourAndSchedules(params.tourId as string);
+        const result = await fetchTourAndSchedulesClient(params.tourId as string);
+        console.log('Fetched data:', result); // 디버깅용 로그
         setData(result);
       } catch (err) {
         setError('데이터를 불러오는 중 오류가 발생했습니다.');
-        console.error(err);
+        console.error('Fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -89,9 +89,16 @@ export default function ProductInfoPage() {
     );
   }
 
+  console.log('Rendering with data:', data); // 디버깅용 로그
+  
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
+        <h1 className="text-2xl font-bold mb-4">{data.tour.title}</h1>
+        <p className="text-gray-600 mb-6">
+          {new Date(data.tour.start_date).toLocaleDateString('ko-KR')} ~ 
+          {new Date(data.tour.end_date).toLocaleDateString('ko-KR')}
+        </p>
         <TourScheduleInfo tour={data.tour} schedules={data.schedules || []} journeyItems={data.journeyItems || []} />
       </div>
     </div>
