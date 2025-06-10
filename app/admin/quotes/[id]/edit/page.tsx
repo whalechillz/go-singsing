@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -15,7 +15,8 @@ import {
   Plus,
   X,
   Copy,
-  Eye
+  Eye,
+  Save
 } from "lucide-react";
 import Link from "next/link";
 
@@ -27,11 +28,14 @@ interface TourProduct {
   courses: string[] | null;
 }
 
-export default function NewQuotePage() {
+export default function EditQuotePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const params = useParams();
+  const quoteId = params.id as string;
+  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [tourProducts, setTourProducts] = useState<TourProduct[]>([]);
-  const [previewOpen, setPreviewOpen] = useState(false);
   
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -50,7 +54,7 @@ export default function NewQuotePage() {
     
     // 견적 정보
     quote_expires_at: "",
-    quote_status: "draft" as const,
+    quote_status: "draft" as 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected',
     quote_notes: "",
     
     // 견적 상세 데이터
@@ -83,14 +87,8 @@ export default function NewQuotePage() {
 
   useEffect(() => {
     fetchTourProducts();
-    // 기본 만료일을 7일 후로 설정
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 7);
-    setFormData(prev => ({
-      ...prev,
-      quote_expires_at: expiryDate.toISOString().split('T')[0]
-    }));
-  }, []);
+    fetchQuoteData();
+  }, [quoteId]);
 
   const fetchTourProducts = async () => {
     try {
@@ -103,6 +101,60 @@ export default function NewQuotePage() {
       setTourProducts(data || []);
     } catch (error) {
       console.error("Error fetching tour products:", error);
+    }
+  };
+
+  const fetchQuoteData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("singsing_tours")
+        .select("*")
+        .eq("id", quoteId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        const quoteData = typeof data.quote_data === 'string' 
+          ? JSON.parse(data.quote_data) 
+          : data.quote_data;
+          
+        setFormData({
+          title: data.title,
+          tour_product_id: data.tour_product_id || "",
+          start_date: data.start_date,
+          end_date: data.end_date,
+          price: data.price,
+          max_participants: data.max_participants,
+          customer_name: data.customer_name || "",
+          customer_phone: data.customer_phone || "",
+          customer_email: "",
+          quote_expires_at: data.quote_expires_at || "",
+          quote_status: data.quote_status || "draft",
+          quote_notes: data.quote_notes || "",
+          quote_data: quoteData || {
+            participants: {
+              estimated_count: data.max_participants,
+              group_name: "",
+              leader_name: "",
+              leader_phone: ""
+            },
+            includeExclude: {
+              includes: ["왕복 전용버스", "그린피 및 카트비", "숙박", "조식"],
+              excludes: ["개인 경비", "캐디피", "중식 및 석식", "여행자 보험"]
+            },
+            schedules: [],
+            additional_options: [],
+            special_requests: ""
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching quote:", error);
+      alert("견적서를 불러오는 중 오류가 발생했습니다.");
+      router.push("/admin/quotes");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -188,13 +240,12 @@ export default function NewQuotePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
 
     try {
-      // 견적서 데이터로 투어 생성
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("singsing_tours")
-        .insert({
+        .update({
           title: formData.title,
           tour_product_id: formData.tour_product_id || null,
           start_date: formData.start_date,
@@ -206,30 +257,38 @@ export default function NewQuotePage() {
           quote_expires_at: formData.quote_expires_at,
           quote_status: formData.quote_status,
           quote_data: formData.quote_data,
-          quote_notes: formData.quote_notes || null
+          quote_notes: formData.quote_notes || null,
+          updated_at: new Date().toISOString()
         })
-        .select()
-        .single();
+        .eq('id', quoteId);
 
       if (error) throw error;
 
-      alert("견적서가 생성되었습니다.");
+      alert("견적서가 저장되었습니다.");
       router.push("/admin/quotes");
     } catch (error) {
-      console.error("Error creating quote:", error);
-      alert("견적서 생성 중 오류가 발생했습니다.");
+      console.error("Error updating quote:", error);
+      alert("견적서 저장 중 오류가 발생했습니다.");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const handlePreview = () => {
-    // 미리보기를 위한 임시 데이터 저장
-    localStorage.setItem('quotePreviewData', JSON.stringify(formData));
-    setPreviewOpen(true);
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}/quote/${quoteId}`;
+    navigator.clipboard.writeText(url);
+    alert('견적서 링크가 복사되었습니다.');
   };
 
   const duration = calculateDays();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -244,8 +303,28 @@ export default function NewQuotePage() {
             견적서 목록으로
           </Link>
           
-          <h1 className="text-2xl font-bold text-gray-900">새 견적서 작성</h1>
-          <p className="text-gray-600 mt-1">고객에게 발송할 견적서를 작성합니다.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">견적서 수정</h1>
+              <p className="text-gray-600 mt-1">견적서 정보를 수정합니다.</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => window.open(`/quote/${quoteId}`, '_blank')}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                미리보기
+              </button>
+              <button
+                onClick={handleCopyLink}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                링크 복사
+              </button>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -540,6 +619,9 @@ export default function NewQuotePage() {
                 >
                   <option value="draft">작성중</option>
                   <option value="sent">발송됨</option>
+                  <option value="viewed">열람됨</option>
+                  <option value="accepted">수락됨</option>
+                  <option value="rejected">거절됨</option>
                 </select>
               </div>
             </div>
@@ -560,48 +642,23 @@ export default function NewQuotePage() {
 
           {/* 액션 버튼 */}
           <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={handlePreview}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+            <Link
+              href="/admin/quotes"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <Eye className="w-4 h-4" />
-              미리보기
-            </button>
+              취소
+            </Link>
             <button
               type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={saving}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {loading ? "생성 중..." : "견적서 생성"}
+              <Save className="w-4 h-4" />
+              {saving ? "저장 중..." : "저장"}
             </button>
           </div>
         </form>
       </div>
-
-      {/* 미리보기 모달 */}
-      {previewOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-semibold">견적서 미리보기</h3>
-              <button
-                onClick={() => setPreviewOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="overflow-y-auto" style={{ height: 'calc(90vh - 60px)' }}>
-              <iframe
-                src="/quote/preview"
-                className="w-full h-full"
-                style={{ minHeight: '800px' }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

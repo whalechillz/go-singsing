@@ -8,6 +8,7 @@ const navLinks = [
   { href: "/admin/participants", label: "투어 현황표" },
   { href: "/admin/tours", label: "투어 스케쥴 관리" },
   { href: "/admin/documents", label: "문서 관리" },
+  { href: "/admin/quotes", label: "견적서 관리" },
 ];
 
 export default function AdminNavbar() {

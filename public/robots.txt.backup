@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /quote/
+Disallow: /admin/
+Disallow: /api/

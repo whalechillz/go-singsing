@@ -41,12 +41,12 @@ export default function PublicQuotePage() {
 
   const fetchQuoteDetails = async () => {
     try {
-      // 견적 정보 가져오기 (status가 quote인 것만)
+      // 견적 정보 가져오기 (quote_data가 있는 것)
       const { data: quoteData, error: quoteError } = await supabase
         .from("singsing_tours")
         .select("*")
         .eq("id", quoteId)
-        .eq("status", "quote")
+        .not('quote_data', 'is', null)
         .single();
       
       if (quoteError) throw new Error("견적을 찾을 수 없습니다.");
