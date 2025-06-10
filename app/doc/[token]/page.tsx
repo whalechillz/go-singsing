@@ -59,6 +59,40 @@ export default function PublicDocumentPage() {
             setProductData(product);
           }
 
+          // 일정 정보 가져오기 (중요!)
+          const { data: schedules } = await supabase
+            .from('singsing_schedules')
+            .select(`
+              *,
+              schedule_items:singsing_schedule_items(
+                *,
+                attraction_data:attraction_id(
+                  id,
+                  name,
+                  description,
+                  main_image_url
+                )
+              )
+            `)
+            .eq('tour_id', linkData.tour_id)
+            .order('date');
+
+          // 스케줄 데이터를 tourData에 추가
+          if (schedules) {
+            // schedule_items를 order_no로 정렬
+            const schedulesWithOrderedItems = schedules.map(schedule => ({
+              ...schedule,
+              schedule_items: schedule.schedule_items?.sort((a: any, b: any) => 
+                (a.order_no || 0) - (b.order_no || 0)
+              ) || []
+            }));
+            
+            setTourData({
+              ...linkData.singsing_tours,
+              schedules: schedulesWithOrderedItems
+            });
+          }
+
           // 여정 정보 (탑승안내용)
           const { data: journeys } = await supabase
             .from('tour_journey_items')

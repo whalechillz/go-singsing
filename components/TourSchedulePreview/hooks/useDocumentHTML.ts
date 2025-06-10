@@ -40,6 +40,11 @@ export function useDocumentHTML({
           html = generateCustomerScheduleHTML(tourData, productData);
           break;
 
+        case 'staff_schedule':
+          // 스탭용 일정표는 고객용과 동일하되, 추가 정보 포함
+          html = generateCustomerScheduleHTML(tourData, productData);
+          break;
+
         case 'customer_boarding':
           html = generateBoardingGuideHTML(tourData, journeyItems, false);
           break;
