@@ -48,6 +48,17 @@ export default async function ShortLinkRedirect({
     const tourId = linkData.tour_id;
     
     switch (linkData.document_type) {
+      // 새로운 통합 링크 타입
+      case 'customer_all':
+        return `/public-document/${tourId}`;
+      
+      case 'staff_all':
+        return `/public-document/${tourId}?staff=true`;
+      
+      case 'golf_timetable':
+        return `/public-document/${tourId}?golf=true#timetable`;
+      
+      // 기존 개별 링크 타입들 (호환성 유지)
       case 'customer_schedule':
       case 'simplified':
         return `/public-document/${tourId}`;

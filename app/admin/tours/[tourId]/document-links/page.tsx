@@ -38,7 +38,7 @@ export default function DocumentLinksPage() {
   const [editingLink, setEditingLink] = useState<DocumentLink | null>(null);
   
   // 새 문서 링크 폼 상태
-  const [newDocumentType, setNewDocumentType] = useState('customer_schedule');
+  const [newDocumentType, setNewDocumentType] = useState('customer_all');
   const [expirationDays, setExpirationDays] = useState('');
   
   // 수정 폼 상태
@@ -46,14 +46,18 @@ export default function DocumentLinksPage() {
   const [editExpirationDays, setEditExpirationDays] = useState('');
 
   const documentTypeOptions = [
-    { value: 'customer_schedule', label: '고객용 일정표' },
-    { value: 'staff_schedule', label: '스탭용 일정표' },
-    { value: 'customer_boarding', label: '고객용 탑승안내' },
-    { value: 'staff_boarding', label: '스탭용 탑승안내' },
-    { value: 'room_assignment', label: '고객용 객실배정' },
-    { value: 'room_assignment_staff', label: '스탭용 객실배정' },
-    { value: 'customer_timetable', label: '고객용 티타임표' },
-    { value: 'staff_timetable', label: '스탭용 티타임표' },
+    { value: 'customer_all', label: '✅ 고객용 통합 문서 (추천)' },
+    { value: 'staff_all', label: '✅ 스탭용 통합 문서 (추천)' },
+    { value: 'golf_timetable', label: '⛳ 골프장 전용 티타임표' },
+    // 기존 개별 문서 타입들 (호환성 유지)
+    { value: 'customer_schedule', label: '고객용 일정표 (개별)' },
+    { value: 'staff_schedule', label: '스탭용 일정표 (개별)' },
+    { value: 'customer_boarding', label: '고객용 탑승안내 (개별)' },
+    { value: 'staff_boarding', label: '스탭용 탑승안내 (개별)' },
+    { value: 'room_assignment', label: '고객용 객실배정 (개별)' },
+    { value: 'room_assignment_staff', label: '스탭용 객실배정 (개별)' },
+    { value: 'customer_timetable', label: '고객용 티타임표 (개별)' },
+    { value: 'staff_timetable', label: '스탭용 티타임표 (개별)' },
     { value: 'simplified', label: '간편일정' },
   ];
 
@@ -122,7 +126,7 @@ export default function DocumentLinksPage() {
 
       setDocumentLinks([data, ...documentLinks]);
       setIsCreateModalOpen(false);
-      setNewDocumentType('customer_schedule');
+      setNewDocumentType('customer_all');
       setExpirationDays('');
       alert('문서 링크가 생성되었습니다.');
     } catch (error) {
@@ -281,11 +285,28 @@ export default function DocumentLinksPage() {
               <div key={link.id} className={`bg-white rounded-lg shadow-sm border ${isExpired ? 'opacity-60' : ''}`}>
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                      <h3 className="text-lg font-semibold">
-                        {documentType?.label || link.document_type}
-                      </h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                        <h3 className="text-lg font-semibold">
+                          {documentType?.label || link.document_type}
+                        </h3>
+                      </div>
+                      {link.document_type === 'customer_all' && (
+                        <p className="text-xs text-gray-500 ml-8">
+                          탭으로 문서 전환 가능 (일정표, 탑승안내, 객실배정, 티타임표, 간편일정)
+                        </p>
+                      )}
+                      {link.document_type === 'staff_all' && (
+                        <p className="text-xs text-gray-500 ml-8">
+                          탭으로 문서 전환 가능 (일정표, 탑승안내, 객실배정, 티타임표)
+                        </p>
+                      )}
+                      {link.document_type === 'golf_timetable' && (
+                        <p className="text-xs text-orange-600 ml-8">
+                          티타임표만 표시 - 골프장 공유용
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <button

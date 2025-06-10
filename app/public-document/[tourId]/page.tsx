@@ -27,6 +27,7 @@ export default function PublicDocumentPage() {
   const searchParams = useSearchParams();
   const tourId = params.tourId as string;
   const isStaff = searchParams.get('staff') === 'true';
+  const isGolf = searchParams.get('golf') === 'true';
   const [activeTab, setActiveTab] = useState<DocumentType>('customer_schedule');
   
   const {
@@ -52,6 +53,12 @@ export default function PublicDocumentPage() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1); // # 제거
+      
+      // 골프장 전용 모드일 때는 티타임표로 고정
+      if (isGolf) {
+        setActiveTab('staff_timetable');
+        return;
+      }
       
       switch (hash) {
         case 'boarding':
@@ -80,7 +87,7 @@ export default function PublicDocumentPage() {
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
-  }, [isStaff]);
+  }, [isStaff, isGolf]);
 
   const handlePrint = () => {
     window.print();
@@ -126,10 +133,13 @@ export default function PublicDocumentPage() {
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">{tourData.title}</h1>
+              <h1 className="text-xl font-bold">
+                {isGolf ? `${tourData.title} - 티타임표` : tourData.title}
+              </h1>
               <p className="text-sm text-gray-600">
                 {new Date(tourData.start_date).toLocaleDateString('ko-KR')} ~ 
                 {' '}{new Date(tourData.end_date).toLocaleDateString('ko-KR')}
+                {isGolf && <span className="ml-2 text-blue-600">(골프장 전용)</span>}
               </p>
             </div>
             <button
@@ -143,25 +153,27 @@ export default function PublicDocumentPage() {
         </div>
       </div>
 
-      {/* 문서 선택 탭 */}
-      <div className="max-w-7xl mx-auto px-4 py-4 no-print">
-        <div className="flex flex-wrap gap-2">
-          {(isStaff ? STAFF_DOCUMENT_TYPES : PUBLIC_DOCUMENT_TYPES).map((doc) => (
-            <button
-              key={doc.id}
-              onClick={() => setActiveTab(doc.id)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                activeTab === doc.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
-              }`}
-            >
-              <span className="mr-2">{doc.icon}</span>
-              {doc.label}
-            </button>
-          ))}
+      {/* 문서 선택 탭 - 골프장 전용일 때는 숨김 */}
+      {!isGolf && (
+        <div className="max-w-7xl mx-auto px-4 py-4 no-print">
+          <div className="flex flex-wrap gap-2">
+            {(isStaff ? STAFF_DOCUMENT_TYPES : PUBLIC_DOCUMENT_TYPES).map((doc) => (
+              <button
+                key={doc.id}
+                onClick={() => setActiveTab(doc.id)}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  activeTab === doc.id
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+                }`}
+              >
+                <span className="mr-2">{doc.icon}</span>
+                {doc.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 문서 내용 */}
       <div className="max-w-7xl mx-auto px-4 pb-8 print:p-0">
