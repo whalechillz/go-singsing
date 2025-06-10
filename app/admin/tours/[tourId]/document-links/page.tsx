@@ -9,11 +9,13 @@ interface DocumentLink {
   id: string;
   tour_id: string;
   document_type: string;
-  access_token: string;
+  public_url: string;
   is_active: boolean;
   expires_at: string | null;
   view_count: number;
   created_at: string;
+  first_viewed_at?: string | null;
+  last_viewed_at?: string | null;
 }
 
 interface Tour {
@@ -88,8 +90,13 @@ export default function DocumentLinksPage() {
     }
   };
 
-  const generateAccessToken = () => {
-    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  const generatePublicUrl = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   };
 
   const handleCreateLink = async () => {
@@ -103,7 +110,7 @@ export default function DocumentLinksPage() {
         .insert({
           tour_id: tourId,
           document_type: newDocumentType,
-          access_token: generateAccessToken(),
+          public_url: generatePublicUrl(),
           expires_at: expiresAt,
           is_active: true,
           view_count: 0
@@ -219,8 +226,8 @@ export default function DocumentLinksPage() {
     }
   };
 
-  const getDocumentUrl = (token: string) => {
-    return `${window.location.origin}/doc/${token}`;
+  const getDocumentUrl = (publicUrl: string) => {
+    return `${window.location.origin}/s/${publicUrl}`;
   };
 
   if (loading) {
@@ -310,19 +317,19 @@ export default function DocumentLinksPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        value={getDocumentUrl(link.access_token)}
+                        value={getDocumentUrl(link.public_url)}
                         readOnly
                         className="flex-1 px-3 py-2 border rounded-md bg-gray-50 text-sm"
                       />
                       <button
-                        onClick={() => copyToClipboard(getDocumentUrl(link.access_token))}
+                        onClick={() => copyToClipboard(getDocumentUrl(link.public_url))}
                         className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
                         title="링크 복사"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => window.open(getDocumentUrl(link.access_token), '_blank')}
+                        onClick={() => window.open(getDocumentUrl(link.public_url), '_blank')}
                         className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
                         title="새 탭에서 열기"
                       >

@@ -25,6 +25,8 @@ interface TourProduct {
   golf_course: string | null;
   hotel: string | null;
   courses: string[] | null;
+  included_items?: string | null;
+  excluded_items?: string | null;
 }
 
 export default function NewQuotePage() {
@@ -112,11 +114,50 @@ export default function NewQuotePage() {
     if (productId) {
       const product = tourProducts.find(p => p.id === productId);
       if (product) {
+        // 포함/불포함 사항 처리
+        const includes = product.included_items 
+          ? product.included_items.split(',').map(item => item.trim()).filter(item => item)
+          : prev.quote_data.includeExclude.includes;
+        
+        const excludes = product.excluded_items
+          ? product.excluded_items.split(',').map(item => item.trim()).filter(item => item)
+          : prev.quote_data.includeExclude.excludes;
+        
         setFormData(prev => ({
           ...prev,
-          title: `${product.name} 견적서`
+          title: `${product.name} 견적서`,
+          quote_data: {
+            ...prev.quote_data,
+            includeExclude: {
+              includes,
+              excludes
+            }
+          }
         }));
       }
+    } else {
+      // 상품 선택 해제 시 기본값으로 복원
+      setFormData(prev => ({
+        ...prev,
+        title: "",
+        quote_data: {
+          ...prev.quote_data,
+          includeExclude: {
+            includes: [
+              "왕복 전용버스",
+              "그린피 및 카트비",
+              "숙박",
+              "조식"
+            ],
+            excludes: [
+              "개인 경비",
+              "캐디피",
+              "중식 및 석식",
+              "여행자 보험"
+            ]
+          }
+        }
+      }));
     }
   };
 

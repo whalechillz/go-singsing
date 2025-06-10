@@ -27,6 +27,8 @@ interface TourProduct {
   golf_course: string | null;
   hotel: string | null;
   courses: string[] | null;
+  included_items?: string | null;
+  excluded_items?: string | null;
 }
 
 export default function EditQuotePage() {
@@ -178,11 +180,50 @@ export default function EditQuotePage() {
     if (productId) {
       const product = tourProducts.find(p => p.id === productId);
       if (product) {
+        // 포함/불포함 사항 처리
+        const includes = product.included_items 
+          ? product.included_items.split(',').map(item => item.trim()).filter(item => item)
+          : prev.quote_data.includeExclude.includes;
+        
+        const excludes = product.excluded_items
+          ? product.excluded_items.split(',').map(item => item.trim()).filter(item => item)
+          : prev.quote_data.includeExclude.excludes;
+        
         setFormData(prev => ({
           ...prev,
-          title: `${product.name} 견적서`
+          title: `${product.name} 견적서`,
+          quote_data: {
+            ...prev.quote_data,
+            includeExclude: {
+              includes,
+              excludes
+            }
+          }
         }));
       }
+    } else {
+      // 상품 선택 해제 시 기본값으로 복원
+      setFormData(prev => ({
+        ...prev,
+        title: "",
+        quote_data: {
+          ...prev.quote_data,
+          includeExclude: {
+            includes: [
+              "왕복 전용버스",
+              "그린피 및 카트비",
+              "숙박",
+              "조식"
+            ],
+            excludes: [
+              "개인 경비",
+              "캐디피",
+              "중식 및 석식",
+              "여행자 보험"
+            ]
+          }
+        }
+      }));
     }
   };
 
@@ -278,6 +319,14 @@ export default function EditQuotePage() {
 
       if (error) throw error;
 
+      // 공개 링크가 있는 경우 만료일 업데이트
+      if (documentLink) {
+        await supabase
+          .from("public_document_links")
+          .update({ expires_at: formData.quote_expires_at })
+          .eq("id", documentLink.id);
+      }
+
       alert("견적서가 저장되었습니다.");
       router.push("/admin/quotes");
     } catch (error) {
@@ -325,15 +374,17 @@ export default function EditQuotePage() {
     }
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = (isPublicLink: boolean = false) => {
     let url;
-    if (documentLink?.public_url) {
-      url = `${window.location.origin}/q/${documentLink.public_url}`;
+    if (isPublicLink && documentLink?.public_url) {
+      // 공개 링크 (/s/ 경로 사용)
+      url = `${window.location.origin}/s/${documentLink.public_url}`;
     } else {
+      // 일반 공유 링크
       url = `${window.location.origin}/quote/${quoteId}`;
     }
     navigator.clipboard.writeText(url);
-    alert('견적서 링크가 복사되었습니다.');
+    alert(isPublicLink ? '공개 링크가 복사되었습니다.' : '공유 링크가 복사되었습니다.');
   };
 
   const duration = calculateDays();
@@ -382,15 +433,21 @@ export default function EditQuotePage() {
                 </button>
               )}
               <button
-                onClick={handleCopyLink}
+                onClick={() => handleCopyLink(false)}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
-                <Copy className="w-4 h-4" />
-                링크 복사
-                {documentLink && (
-                  <span className="text-xs text-gray-500">(/q/{documentLink.public_url})</span>
-                )}
+                <Share2 className="w-4 h-4" />
+                공유 링크 복사
               </button>
+              {documentLink && (
+                <button
+                  onClick={() => handleCopyLink(true)}
+                  className="px-4 py-2 text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  공개 링크 복사
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -410,14 +467,14 @@ export default function EditQuotePage() {
                     <div className="flex-1">
                       <p className="text-sm text-gray-600 mb-1">공개 링크</p>
                       <p className="font-mono text-sm bg-white px-3 py-2 rounded border border-gray-200">
-                        {window.location.origin}/q/{documentLink.public_url}
+                        {window.location.origin}/s/{documentLink.public_url}
                       </p>
                     </div>
                     <button
                       type="button"
-                      onClick={handleCopyLink}
+                      onClick={() => handleCopyLink(true)}
                       className="ml-4 p-2 text-blue-600 hover:bg-blue-100 rounded transition-colors"
-                      title="링크 복사"
+                      title="공개 링크 복사"
                     >
                       <Copy className="w-5 h-5" />
                     </button>
@@ -773,7 +830,7 @@ export default function EditQuotePage() {
                       type="text"
                       readOnly
                       className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"
-                      value={`${window.location.origin}/q/${documentLink.public_url}`}
+                      value={`${window.location.origin}/s/${documentLink.public_url}`}
                     />
                     <button
                       type="button"

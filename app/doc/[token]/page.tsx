@@ -24,7 +24,7 @@ export default function PublicDocumentPage() {
         const { data: linkData, error: linkError } = await supabase
           .from('public_document_links')
           .select('*, singsing_tours(*)')
-          .eq('access_token', token)
+          .eq('public_url', token)
           .eq('is_active', true)
           .single();
 
