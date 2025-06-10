@@ -4,20 +4,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, Copy, ExternalLink, Trash2, Plus, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 interface DocumentLink {
@@ -202,18 +188,19 @@ export default function DocumentLinksPage() {
       </div>
 
       <div className="mb-6">
-        <Button onClick={() => setIsCreateModalOpen(true)}>
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        >
           <Plus className="w-4 h-4 mr-2" />
           새 문서 링크 생성
-        </Button>
+        </button>
       </div>
 
       {documentLinks.length === 0 ? (
-        <Alert>
-          <AlertDescription>
-            아직 생성된 문서 링크가 없습니다. 위의 버튼을 클릭하여 새로운 링크를 생성하세요.
-          </AlertDescription>
-        </Alert>
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
+          아직 생성된 문서 링크가 없습니다. 위의 버튼을 클릭하여 새로운 링크를 생성하세요.
+        </div>
       ) : (
         <div className="grid gap-4">
           {documentLinks.map((link) => {
@@ -221,34 +208,35 @@ export default function DocumentLinksPage() {
             const isExpired = link.expires_at && new Date(link.expires_at) < new Date();
             
             return (
-              <Card key={link.id} className={isExpired ? 'opacity-60' : ''}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
+              <div key={link.id} className={`bg-white rounded-lg shadow-sm border ${isExpired ? 'opacity-60' : ''}`}>
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <FileText className="w-5 h-5 text-blue-600" />
-                      <CardTitle className="text-lg">
+                      <h3 className="text-lg font-semibold">
                         {documentType?.label || link.document_type}
-                      </CardTitle>
+                      </h3>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant={link.is_active ? "secondary" : "outline"}
-                        size="sm"
+                      <button
                         onClick={() => handleToggleActive(link.id, link.is_active)}
+                        className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                          link.is_active 
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
                       >
                         {link.is_active ? '활성' : '비활성'}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      </button>
+                      <button
                         onClick={() => handleDeleteLink(link.id)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </Button>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
+                  
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <input
@@ -257,20 +245,18 @@ export default function DocumentLinksPage() {
                         readOnly
                         className="flex-1 px-3 py-2 border rounded-md bg-gray-50 text-sm"
                       />
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => copyToClipboard(getDocumentUrl(link.access_token))}
+                        className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
                       >
                         <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      </button>
+                      <button
                         onClick={() => window.open(getDocumentUrl(link.access_token), '_blank')}
+                        className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
                       >
                         <ExternalLink className="w-4 h-4" />
-                      </Button>
+                      </button>
                     </div>
                     
                     <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -284,67 +270,85 @@ export default function DocumentLinksPage() {
                       )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
       )}
 
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>새 문서 링크 생성</DialogTitle>
-            <DialogDescription>
-              공개적으로 접근 가능한 문서 링크를 생성합니다.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="document-type">문서 종류</Label>
-              <Select
-                value={newDocumentType}
-                onValueChange={setNewDocumentType}
+      {/* 모달 */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">새 문서 링크 생성</h2>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
               >
-                <SelectTrigger id="document-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {documentTypeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <X className="w-5 h-5" />
+              </button>
             </div>
             
-            <div>
-              <Label htmlFor="expiration">만료 기한 (일)</Label>
-              <Input
-                id="expiration"
-                type="number"
-                placeholder="비워두면 무제한"
-                value={expirationDays}
-                onChange={(e) => setExpirationDays(e.target.value)}
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                링크가 자동으로 만료될 날짜를 설정합니다.
-              </p>
+            <p className="text-gray-600 mb-6">
+              공개적으로 접근 가능한 문서 링크를 생성합니다.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="document-type" className="block text-sm font-medium text-gray-700 mb-1">
+                  문서 종류
+                </label>
+                <select
+                  id="document-type"
+                  value={newDocumentType}
+                  onChange={(e) => setNewDocumentType(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {documentTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="expiration" className="block text-sm font-medium text-gray-700 mb-1">
+                  만료 기한 (일)
+                </label>
+                <input
+                  id="expiration"
+                  type="number"
+                  placeholder="비워두면 무제한"
+                  value={expirationDays}
+                  onChange={(e) => setExpirationDays(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  링크가 자동으로 만료될 날짜를 설정합니다.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleCreateLink}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                생성
+              </button>
             </div>
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-              취소
-            </Button>
-            <Button onClick={handleCreateLink}>
-              생성
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }
