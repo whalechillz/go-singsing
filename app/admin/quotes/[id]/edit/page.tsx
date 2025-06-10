@@ -412,7 +412,7 @@ export default function EditQuotePage() {
       url = `${window.location.origin}/quote/${quoteId}`;
     }
     navigator.clipboard.writeText(url);
-    alert(isPublicLink ? '공개 링크가 복사되었습니다.' : '공유 링크가 복사되었습니다.');
+    alert(isPublicLink ? '고객용 공개 링크가 복사되었습니다.' : '내부용 링크가 복사되었습니다.');
   };
 
   const duration = calculateDays();
@@ -463,17 +463,19 @@ export default function EditQuotePage() {
               <button
                 onClick={() => handleCopyLink(false)}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                title="내부 관리용 링크 (ID 노출)"
               >
                 <Share2 className="w-4 h-4" />
-                공유 링크 복사
+                내부 링크 복사
               </button>
               {documentLink && (
                 <button
                   onClick={() => handleCopyLink(true)}
                   className="px-4 py-2 text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
+                  title="고객에게 전달하는 보안 링크 (만료일 설정 가능)"
                 >
                   <Copy className="w-4 h-4" />
-                  공개 링크 복사
+                  고객용 공개 링크 복사
                 </button>
               )}
             </div>
