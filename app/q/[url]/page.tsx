@@ -9,9 +9,9 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export default async function ShortLinkRedirect({
   params
 }: {
-  params: { url: string }
+  params: Promise<{ url: string }>
 }) {
-  const { url } = params;
+  const { url } = await params;
   
   // 공개 링크 정보 조회
   const { data: linkData, error } = await supabase
