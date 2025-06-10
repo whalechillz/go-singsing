@@ -19,7 +19,8 @@ import {
   Briefcase,
   Bus,
   Utensils,
-  Camera
+  Camera,
+  CheckCircle
 } from 'lucide-react';
 
 interface QuoteFormProps {
@@ -54,6 +55,21 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
     quote_notes: '',
     status: 'quote'
   });
+  
+  const [includeExclude, setIncludeExclude] = useState({
+    includes: [
+      '왕복 전용버스',
+      '그린피 및 카트비',
+      '숙박',
+      '조식 제공'
+    ],
+    excludes: [
+      '개인 경비',
+      '캐디피',
+      '중식 및 석식',
+      '여행자 보험'
+    ]
+  });
 
   useEffect(() => {
     fetchTourProducts();
@@ -72,6 +88,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
         
         if (quoteData.schedules) setSchedules(quoteData.schedules);
         if (quoteData.participants) setParticipantInfo(quoteData.participants);
+        if (quoteData.includeExclude) setIncludeExclude(quoteData.includeExclude);
       }
       
       // tour_journey_items 가져오기
@@ -119,7 +136,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
   const fetchTourProducts = async () => {
     const { data } = await supabase
       .from("tour_products")
-      .select("*")
+      .select("*, included_items, excluded_items")
       .order("name");
     
     if (data) setTourProducts(data);
@@ -150,6 +167,17 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
         tour_product_id: productId,
         title: `${product.name} - ${form.start_date || '날짜 미정'}`
       });
+      
+      // 여행상품의 포함/불포함 사항 가져오기
+      if (product.included_items || product.excluded_items) {
+        const includes = product.included_items ? product.included_items.split(',').map((item: string) => item.trim()) : includeExclude.includes;
+        const excludes = product.excluded_items ? product.excluded_items.split(',').map((item: string) => item.trim()) : includeExclude.excludes;
+        
+        setIncludeExclude({
+          includes: includes.filter((item: string) => item.length > 0),
+          excludes: excludes.filter((item: string) => item.length > 0)
+        });
+      }
     }
   };
 
@@ -170,7 +198,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
       // 견적 데이터에 일정과 참가자 정보 포함
       const quoteData = {
         schedules,
-        participants: participantInfo
+        participants: participantInfo,
+        includeExclude
       };
 
       const payload = {
@@ -236,7 +265,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
   const tabs = [
     { id: 'basic', label: '기본 정보', icon: FileText },
     { id: 'schedule', label: '일정 관리', icon: Calendar },
-    { id: 'participants', label: '참가자 정보', icon: Users }
+    { id: 'participants', label: '참가자 정보', icon: Users },
+    { id: 'includeExclude', label: '포함/불포함', icon: CheckCircle }
   ];
 
   return (
@@ -460,15 +490,21 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
               </p>
             ) : (
               <div className="space-y-6">
-                {schedules.map((schedule, index) => {
-                  const dayJourneyItems = journeyItems.filter(item => item.day_number === schedule.day);
+                {/* 일자별로 표시 */}
+                {Array.from({ length: schedules.length }, (_, dayIndex) => {
+                  const dayNumber = dayIndex + 1;
+                  const schedule = schedules[dayIndex];
+                  const dayJourneyItems = journeyItems.filter(item => item.day_number === dayNumber);
                   
                   return (
-                    <div key={index} className="border rounded-lg p-4">
+                    <div key={dayIndex} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-medium">
-                          Day {schedule.day} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
+                        <h4 className="font-medium text-lg">
+                          Day {dayNumber} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
                         </h4>
+                        <span className="text-sm text-gray-500">
+                          {dayJourneyItems.length}개 일정
+                        </span>
                       </div>
                       <div className="space-y-3">
                         <div>
@@ -479,7 +515,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
                             type="text"
                             className="w-full border rounded-lg px-3 py-2"
                             value={schedule.title}
-                            onChange={(e) => handleScheduleChange(index, 'title', e.target.value)}
+                            onChange={(e) => handleScheduleChange(dayIndex, 'title', e.target.value)}
                             placeholder="예: 서울 출발 → 순천 도착"
                           />
                         </div>
@@ -491,7 +527,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
                             className="w-full border rounded-lg px-3 py-2"
                             rows={3}
                             value={schedule.description}
-                            onChange={(e) => handleScheduleChange(index, 'description', e.target.value)}
+                            onChange={(e) => handleScheduleChange(dayIndex, 'description', e.target.value)}
                             placeholder="주요 일정을 입력하세요..."
                           />
                         </div>
@@ -500,12 +536,12 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
                         {dayJourneyItems.length > 0 ? (
                           <div className="mt-4">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              등록된 일정 항목
+                              Day {dayNumber} 등록된 일정 항목
                             </label>
                             <div className="bg-gray-50 rounded-lg p-3 space-y-2">
                               {dayJourneyItems.map((item, idx) => (
                                 <div key={item.id} className="flex items-center gap-3 bg-white p-2 rounded border">
-                                  <span className="text-sm font-medium text-gray-500">{item.order_index}</span>
+                                  <span className="text-sm font-medium text-gray-500 w-6">{idx + 1}</span>
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                       {item.spot?.category === 'boarding' && <Bus className="w-4 h-4 text-blue-500" />}
@@ -547,7 +583,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
                         ) : initialData?.id ? (
                           <div className="mt-4 bg-gray-50 rounded-lg p-4 text-center">
                             <p className="text-sm text-gray-600 mb-2">
-                              아직 등록된 일정 항목이 없습니다.
+                              Day {dayNumber}에 등록된 일정이 없습니다.
                             </p>
                             <Link 
                               href={`/admin/tours/${initialData.id}/schedule`} 
@@ -640,6 +676,117 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
               <p className="text-sm text-blue-800">
                 <strong>안내:</strong> 견적이 확정되어 투어로 전환되면, 여기에 입력한 정보를 바탕으로 
                 상세한 참가자 명단을 추가할 수 있습니다.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* 포함/불포함 사항 탭 */}
+        {activeTab === 'includeExclude' && (
+          <div className="space-y-6">
+            {/* 포함 사항 */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  포함 사항
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIncludeExclude({
+                    ...includeExclude,
+                    includes: [...includeExclude.includes, '']
+                  })}
+                  className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  추가
+                </button>
+              </div>
+              <div className="space-y-2">
+                {includeExclude.includes.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <input
+                      type="text"
+                      className="flex-1 border rounded-lg px-3 py-2"
+                      value={item}
+                      onChange={(e) => {
+                        const newIncludes = [...includeExclude.includes];
+                        newIncludes[index] = e.target.value;
+                        setIncludeExclude({ ...includeExclude, includes: newIncludes });
+                      }}
+                      placeholder="포함 사항을 입력하세요"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newIncludes = includeExclude.includes.filter((_, i) => i !== index);
+                        setIncludeExclude({ ...includeExclude, includes: newIncludes });
+                      }}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* 불포함 사항 */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <X className="w-5 h-5 text-gray-600" />
+                  불포함 사항
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIncludeExclude({
+                    ...includeExclude,
+                    excludes: [...includeExclude.excludes, '']
+                  })}
+                  className="px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-1 text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  추가
+                </button>
+              </div>
+              <div className="space-y-2">
+                {includeExclude.excludes.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <X className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <input
+                      type="text"
+                      className="flex-1 border rounded-lg px-3 py-2"
+                      value={item}
+                      onChange={(e) => {
+                        const newExcludes = [...includeExclude.excludes];
+                        newExcludes[index] = e.target.value;
+                        setIncludeExclude({ ...includeExclude, excludes: newExcludes });
+                      }}
+                      placeholder="불포함 사항을 입력하세요"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newExcludes = includeExclude.excludes.filter((_, i) => i !== index);
+                        setIncludeExclude({ ...includeExclude, excludes: newExcludes });
+                      }}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>안내:</strong> 견적서에 표시될 포함/불포함 사항을 관리할 수 있습니다. 
+                여행상품 선택 시 자동으로 해당 상품의 포함/불포함 사항이 불러와집니다.
+                필요에 따라 수정하거나 새로운 항목을 추가할 수 있습니다.
               </p>
             </div>
           </div>

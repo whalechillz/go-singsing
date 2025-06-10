@@ -494,22 +494,21 @@ export default function PublicQuotePage() {
                   포함 사항
                 </h3>
                 <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">왕복 전용버스</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">그린피 및 카트비</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">숙박 ({duration.nights}박)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">조식 제공</span>
-                  </li>
+                  {(quoteData?.includeExclude?.includes || [
+                    '왕복 전용버스',
+                    '그린피 및 카트비',
+                    `숙박 (${duration.nights}박)`,
+                    '조식 제공'
+                  ]).map((item, index) => (
+                    item && (
+                      <li key={index} className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">
+                          {item.includes('숙박') && !item.includes('(') ? `${item} (${duration.nights}박)` : item}
+                        </span>
+                      </li>
+                    )
+                  ))}
                 </ul>
               </div>
 
@@ -519,22 +518,19 @@ export default function PublicQuotePage() {
                   불포함 사항
                 </h3>
                 <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <X className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">개인 경비</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <X className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">캐디피</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <X className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">중식 및 석식</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <X className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">여행자 보험</span>
-                  </li>
+                  {(quoteData?.includeExclude?.excludes || [
+                    '개인 경비',
+                    '캐디피',
+                    '중식 및 석식',
+                    '여행자 보험'
+                  ]).map((item, index) => (
+                    item && (
+                      <li key={index} className="flex items-start gap-2">
+                        <X className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">{item}</span>
+                      </li>
+                    )
+                  ))}
                 </ul>
               </div>
             </div>
