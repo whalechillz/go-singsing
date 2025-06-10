@@ -33,7 +33,7 @@ export default function NotFound() {
         {/* 버튼 영역 */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
           <Link 
-            href="/" 
+            href="https://www.singsingtour.com/" 
             className="group bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             <span className="flex items-center gap-2">
@@ -45,17 +45,10 @@ export default function NotFound() {
           </Link>
           
           <Link 
-            href="/tour-schedule" 
+            href="https://go.singsinggolf.kr/" 
             className="bg-white text-purple-600 px-8 py-4 rounded-full text-lg font-medium border-2 border-purple-300 hover:bg-purple-50 transition-all shadow-md hover:shadow-lg"
           >
             투어 일정 보기
-          </Link>
-
-          <Link 
-            href="/quote" 
-            className="bg-white text-purple-600 px-8 py-4 rounded-full text-lg font-medium border-2 border-purple-300 hover:bg-purple-50 transition-all shadow-md hover:shadow-lg"
-          >
-            단체 견적 문의
           </Link>
         </div>
 
