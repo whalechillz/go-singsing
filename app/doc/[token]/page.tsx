@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useDocumentHTML } from '@/components/TourSchedulePreview/hooks/useDocumentHTML';
+import { Schedule, ScheduleItem } from '@/components/TourSchedulePreview/types';
 
 export default function PublicDocumentPage() {
   const params = useParams();
@@ -45,65 +46,159 @@ export default function PublicDocumentPage() {
           .eq('id', linkData.id);
 
         setDocumentData(linkData);
-        setTourData(linkData.singsing_tours);
+        const tour = linkData.singsing_tours;
 
         // 2. 투어 관련 데이터 조회
-        if (linkData.singsing_tours) {
+        if (tour) {
           // 상품 정보
-          if (linkData.singsing_tours.tour_product_id) {
+          if (tour.tour_product_id) {
             const { data: product } = await supabase
               .from('tour_products')
               .select('*')
-              .eq('id', linkData.singsing_tours.tour_product_id)
+              .eq('id', tour.tour_product_id)
               .single();
             setProductData(product);
           }
 
-          // 일정 정보 가져오기 (중요!)
-          const { data: schedules } = await supabase
-            .from('singsing_schedules')
-            .select(`
-              *,
-              schedule_items:singsing_schedule_items(
-                *,
-                attraction_data:attraction_id(
-                  id,
-                  name,
-                  description,
-                  main_image_url
-                )
-              )
-            `)
+          // 여정 아이템에서 일정 정보 가져오기
+          const { data: journeyData, error: journeyError } = await supabase
+            .from('tour_journey_items')
+            .select('*')
             .eq('tour_id', linkData.tour_id)
-            .order('date');
+            .order('day_number')
+            .order('order_index');
 
-          // 스케줄 데이터를 tourData에 추가
-          if (schedules) {
-            // schedule_items를 order_no로 정렬
-            const schedulesWithOrderedItems = schedules.map(schedule => ({
-              ...schedule,
-              schedule_items: schedule.schedule_items?.sort((a: any, b: any) => 
-                (a.order_no || 0) - (b.order_no || 0)
-              ) || []
+          if (journeyError) throw journeyError;
+          
+          // DAY_INFO 타입의 아이템에서 날짜별 정보 추출
+          const dayInfoItems = journeyData?.filter(item => item.order_index === 0) || [];
+          
+          // 스케줄 생성
+          let schedules: Schedule[] = [];
+          
+          if (dayInfoItems.length > 0) {
+            schedules = dayInfoItems.map(dayInfo => ({
+                id: dayInfo.id,
+                tour_id: dayInfo.tour_id,
+                date: dayInfo.day_date || new Date(new Date(tour.start_date).getTime() + (dayInfo.day_number - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                day_number: dayInfo.day_number,
+                title: dayInfo.notes || `Day ${dayInfo.day_number} 일정`,
+                meal_breakfast: Boolean(dayInfo.meal_breakfast),
+                meal_lunch: Boolean(dayInfo.meal_lunch),
+                meal_dinner: Boolean(dayInfo.meal_dinner),
+                menu_breakfast: dayInfo.menu_breakfast || '',
+                menu_lunch: dayInfo.menu_lunch || '',
+                menu_dinner: dayInfo.menu_dinner || '',
+                schedule_items: []
+              }));
+          } else {
+            // 기본 스케줄 생성
+            const startDate = new Date(tour.start_date);
+            const endDate = new Date(tour.end_date);
+            const dayCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            
+            for (let i = 0; i < dayCount; i++) {
+              const currentDate = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
+              schedules.push({
+                id: `temp-${i}`,
+                tour_id: linkData.tour_id,
+                date: currentDate.toISOString().split('T')[0],
+                day_number: i + 1,
+                title: `Day ${i + 1} 일정`,
+                meal_breakfast: false,
+                meal_lunch: false,
+                meal_dinner: false,
+                menu_breakfast: '',
+                menu_lunch: '',
+                menu_dinner: '',
+                schedule_items: []
+              });
+            }
+          }
+          
+          // 일반 여정 아이템 처리
+          const regularItems = journeyData?.filter(item => item.order_index > 0) || [];
+          
+          if (regularItems.length > 0) {
+            const itemsWithRelations = await Promise.all(regularItems.map(async (item) => {
+              let spot = null;
+              
+              if (item.spot_id) {
+                const { data } = await supabase
+                  .from('tourist_attractions')
+                  .select('*')
+                  .eq('id', item.spot_id)
+                  .single();
+                spot = data;
+              }
+              
+              return { ...item, spot };
             }));
             
-            setTourData({
-              ...linkData.singsing_tours,
-              schedules: schedulesWithOrderedItems
+            setJourneyItems(itemsWithRelations);
+            
+            // 각 날짜별로 일정 아이템 생성
+            schedules.forEach(schedule => {
+              const dayItems = itemsWithRelations.filter(item => item.day_number === schedule.day_number);
+              
+              schedule.schedule_items = dayItems.map(item => {
+                let content = '';
+                let time = item.arrival_time || '';
+                
+                // 스팟이 있으면 스팟 이름을 그대로 사용
+                if (item.spot) {
+                  content = item.spot.name;
+                  
+                  // 식사 메뉴가 있으면 추가
+                  if (item.meal_menu) {
+                    content += ` - ${item.meal_menu}`;
+                  }
+                } else {
+                  // 스팟이 없는 경우만 기본 처리
+                  if (item.boarding_type === 'arrival') {
+                    content = '도착';
+                  } else if (item.notes) {
+                    content = item.notes;
+                  } else if (item.meal_type) {
+                    const mealName = item.meal_type === 'breakfast' ? '조식' : item.meal_type === 'lunch' ? '중식' : item.meal_type === 'dinner' ? '석식' : item.meal_type === 'snack' ? '간편식' : '';
+                    content = mealName;
+                    if (item.meal_menu) {
+                      content += ` - ${item.meal_menu}`;
+                    }
+                  }
+                }
+                
+                return {
+                  time,
+                  content,
+                  attraction_data: item.spot
+                } as ScheduleItem;
+              });
             });
           }
 
-          // 여정 정보 (탑승안내용)
-          const { data: journeys } = await supabase
-            .from('tour_journey_items')
-            .select(`
-              *,
-              spot:spot_id(*)
-            `)
-            .eq('tour_id', linkData.tour_id)
-            .order('day_number, order_index');
+          // tourData 설정
+          const finalTourData = {
+            ...tour,
+            schedules: schedules,
+            staff: [],
+            tour_period: tour.tour_period || `${tour.start_date} ~ ${tour.end_date}`,
+            show_staff_info: tour.show_staff_info ?? true,
+            show_footer_message: tour.show_footer_message ?? true,
+            show_company_phones: tour.show_company_phones ?? true,
+            company_phone: tour.company_phone || '031-215-3990',
+            company_mobile: tour.company_mobile || '010-3332-9020',
+            golf_reservation_phone: tour.golf_reservation_phone || '',
+            golf_reservation_mobile: tour.golf_reservation_mobile || '',
+            footer_message: tour.footer_message || '♡ 즐거운 하루 되시길 바랍니다. ♡',
+            notices: tour.notices || '• 집합시간: 티오프 시간 30분 전 골프장 도착\n• 준비사항: 골프복, 골프화, 모자, 선글라스\n• 카트배정: 4인 1카트 원칙\n• 날씨대비: 우산, 우의 등 개인 준비'
+          };
           
-          setJourneyItems(journeys || []);
+          console.log('설정된 투어 데이터:', finalTourData);
+          console.log('스케줄 개수:', finalTourData.schedules.length);
+          console.log('스케줄 상세:', finalTourData.schedules);
+          
+          setTourData(finalTourData);
         }
 
       } catch (error) {
@@ -129,6 +224,9 @@ export default function PublicDocumentPage() {
     journeyItems,
     tourId: tourData?.id || ''
   });
+  
+  console.log('문서 타입:', documentData?.document_type);
+  console.log('문서 HTML 길이:', documentHTML?.length);
 
   if (loading) {
     return (
@@ -165,8 +263,18 @@ export default function PublicDocumentPage() {
       {/* 문서 내용 */}
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          <style dangerouslySetInnerHTML={{ __html: `
+            .document-content body {
+              margin: 0;
+              padding: 0;
+            }
+            
+            .document-content .container {
+              padding: 20px;
+            }
+          `}} />
           <div 
-            className="document-content"
+            className="document-content p-8"
             dangerouslySetInnerHTML={{ __html: documentHTML }}
           />
         </div>
