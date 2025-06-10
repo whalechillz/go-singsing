@@ -186,6 +186,16 @@ export default function NewQuotePage() {
     return { nights: days - 1, days };
   };
 
+  const generatePublicUrl = () => {
+    // 랜덤 문자열 생성 (8자리)
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -212,6 +222,24 @@ export default function NewQuotePage() {
         .single();
 
       if (error) throw error;
+
+      // 공개 링크 생성
+      if (data) {
+        const publicUrl = generatePublicUrl();
+        const { error: linkError } = await supabase
+          .from("public_document_links")
+          .insert({
+            tour_id: data.id,
+            document_type: 'quote',
+            public_url: publicUrl,
+            expires_at: formData.quote_expires_at,
+            is_active: true
+          });
+
+        if (linkError) {
+          console.error("링크 생성 오류:", linkError);
+        }
+      }
 
       alert("견적서가 생성되었습니다.");
       router.push("/admin/quotes");

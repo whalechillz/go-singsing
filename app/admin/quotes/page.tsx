@@ -112,10 +112,33 @@ export default function QuotesPage() {
     }
   };
 
-  const handleCopyLink = (quoteId: string) => {
-    const url = `${window.location.origin}/quote/${quoteId}`;
-    navigator.clipboard.writeText(url);
-    alert('견적서 링크가 복사되었습니다.');
+  const handleCopyLink = async (quoteId: string) => {
+    try {
+      // 공개 링크 정보 가져오기
+      const { data: linkData } = await supabase
+        .from("public_document_links")
+        .select("public_url")
+        .eq("tour_id", quoteId)
+        .eq("document_type", "quote")
+        .single();
+
+      let url;
+      if (linkData?.public_url) {
+        url = `${window.location.origin}/q/${linkData.public_url}`;
+      } else {
+        // 공개 링크가 없는 경우 기본 링크 사용
+        url = `${window.location.origin}/quote/${quoteId}`;
+      }
+      
+      navigator.clipboard.writeText(url);
+      alert('견적서 링크가 복사되었습니다.');
+    } catch (error) {
+      console.error("Error copying link:", error);
+      // 오류 발생 시 기본 링크 사용
+      const url = `${window.location.origin}/quote/${quoteId}`;
+      navigator.clipboard.writeText(url);
+      alert('견적서 링크가 복사되었습니다.');
+    }
   };
 
   const handleDelete = async (quoteId: string) => {
@@ -267,17 +290,19 @@ export default function QuotesPage() {
                   return (
                     <tr key={quote.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{quote.title}</div>
-                          <div className="text-sm text-gray-500">
-                            생성일: {formatDate(quote.created_at)}
-                          </div>
-                          {quote.quote_expires_at && (
+                        <Link href={`/admin/quotes/${quote.id}/edit`} className="hover:text-blue-600">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900 hover:text-blue-600 cursor-pointer">{quote.title}</div>
                             <div className="text-sm text-gray-500">
-                              만료일: {formatDate(quote.quote_expires_at)}
+                              생성일: {formatDate(quote.created_at)}
                             </div>
-                          )}
-                        </div>
+                            {quote.quote_expires_at && (
+                              <div className="text-sm text-gray-500">
+                                만료일: {formatDate(quote.quote_expires_at)}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4">
                         {quote.customer_name ? (

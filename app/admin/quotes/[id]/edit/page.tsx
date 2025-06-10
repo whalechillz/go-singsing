@@ -36,6 +36,7 @@ export default function EditQuotePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tourProducts, setTourProducts] = useState<TourProduct[]>([]);
+  const [documentLink, setDocumentLink] = useState<any>(null);
   
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -113,6 +114,18 @@ export default function EditQuotePage() {
         .single();
       
       if (error) throw error;
+      
+      // 공개 링크 정보 가져오기
+      const { data: linkData } = await supabase
+        .from("public_document_links")
+        .select("*")
+        .eq("tour_id", quoteId)
+        .eq("document_type", "quote")
+        .single();
+      
+      if (linkData) {
+        setDocumentLink(linkData);
+      }
       
       if (data) {
         const quoteData = typeof data.quote_data === 'string' 
@@ -274,8 +287,50 @@ export default function EditQuotePage() {
     }
   };
 
+  const generatePublicUrl = () => {
+    // 랜덤 문자열 생성 (8자리)
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const handleCreatePublicLink = async () => {
+    try {
+      const publicUrl = generatePublicUrl();
+      const { data, error } = await supabase
+        .from("public_document_links")
+        .insert({
+          tour_id: quoteId,
+          document_type: 'quote',
+          public_url: publicUrl,
+          expires_at: formData.quote_expires_at,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        setDocumentLink(data);
+        alert('공개 링크가 생성되었습니다.');
+      }
+    } catch (error) {
+      console.error("Error creating public link:", error);
+      alert('공개 링크 생성 중 오류가 발생했습니다.');
+    }
+  };
+
   const handleCopyLink = () => {
-    const url = `${window.location.origin}/quote/${quoteId}`;
+    let url;
+    if (documentLink?.public_url) {
+      url = `${window.location.origin}/q/${documentLink.public_url}`;
+    } else {
+      url = `${window.location.origin}/quote/${quoteId}`;
+    }
     navigator.clipboard.writeText(url);
     alert('견적서 링크가 복사되었습니다.');
   };
@@ -316,12 +371,24 @@ export default function EditQuotePage() {
                 <Eye className="w-4 h-4" />
                 미리보기
               </button>
+              {!documentLink && (
+                <button
+                  onClick={handleCreatePublicLink}
+                  className="px-4 py-2 text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  공개 링크 생성
+                </button>
+              )}
               <button
                 onClick={handleCopyLink}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
                 <Copy className="w-4 h-4" />
                 링크 복사
+                {documentLink && (
+                  <span className="text-xs text-gray-500">(/q/{documentLink.public_url})</span>
+                )}
               </button>
             </div>
           </div>

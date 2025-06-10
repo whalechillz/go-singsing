@@ -625,9 +625,16 @@ export default function PublicQuotePage() {
             </div>
 
             {/* 예약 진행 버튼 */}
-            <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
-              예약 진행하기
-            </button>
+            <a 
+              href="tel:031-215-3990"
+              className="block w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all text-center"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Phone className="w-5 h-5" />
+                예약 진행하기
+              </div>
+              <div className="text-sm font-normal mt-1 opacity-90">031-215-3990</div>
+            </a>
           </div>
         </div>
 
