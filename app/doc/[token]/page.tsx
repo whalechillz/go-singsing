@@ -60,7 +60,7 @@ export default function PublicDocumentPage() {
             setProductData(product);
           }
 
-          // 여정 아이템에서 일정 정보 가져오기
+          // 일정 정보 가져오기 (중요!)
           const { data: journeyData, error: journeyError } = await supabase
             .from('tour_journey_items')
             .select('*')
@@ -194,10 +194,6 @@ export default function PublicDocumentPage() {
             notices: tour.notices || '• 집합시간: 티오프 시간 30분 전 골프장 도착\n• 준비사항: 골프복, 골프화, 모자, 선글라스\n• 카트배정: 4인 1카트 원칙\n• 날씨대비: 우산, 우의 등 개인 준비'
           };
           
-          console.log('설정된 투어 데이터:', finalTourData);
-          console.log('스케줄 개수:', finalTourData.schedules.length);
-          console.log('스케줄 상세:', finalTourData.schedules);
-          
           setTourData(finalTourData);
         }
 
@@ -224,9 +220,6 @@ export default function PublicDocumentPage() {
     journeyItems,
     tourId: tourData?.id || ''
   });
-  
-  console.log('문서 타입:', documentData?.document_type);
-  console.log('문서 HTML 길이:', documentHTML?.length);
 
   if (loading) {
     return (
@@ -263,18 +256,8 @@ export default function PublicDocumentPage() {
       {/* 문서 내용 */}
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          <style dangerouslySetInnerHTML={{ __html: `
-            .document-content body {
-              margin: 0;
-              padding: 0;
-            }
-            
-            .document-content .container {
-              padding: 20px;
-            }
-          `}} />
           <div 
-            className="document-content p-8"
+            className="document-content"
             dangerouslySetInnerHTML={{ __html: documentHTML }}
           />
         </div>

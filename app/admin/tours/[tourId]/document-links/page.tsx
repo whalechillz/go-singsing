@@ -48,6 +48,11 @@ export default function DocumentLinksPage() {
     { value: 'staff_schedule', label: '스탭용 일정표' },
     { value: 'customer_boarding', label: '고객용 탑승안내' },
     { value: 'staff_boarding', label: '스탭용 탑승안내' },
+    { value: 'room_assignment', label: '고객용 객실배정' },
+    { value: 'room_assignment_staff', label: '스탭용 객실배정' },
+    { value: 'customer_timetable', label: '고객용 티타임표' },
+    { value: 'staff_timetable', label: '스탭용 티타임표' },
+    { value: 'simplified', label: '간편일정' },
   ];
 
   useEffect(() => {
