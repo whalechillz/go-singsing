@@ -379,8 +379,8 @@ export default function EditQuotePage() {
   const handleCopyLink = (isPublicLink: boolean = false) => {
     let url;
     if (isPublicLink && documentLink?.public_url) {
-      // 공개 링크 (/s/ 경로 사용)
-      url = `${window.location.origin}/s/${documentLink.public_url}`;
+      // 공개 링크 (/q/ 경로 사용 - 견적서)
+      url = `${window.location.origin}/q/${documentLink.public_url}`;
     } else {
       // 일반 공유 링크
       url = `${window.location.origin}/quote/${quoteId}`;
@@ -469,7 +469,7 @@ export default function EditQuotePage() {
                     <div className="flex-1">
                       <p className="text-sm text-gray-600 mb-1">공개 링크</p>
                       <p className="font-mono text-sm bg-white px-3 py-2 rounded border border-gray-200">
-                        {window.location.origin}/s/{documentLink.public_url}
+                        {window.location.origin}/q/{documentLink.public_url}
                       </p>
                     </div>
                     <button
@@ -836,7 +836,7 @@ export default function EditQuotePage() {
                     />
                     <button
                       type="button"
-                      onClick={handleCopyLink}
+                      onClick={() => handleCopyLink(false)}
                       className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <Copy className="w-4 h-4" />
