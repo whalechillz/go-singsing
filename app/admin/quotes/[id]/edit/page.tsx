@@ -16,7 +16,8 @@ import {
   X,
   Copy,
   Eye,
-  Save
+  Save,
+  Share2
 } from "lucide-react";
 import Link from "next/link";
 
@@ -395,6 +396,109 @@ export default function EditQuotePage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 공개 링크 정보 */}
+          {documentLink && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-gray-600" />
+                공개 링크 정보
+              </h2>
+              
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-1">공개 링크</p>
+                      <p className="font-mono text-sm bg-white px-3 py-2 rounded border border-gray-200">
+                        {window.location.origin}/q/{documentLink.public_url}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="ml-4 p-2 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                      title="링크 복사"
+                    >
+                      <Copy className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">생성일</label>
+                    <p className="font-medium">
+                      {new Date(documentLink.created_at).toLocaleDateString('ko-KR')}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">만료일</label>
+                    <p className="font-medium">
+                      {documentLink.expires_at 
+                        ? new Date(documentLink.expires_at).toLocaleDateString('ko-KR')
+                        : '무제한'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">조회수</label>
+                    <p className="font-medium">{documentLink.view_count || 0}회</p>
+                  </div>
+                </div>
+                
+                {documentLink.first_viewed_at && (
+                  <div className="text-sm text-gray-500">
+                    처음 확인: {new Date(documentLink.first_viewed_at).toLocaleString('ko-KR')}
+                    {documentLink.last_viewed_at && documentLink.last_viewed_at !== documentLink.first_viewed_at && (
+                      <> · 마지막 확인: {new Date(documentLink.last_viewed_at).toLocaleString('ko-KR')}</>
+                    )}
+                  </div>
+                )}
+                
+                <div className="flex gap-2 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (confirm('링크를 비활성화하시겠습니까?')) {
+                        const { error } = await supabase
+                          .from("public_document_links")
+                          .update({ is_active: false })
+                          .eq("id", documentLink.id);
+                        
+                        if (!error) {
+                          alert('링크가 비활성화되었습니다.');
+                          setDocumentLink({ ...documentLink, is_active: false });
+                        }
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm"
+                  >
+                    링크 비활성화
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const newExpiryDate = prompt('새 만료일을 입력하세요 (YYYY-MM-DD)', formData.quote_expires_at);
+                      if (newExpiryDate) {
+                        const { error } = await supabase
+                          .from("public_document_links")
+                          .update({ expires_at: newExpiryDate })
+                          .eq("id", documentLink.id);
+                        
+                        if (!error) {
+                          alert('만료일이 업데이트되었습니다.');
+                          setDocumentLink({ ...documentLink, expires_at: newExpiryDate });
+                        }
+                      }
+                    }}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    만료일 수정
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 기본 정보 */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -652,6 +756,70 @@ export default function EditQuotePage() {
               </div>
             </div>
           </div>
+
+          {/* 링크 정보 */}
+          {documentLink && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Copy className="w-5 h-5 text-gray-600" />
+                공유 링크 정보
+              </h2>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="mb-3">
+                  <label className="text-sm font-medium text-gray-700">공유 링크</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="text"
+                      readOnly
+                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"
+                      value={`${window.location.origin}/q/${documentLink.public_url}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">조회수</span>
+                    <p className="font-medium">{documentLink.view_count || 0}회</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">처음 확인</span>
+                    <p className="font-medium">
+                      {documentLink.first_viewed_at 
+                        ? new Date(documentLink.first_viewed_at).toLocaleString('ko-KR')
+                        : '미확인'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">마지막 확인</span>
+                    <p className="font-medium">
+                      {documentLink.last_viewed_at 
+                        ? new Date(documentLink.last_viewed_at).toLocaleString('ko-KR')
+                        : '미확인'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-sm text-gray-600">
+                <p className="flex items-center gap-1">
+                  <Info className="w-4 h-4" />
+                  링크는 견적 유효기간과 동일하게 설정됩니다.
+                </p>
+                <p className="mt-1">
+                  만료일: {formData.quote_expires_at ? new Date(formData.quote_expires_at).toLocaleDateString('ko-KR') : '설정 안함'}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* 견적 설정 */}
           <div className="bg-white rounded-lg shadow-sm p-6">
