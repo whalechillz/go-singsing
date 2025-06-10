@@ -59,30 +59,6 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
                     }).join('')}
                   </div>
                 ` : ''}
-                
-                <div class="meal-info">
-                  <div class="meal">
-                    <span class="meal-label">조식</span>
-                    <span class="meal-indicator ${schedule.meal_breakfast ? 'included' : 'excluded'}">
-                      ${schedule.meal_breakfast ? 'O' : 'X'}
-                    </span>
-                    ${schedule.meal_breakfast && schedule.menu_breakfast ? `<span class="meal-menu">: ${schedule.menu_breakfast}</span>` : ''}
-                  </div>
-                  <div class="meal">
-                    <span class="meal-label">중식</span>
-                    <span class="meal-indicator ${schedule.meal_lunch ? 'included' : 'excluded'}">
-                      ${schedule.meal_lunch ? 'O' : 'X'}
-                    </span>
-                    ${schedule.meal_lunch && schedule.menu_lunch ? `<span class="meal-menu">: ${schedule.menu_lunch}</span>` : ''}
-                  </div>
-                  <div class="meal">
-                    <span class="meal-label">석식</span>
-                    <span class="meal-indicator ${schedule.meal_dinner ? 'included' : 'excluded'}">
-                      ${schedule.meal_dinner ? 'O' : 'X'}
-                    </span>
-                    ${schedule.meal_dinner && schedule.menu_dinner ? `<span class="meal-menu">: ${schedule.menu_dinner}</span>` : ''}
-                  </div>
-                </div>
               </div>
             </div>
           `).join('') || '<div style="padding: 20px; text-align: center; color: #666;">일정 정보가 없습니다.</div>'}
@@ -126,11 +102,11 @@ function getScheduleStyles(): string {
     
     .day-content {
       padding: 20px;
+      padding-bottom: 10px;
     }
     
     .schedule-timeline {
       padding-left: 20px;
-      margin-bottom: 20px;
     }
     
     .timeline-item {
@@ -159,6 +135,8 @@ function getScheduleStyles(): string {
     .timeline-item.meal .timeline-icon { background: #fff3e0; }
     .timeline-item.rest .timeline-icon { background: #f3e5f5; }
     .timeline-item.tour .timeline-icon { background: #fce4ec; }
+    .timeline-item.shopping .timeline-icon { background: #f3e5f5; }
+    .timeline-item.default .timeline-icon { background: #f0f0f0; }
     
     .timeline-time {
       font-weight: bold;
@@ -188,49 +166,6 @@ function getScheduleStyles(): string {
       font-size: 13px;
       color: #666;
       line-height: 1.5;
-    }
-    
-    .meal-info {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px 16px;
-      background: #f8f9fa;
-      border-radius: 4px;
-      margin-top: 12px;
-      font-size: 13px;
-    }
-    
-    .meal {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .meal-label {
-      color: #555;
-      font-weight: 600;
-      width: 35px;
-    }
-    
-    .meal-indicator {
-      font-weight: bold;
-      width: 20px;
-      text-align: center;
-    }
-    
-    .meal-indicator.included {
-      color: #22c55e;
-    }
-    
-    .meal-indicator.excluded {
-      color: #dc2626;
-    }
-    
-    .meal-menu {
-      color: #666;
-      font-size: 12px;
-      flex: 1;
     }
     
     .product-info-box {

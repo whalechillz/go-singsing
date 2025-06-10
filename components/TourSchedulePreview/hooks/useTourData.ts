@@ -134,15 +134,7 @@ export function useTourData(tourId: string) {
       let schedules: Schedule[] = [];
       
       if (dayInfoItems.length > 0) {
-        schedules = dayInfoItems.map(dayInfo => {
-          console.log('Day Info data:', {
-            day: dayInfo.day_number,
-            meal_breakfast: dayInfo.meal_breakfast,
-            meal_lunch: dayInfo.meal_lunch,
-            meal_dinner: dayInfo.meal_dinner
-          });
-          
-          return {
+        schedules = dayInfoItems.map(dayInfo => ({
             id: dayInfo.id,
             tour_id: dayInfo.tour_id,
             date: dayInfo.day_date || new Date(new Date(tour.start_date).getTime() + (dayInfo.day_number - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -155,8 +147,7 @@ export function useTourData(tourId: string) {
             menu_lunch: dayInfo.menu_lunch || '',
             menu_dinner: dayInfo.menu_dinner || '',
             schedule_items: []
-          };
-        });
+          }));
       } else {
         // 기본 스케줄 생성
         const startDate = new Date(tour.start_date);
