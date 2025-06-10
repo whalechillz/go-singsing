@@ -21,6 +21,7 @@ export default function PublicQuotePage() {
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [quoteData, setQuoteData] = useState<any>(null);
 
   useEffect(() => {
     fetchQuoteDetails();
@@ -47,6 +48,14 @@ export default function PublicQuotePage() {
           .single();
         
         quoteData.product = productData;
+      }
+      
+      // quote_data 파싱
+      if (quoteData.quote_data) {
+        const parsed = typeof quoteData.quote_data === 'string' 
+          ? JSON.parse(quoteData.quote_data) 
+          : quoteData.quote_data;
+        setQuoteData(parsed);
       }
       
       setQuote(quoteData);
@@ -243,6 +252,39 @@ export default function PublicQuotePage() {
               </p>
             </div>
           </div>
+
+          {/* 일정 정보 */}
+          {quoteData?.schedules && quoteData.schedules.length > 0 && (
+            <div className="border-t pt-6 mt-6">
+              <h3 className="text-lg font-semibold mb-4">상세 일정</h3>
+              <div className="space-y-3">
+                {quoteData.schedules.map((schedule: any, index: number) => (
+                  <div key={index} className="flex gap-3">
+                    <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-blue-600">D{schedule.day}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">
+                        {new Date(schedule.date).toLocaleDateString('ko-KR', {
+                          month: 'long',
+                          day: 'numeric',
+                          weekday: 'short'
+                        })}
+                      </div>
+                      {schedule.title && (
+                        <div className="text-gray-700 mt-1">{schedule.title}</div>
+                      )}
+                      {schedule.description && (
+                        <div className="text-gray-600 text-sm mt-1 whitespace-pre-wrap">
+                          {schedule.description}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 추가 정보 */}
           {quote.quote_notes && (

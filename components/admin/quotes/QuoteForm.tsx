@@ -11,7 +11,11 @@ import {
   FileText,
   Clock,
   Save,
-  X
+  X,
+  MapPin,
+  Plus,
+  Trash2,
+  Briefcase
 } from 'lucide-react';
 
 interface QuoteFormProps {
@@ -23,6 +27,14 @@ interface QuoteFormProps {
 const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData }) => {
   const [loading, setLoading] = useState(false);
   const [tourProducts, setTourProducts] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [participantInfo, setParticipantInfo] = useState({
+    group_name: '',
+    leader_name: '',
+    leader_phone: '',
+    estimated_count: 0
+  });
   const [form, setForm] = useState({
     title: '',
     tour_product_id: '',
@@ -46,6 +58,16 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
         ...form,
         ...initialData
       });
+      
+      // 저장된 일정과 참가자 정보 불러오기
+      if (initialData.quote_data) {
+        const quoteData = typeof initialData.quote_data === 'string' 
+          ? JSON.parse(initialData.quote_data) 
+          : initialData.quote_data;
+        
+        if (quoteData.schedules) setSchedules(quoteData.schedules);
+        if (quoteData.participants) setParticipantInfo(quoteData.participants);
+      }
     } else {
       // 기본 유효기간 설정 (30일)
       const expiryDate = new Date();
@@ -56,6 +78,35 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
       });
     }
   }, [initialData]);
+
+  // 일정 초기화
+  useEffect(() => {
+    if (form.start_date && form.end_date) {
+      const start = new Date(form.start_date);
+      const end = new Date(form.end_date);
+      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      
+      // 일정이 변경되었을 때 기존 일정 재구성
+      const newSchedules = [];
+      for (let i = 0; i < days; i++) {
+        const date = new Date(start);
+        date.setDate(date.getDate() + i);
+        
+        // 기존 일정이 있으면 유지
+        const existingSchedule = schedules.find(s => 
+          new Date(s.date).toDateString() === date.toDateString()
+        );
+        
+        newSchedules.push({
+          day: i + 1,
+          date: date.toISOString().split('T')[0],
+          title: existingSchedule?.title || `Day ${i + 1}`,
+          description: existingSchedule?.description || ''
+        });
+      }
+      setSchedules(newSchedules);
+    }
+  }, [form.start_date, form.end_date]);
 
   const fetchTourProducts = async () => {
     const { data } = await supabase
@@ -77,15 +128,32 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
     }
   };
 
+  const handleScheduleChange = (index: number, field: string, value: string) => {
+    const newSchedules = [...schedules];
+    newSchedules[index] = {
+      ...newSchedules[index],
+      [field]: value
+    };
+    setSchedules(newSchedules);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // 견적 데이터에 일정과 참가자 정보 포함
+      const quoteData = {
+        schedules,
+        participants: participantInfo
+      };
+
       const payload = {
         ...form,
         quoted_at: new Date().toISOString(),
-        quoted_by: 'admin' // TODO: 실제 사용자 정보로 변경
+        quoted_by: 'admin', // TODO: 실제 사용자 정보로 변경
+        quote_data: JSON.stringify(quoteData), // jsonb 필드에 저장
+        max_participants: participantInfo.estimated_count || form.max_participants
       };
 
       if (initialData?.id) {
@@ -125,229 +193,347 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
     return '';
   };
 
+  const tabs = [
+    { id: 'basic', label: '기본 정보', icon: FileText },
+    { id: 'schedule', label: '일정 관리', icon: Calendar },
+    { id: 'participants', label: '참가자 정보', icon: Users }
+  ];
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
-      {/* 고객 정보 */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <User className="w-5 h-5" />
-          고객 정보
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              고객명 *
-            </label>
-            <input
-              type="text"
-              className="w-full border rounded-lg px-3 py-2"
-              value={form.customer_name}
-              onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              연락처 *
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-              <input
-                type="tel"
-                className="w-full border rounded-lg pl-10 pr-3 py-2"
-                value={form.customer_phone}
-                onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
-                placeholder="010-0000-0000"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              이메일
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-              <input
-                type="email"
-                className="w-full border rounded-lg pl-10 pr-3 py-2"
-                value={form.customer_email}
-                onChange={(e) => setForm({ ...form, customer_email: e.target.value })}
-                placeholder="email@example.com"
-              />
-            </div>
-          </div>
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow">
+      {/* 탭 메뉴 */}
+      <div className="border-b">
+        <div className="flex">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-all ${
+                activeTab === tab.id
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <tab.icon className="w-5 h-5" />
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* 투어 정보 */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          투어 정보
-        </h3>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="p-6">
+        {/* 기본 정보 탭 */}
+        {activeTab === 'basic' && (
+          <div className="space-y-6">
+            {/* 고객 정보 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                투어 상품 *
-              </label>
-              <select
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <User className="w-5 h-5" />
+                고객 정보
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    고객명 *
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border rounded-lg px-3 py-2"
+                    value={form.customer_name}
+                    onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    연락처 *
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="tel"
+                      className="w-full border rounded-lg pl-10 pr-3 py-2"
+                      value={form.customer_phone}
+                      onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
+                      placeholder="010-0000-0000"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    이메일
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="email"
+                      className="w-full border rounded-lg pl-10 pr-3 py-2"
+                      value={form.customer_email}
+                      onChange={(e) => setForm({ ...form, customer_email: e.target.value })}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 투어 정보 */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Briefcase className="w-5 h-5" />
+                투어 정보
+              </h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      투어 상품 *
+                    </label>
+                    <select
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={form.tour_product_id}
+                      onChange={(e) => handleProductChange(e.target.value)}
+                      required
+                    >
+                      <option value="">선택하세요</option>
+                      {tourProducts.map(product => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} - {product.golf_course}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      견적 제목 *
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={form.title}
+                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      placeholder="2박3일 순천버스핑 - 홍길동님"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      출발일 *
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={form.start_date}
+                      onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      도착일 *
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={form.end_date}
+                      onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+                      min={form.start_date}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      일정
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full border rounded-lg px-3 py-2 bg-gray-50"
+                      value={calculateDays()}
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      1인 금액 *
+                    </label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="number"
+                        className="w-full border rounded-lg pl-10 pr-3 py-2"
+                        value={form.price}
+                        onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                        min="0"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      견적 유효기간 *
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={form.quote_expires_at}
+                      onChange={(e) => setForm({ ...form, quote_expires_at: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 추가 메모 */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                추가 정보
+              </h3>
+              <textarea
                 className="w-full border rounded-lg px-3 py-2"
-                value={form.tour_product_id}
-                onChange={(e) => handleProductChange(e.target.value)}
-                required
-              >
-                <option value="">선택하세요</option>
-                {tourProducts.map(product => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} - {product.golf_course}
-                  </option>
+                rows={4}
+                value={form.quote_notes}
+                onChange={(e) => setForm({ ...form, quote_notes: e.target.value })}
+                placeholder="고객 요청사항이나 특이사항을 입력하세요..."
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 일정 관리 탭 */}
+        {activeTab === 'schedule' && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold mb-4">일정 정보</h3>
+            {schedules.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                먼저 기본 정보에서 출발일과 도착일을 선택해주세요.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {schedules.map((schedule, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium">
+                        Day {schedule.day} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
+                      </h4>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          일정 제목
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full border rounded-lg px-3 py-2"
+                          value={schedule.title}
+                          onChange={(e) => handleScheduleChange(index, 'title', e.target.value)}
+                          placeholder="예: 서울 출발 → 순천 도착"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          상세 일정
+                        </label>
+                        <textarea
+                          className="w-full border rounded-lg px-3 py-2"
+                          rows={3}
+                          value={schedule.description}
+                          onChange={(e) => handleScheduleChange(index, 'description', e.target.value)}
+                          placeholder="주요 일정을 입력하세요..."
+                        />
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                견적 제목 *
-              </label>
-              <input
-                type="text"
-                className="w-full border rounded-lg px-3 py-2"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="2박3일 순천버스핑 - 홍길동님"
-                required
-              />
-            </div>
+              </div>
+            )}
           </div>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                출발일 *
-              </label>
-              <input
-                type="date"
-                className="w-full border rounded-lg px-3 py-2"
-                value={form.start_date}
-                onChange={(e) => setForm({ ...form, start_date: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                도착일 *
-              </label>
-              <input
-                type="date"
-                className="w-full border rounded-lg px-3 py-2"
-                value={form.end_date}
-                onChange={(e) => setForm({ ...form, end_date: e.target.value })}
-                min={form.start_date}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                일정
-              </label>
-              <input
-                type="text"
-                className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-                value={calculateDays()}
-                readOnly
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                인원 *
-              </label>
-              <div className="relative">
-                <Users className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+        {/* 참가자 정보 탭 */}
+        {activeTab === 'participants' && (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold mb-4">참가자 정보</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  모임명
+                </label>
                 <input
-                  type="number"
-                  className="w-full border rounded-lg pl-10 pr-3 py-2"
-                  value={form.max_participants}
-                  onChange={(e) => setForm({ ...form, max_participants: Number(e.target.value) })}
-                  min="1"
-                  required
+                  type="text"
+                  className="w-full border rounded-lg px-3 py-2"
+                  value={participantInfo.group_name}
+                  onChange={(e) => setParticipantInfo({ ...participantInfo, group_name: e.target.value })}
+                  placeholder="예: ○○동호회"
                 />
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                1인 금액 *
-              </label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  예상 인원
+                </label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                  <input
+                    type="number"
+                    className="w-full border rounded-lg pl-10 pr-3 py-2"
+                    value={participantInfo.estimated_count}
+                    onChange={(e) => setParticipantInfo({ ...participantInfo, estimated_count: Number(e.target.value) })}
+                    min="1"
+                    placeholder="40"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  총무 성명
+                </label>
                 <input
-                  type="number"
-                  className="w-full border rounded-lg pl-10 pr-3 py-2"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-                  min="0"
-                  required
+                  type="text"
+                  className="w-full border rounded-lg px-3 py-2"
+                  value={participantInfo.leader_name}
+                  onChange={(e) => setParticipantInfo({ ...participantInfo, leader_name: e.target.value })}
+                  placeholder="홍길동"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  총무 연락처
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                  <input
+                    type="tel"
+                    className="w-full border rounded-lg pl-10 pr-3 py-2"
+                    value={participantInfo.leader_phone}
+                    onChange={(e) => setParticipantInfo({ ...participantInfo, leader_phone: e.target.value })}
+                    placeholder="010-0000-0000"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                총액
-              </label>
-              <input
-                type="text"
-                className="w-full border rounded-lg px-3 py-2 bg-gray-50 font-semibold"
-                value={`${(form.price * form.max_participants).toLocaleString()}원`}
-                readOnly
-              />
+
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>안내:</strong> 견적이 확정되어 투어로 전환되면, 여기에 입력한 정보를 바탕으로 
+                상세한 참가자 명단을 추가할 수 있습니다.
+              </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* 견적 설정 */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5" />
-          견적 설정
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              견적 유효기간 *
-            </label>
-            <input
-              type="date"
-              className="w-full border rounded-lg px-3 py-2"
-              value={form.quote_expires_at}
-              onChange={(e) => setForm({ ...form, quote_expires_at: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
-              required
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 추가 메모 */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <FileText className="w-5 h-5" />
-          추가 정보
-        </h3>
-        <textarea
-          className="w-full border rounded-lg px-3 py-2"
-          rows={4}
-          value={form.quote_notes}
-          onChange={(e) => setForm({ ...form, quote_notes: e.target.value })}
-          placeholder="고객 요청사항이나 특이사항을 입력하세요..."
-        />
+        )}
       </div>
 
       {/* 버튼 */}
-      <div className="flex justify-end gap-3">
+      <div className="border-t px-6 py-4 flex justify-end gap-3">
         <button
           type="button"
           className="px-4 py-2 bg-white text-gray-700 border rounded-lg hover:bg-gray-50 flex items-center gap-2"

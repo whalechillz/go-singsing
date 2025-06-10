@@ -29,6 +29,8 @@ export default function QuoteDetailPage() {
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [quoteData, setQuoteData] = useState<any>(null);
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => {
     fetchQuoteDetails();
@@ -54,6 +56,14 @@ export default function QuoteDetailPage() {
           .single();
         
         quoteData.product = productData;
+      }
+      
+      // quote_data 파싱
+      if (quoteData.quote_data) {
+        const parsed = typeof quoteData.quote_data === 'string' 
+          ? JSON.parse(quoteData.quote_data) 
+          : quoteData.quote_data;
+        setQuoteData(parsed);
       }
       
       setQuote(quoteData);
@@ -85,8 +95,10 @@ export default function QuoteDetailPage() {
   const handleConvertToTour = async () => {
     if (!window.confirm("이 견적을 정식 투어로 전환하시겠습니까?")) return;
     
+    setConverting(true);
     try {
-      const { error } = await supabase
+      // 1. 투어 상태 변경
+      const { error: updateError } = await supabase
         .from("singsing_tours")
         .update({ 
           status: 'confirmed',
@@ -94,12 +106,53 @@ export default function QuoteDetailPage() {
         })
         .eq("id", quoteId);
         
-      if (error) throw error;
+      if (updateError) throw updateError;
       
-      alert("견적이 투어로 전환되었습니다.");
+      // 2. 일정 데이터 생성
+      if (quoteData?.schedules) {
+        for (const schedule of quoteData.schedules) {
+          const { error: scheduleError } = await supabase
+            .from("singsing_schedules")
+            .insert({
+              tour_id: quoteId,
+              day_number: schedule.day,
+              schedule_date: schedule.date,
+              title: schedule.title || `Day ${schedule.day}`,
+              description: schedule.description,
+              meal_breakfast: false,
+              meal_lunch: false,
+              meal_dinner: false
+            });
+          
+          if (scheduleError) console.error('일정 생성 오류:', scheduleError);
+        }
+      }
+      
+      // 3. 총무 정보를 참가자로 추가 (원하는 경우)
+      if (quoteData?.participants && quoteData.participants.leader_name) {
+        const { error: participantError } = await supabase
+          .from("singsing_participants")
+          .insert({
+            tour_id: quoteId,
+            name: quoteData.participants.leader_name,
+            phone: quoteData.participants.leader_phone || '',
+            team_name: quoteData.participants.group_name || '',
+            role: '총무',
+            status: 'confirmed',
+            group_size: 1,
+            is_paying_for_group: true,
+            companions: []
+          });
+        
+        if (participantError) console.error('참가자 생성 오류:', participantError);
+      }
+      
+      alert("견적이 투어로 전환되었습니다. 일정과 참가자 정보가 함께 이동되었습니다.");
       router.push(`/admin/tours/${quoteId}`);
     } catch (err: any) {
       alert("전환 실패: " + err.message);
+    } finally {
+      setConverting(false);
     }
   };
 
@@ -215,10 +268,11 @@ export default function QuoteDetailPage() {
           </button>
           <button
             onClick={handleConvertToTour}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={converting}
           >
             <ArrowUpRight className="w-4 h-4" />
-            투어로 전환
+            {converting ? '전환 중...' : '투어로 전환'}
           </button>
         </div>
       </div>
@@ -346,6 +400,63 @@ export default function QuoteDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* 일정 정보 */}
+      {quoteData?.schedules && quoteData.schedules.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-4">일정 정보</h3>
+          <div className="space-y-3">
+            {quoteData.schedules.map((schedule: any, index: number) => (
+              <div key={index} className="border-l-4 border-blue-500 pl-4">
+                <div className="font-medium text-gray-900">
+                  Day {schedule.day} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
+                </div>
+                {schedule.title && (
+                  <div className="text-gray-700 mt-1">{schedule.title}</div>
+                )}
+                {schedule.description && (
+                  <div className="text-gray-600 text-sm mt-1 whitespace-pre-wrap">
+                    {schedule.description}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 참가자 정보 */}
+      {quoteData?.participants && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-4">참가자 정보</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {quoteData.participants.group_name && (
+              <div>
+                <label className="text-sm text-gray-600">모임명</label>
+                <p className="font-medium">{quoteData.participants.group_name}</p>
+              </div>
+            )}
+            {quoteData.participants.estimated_count > 0 && (
+              <div>
+                <label className="text-sm text-gray-600">예상 인원</label>
+                <p className="font-medium">{quoteData.participants.estimated_count}명</p>
+              </div>
+            )}
+            {quoteData.participants.leader_name && (
+              <div>
+                <label className="text-sm text-gray-600">총무 성명</label>
+                <p className="font-medium">{quoteData.participants.leader_name}</p>
+              </div>
+            )}
+            {quoteData.participants.leader_phone && (
+              <div>
+                <label className="text-sm text-gray-600">총무 연락처</label>
+                <p className="font-medium">{quoteData.participants.leader_phone}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 추가 정보 */}
       {quote.quote_notes && (
