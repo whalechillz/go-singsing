@@ -11,23 +11,18 @@ import {
   Phone,
   Mail,
   FileText,
-  Sunrise,
-  Coffee,
   Utensils,
   Home,
   Bus,
-  Golf,
+  Flag,
   Camera,
   ChevronRight,
   Download,
   Share2,
   CheckCircle,
   Info,
-  Star,
-  Bed,
   X
 } from 'lucide-react';
-import Image from 'next/image';
 
 export default function PublicQuotePage() {
   const params = useParams();
@@ -353,7 +348,7 @@ export default function PublicQuotePage() {
                               )}
                               {dayItems.some(item => item.spot?.category === 'golf_round') && (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs">
-                                  <Golf className="w-3 h-3" /> 골프
+                                  <Flag className="w-3 h-3" /> 골프
                                 </span>
                               )}
                               {dayItems.some(item => item.spot?.category === 'tourist_spot') && (
@@ -458,7 +453,7 @@ export default function PublicQuotePage() {
                             )}
                             {schedule.description?.includes('골프') && (
                               <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs">
-                                <Golf className="w-3 h-3" /> 골프
+                                <Flag className="w-3 h-3" /> 골프
                               </span>
                             )}
                             {schedule.description?.includes('관광') && (
