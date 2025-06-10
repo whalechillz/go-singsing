@@ -22,12 +22,33 @@ const STAFF_DOCUMENT_TYPES = [
   { id: 'staff_timetable', label: '티타임표 (스탭용)', icon: '⛳' }
 ] as const;
 
+const getDocumentLabel = (docType: DocumentType): string => {
+  const allTypes = [...PUBLIC_DOCUMENT_TYPES, ...STAFF_DOCUMENT_TYPES];
+  const doc = allTypes.find(d => d.id === docType);
+  
+  // 기타 문서 타입에 대한 라벨
+  const otherLabels: Record<string, string> = {
+    'customer_schedule': '일정표',
+    'staff_schedule': '일정표 (스탭용)',
+    'customer_boarding': '탑승안내',
+    'staff_boarding': '탑승안내 (스탭용)',
+    'room_assignment': '객실배정',
+    'room_assignment_staff': '객실배정 (스탭용)',
+    'customer_timetable': '티타임표',
+    'staff_timetable': '티타임표 (스탭용)',
+    'simplified': '간편일정'
+  };
+  
+  return doc?.label || otherLabels[docType] || docType;
+};
+
 export default function PublicDocumentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const tourId = params.tourId as string;
   const isStaff = searchParams.get('staff') === 'true';
   const isGolf = searchParams.get('golf') === 'true';
+  const singleDocType = searchParams.get('single'); // 개별 문서 타입
   const [activeTab, setActiveTab] = useState<DocumentType>('customer_schedule');
   
   const {
@@ -49,16 +70,22 @@ export default function PublicDocumentPage() {
     tourId
   });
 
-  // URL 해시에 따라 문서 타입 설정
+  // 초기 탭 설정 및 URL 해시 처리
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.slice(1); // # 제거
+      // 개별 문서 모드일 때
+      if (singleDocType) {
+        setActiveTab(singleDocType as DocumentType);
+        return;
+      }
       
       // 골프장 전용 모드일 때는 티타임표로 고정
       if (isGolf) {
         setActiveTab('staff_timetable');
         return;
       }
+      
+      const hash = window.location.hash.slice(1); // # 제거
       
       switch (hash) {
         case 'boarding':
@@ -87,7 +114,7 @@ export default function PublicDocumentPage() {
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
-  }, [isStaff, isGolf]);
+  }, [isStaff, isGolf, singleDocType]);
 
   const handlePrint = () => {
     window.print();
@@ -134,12 +161,15 @@ export default function PublicDocumentPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">
-                {isGolf ? `${tourData.title} - 티타임표` : tourData.title}
+                {isGolf ? `${tourData.title} - 티타임표` : 
+                 singleDocType ? `${tourData.title} - ${getDocumentLabel(activeTab)}` :
+                 tourData.title}
               </h1>
               <p className="text-sm text-gray-600">
                 {new Date(tourData.start_date).toLocaleDateString('ko-KR')} ~ 
                 {' '}{new Date(tourData.end_date).toLocaleDateString('ko-KR')}
                 {isGolf && <span className="ml-2 text-blue-600">(골프장 전용)</span>}
+                {singleDocType && <span className="ml-2 text-blue-600">(개별 문서)</span>}
               </p>
             </div>
             <button
@@ -153,8 +183,8 @@ export default function PublicDocumentPage() {
         </div>
       </div>
 
-      {/* 문서 선택 탭 - 골프장 전용일 때는 숨김 */}
-      {!isGolf && (
+      {/* 문서 선택 탭 - 골프장 전용이거나 개별 문서일 때는 숨김 */}
+      {!isGolf && !singleDocType && (
         <div className="max-w-7xl mx-auto px-4 py-4 no-print">
           <div className="flex flex-wrap gap-2">
             {(isStaff ? STAFF_DOCUMENT_TYPES : PUBLIC_DOCUMENT_TYPES).map((doc) => (

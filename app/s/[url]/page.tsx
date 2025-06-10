@@ -58,31 +58,33 @@ export default async function ShortLinkRedirect({
       case 'golf_timetable':
         return `/public-document/${tourId}?golf=true#timetable`;
       
-      // 기존 개별 링크 타입들 (호환성 유지)
+      // 기존 개별 링크 타입들 (호환성 유지) - single 파라미터 추가
       case 'customer_schedule':
+        return `/public-document/${tourId}?single=customer_schedule`;
+      
       case 'simplified':
-        return `/public-document/${tourId}`;
+        return `/public-document/${tourId}?single=simplified`;
       
       case 'staff_schedule':
-        return `/public-document/${tourId}?staff=true`;
+        return `/public-document/${tourId}?staff=true&single=staff_schedule`;
       
       case 'customer_boarding':
-        return `/public-document/${tourId}#boarding`;
+        return `/public-document/${tourId}?single=customer_boarding`;
       
       case 'staff_boarding':
-        return `/public-document/${tourId}?staff=true#boarding`;
+        return `/public-document/${tourId}?staff=true&single=staff_boarding`;
       
       case 'room_assignment':
-        return `/public-document/${tourId}#room`;
+        return `/public-document/${tourId}?single=room_assignment`;
       
       case 'room_assignment_staff':
-        return `/public-document/${tourId}?staff=true#room`;
+        return `/public-document/${tourId}?staff=true&single=room_assignment_staff`;
       
       case 'customer_timetable':
-        return `/public-document/${tourId}#timetable`;
+        return `/public-document/${tourId}?single=customer_timetable`;
       
       case 'staff_timetable':
-        return `/public-document/${tourId}?staff=true#timetable`;
+        return `/public-document/${tourId}?staff=true&single=staff_timetable`;
       
       case 'quote':
         return `/quote/${tourId}`;
