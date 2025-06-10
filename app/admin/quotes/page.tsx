@@ -94,7 +94,7 @@ export default function QuotesPage() {
       let url;
       if (linkData?.public_url) {
         // 공개 링크가 있는 경우
-        url = getPublicLinkUrl(linkData.public_url);
+        url = getPublicLinkUrl(linkData.public_url, true);  // 견적서는 /q/ 경로 사용
       } else {
         // 공개 링크가 없는 경우 생성
         const publicUrl = generatePublicUrl();
@@ -112,7 +112,7 @@ export default function QuotesPage() {
           });
         
         if (createError) throw createError;
-        url = getPublicLinkUrl(publicUrl);
+        url = getPublicLinkUrl(publicUrl, true);  // 견적서는 /q/ 경로 사용
       }
       
       await navigator.clipboard.writeText(url);

@@ -14,13 +14,16 @@ export function generatePublicUrl(): string {
 /**
  * 공개 링크 URL 생성
  * @param publicUrl public_document_links 테이블의 public_url
+ * @param isQuote 견적서 여부 (true면 /q/, false면 /s/ 사용)
  * @returns 전체 공개 링크 URL
  */
-export function getPublicLinkUrl(publicUrl: string): string {
+export function getPublicLinkUrl(publicUrl: string, isQuote: boolean = false): string {
   if (typeof window !== 'undefined') {
-    return `${window.location.origin}/q/${publicUrl}`;
+    const path = isQuote ? 'q' : 's';
+    return `${window.location.origin}/${path}/${publicUrl}`;
   }
-  return `/q/${publicUrl}`;
+  const path = isQuote ? 'q' : 's';
+  return `/${path}/${publicUrl}`;
 }
 
 /**
