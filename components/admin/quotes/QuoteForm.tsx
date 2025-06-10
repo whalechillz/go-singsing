@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/lib/supabaseClient";
+import Link from 'next/link';
 import { 
   Calendar,
   Users,
@@ -15,7 +16,10 @@ import {
   MapPin,
   Plus,
   Trash2,
-  Briefcase
+  Briefcase,
+  Bus,
+  Utensils,
+  Camera
 } from 'lucide-react';
 
 interface QuoteFormProps {
@@ -29,6 +33,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
   const [tourProducts, setTourProducts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('basic');
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [journeyItems, setJourneyItems] = useState<any[]>([]);
   const [participantInfo, setParticipantInfo] = useState({
     group_name: '',
     leader_name: '',
@@ -68,6 +73,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
         if (quoteData.schedules) setSchedules(quoteData.schedules);
         if (quoteData.participants) setParticipantInfo(quoteData.participants);
       }
+      
+      // tour_journey_items 가져오기
+      fetchJourneyItems(initialData.id);
     } else {
       // 기본 유효기간 설정 (30일)
       const expiryDate = new Date();
@@ -115,6 +123,23 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
       .order("name");
     
     if (data) setTourProducts(data);
+  };
+  
+  const fetchJourneyItems = async (tourId: string) => {
+    const { data } = await supabase
+      .from("tour_journey_items")
+      .select(`
+        *,
+        spot:tourist_attractions!spot_id(*)
+      `)
+      .eq("tour_id", tourId)
+      .gt("order_index", 0) // DAY_INFO 제외
+      .order("day_number")
+      .order("order_index");
+    
+    if (data) {
+      setJourneyItems(data);
+    }
   };
 
   const handleProductChange = (productId: string) => {
@@ -427,49 +452,123 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
 
         {/* 일정 관리 탭 */}
         {activeTab === 'schedule' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h3 className="text-lg font-semibold mb-4">일정 정보</h3>
             {schedules.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
                 먼저 기본 정보에서 출발일과 도착일을 선택해주세요.
               </p>
             ) : (
-              <div className="space-y-4">
-                {schedules.map((schedule, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium">
-                        Day {schedule.day} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
-                      </h4>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          일정 제목
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full border rounded-lg px-3 py-2"
-                          value={schedule.title}
-                          onChange={(e) => handleScheduleChange(index, 'title', e.target.value)}
-                          placeholder="예: 서울 출발 → 순천 도착"
-                        />
+              <div className="space-y-6">
+                {schedules.map((schedule, index) => {
+                  const dayJourneyItems = journeyItems.filter(item => item.day_number === schedule.day);
+                  
+                  return (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium">
+                          Day {schedule.day} - {new Date(schedule.date).toLocaleDateString('ko-KR')}
+                        </h4>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          상세 일정
-                        </label>
-                        <textarea
-                          className="w-full border rounded-lg px-3 py-2"
-                          rows={3}
-                          value={schedule.description}
-                          onChange={(e) => handleScheduleChange(index, 'description', e.target.value)}
-                          placeholder="주요 일정을 입력하세요..."
-                        />
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            일정 제목
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full border rounded-lg px-3 py-2"
+                            value={schedule.title}
+                            onChange={(e) => handleScheduleChange(index, 'title', e.target.value)}
+                            placeholder="예: 서울 출발 → 순천 도착"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            상세 일정
+                          </label>
+                          <textarea
+                            className="w-full border rounded-lg px-3 py-2"
+                            rows={3}
+                            value={schedule.description}
+                            onChange={(e) => handleScheduleChange(index, 'description', e.target.value)}
+                            placeholder="주요 일정을 입력하세요..."
+                          />
+                        </div>
+                        
+                        {/* 실제 일정 항목 표시 */}
+                        {dayJourneyItems.length > 0 ? (
+                          <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              등록된 일정 항목
+                            </label>
+                            <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                              {dayJourneyItems.map((item, idx) => (
+                                <div key={item.id} className="flex items-center gap-3 bg-white p-2 rounded border">
+                                  <span className="text-sm font-medium text-gray-500">{item.order_index}</span>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      {item.spot?.category === 'boarding' && <Bus className="w-4 h-4 text-blue-500" />}
+                                      {item.spot?.category === 'golf_round' && <MapPin className="w-4 h-4 text-green-500" />}
+                                      {item.spot?.category === 'restaurant' && <Utensils className="w-4 h-4 text-orange-500" />}
+                                      {item.spot?.category === 'tourist_spot' && <Camera className="w-4 h-4 text-purple-500" />}
+                                      <span className="font-medium">{item.spot?.name || '알 수 없음'}</span>
+                                      {item.arrival_time && (
+                                        <span className="text-sm text-gray-500">({item.arrival_time})</span>
+                                      )}
+                                    </div>
+                                    {item.spot?.address && (
+                                      <p className="text-sm text-gray-600 mt-1">{item.spot.address}</p>
+                                    )}
+                                    {item.meal_type && item.meal_menu && (
+                                      <p className="text-sm text-orange-600 mt-1">
+                                        {item.meal_type}: {item.meal_menu}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex items-center justify-between mt-2">
+                              <p className="text-xs text-gray-500">
+                                * 일정 항목은 '일정 관리' 메뉴에서 수정할 수 있습니다.
+                              </p>
+                              {initialData?.id && (
+                                <Link 
+                                  href={`/admin/tours/${initialData.id}/schedule`} 
+                                  target="_blank"
+                                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                                >
+                                  일정 관리 바로가기
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        ) : initialData?.id ? (
+                          <div className="mt-4 bg-gray-50 rounded-lg p-4 text-center">
+                            <p className="text-sm text-gray-600 mb-2">
+                              아직 등록된 일정 항목이 없습니다.
+                            </p>
+                            <Link 
+                              href={`/admin/tours/${initialData.id}/schedule`} 
+                              target="_blank"
+                              className="text-sm text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"
+                            >
+                              <Plus className="w-4 h-4" />
+                              일정 관리에서 추가하기
+                            </Link>
+                          </div>
+                        ) : !initialData?.id ? (
+                          <div className="mt-4 bg-blue-50 rounded-lg p-4">
+                            <p className="text-sm text-blue-800">
+                              견적을 저장한 후 '일정 관리' 메뉴에서 상세한 일정을 추가할 수 있습니다.
+                            </p>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

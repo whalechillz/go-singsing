@@ -488,7 +488,7 @@ export default function PublicQuotePage() {
                   <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p>상세 일정은 담당자와 상의 후 확정됩니다.</p>
                 </div>
-              ))}
+              )}
             </div>
 
             {/* 포함/불포함 사항 */}
