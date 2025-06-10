@@ -131,6 +131,7 @@ export interface JourneyItem {
 
 export const DOCUMENT_TYPES = [
   { id: 'customer_schedule', label: '일정표', icon: '📋' },
+  { id: 'staff_schedule', label: '일정표 (스탭용)', icon: '📋' },
   { id: 'customer_boarding', label: '탑승안내 (고객용)', icon: '🚌' },
   { id: 'staff_boarding', label: '탑승안내 (스탭용)', icon: '👥' },
   { id: 'room_assignment', label: '객실배정 (고객용)', icon: '🏨' },
