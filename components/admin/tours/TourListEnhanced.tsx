@@ -14,7 +14,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  CreditCard
 } from 'lucide-react';
 
 interface Tour {
@@ -411,6 +412,13 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                           <Users className="w-3.5 h-3.5 inline mr-1" />
                           관리
                         </Link>
+                        <Link
+                          href={`/admin/payments?tourId=${tour.id}`}
+                          className="text-xs text-green-600 hover:text-green-800 font-medium px-2 py-1 rounded-md hover:bg-green-50 transition-colors"
+                        >
+                          <CreditCard className="w-3.5 h-3.5 inline mr-1" />
+                          결제
+                        </Link>
                       </div>
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap">
@@ -451,6 +459,13 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                                 onClick={() => setShowDropdown(null)}
                               >
                                 참가자 관리
+                              </Link>
+                              <Link
+                                href={`/admin/payments?tourId=${tour.id}`}
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setShowDropdown(null)}
+                              >
+                                결제 관리
                               </Link>
                               <button
                                 onClick={(e) => {
