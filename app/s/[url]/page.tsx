@@ -43,8 +43,40 @@ export default async function ShortLinkRedirect({
     );
   }
   
-  // 스케줄 문서가 아닌 경우
-  if (linkData.document_type !== 'schedule') {
+  // document_type에 따른 리다이렉트 처리
+  const getRedirectPath = (linkData: any) => {
+    const tourId = linkData.tour_id;
+    
+    switch (linkData.document_type) {
+      case 'customer_schedule':
+      case 'staff_schedule':
+      case 'simplified':
+        return `/tour-schedule/${tourId}`;
+      
+      case 'customer_boarding':
+      case 'staff_boarding':
+        return `/tour-schedule/${tourId}#boarding`;
+      
+      case 'room_assignment':
+      case 'room_assignment_staff':
+        return `/tour-schedule/${tourId}#room`;
+      
+      case 'customer_timetable':
+      case 'staff_timetable':
+        return `/tour-schedule/${tourId}#timetable`;
+      
+      case 'quote':
+        return `/quote/${tourId}`;
+      
+      default:
+        return null;
+    }
+  };
+  
+  const redirectPath = getRedirectPath(linkData);
+  
+  // 처리할 수 없는 문서 유형인 경우
+  if (!redirectPath) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
@@ -55,7 +87,7 @@ export default async function ShortLinkRedirect({
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">잘못된 문서 유형</h1>
           <p className="text-gray-600">
-            이 링크는 스케줄 문서가 아닙니다.
+            이 링크는 처리할 수 없는 문서 유형입니다.
           </p>
         </div>
       </div>
@@ -96,6 +128,6 @@ export default async function ShortLinkRedirect({
     })
     .eq("public_url", url);
   
-  // 스케줄 문서로 리다이렉트
-  redirect(`/tour-schedule/${linkData.tour_id}`);
+  // 적절한 페이지로 리다이렉트
+  redirect(redirectPath!);
 }
