@@ -277,7 +277,7 @@ export default function TourPromotionClient({ promo, attractionOptions, document
                 return (
                   <a
                     key={link.id}
-                    href={`/document/${link.access_token}`}
+                    href={`/doc/${link.access_token}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 flex items-center gap-4 group"

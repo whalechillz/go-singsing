@@ -173,7 +173,7 @@ export default function DocumentLinksPage() {
   };
 
   const getDocumentUrl = (token: string) => {
-    return `${window.location.origin}/document/${token}`;
+    return `${window.location.origin}/doc/${token}`;
   };
 
   if (loading) {
