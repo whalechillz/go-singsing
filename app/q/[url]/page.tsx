@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import QuoteView from '@/components/QuoteView';
 
 // 서버 사이드용 Supabase 클라이언트
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -77,9 +78,10 @@ export default async function ShortLinkRedirect({
     })
     .eq("public_url", url);
   
-  // 문서 타입에 따라 리다이렉트
+  // 문서 타입에 따라 처리
   if (linkData.document_type === 'quote') {
-    redirect(`/quote/${linkData.tour_id}`);
+    // 견적서는 URL을 유지하면서 컴포넌트 렌더링
+    return <QuoteView quoteId={linkData.tour_id} />;
   } else if (linkData.document_type === 'boarding_guide') {
     redirect(`/document/${linkData.tour_id}/boarding`);
   } else {
