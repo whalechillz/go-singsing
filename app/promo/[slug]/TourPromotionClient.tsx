@@ -11,7 +11,9 @@ import {
   DollarSign,
   Bus,
   Hotel,
-  Utensils
+  Utensils,
+  FileText,
+  Download
 } from 'lucide-react';
 
 interface Attraction {
@@ -57,12 +59,24 @@ interface Promo {
   tour: Tour;
 }
 
+interface DocumentLink {
+  id: string;
+  tour_id: string;
+  document_type: string;
+  access_token: string;
+  is_active: boolean;
+  expires_at: string | null;
+  view_count: number;
+  created_at: string;
+}
+
 interface TourPromotionClientProps {
   promo: Promo;
   attractionOptions: AttractionOption[];
+  documentLinks?: DocumentLink[];
 }
 
-export default function TourPromotionClient({ promo, attractionOptions }: TourPromotionClientProps) {
+export default function TourPromotionClient({ promo, attractionOptions, documentLinks = [] }: TourPromotionClientProps) {
   const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
   const tour = promo.tour;
   
@@ -244,6 +258,53 @@ export default function TourPromotionClient({ promo, attractionOptions }: TourPr
           )}
         </div>
       </div>
+
+      {/* 문서 다운로드 섹션 */}
+      {documentLinks.length > 0 && (
+        <div className="bg-gray-100 py-12">
+          <div className="max-w-6xl mx-auto px-4">
+            <h3 className="text-2xl font-bold text-center mb-8">투어 관련 문서</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {documentLinks.map((link) => {
+                const documentTypeLabels: { [key: string]: string } = {
+                  'customer_schedule': '고객용 일정표',
+                  'staff_schedule': '스탭용 일정표',
+                  'boarding_guide': '탑승 안내',
+                  'customer_boarding': '고객용 탑승안내',
+                  'staff_boarding': '스탭용 탑승안내'
+                };
+                
+                return (
+                  <a
+                    key={link.id}
+                    href={`/document/${link.access_token}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 flex items-center gap-4 group"
+                  >
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                        <FileText className="w-6 h-6 text-blue-600" />
+                      </div>
+                    </div>
+                    <div className="flex-grow">
+                      <h4 className="font-semibold text-gray-900 mb-1">
+                        {documentTypeLabels[link.document_type] || link.document_type}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        클릭하여 보기
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <Download className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CTA 섹션 */}
       <div className="bg-blue-600 text-white py-16">

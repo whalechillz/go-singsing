@@ -75,10 +75,19 @@ export default async function TourPromotionPage({ params }: Props) {
     .eq('tour_id', promo.tour_id)
     .order('schedule_id, order_no');
 
+  // 활성화된 문서 링크 가져오기
+  const { data: documentLinks } = await supabase
+    .from('public_document_links')
+    .select('*')
+    .eq('tour_id', promo.tour_id)
+    .eq('is_active', true)
+    .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
+
   return (
     <TourPromotionClient 
       promo={promo}
       attractionOptions={attractionOptions || []}
+      documentLinks={documentLinks || []}
     />
   );
 }

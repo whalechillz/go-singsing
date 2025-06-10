@@ -12,7 +12,8 @@ import TeeTimeAssignmentManager from "@/components/TeeTimeAssignmentManager";
 import TourSchedulePreview from "@/components/TourSchedulePreview";
 import TourBoardingManager from "@/components/TourBoardingManager";
 import TourPromotionManager from "@/components/TourPromotionManager";
-import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock, Megaphone } from 'lucide-react';
+import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock, Megaphone, Link } from 'lucide-react';
+import { useRouter } from "next/navigation";
 
 const TABS = [
   { key: "participants", label: "참가자 관리", icon: <Users className="w-4 h-4" /> },
@@ -21,6 +22,7 @@ const TABS = [
   { key: "schedules", label: "일정 관리", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티타임 관리", icon: <Flag className="w-4 h-4" /> },
   { key: "schedule-preview", label: "문서 미리보기", icon: <FileText className="w-4 h-4" /> },
+  { key: "document-links", label: "문서 링크 관리", icon: <Link className="w-4 h-4" /> },
   { key: "promotion", label: "홍보 페이지", icon: <Megaphone className="w-4 h-4" /> },
 ];
 
@@ -36,6 +38,7 @@ type Params = { tourId?: string };
 
 const TourDetailPage: React.FC = () => {
   const params = useParams() as Params;
+  const router = useRouter();
   const tourId = params?.tourId ?? "";
   const [activeTab, setActiveTab] = useState<string>("participants");
   const [tour, setTour] = useState<Tour | null>(null);
@@ -69,7 +72,13 @@ const TourDetailPage: React.FC = () => {
                   ? "text-blue-600 bg-gray-50" 
                   : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                 }`}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                if (tab.key === "document-links") {
+                  router.push(`/admin/tours/${tourId}/document-links`);
+                } else {
+                  setActiveTab(tab.key);
+                }
+              }}
               aria-label={tab.label}
             >
               <span className={`transition-colors ${
