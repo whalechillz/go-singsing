@@ -134,20 +134,29 @@ export function useTourData(tourId: string) {
       let schedules: Schedule[] = [];
       
       if (dayInfoItems.length > 0) {
-        schedules = dayInfoItems.map(dayInfo => ({
-          id: dayInfo.id,
-          tour_id: dayInfo.tour_id,
-          date: dayInfo.day_date || new Date(new Date(tour.start_date).getTime() + (dayInfo.day_number - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          day_number: dayInfo.day_number,
-          title: dayInfo.notes || `Day ${dayInfo.day_number} 일정`,
-          meal_breakfast: dayInfo.meal_breakfast || false,
-          meal_lunch: dayInfo.meal_lunch || false,
-          meal_dinner: dayInfo.meal_dinner || false,
-          menu_breakfast: dayInfo.menu_breakfast || '',
-          menu_lunch: dayInfo.menu_lunch || '',
-          menu_dinner: dayInfo.menu_dinner || '',
-          schedule_items: []
-        }));
+        schedules = dayInfoItems.map(dayInfo => {
+          console.log('Day Info data:', {
+            day: dayInfo.day_number,
+            meal_breakfast: dayInfo.meal_breakfast,
+            meal_lunch: dayInfo.meal_lunch,
+            meal_dinner: dayInfo.meal_dinner
+          });
+          
+          return {
+            id: dayInfo.id,
+            tour_id: dayInfo.tour_id,
+            date: dayInfo.day_date || new Date(new Date(tour.start_date).getTime() + (dayInfo.day_number - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            day_number: dayInfo.day_number,
+            title: dayInfo.notes || `Day ${dayInfo.day_number} 일정`,
+            meal_breakfast: Boolean(dayInfo.meal_breakfast),
+            meal_lunch: Boolean(dayInfo.meal_lunch),
+            meal_dinner: Boolean(dayInfo.meal_dinner),
+            menu_breakfast: dayInfo.menu_breakfast || '',
+            menu_lunch: dayInfo.menu_lunch || '',
+            menu_dinner: dayInfo.menu_dinner || '',
+            schedule_items: []
+          };
+        });
       } else {
         // 기본 스케줄 생성
         const startDate = new Date(tour.start_date);

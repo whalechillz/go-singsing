@@ -43,7 +43,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
                         <div class="timeline-item ${iconClass}">
                           <div class="timeline-icon">${icon}</div>
                           <div class="timeline-content">
-                            ${item.time ? `<span class="timeline-time">${item.time}</span>` : ''}
+                            ${item.time ? `<span class="timeline-time">${item.time.split(':').slice(0, 2).join(':')}</span>` : ''}
                             <span class="timeline-text">${item.content}</span>
                             ${item.attraction_data && item.attraction_data.main_image_url ? `
                               <div class="timeline-image-wrapper">
@@ -61,26 +61,26 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
                 ` : ''}
                 
                 <div class="meal-info">
-                  <div class="meal ${schedule.meal_breakfast ? 'meal-included' : 'meal-excluded'}">
-                    <div class="meal-header">조식</div>
-                    <div class="meal-status">
-                      ${schedule.meal_breakfast ? '✓' : '✗'}
-                    </div>
-                    ${schedule.meal_breakfast && schedule.menu_breakfast ? `<div class="meal-menu">${schedule.menu_breakfast}</div>` : ''}
+                  <div class="meal">
+                    <span class="meal-label">조식</span>
+                    <span class="meal-indicator ${schedule.meal_breakfast ? 'included' : 'excluded'}">
+                      ${schedule.meal_breakfast ? 'O' : 'X'}
+                    </span>
+                    ${schedule.meal_breakfast && schedule.menu_breakfast ? `<span class="meal-menu">: ${schedule.menu_breakfast}</span>` : ''}
                   </div>
-                  <div class="meal ${schedule.meal_lunch ? 'meal-included' : 'meal-excluded'}">
-                    <div class="meal-header">중식</div>
-                    <div class="meal-status">
-                      ${schedule.meal_lunch ? '✓' : '✗'}
-                    </div>
-                    ${schedule.meal_lunch && schedule.menu_lunch ? `<div class="meal-menu">${schedule.menu_lunch}</div>` : ''}
+                  <div class="meal">
+                    <span class="meal-label">중식</span>
+                    <span class="meal-indicator ${schedule.meal_lunch ? 'included' : 'excluded'}">
+                      ${schedule.meal_lunch ? 'O' : 'X'}
+                    </span>
+                    ${schedule.meal_lunch && schedule.menu_lunch ? `<span class="meal-menu">: ${schedule.menu_lunch}</span>` : ''}
                   </div>
-                  <div class="meal ${schedule.meal_dinner ? 'meal-included' : 'meal-excluded'}">
-                    <div class="meal-header">석식</div>
-                    <div class="meal-status">
-                      ${schedule.meal_dinner ? '✓' : '✗'}
-                    </div>
-                    ${schedule.meal_dinner && schedule.menu_dinner ? `<div class="meal-menu">${schedule.menu_dinner}</div>` : ''}
+                  <div class="meal">
+                    <span class="meal-label">석식</span>
+                    <span class="meal-indicator ${schedule.meal_dinner ? 'included' : 'excluded'}">
+                      ${schedule.meal_dinner ? 'O' : 'X'}
+                    </span>
+                    ${schedule.meal_dinner && schedule.menu_dinner ? `<span class="meal-menu">: ${schedule.menu_dinner}</span>` : ''}
                   </div>
                 </div>
               </div>
@@ -192,70 +192,45 @@ function getScheduleStyles(): string {
     
     .meal-info {
       display: flex;
-      gap: 15px;
-      padding: 15px;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 16px;
       background: #f8f9fa;
-      border-radius: 8px;
-      margin-bottom: 15px;
+      border-radius: 4px;
+      margin-top: 12px;
+      font-size: 13px;
     }
     
     .meal {
-      flex: 1;
-      text-align: center;
-      padding: 12px;
-      border-radius: 6px;
-      transition: all 0.2s ease;
-      border: 2px solid transparent;
-    }
-    
-    .meal.meal-included {
-      background: #f0fdf4;
-      border-color: #86efac;
-    }
-    
-    .meal.meal-excluded {
-      background: #fef2f2;
-      border-color: #fecaca;
-    }
-    
-    .meal-header {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    
-    .meal.meal-included .meal-header {
-      color: #166534;
-    }
-    
-    .meal.meal-excluded .meal-header {
-      color: #991b1b;
-    }
-    
-    .meal-status {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      height: 32px;
+      gap: 8px;
     }
     
-    .meal.meal-included .meal-status {
-      color: #16a34a;
+    .meal-label {
+      color: #555;
+      font-weight: 600;
+      width: 35px;
     }
     
-    .meal.meal-excluded .meal-status {
+    .meal-indicator {
+      font-weight: bold;
+      width: 20px;
+      text-align: center;
+    }
+    
+    .meal-indicator.included {
+      color: #22c55e;
+    }
+    
+    .meal-indicator.excluded {
       color: #dc2626;
     }
     
     .meal-menu {
+      color: #666;
       font-size: 12px;
-      color: #555;
-      line-height: 1.4;
-      max-width: 150px;
-      margin: 0 auto;
+      flex: 1;
     }
     
     .product-info-box {
