@@ -179,7 +179,7 @@ export default function EditQuotePage() {
       const product = tourProducts.find(p => p.id === productId);
       if (product) {
         // 포함 사항 처리 - 쉼표로 구분하거나, 줄바꿈으로 구분된 경우도 처리
-        let includes = [];
+        let includes: string[] = [];
         if (product.included_items) {
           // 쉼표 또는 줄바꿈으로 분리
           includes = product.included_items
@@ -199,7 +199,7 @@ export default function EditQuotePage() {
         }
         
         // 불포함 사항 처리
-        let excludes = [];
+        let excludes: string[] = [];
         if (product.excluded_items) {
           excludes = product.excluded_items
             .split(/[,\n]/)
