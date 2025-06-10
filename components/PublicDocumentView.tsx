@@ -15,6 +15,21 @@ interface PublicDocumentViewProps {
   };
 }
 
+const PUBLIC_DOCUMENT_TYPES = [
+  { id: 'customer_schedule', label: '일정표', icon: '📋' },
+  { id: 'customer_boarding', label: '탑승안내', icon: '🚌' },
+  { id: 'room_assignment', label: '객실배정', icon: '🏨' },
+  { id: 'customer_timetable', label: '티타임표', icon: '⛳' },
+  { id: 'simplified', label: '간편일정', icon: '📄' }
+] as const;
+
+const STAFF_DOCUMENT_TYPES = [
+  { id: 'staff_schedule', label: '일정표 (스탭용)', icon: '📋' },
+  { id: 'staff_boarding', label: '탑승안내 (스탭용)', icon: '🚌' },
+  { id: 'room_assignment_staff', label: '객실배정 (스탭용)', icon: '🏨' },
+  { id: 'staff_timetable', label: '티타임표 (스탭용)', icon: '⛳' }
+] as const;
+
 // document_type을 DocumentType으로 매핑
 const mapDocumentType = (docType: string): DocumentType => {
   const typeMap: Record<string, DocumentType> = {
@@ -27,6 +42,9 @@ const mapDocumentType = (docType: string): DocumentType => {
     'staff_boarding': 'staff_boarding',
     'staff_room': 'room_assignment_staff',
     'staff_timetable': 'staff_timetable',
+    'customer_all': 'customer_schedule', // 통합 문서는 기본값으로 일정표
+    'staff_all': 'staff_schedule', // 스탭용 통합 문서는 기본값으로 스탭 일정표
+    'golf_timetable': 'staff_timetable', // 골프장 전용은 스탭 티타임표
   };
   
   return typeMap[docType] || 'customer_schedule';
@@ -43,6 +61,9 @@ const getDocumentTitle = (docType: string): string => {
     'staff_boarding': '탑승 안내 (스탭용)',
     'staff_room': '객실 배정 (스탭용)',
     'staff_timetable': '티타임표 (스탭용)',
+    'customer_all': '통합 문서',
+    'staff_all': '통합 문서 (스탭용)',
+    'golf_timetable': '티타임표 (골프장 전용)',
   };
   
   return titleMap[docType] || '문서';
@@ -50,8 +71,15 @@ const getDocumentTitle = (docType: string): string => {
 
 export default function PublicDocumentView({ linkData }: PublicDocumentViewProps) {
   const tourId = linkData.tour_id;
-  const documentType = mapDocumentType(linkData.document_type);
-  const [activeTab] = useState<DocumentType>(documentType);
+  
+  // 통합 문서 여부 확인 (먼저 확인)
+  const isAllDocuments = linkData.document_type === 'customer_all' || linkData.document_type === 'staff_all';
+  const isStaffDocuments = linkData.document_type === 'staff_all';
+  const isGolfOnly = linkData.document_type === 'golf_timetable';
+  
+  // 골프장 전용일 때는 staff_timetable로 고정
+  const initialDocumentType = isGolfOnly ? 'staff_timetable' : mapDocumentType(linkData.document_type);
+  const [activeTab, setActiveTab] = useState<DocumentType>(initialDocumentType);
   
   const {
     tourData,
@@ -117,11 +145,12 @@ export default function PublicDocumentView({ linkData }: PublicDocumentViewProps
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">
-                {tourData.title} - {getDocumentTitle(linkData.document_type)}
+                {tourData.title} {!isAllDocuments && `- ${getDocumentTitle(linkData.document_type)}`}
               </h1>
               <p className="text-sm text-gray-600">
                 {new Date(tourData.start_date).toLocaleDateString('ko-KR')} ~ 
                 {' '}{new Date(tourData.end_date).toLocaleDateString('ko-KR')}
+                {isGolfOnly && <span className="ml-2 text-blue-600">(골프장 전용)</span>}
               </p>
             </div>
             <button
@@ -134,6 +163,28 @@ export default function PublicDocumentView({ linkData }: PublicDocumentViewProps
           </div>
         </div>
       </div>
+      
+      {/* 문서 선택 탭 - 통합 문서일 때만 표시 */}
+      {isAllDocuments && !isGolfOnly && (
+        <div className="max-w-7xl mx-auto px-4 py-4 no-print">
+          <div className="flex flex-wrap gap-2">
+            {(isStaffDocuments ? STAFF_DOCUMENT_TYPES : PUBLIC_DOCUMENT_TYPES).map((doc) => (
+              <button
+                key={doc.id}
+                onClick={() => setActiveTab(doc.id as DocumentType)}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  activeTab === doc.id
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+                }`}
+              >
+                <span className="mr-2">{doc.icon}</span>
+                {doc.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 문서 내용 */}
       <div className="max-w-7xl mx-auto px-4 pb-8 print:p-0">
