@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Plus, Search, Calendar, Users, DollarSign, Copy, Send, Eye, Edit, Trash2, Clock, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { generatePublicUrl, getPublicLinkUrl } from "@/utils/publicLink";
 
 interface Quote {
   id: string;
@@ -30,6 +31,8 @@ export default function QuotesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  
+
 
   useEffect(() => {
     fetchQuotes();
@@ -80,29 +83,43 @@ export default function QuotesPage() {
   const handleCopyLink = async (quoteId: string) => {
     try {
       // 공개 링크 정보 가져오기
-      const { data: linkData } = await supabase
+      const { data: linkData, error } = await supabase
         .from("public_document_links")
         .select("public_url")
         .eq("tour_id", quoteId)
         .eq("document_type", "quote")
+        .eq("is_active", true)
         .single();
 
       let url;
       if (linkData?.public_url) {
-        url = `${window.location.origin}/q/${linkData.public_url}`;
+        // 공개 링크가 있는 경우
+        url = getPublicLinkUrl(linkData.public_url);
       } else {
-        // 공개 링크가 없는 경우 기본 링크 사용
-        url = `${window.location.origin}/quote/${quoteId}`;
+        // 공개 링크가 없는 경우 생성
+        const publicUrl = generatePublicUrl();
+        const expiresAt = quotes.find(q => q.id === quoteId)?.quote_expires_at;
+        
+        const { error: createError } = await supabase
+          .from("public_document_links")
+          .insert({
+            tour_id: quoteId,
+            document_type: 'quote',
+            public_url: publicUrl,
+            expires_at: expiresAt,
+            is_active: true,
+            view_count: 0
+          });
+        
+        if (createError) throw createError;
+        url = getPublicLinkUrl(publicUrl);
       }
       
-      navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(url);
       alert('견적서 링크가 복사되었습니다.');
     } catch (error) {
       console.error("Error copying link:", error);
-      // 오류 발생 시 기본 링크 사용
-      const url = `${window.location.origin}/quote/${quoteId}`;
-      navigator.clipboard.writeText(url);
-      alert('견적서 링크가 복사되었습니다.');
+      alert('링크 복사 중 오류가 발생했습니다.');
     }
   };
 

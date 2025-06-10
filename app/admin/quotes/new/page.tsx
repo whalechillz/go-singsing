@@ -18,6 +18,7 @@ import {
   Eye
 } from "lucide-react";
 import Link from "next/link";
+import { generatePublicUrl } from "@/utils/publicLink";
 
 interface TourProduct {
   id: string;
@@ -256,15 +257,7 @@ export default function NewQuotePage() {
     return { nights: days - 1, days };
   };
 
-  const generatePublicUrl = () => {
-    // 랜덤 문자열 생성 (8자리)
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -20,6 +20,7 @@ import {
   Share2
 } from "lucide-react";
 import Link from "next/link";
+import { generatePublicUrl, getPublicLinkUrl, getInternalQuoteUrl } from "@/utils/publicLink";
 
 interface TourProduct {
   id: string;
@@ -365,15 +366,7 @@ export default function EditQuotePage() {
     }
   };
 
-  const generatePublicUrl = () => {
-    // 랜덤 문자열 생성 (8자리)
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
+
 
   const handleCreatePublicLink = async () => {
     try {
@@ -406,10 +399,10 @@ export default function EditQuotePage() {
     let url;
     if (isPublicLink && documentLink?.public_url) {
       // 공개 링크 (/q/ 경로 사용 - 견적서)
-      url = `${window.location.origin}/q/${documentLink.public_url}`;
+      url = getPublicLinkUrl(documentLink.public_url);
     } else {
       // 일반 공유 링크
-      url = `${window.location.origin}/quote/${quoteId}`;
+      url = getInternalQuoteUrl(quoteId);
     }
     navigator.clipboard.writeText(url);
     alert(isPublicLink ? '고객용 공개 링크가 복사되었습니다.' : '내부용 링크가 복사되었습니다.');
