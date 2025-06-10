@@ -226,8 +226,10 @@ export default function DocumentLinksPage() {
     }
   };
 
-  const getDocumentUrl = (publicUrl: string) => {
-    return `${window.location.origin}/s/${publicUrl}`;
+  const getDocumentUrl = (link: DocumentLink) => {
+    // document_type에 따라 다른 경로 사용
+    const prefix = link.document_type === 'quote' ? 'q' : 's';
+    return `${window.location.origin}/${prefix}/${link.public_url}`;
   };
 
   if (loading) {
@@ -317,19 +319,19 @@ export default function DocumentLinksPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        value={getDocumentUrl(link.public_url)}
+                        value={getDocumentUrl(link)}
                         readOnly
                         className="flex-1 px-3 py-2 border rounded-md bg-gray-50 text-sm"
                       />
                       <button
-                        onClick={() => copyToClipboard(getDocumentUrl(link.public_url))}
+                        onClick={() => copyToClipboard(getDocumentUrl(link))}
                         className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
                         title="링크 복사"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => window.open(getDocumentUrl(link.public_url), '_blank')}
+                        onClick={() => window.open(getDocumentUrl(link), '_blank')}
                         className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
                         title="새 탭에서 열기"
                       >

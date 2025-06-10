@@ -830,7 +830,7 @@ export default function EditQuotePage() {
                       type="text"
                       readOnly
                       className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"
-                      value={`${window.location.origin}/s/${documentLink.public_url}`}
+                      value={`${window.location.origin}/q/${documentLink.public_url}`}
                     />
                     <button
                       type="button"
