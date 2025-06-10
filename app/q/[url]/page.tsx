@@ -16,7 +16,7 @@ export default async function ShortLinkRedirect({
   // 공개 링크 정보 조회
   const { data: linkData, error } = await supabase
     .from("public_document_links")
-    .select("tour_id, document_type, is_active, expires_at")
+    .select("*")
     .eq("public_url", url)
     .single();
   
@@ -49,13 +49,13 @@ export default async function ShortLinkRedirect({
   }
   
   // 조회수 증가 (view_count 업데이트)
-  const currentViewCount = linkData.view_count || 0;
+  const currentViewCount = (linkData as any).view_count || 0;
   await supabase
     .from("public_document_links")
     .update({ 
       view_count: currentViewCount + 1,
       last_viewed_at: new Date().toISOString(),
-      first_viewed_at: linkData.first_viewed_at || new Date().toISOString()
+      first_viewed_at: (linkData as any).first_viewed_at || new Date().toISOString()
     })
     .eq("public_url", url);
   
