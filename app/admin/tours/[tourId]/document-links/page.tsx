@@ -4,7 +4,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FileText, Copy, ExternalLink, Trash2, Plus, X } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface DocumentLink {
   id: string;
@@ -72,7 +71,7 @@ export default function DocumentLinksPage() {
       setDocumentLinks(linksData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('데이터를 불러오는 중 오류가 발생했습니다.');
+      alert('데이터를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -107,10 +106,10 @@ export default function DocumentLinksPage() {
       setIsCreateModalOpen(false);
       setNewDocumentType('customer_schedule');
       setExpirationDays('');
-      toast.success('문서 링크가 생성되었습니다.');
+      alert('문서 링크가 생성되었습니다.');
     } catch (error) {
       console.error('Error creating link:', error);
-      toast.error('문서 링크 생성 중 오류가 발생했습니다.');
+      alert('문서 링크 생성 중 오류가 발생했습니다.');
     }
   };
 
@@ -127,10 +126,10 @@ export default function DocumentLinksPage() {
         link.id === linkId ? { ...link, is_active: !currentStatus } : link
       ));
       
-      toast.success(currentStatus ? '링크가 비활성화되었습니다.' : '링크가 활성화되었습니다.');
+      alert(currentStatus ? '링크가 비활성화되었습니다.' : '링크가 활성화되었습니다.');
     } catch (error) {
       console.error('Error toggling link status:', error);
-      toast.error('상태 변경 중 오류가 발생했습니다.');
+      alert('상태 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -146,16 +145,16 @@ export default function DocumentLinksPage() {
       if (error) throw error;
 
       setDocumentLinks(documentLinks.filter(link => link.id !== linkId));
-      toast.success('문서 링크가 삭제되었습니다.');
+      alert('문서 링크가 삭제되었습니다.');
     } catch (error) {
       console.error('Error deleting link:', error);
-      toast.error('링크 삭제 중 오류가 발생했습니다.');
+      alert('링크 삭제 중 오류가 발생했습니다.');
     }
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('링크가 복사되었습니다.');
+    alert('링크가 복사되었습니다.');
   };
 
   const getDocumentUrl = (token: string) => {
