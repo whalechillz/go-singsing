@@ -50,7 +50,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     'tour-management': true, 
     'memo-management': true,
     'tour-staff-management': true,
-    'customer-management': true 
+    'customer-management': true,
+    'document-management': true 
   });
   
   // pathname에 따라 activeNav 결정
@@ -65,6 +66,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/participants')) return 'participants-list';
     if (pathname.startsWith('/admin/payments')) return 'payments';
     if (pathname.startsWith('/admin/documents')) return 'documents';
+    if (pathname.startsWith('/admin/tour-documents')) return 'tour-documents';
     if (pathname.startsWith('/admin/memos')) return 'memos';
     if (pathname.startsWith('/admin/work-memos')) return 'work-memos';
     if (pathname.startsWith('/admin/memo-templates')) return 'memo-templates';
@@ -127,7 +129,15 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'roles', label: '권한 설정', href: '/admin/roles' },
       ]
     },
-    { id: 'documents', label: '문서 관리', icon: <FileText className="w-5 h-5" />, href: '/admin/documents' },
+    { 
+      id: 'document-management', 
+      label: '문서 관리', 
+      icon: <FileText className="w-5 h-5" />,
+      subMenu: [
+        { id: 'documents', label: '문서 목록', href: '/admin/documents' },
+        { id: 'tour-documents', label: '투어별 문서 링크', href: '/admin/tour-documents' },
+      ]
+    },
     { 
       id: 'memo-management', 
       label: '메모 관리', 

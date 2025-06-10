@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, MapPin, Users, Calendar, Plus, Search, Trash2, Edit2, Copy, Settings, Eye, Save } from 'lucide-react';
+import { FileText, MapPin, Users, Calendar, Plus, Search, Trash2, Edit2, Settings, Eye, Save } from 'lucide-react';
 // DocumentNoticeManager 제거됨
 
 // 문서 타입 정의
@@ -21,13 +21,7 @@ interface Document {
   };
 }
 
-interface DocumentTemplate {
-  id: string;
-  template_name: string;
-  document_type: string;
-  content_blocks: any[];
-  is_default: boolean;
-}
+// Template 기능은 현재 사용하지 않음 (테이블 없음)
 
 interface Tour {
   id: string;
@@ -49,18 +43,13 @@ const DOCUMENT_TYPES = [
 export default function DocumentsPage() {
   const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
+  // const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'documents' | 'templates' | 'tour-notices'>('documents');
+  const [activeTab, setActiveTab] = useState<'documents' | 'tour-notices'>('documents');
   const [selectedTour, setSelectedTour] = useState<string>('');
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [newTemplate, setNewTemplate] = useState({
-    template_name: '',
-    document_type: 'customer_schedule',
-    content_blocks: []
-  });
+  // Template 모달 관련 상태는 현재 사용하지 않음
 
   useEffect(() => {
     fetchData();
@@ -86,14 +75,7 @@ export default function DocumentsPage() {
       if (docsError) throw docsError;
       setDocuments(docsData || []);
 
-      // 템플릿 목록 가져오기
-      const { data: templatesData, error: templatesError } = await supabase
-        .from('document_templates')
-        .select('*')
-        .order('document_type, template_name');
-      
-      if (templatesError) throw templatesError;
-      setTemplates(templatesData || []);
+      // 템플릿 기능은 현재 사용하지 않음 (테이블 없음)
 
       // 투어 목록 가져오기
       const { data: toursData, error: toursError } = await supabase
@@ -117,64 +99,7 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleCreateTemplate = async () => {
-    try {
-      const { error } = await supabase
-        .from('document_templates')
-        .insert([newTemplate]);
-      
-      if (error) throw error;
-      
-      setShowTemplateModal(false);
-      setNewTemplate({
-        template_name: '',
-        document_type: 'customer_schedule',
-        content_blocks: []
-      });
-      fetchData();
-    } catch (err) {
-      setError('템플릿 생성 중 오류가 발생했습니다.');
-    }
-  };
-
-  const handleDeleteTemplate = async (id: string) => {
-    if (!confirm('정말로 이 템플릿을 삭제하시겠습니까?')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('document_templates')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      fetchData();
-    } catch (err) {
-      setError('템플릿 삭제 중 오류가 발생했습니다.');
-    }
-  };
-
-  const handleSetDefaultTemplate = async (id: string, documentType: string) => {
-    try {
-      // 같은 타입의 모든 템플릿의 is_default를 false로
-      await supabase
-        .from('document_templates')
-        .update({ is_default: false })
-        .eq('document_type', documentType);
-      
-      // 선택한 템플릿을 기본값으로 설정
-      const { error } = await supabase
-        .from('document_templates')
-        .update({ is_default: true })
-        .eq('id', id);
-      
-      if (error) throw error;
-      fetchData();
-    } catch (err) {
-      setError('기본 템플릿 설정 중 오류가 발생했습니다.');
-    }
-  };
+  // 템플릿 관련 함수들은 현재 사용하지 않음
 
   if (isLoading) {
     return (
@@ -207,17 +132,7 @@ export default function DocumentsPage() {
                 <FileText className="w-4 h-4 inline mr-2" />
                 문서 목록
               </button>
-              <button
-                className={`px-6 py-3 font-medium ${
-                  activeTab === 'templates' 
-                    ? 'border-b-2 border-blue-600 text-blue-600' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-                onClick={() => setActiveTab('templates')}
-              >
-                <Copy className="w-4 h-4 inline mr-2" />
-                템플릿 관리
-              </button>
+              {/* 템플릿 관리 탭은 현재 사용하지 않음 */}
               <button
                 className={`px-6 py-3 font-medium ${
                   activeTab === 'tour-notices' 
@@ -317,78 +232,7 @@ export default function DocumentsPage() {
           </div>
         )}
 
-        {/* 템플릿 관리 탭 */}
-        {activeTab === 'templates' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">문서 템플릿</h2>
-                <button
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
-                  onClick={() => setShowTemplateModal(true)}
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  새 템플릿
-                </button>
-              </div>
-
-              {DOCUMENT_TYPES.map(docType => {
-                const typeTemplates = templates.filter(t => t.document_type === docType.value);
-                
-                return (
-                  <div key={docType.value} className="mb-6">
-                    <h3 className="text-md font-semibold text-gray-700 mb-3 flex items-center">
-                      <span className="text-2xl mr-2">{docType.icon}</span>
-                      {docType.label}
-                    </h3>
-                    
-                    {typeTemplates.length === 0 ? (
-                      <p className="text-gray-500 text-sm ml-10">템플릿이 없습니다.</p>
-                    ) : (
-                      <div className="grid gap-3 ml-10">
-                        {typeTemplates.map(template => (
-                          <div key={template.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-medium text-gray-900">
-                                  {template.template_name}
-                                  {template.is_default && (
-                                    <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                                      기본
-                                    </span>
-                                  )}
-                                </h4>
-                                <p className="text-sm text-gray-500 mt-1">
-                                  {template.content_blocks.length}개의 콘텐츠 블록
-                                </p>
-                              </div>
-                              <div className="flex gap-2">
-                                {!template.is_default && (
-                                  <button
-                                    className="text-blue-600 hover:text-blue-800 text-sm"
-                                    onClick={() => handleSetDefaultTemplate(template.id, template.document_type)}
-                                  >
-                                    기본으로 설정
-                                  </button>
-                                )}
-                                <button
-                                  className="text-red-600 hover:text-red-800"
-                                  onClick={() => handleDeleteTemplate(template.id)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* 템플릿 관리 기능은 현재 사용하지 않음 */}
 
         {/* 투어별 공지사항 탭 */}
         {activeTab === 'tour-notices' && (
@@ -422,61 +266,7 @@ export default function DocumentsPage() {
           </div>
         )}
 
-        {/* 템플릿 생성 모달 */}
-        {showTemplateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4">새 템플릿 만들기</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    템플릿 이름
-                  </label>
-                  <input
-                    type="text"
-                    value={newTemplate.template_name}
-                    onChange={(e) => setNewTemplate({ ...newTemplate, template_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 기본 고객용 일정표"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    문서 유형
-                  </label>
-                  <select
-                    value={newTemplate.document_type}
-                    onChange={(e) => setNewTemplate({ ...newTemplate, document_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    {DOCUMENT_TYPES.map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setShowTemplateModal(false)}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleCreateTemplate}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  생성
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* 템플릿 생성 모달은 현재 사용하지 않음 */}
 
         {error && (
           <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg">
