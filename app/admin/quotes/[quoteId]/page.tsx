@@ -18,7 +18,10 @@ import {
   ArrowUpRight,
   Download,
   Eye,
-  Copy
+  Copy,
+  QrCode,
+  Share2,
+  ExternalLink
 } from 'lucide-react';
 
 export default function QuoteDetailPage() {
@@ -31,6 +34,8 @@ export default function QuoteDetailPage() {
   const [error, setError] = useState("");
   const [quoteData, setQuoteData] = useState<any>(null);
   const [converting, setConverting] = useState(false);
+  const [documentLink, setDocumentLink] = useState<any>(null);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   useEffect(() => {
     fetchQuoteDetails();
@@ -64,6 +69,18 @@ export default function QuoteDetailPage() {
           ? JSON.parse(quoteData.quote_data) 
           : quoteData.quote_data;
         setQuoteData(parsed);
+      }
+      
+      // 문서 링크 정보 가져오기
+      const { data: linkData } = await supabase
+        .from("public_document_links")
+        .select("*")
+        .eq("tour_id", quoteId)
+        .eq("document_type", "quote")
+        .single();
+      
+      if (linkData) {
+        setDocumentLink(linkData);
       }
       
       setQuote(quoteData);
@@ -157,7 +174,9 @@ export default function QuoteDetailPage() {
   };
 
   const copyQuoteLink = () => {
-    const link = `${window.location.origin}/quote/${quoteId}`;
+    const link = documentLink?.public_url 
+      ? `${window.location.origin}/public/${documentLink.public_url}`
+      : `${window.location.origin}/quote/${quoteId}`;
     navigator.clipboard.writeText(link);
     alert('견적서 링크가 복사되었습니다.');
   };
@@ -166,7 +185,51 @@ export default function QuoteDetailPage() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
+        {/* QR코드 모달 */}
+      {showQRModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+            <h3 className="text-lg font-bold mb-4">견적서 QR코드</h3>
+            <div className="bg-gray-100 p-4 rounded-lg mb-4">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                  documentLink?.public_url 
+                    ? `${window.location.origin}/public/${documentLink.public_url}`
+                    : `${window.location.origin}/quote/${quoteId}`
+                )}`}
+                alt="QR Code"
+                className="mx-auto"
+              />
+            </div>
+            <p className="text-sm text-gray-600 mb-4 text-center">
+              고객님이 QR코드를 스캔하면 견적서를 확인할 수 있습니다.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const link = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
+                    documentLink?.public_url 
+                      ? `${window.location.origin}/public/${documentLink.public_url}`
+                      : `${window.location.origin}/quote/${quoteId}`
+                  )}`;
+                  window.open(link, '_blank');
+                }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Download className="w-4 h-4 inline mr-1" />
+                다운로드
+              </button>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
     );
   }
 
@@ -238,6 +301,13 @@ export default function QuoteDetailPage() {
         
         <div className="flex gap-2">
           <button
+            onClick={() => setShowQRModal(true)}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+          >
+            <QrCode className="w-4 h-4" />
+            QR코드
+          </button>
+          <button
             onClick={copyQuoteLink}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
           >
@@ -245,7 +315,7 @@ export default function QuoteDetailPage() {
             링크 복사
           </button>
           <Link
-            href={`/quote/${quoteId}`}
+            href={documentLink?.public_url ? `/public/${documentLink.public_url}` : `/quote/${quoteId}`}
             target="_blank"
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
           >
@@ -454,6 +524,38 @@ export default function QuoteDetailPage() {
                 <p className="font-medium">{quoteData.participants.leader_phone}</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 문서 링크 정보 */}
+      {documentLink && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <ExternalLink className="w-5 h-5" />
+            공유 정보
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm text-gray-600">조회수</label>
+              <p className="font-medium">{documentLink.view_count || 0}회</p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-600">처음 확인</label>
+              <p className="font-medium">
+                {documentLink.first_viewed_at 
+                  ? new Date(documentLink.first_viewed_at).toLocaleString('ko-KR')
+                  : '미확인'}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-600">마지막 확인</label>
+              <p className="font-medium">
+                {documentLink.last_viewed_at 
+                  ? new Date(documentLink.last_viewed_at).toLocaleString('ko-KR')
+                  : '미확인'}
+              </p>
+            </div>
           </div>
         </div>
       )}

@@ -174,7 +174,22 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
           .single();
         
         if (error) throw error;
-        onSuccess(data.id);
+        
+      // 문서 링크 생성
+      const expiresAt = new Date(data.quote_expires_at);
+      expiresAt.setDate(expiresAt.getDate() + 30); // 만료일 + 30일
+      
+      await supabase
+        .from("public_document_links")
+        .insert({
+          tour_id: data.id,
+          document_type: 'quote',
+          title: `견적서 - ${data.title}`,
+          expires_at: expiresAt.toISOString(),
+          is_active: true
+        });
+      
+      onSuccess(data.id);
       }
     } catch (error: any) {
       alert('저장 실패: ' + error.message);
