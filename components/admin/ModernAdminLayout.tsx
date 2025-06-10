@@ -23,7 +23,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     if (pathname.startsWith('/admin/participants')) return '참가자 목록';
     if (pathname.startsWith('/admin/payments')) return '결제 관리';
     if (pathname.startsWith('/admin/tour-documents')) return '투어별 문서 링크';
-    if (pathname.startsWith('/admin/documents')) return '문서 관리';
+    // if (pathname.startsWith('/admin/documents')) return '문서 관리'; // 삭제됨
     if (pathname.startsWith('/admin/attractions')) return '스팟 관리';
     if (pathname.startsWith('/admin/memos')) return '참가자 메모';
     if (pathname.startsWith('/admin/work-memos')) return '업무 메모';
