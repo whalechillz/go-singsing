@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import ModernAdminLayout from '@/components/ModernAdminLayout';
+import ModernAdminLayout from '@/components/admin/ModernAdminLayout';
 
 interface LayoutProps {
   children: ReactNode;
