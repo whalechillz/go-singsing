@@ -1,0 +1,147 @@
+/* 무지개빛 그라데이션 텍스트 효과 */
+
+/* 기본 무지개 그라데이션 */
+.rainbow-text {
+  background: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ff7f00 14%,
+    #ffff00 28%,
+    #00ff00 42%,
+    #0000ff 56%,
+    #4b0082 70%,
+    #9400d3 84%,
+    #ff0000 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* 애니메이션 효과 추가 */
+.rainbow-text-animated {
+  background: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ff7f00 14%,
+    #ffff00 28%,
+    #00ff00 42%,
+    #0000ff 56%,
+    #4b0082 70%,
+    #9400d3 84%,
+    #ff0000 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  animation: rainbow-flow 3s ease-in-out infinite;
+}
+
+/* 구글 Gemini 스타일 그라데이션 */
+.gemini-gradient {
+  background: linear-gradient(
+    135deg,
+    #4285f4 0%,
+    #9b72cb 20%,
+    #d96570 40%,
+    #f9ab55 60%,
+    #e37400 80%,
+    #4285f4 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 600;
+}
+
+/* 애플 스타일 그라데이션 */
+.apple-gradient {
+  background: linear-gradient(
+    135deg,
+    #5ac8fa 0%,
+    #007aff 20%,
+    #5856d6 40%,
+    #af52de 60%,
+    #ff2d55 80%,
+    #ff3b30 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 600;
+}
+
+/* 부드러운 파스텔 무지개 */
+.pastel-rainbow {
+  background: linear-gradient(
+    90deg,
+    #ffb3ba 0%,
+    #ffdfba 16%,
+    #ffffba 32%,
+    #baffc9 48%,
+    #bae1ff 64%,
+    #e0aaff 80%,
+    #ffb3ba 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes rainbow-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 호버 효과 */
+.rainbow-text-hover {
+  background: linear-gradient(
+    90deg,
+    #667eea 0%,
+    #764ba2 25%,
+    #f093fb 50%,
+    #4facfe 75%,
+    #667eea 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.rainbow-text-hover:hover {
+  animation: rainbow-flow 2s ease-in-out infinite;
+  transform: scale(1.05);
+}
+
+/* 네온 무지개 효과 */
+.neon-rainbow {
+  background: linear-gradient(
+    45deg,
+    #00ffff 0%,
+    #ff00ff 25%,
+    #ffff00 50%,
+    #00ff00 75%,
+    #00ffff 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  filter: brightness(1.2);
+}

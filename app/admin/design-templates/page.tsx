@@ -4,10 +4,27 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, Copy, FileText, Calendar, BedDouble, Sparkles, Briefcase, Palette, Quote } from 'lucide-react';
+import RainbowText from '@/components/ui/RainbowText';
 
 export default function DesignTemplatesPage() {
   const [activeTemplate, setActiveTemplate] = React.useState<'a-contract' | 'b-operational' | 'c-promotional' | 'd-professional' | 'e-dynamic' | 'f-quote'>('a-contract');
   const [dynamicTheme, setDynamicTheme] = React.useState<'blue' | 'green' | 'orange'>('blue');
+
+  // CSS 애니메이션을 위한 전역 스타일
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes gradient-flow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   // A그룹: 브랜드컬러 (계약문서) - #2c5282
   const generateContractHTML = () => {
@@ -36,13 +53,27 @@ export default function DesignTemplatesPage() {
       padding: 30px;
     }
     
-    /* A그룹 헤더 - 권위있는 스타일 */
+    /* A그룹 헤더 - 무지개빛 그라데이션 스타일 */
     .header-contract {
-      background-color: #2c5282;
+      background: linear-gradient(135deg, #4285f4 0%, #9b72cb 20%, #d96570 40%, #f9ab55 60%, #e37400 80%, #4285f4 100%);
       color: white;
       padding: 30px;
       text-align: center;
       margin: -30px -30px 30px -30px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* 애니메이션 효과 */
+    @keyframes gradient-flow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .header-contract.animated {
+      background-size: 200% 200%;
+      animation: gradient-flow 3s ease infinite;
     }
     
     .header-contract .logo {
@@ -50,6 +81,37 @@ export default function DesignTemplatesPage() {
       font-weight: bold;
       margin-bottom: 15px;
       letter-spacing: 0.5px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    /* 텍스트 그라데이션 옵션 */
+    .gradient-text-gemini {
+      background: linear-gradient(135deg, #4285f4 0%, #9b72cb 20%, #d96570 40%, #f9ab55 60%, #e37400 80%, #4285f4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: bold;
+      display: inline-block;
+    }
+    
+    .gradient-text-apple {
+      background: linear-gradient(135deg, #5ac8fa 0%, #007aff 20%, #5856d6 40%, #af52de 60%, #ff2d55 80%, #ff3b30 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: bold;
+      display: inline-block;
+    }
+    
+    .gradient-text-neon {
+      background: linear-gradient(45deg, #00ffff 0%, #ff00ff 25%, #ffff00 50%, #00ff00 75%, #00ffff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: bold;
+      display: inline-block;
+      filter: brightness(1.2);
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
     
     .header-contract .subtitle {
@@ -72,11 +134,15 @@ export default function DesignTemplatesPage() {
     .section-title {
       font-size: 18px;
       font-weight: bold;
-      color: #2c5282;
+      background: linear-gradient(135deg, #4285f4 0%, #9b72cb 20%, #d96570 40%, #f9ab55 60%, #e37400 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       padding: 10px;
-      background: #e7f3ff;
+      background-color: #e7f3ff;
       margin-bottom: 15px;
-      border-left: 4px solid #2c5282;
+      border-left: 4px solid;
+      border-image: linear-gradient(135deg, #4285f4, #9b72cb, #d96570, #f9ab55, #e37400) 1;
     }
     
     .info-box {
@@ -128,7 +194,7 @@ export default function DesignTemplatesPage() {
 </head>
 <body>
   <div class="container">
-    <div class="header-contract">
+    <div class="header-contract animated">
       <div class="logo">싱싱골프투어</div>
       <div class="subtitle">2박3일 순천버스핑</div>
       <div class="company-info">
@@ -2051,22 +2117,31 @@ export default function DesignTemplatesPage() {
             <div className="flex items-center gap-3">
               <FileText className="w-8 h-8 text-blue-700" />
               <div>
-                <CardTitle className="text-lg">A그룹: 계약문서</CardTitle>
-                <CardDescription>권위감·신뢰감</CardDescription>
+                <CardTitle className="text-lg">A그룹: <RainbowText text="계약문서" variant="gemini" /></CardTitle>
+                <CardDescription>화려한 무지개빛 그라데이션</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#2c5282' }}></div>
-                <span className="text-sm">진한 네이비</span>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #4285f4 0%, #9b72cb 20%, #d96570 40%, #f9ab55 60%, #e37400 80%, #4285f4 100%)' }}></div>
+                  <RainbowText text="Gemini 스타일" variant="gemini" className="text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #5ac8fa 0%, #007aff 20%, #5856d6 40%, #af52de 60%, #ff2d55 80%, #ff3b30 100%)' }}></div>
+                  <RainbowText text="Apple 스타일" variant="apple" className="text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 14%, #ffff00 28%, #00ff00 42%, #0000ff 56%, #4b0082 70%, #9400d3 84%, #ff0000 100%)' }}></div>
+                  <RainbowText text="무지개 애니메이션" variant="animated" className="text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(45deg, #00ffff 0%, #ff00ff 25%, #ffff00 50%, #00ff00 75%, #00ffff 100%)' }}></div>
+                  <RainbowText text="네온 효과" variant="neon" className="text-sm" />
+                </div>
               </div>
-              <ul className="space-y-1 text-sm text-gray-600">
-                <li>• 고객용 일정표</li>
-                <li>• 직사각형 레이아웃</li>
-                <li>• 권위있는 헤더</li>
-              </ul>
             </div>
           </CardContent>
         </Card>
@@ -2234,14 +2309,30 @@ export default function DesignTemplatesPage() {
         <div className="bg-white border rounded-lg p-8 min-h-[400px]">
           {activeTemplate === 'a-contract' && (
             <div>
-              <div className="text-center mb-6" style={{ backgroundColor: '#2c5282', color: 'white', padding: '30px', margin: '-32px -32px 32px -32px' }}>
-                <div className="text-2xl font-bold mb-2">싱싱골프투어</div>
+              <div className="text-center mb-6 relative overflow-hidden" style={{ 
+                background: 'linear-gradient(135deg, #4285f4 0%, #9b72cb 20%, #d96570 40%, #f9ab55 60%, #e37400 80%, #4285f4 100%)',
+                backgroundSize: '200% 200%',
+                color: 'white', 
+                padding: '30px', 
+                margin: '-32px -32px 32px -32px',
+                animation: 'gradient-flow 3s ease infinite'
+              }}>
+                <div className="text-2xl font-bold mb-2" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>싱싱골프투어</div>
                 <div className="text-lg mb-1">2박3일 순천버스핑</div>
                 <div className="text-sm opacity-90">수원시 영통구 법조로149번길 200 | TEL 031-215-3990</div>
               </div>
               <div className="mb-4">
-                <div className="font-bold text-lg mb-2" style={{ color: '#2c5282' }}>상품 정보</div>
-                <div className="border rounded p-4">
+                <div className="font-bold text-lg mb-2">
+                  <span style={{
+                    background: 'linear-gradient(135deg, #4285f4 0%, #9b72cb 20%, #d96570 40%, #f9ab55 60%, #e37400 80%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>상품 정보</span>
+                </div>
+                <div className="border rounded p-4" style={{
+                  borderImage: 'linear-gradient(135deg, #4285f4, #9b72cb, #d96570, #f9ab55, #e37400) 1'
+                }}>
                   <div className="grid grid-cols-2 gap-2">
                     <div><strong>상품명:</strong> 2박3일 순천버스핑</div>
                     <div><strong>골프장:</strong> 파인힐스CC</div>
@@ -2478,6 +2569,29 @@ export default function DesignTemplatesPage() {
         </Button>
       </div>
       
+      {/* A그룹 무지개빛 그라데이션 예시 */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg mb-8">
+        <h3 className="font-semibold mb-4 text-purple-900">🌈 A그룹 무지개빛 그라데이션 예시</h3>
+        <div className="space-y-4">
+          <div className="bg-white p-4 rounded-lg">
+            <RainbowText text="Gemini 스타일 - 계약문서" variant="gemini" className="text-2xl" />
+            <p className="text-sm text-gray-600 mt-2">파란색에서 주황색으로 이어지는 그라데이션</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg">
+            <RainbowText text="Apple 스타일 - 계약문서" variant="apple" className="text-2xl" />
+            <p className="text-sm text-gray-600 mt-2">시안에서 핑크로 이어지는 그라데이션</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg">
+            <RainbowText text="무지개 애니메이션 - 계약문서" variant="animated" className="text-2xl" />
+            <p className="text-sm text-gray-600 mt-2">움직이는 무지개 효과</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg">
+            <RainbowText text="네온 효과 - 계약문서" variant="neon" className="text-2xl" />
+            <p className="text-sm text-gray-600 mt-2">밝고 화려한 네온 스타일</p>
+          </div>
+        </div>
+      </div>
+
       {/* 디자인 가이드라인 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-blue-50 p-6 rounded-lg">
@@ -2486,7 +2600,14 @@ export default function DesignTemplatesPage() {
             <div>
               <strong className="text-blue-700">색상 체계:</strong>
               <ul className="mt-1 ml-4 space-y-1 text-gray-700">
-                <li>• A그룹 (#2c5282): 진중하고 권위있는 느낌</li>
+                <li>• A그룹 (무지개빛 그라데이션): 화려하고 현대적인 느낌
+                  <ul className="ml-4 mt-1">
+                    <li>- Gemini 스타일: 파란색에서 주황색으로</li>
+                    <li>- Apple 스타일: 시안에서 핑크로</li>
+                    <li>- 무지개 애니메이션: 움직이는 효과</li>
+                    <li>- 네온 효과: 밝고 화려한 스타일</li>
+                  </ul>
+                </li>
                 <li>• B그룹 (#4a6fa5): 부드럽고 친근한 느낌</li>
                 <li>• C그룹 (#f093fb): 화려하고 트렌디한 느낌</li>
                 <li>• D그룹 (#4a5568): 고급스럽고 전문적인 느낌</li>
@@ -2497,7 +2618,7 @@ export default function DesignTemplatesPage() {
             <div>
               <strong className="text-blue-700">레이아웃:</strong>
               <ul className="mt-1 ml-4 space-y-1 text-gray-700">
-                <li>• A그룹: 직사각형, 격식있는 구조</li>
+                <li>• A그룹: 그라데이션 헤더, 화려한 시각적 효과</li>
                 <li>• B그룹: 둥근 모서리, 유연한 구조</li>
                 <li>• C그룹: 그라데이션, 화려한 효과</li>
                 <li>• D그룹: 미니멀, 권위있는 구조</li>

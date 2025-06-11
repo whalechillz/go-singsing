@@ -1,0 +1,84 @@
+/* C그룹 홍보서 텍스트용 그라데이션 스타일 */
+
+/* 구글 Gemini 스타일 그라데이션 클래스 */
+.text-gradient-gemini {
+  @apply bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500 bg-clip-text text-transparent font-bold;
+}
+
+/* 애플 스타일 그라데이션 클래스 */
+.text-gradient-apple {
+  @apply bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 bg-clip-text text-transparent font-semibold;
+}
+
+/* 무지개 그라데이션 클래스 */
+.text-gradient-rainbow {
+  @apply bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent font-bold;
+}
+
+/* 파스텔 무지개 그라데이션 */
+.text-gradient-pastel {
+  @apply bg-gradient-to-r from-pink-300 via-purple-300 via-indigo-300 to-blue-300 bg-clip-text text-transparent font-medium;
+}
+
+/* 네온 그라데이션 */
+.text-gradient-neon {
+  @apply bg-gradient-to-r from-cyan-400 via-magenta-500 to-yellow-400 bg-clip-text text-transparent font-bold;
+}
+
+/* 애니메이션 그라데이션 */
+.text-gradient-animated {
+  background: linear-gradient(90deg, 
+    #ff0000 0%, 
+    #ff7f00 14%, 
+    #ffff00 28%, 
+    #00ff00 42%, 
+    #0000ff 56%, 
+    #4b0082 70%, 
+    #9400d3 84%, 
+    #ff0000 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-animation 3s ease-in-out infinite;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 호버 효과가 있는 그라데이션 */
+.text-gradient-hover {
+  @apply bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent font-bold transition-all duration-300;
+}
+
+.text-gradient-hover:hover {
+  @apply bg-gradient-to-r from-pink-500 to-yellow-500 scale-105;
+}
+
+/* C그룹 전용 스타일 */
+.c-group-gradient {
+  background: linear-gradient(135deg, 
+    #667eea 0%, 
+    #764ba2 20%, 
+    #f093fb 40%, 
+    #4facfe 60%, 
+    #00f2fe 80%, 
+    #667eea 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* 사용 예시:
+   <span className="text-gradient-gemini">그리데이션</span>
+   <span className="text-gradient-apple">효로모션</span>
+   <span className="text-gradient-animated">애니메이션</span>
+   <span className="text-gradient-neon">비주얼 충실</span>
+*/

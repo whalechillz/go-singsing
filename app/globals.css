@@ -1,4 +1,6 @@
 @import "tw-animate-css";
+@import "/styles/gradient-text/rainbow-text.css";
+@import "/styles/gradient-text/tailwind-gradients.css";
 
 @tailwind base;
 @tailwind components;
