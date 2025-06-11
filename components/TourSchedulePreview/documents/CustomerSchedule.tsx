@@ -136,6 +136,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
     </div>
     
     <style>
+      ${getCommonStyles()}
       ${getScheduleStyles(isStaff)}
     </style>
   `;
@@ -158,77 +159,23 @@ function formatUsageContent(content: string): string {
 }
 
 function getScheduleStyles(isStaff: boolean = false): string {
-  const primaryColor = isStaff ? '#4a90e2' : '#1e3a5f';
-  const secondaryColor = isStaff ? '#5ca3f2' : '#2c5282';
-  const accentColor = isStaff ? '#ffa726' : '#4a7ba7';
-  const gradientStart = isStaff ? '#4a90e2' : '#2c5282';
-  const gradientEnd = isStaff ? '#5ca3f2' : '#1e3a5f';
-  
   return `
-    /* 기본 스타일 */
-    body {
-      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: ${isStaff ? '14px' : '15px'};
-      line-height: 1.7;
-      color: ${isStaff ? '#333' : '#2c3e50'};
-    }
-    
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      background: ${isStaff ? '#ffffff' : '#fafbfc'};
-    }
-    
-    /* 헤더 스타일 */
-    .header {
-      background: ${isStaff 
-        ? `linear-gradient(135deg, ${gradientStart} 0%, ${gradientEnd} 100%)` 
-        : primaryColor};
-      padding: ${isStaff ? '30px' : '25px'};
-      ${isStaff ? 'box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);' : ''}
-    }
-    
-    /* 섹션 타이틀 */
-    .section-title {
-      font-size: ${isStaff ? '20px' : '18px'};
-      font-weight: 700;
-      color: ${primaryColor};
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: ${isStaff ? '3px' : '2px'} solid ${primaryColor};
-      ${isStaff ? `
-        background: linear-gradient(90deg, ${primaryColor} 0%, transparent 50%);
-        background-size: 100% 2px;
-        background-position: bottom;
-        background-repeat: no-repeat;
-      ` : ''}
-    }
-    
-    /* 일정 카드 */
+    /* 기본 스타일 - 기존 CSS 템플릿 사용 */
     .day-schedule {
       margin-bottom: 25px;
-      border: 1px solid ${isStaff ? '#e3e8ef' : '#d6dce5'};
-      border-radius: ${isStaff ? '12px' : '8px'};
+      border: 1px solid #ddd;
+      border-radius: 5px;
       overflow: hidden;
-      ${isStaff ? 'box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);' : 'box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);'}
-      transition: all 0.3s ease;
-    }
-    
-    .day-schedule:hover {
-      ${isStaff ? 'transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);' : ''}
     }
     
     .day-title {
-      background: ${isStaff 
-        ? `linear-gradient(135deg, ${gradientStart} 0%, ${gradientEnd} 100%)` 
-        : secondaryColor};
+      background: #2c5282;
       color: white;
-      padding: ${isStaff ? '15px 25px' : '12px 20px'};
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-weight: bold;
-      font-size: ${isStaff ? '16px' : '15px'};
     }
     
     .day-round {
@@ -357,7 +304,7 @@ function getScheduleStyles(isStaff: boolean = false): string {
     .detailed-usage-section {
       margin-top: 40px;
       padding-top: 30px;
-      border-top: 2px solid ${isStaff ? '#e3e8ef' : '#e8eaed'};
+      border-top: 2px solid #ddd;
     }
     
     .usage-grid {
@@ -368,19 +315,11 @@ function getScheduleStyles(isStaff: boolean = false): string {
     }
     
     .usage-item {
-      background: ${isStaff 
-        ? 'linear-gradient(to bottom, #f8fbff 0%, #ffffff 100%)' 
-        : '#ffffff'};
-      border: 1px solid ${isStaff ? '#e3e8ef' : '#e8eaed'};
-      border-radius: ${isStaff ? '10px' : '8px'};
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
       padding: 20px;
-      ${isStaff 
-        ? 'box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1); transition: all 0.3s ease;' 
-        : 'box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);'}
-    }
-    
-    .usage-item:hover {
-      ${isStaff ? 'transform: translateY(-2px); box-shadow: 0 4px 15px rgba(74, 144, 226, 0.15);' : ''}
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     .usage-header {
@@ -389,30 +328,25 @@ function getScheduleStyles(isStaff: boolean = false): string {
       gap: 10px;
       margin-bottom: 15px;
       padding-bottom: 10px;
-      border-bottom: ${isStaff ? '2px' : '1px'} solid ${isStaff ? '#e3e8ef' : '#f0f2f5'};
+      border-bottom: 1px solid #e2e8f0;
     }
     
     .usage-icon {
-      font-size: ${isStaff ? '24px' : '20px'};
-      ${isStaff ? `
-        background: linear-gradient(135deg, ${gradientStart}, ${gradientEnd});
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 2px 4px rgba(74, 144, 226, 0.2));
-      ` : ''}
+      font-size: 20px;
+      color: #2c5282;
     }
     
     .usage-header h4 {
       margin: 0;
-      font-size: ${isStaff ? '16px' : '15px'};
+      font-size: 16px;
       font-weight: 600;
-      color: ${primaryColor};
+      color: #2c5282;
     }
     
     .usage-content {
-      font-size: ${isStaff ? '13px' : '14px'};
+      font-size: 14px;
       line-height: 1.8;
-      color: ${isStaff ? '#555' : '#4a5568'};
+      color: #4a5568;
     }
     
     .usage-list-item {
@@ -428,19 +362,48 @@ function getScheduleStyles(isStaff: boolean = false): string {
       top: 8px;
       width: 4px;
       height: 4px;
-      background: ${accentColor};
+      background: #2c5282;
       border-radius: 50%;
     }
     
-    /* 전체적인 폰트 크기 조정 - 60대 고객을 위해 */
-    ${!isStaff ? `
-      @media print {
-        body { font-size: 16px; }
-        .section-title { font-size: 20px; }
-        .day-title { font-size: 16px; }
-        .timeline-text { font-size: 15px; }
-        .usage-content { font-size: 15px; }
+    /* 스탭용 추가 스타일 */
+    ${isStaff ? `
+      .day-schedule {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      }
+      
+      .day-title {
+        background: #4a6fa5;
+        font-size: 16px;
+      }
+      
+      .usage-item {
+        background: linear-gradient(to bottom, #f8fbff 0%, #ffffff 100%);
+        box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+        transition: all 0.3s ease;
+      }
+      
+      .usage-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.15);
       }
     ` : ''}
+    
+    /* 인쇄용 스타일 */
+    @media print {
+      body { 
+        margin: 0; 
+        padding: 0;
+        font-size: 15px; 
+      }
+      .container { 
+        max-width: 100%; 
+        padding: 20px; 
+      }
+      .section-title { font-size: 18px; }
+      .day-title { font-size: 16px; }
+      .timeline-text { font-size: 14px; }
+      .usage-content { font-size: 14px; }
+    }
   `;
 }
