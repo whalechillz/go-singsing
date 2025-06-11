@@ -3,12 +3,13 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, Copy, FileText, Calendar, BedDouble } from 'lucide-react';
+import { Eye, Copy, FileText, Calendar, BedDouble, Sparkles, Briefcase, Palette } from 'lucide-react';
 
 export default function DesignTemplatesPage() {
-  const [activeTemplate, setActiveTemplate] = React.useState<'contract' | 'operational' | 'timetable-customer' | 'timetable-staff'>('contract');
+  const [activeTemplate, setActiveTemplate] = React.useState<'a-contract' | 'b-operational' | 'c-promotional' | 'd-professional' | 'e-dynamic'>('a-contract');
+  const [dynamicTheme, setDynamicTheme] = React.useState<'blue' | 'green' | 'orange'>('blue');
 
-  // A그룹 (계약 문서) - 권위있는 디자인
+  // A그룹: 브랜드컬러 (계약문서) - #2c5282
   const generateContractHTML = () => {
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -179,7 +180,7 @@ export default function DesignTemplatesPage() {
 </html>`;
   };
 
-  // B그룹 (실행 문서) - 친근한 디자인
+  // B그룹: 브랜드컬러 (실행문서) - #4a6fa5
   const generateOperationalHTML = () => {
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -356,497 +357,796 @@ export default function DesignTemplatesPage() {
 </html>`;
   };
 
-  // C그룹 - 티타임표 고객용 디자인 (간단한 정보)
-  const generateTimetableCustomerHTML = () => {
+  // C그룹: 트렌드컬러 (홍보문서) - 화려한 그라데이션
+  const generatePromotionalHTML = () => {
     return `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>싱싱골프투어 - 티타임표</title>
+  <title>싱싱골프투어 - 프로모션</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
     
     body {
       margin: 0;
-      padding: 20px;
+      padding: 0;
       font-family: 'Noto Sans KR', sans-serif;
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1.6;
       color: #333;
-      background: #f5f7fa;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
     }
     
     .container {
       max-width: 900px;
       margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 40px 20px;
     }
     
-    /* 티타임표 헤더 스타일 */
-    .header-timetable {
-      background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+    /* C그룹 헤더 - 화려한 그라데이션 */
+    .header-promotional {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       color: white;
-      padding: 30px;
+      padding: 60px 40px;
       text-align: center;
-      border-radius: 10px;
-      margin-bottom: 30px;
-    }
-    
-    .header-timetable .title {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    
-    .header-timetable .subtitle {
-      font-size: 16px;
-      opacity: 0.9;
-    }
-    
-    /* 티타임 카드 스타일 */
-    .timetable-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    
-    .time-card {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      border-radius: 20px;
+      margin-bottom: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      position: relative;
       overflow: hidden;
+    }
+    
+    .header-promotional::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: float 20s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(-50px, -50px) rotate(180deg); }
+    }
+    
+    .header-promotional .logo {
+      font-size: 42px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header-promotional .title {
+      font-size: 28px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header-promotional .subtitle {
+      font-size: 18px;
+      opacity: 0.9;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* 콘텐츠 카드 */
+    .promo-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transform: translateY(0);
       transition: all 0.3s ease;
     }
     
-    .time-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    .promo-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
     
-    .time-header {
-      padding: 15px;
-      text-align: center;
-      font-weight: bold;
-    }
-    
-    .time-header.morning {
-      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
-      color: white;
-    }
-    
-    .time-header.afternoon {
-      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-      color: white;
-    }
-    
-    .time-header.late {
-      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-      color: white;
-    }
-    
-    .time-content {
-      padding: 20px;
-    }
-    
-    .time-slot {
+    .promo-title {
       font-size: 24px;
       font-weight: bold;
-      color: #374151;
-      margin-bottom: 10px;
-    }
-    
-    .participant-count {
-      font-size: 36px;
-      font-weight: bold;
-      color: #6b7280;
-      text-align: center;
-      margin: 20px 0;
-    }
-    
-    .participant-label {
-      font-size: 14px;
-      color: #9ca3af;
-      text-align: center;
-    }
-    
-    /* 날짜 섹션 */
-    .date-section {
-      background: #6366f1;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       margin-bottom: 20px;
+    }
+    
+    .highlight-box {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      padding: 30px;
+      border-radius: 15px;
+      color: white;
+      text-align: center;
+      margin: 30px 0;
+      font-size: 20px;
+      font-weight: bold;
+      box-shadow: 0 10px 20px rgba(250, 112, 154, 0.3);
+    }
+    
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin: 40px 0;
+    }
+    
+    .feature-item {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    
+    .feature-item:hover {
+      transform: scale(1.05);
+    }
+    
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 40px;
+      border-radius: 50px;
+      text-decoration: none;
       font-size: 18px;
       font-weight: bold;
+      margin: 20px 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
     }
     
-    /* 요약 정보 */
-    .summary-section {
-      background: #f3f4f6;
-      padding: 20px;
-      border-radius: 10px;
-      margin-top: 30px;
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
     }
     
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 20px;
-      text-align: center;
-    }
-    
-    .summary-item {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-    }
-    
-    .summary-value {
-      font-size: 24px;
-      font-weight: bold;
-      color: #6366f1;
-    }
-    
-    .summary-label {
-      font-size: 14px;
-      color: #6b7280;
-      margin-top: 5px;
+    @media print {
+      body { background: white; }
+      .promo-card { box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header-timetable">
-      <div class="title">티타임표</div>
-      <div class="subtitle">2박3일 순천버스핑 · 파인힐스CC</div>
+    <div class="header-promotional">
+      <div class="logo">싱싱골프투어</div>
+      <div class="title">특별 프로모션</div>
+      <div class="subtitle">2025년 봄 시즌 특가!</div>
     </div>
     
-    <div class="date-section">
-      2025년 4월 14일 월요일
+    <div class="promo-card">
+      <h2 class="promo-title">한정 특가! 2박3일 순천 골프투어</h2>
+      <p style="font-size: 18px; line-height: 1.8;">
+        봄꽃이 만발한 순천에서 즐기는 프리미엄 골프 여행!<br>
+        순천만국가정원과 순천만습지의 아름다운 풍경과 함께
+      </p>
     </div>
     
-    <div class="timetable-grid">
-      <div class="time-card">
-        <div class="time-header morning">
-          4월 14일 · 오전
-        </div>
-        <div class="time-content">
-          <div class="time-slot">13:08</div>
-          <div class="participant-count">28/28</div>
-          <div class="participant-label">파인코스</div>
-        </div>
+    <div class="highlight-box">
+      🎉 조기 예약 고객님께 20% 할인 혜택! 🎉
+    </div>
+    
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="feature-icon">⛳</div>
+        <h3>프리미엄 골프장</h3>
+        <p>순천 최고의 코스에서<br>즐기는 라운딩</p>
       </div>
-      
-      <div class="time-card">
-        <div class="time-header afternoon">
-          4월 15일 · 오전
-        </div>
-        <div class="time-content">
-          <div class="time-slot">07:30</div>
-          <div class="participant-count">28/28</div>
-          <div class="participant-label">밸리코스</div>
-        </div>
+      <div class="feature-item">
+        <div class="feature-icon">🏨</div>
+        <h3>특급 호텔</h3>
+        <p>편안한 휴식을 위한<br>최고급 숙박 시설</p>
       </div>
-      
-      <div class="time-card">
-        <div class="time-header late">
-          4월 16일 · 오전
-        </div>
-        <div class="time-content">
-          <div class="time-slot">08:00</div>
-          <div class="participant-count">28/28</div>
-          <div class="participant-label">레이크코스</div>
-        </div>
+      <div class="feature-item">
+        <div class="feature-icon">🍴</div>
+        <h3>특선 요리</h3>
+        <p>순천의 맛있는<br>향토 음식 제공</p>
       </div>
     </div>
     
-    <div class="summary-section">
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-value">3</div>
-          <div class="summary-label">총 라운드</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-value">28</div>
-          <div class="summary-label">총 인원</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-value">7</div>
-          <div class="summary-label">총 팀</div>
-        </div>
-      </div>
+    <div class="promo-card" style="text-align: center;">
+      <h3 style="font-size: 28px; margin-bottom: 30px;">지금 바로 예약하세요!</h3>
+      <a href="#" class="cta-button">예약하기</a>
+      <a href="#" class="cta-button" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">상담받기</a>
     </div>
   </div>
 </body>
 </html>`;
   };
 
-  // C그룹 - 티타임표 스탭용 디자인 (상세 정보)
-  const generateTimetableStaffHTML = () => {
+  // D그룹: 그레이컬러 (실용/고급/권위문서) - #4a5568
+  const generateProfessionalHTML = () => {
     return `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>싱싱골프투어 - 티타임표 (스탭용)</title>
+  <title>싱싱골프투어 - 공식 문서</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
     
     body {
       margin: 0;
-      padding: 20px;
+      padding: 0;
       font-family: 'Noto Sans KR', sans-serif;
-      font-size: 13px;
-      line-height: 1.5;
-      color: #333;
-      background: #f5f7fa;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #2d3748;
+      background: #f7fafc;
     }
     
     .container {
-      max-width: 1200px;
+      max-width: 900px;
       margin: 0 auto;
       background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      min-height: 100vh;
     }
     
-    /* 스탭용 헤더 - 전문적인 스타일 */
-    .header-staff {
+    /* D그룹 헤더 - 고급스럽고 권위있는 스타일 */
+    .header-professional {
       background: linear-gradient(135deg, #4a5568 0%, #718096 100%);
       color: white;
-      padding: 25px;
-      text-align: center;
-      border-radius: 10px;
-      margin-bottom: 30px;
+      padding: 40px 50px;
+      position: relative;
     }
     
-    .header-staff .title {
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 8px;
+    .header-professional::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #cbd5e0 0%, #e2e8f0 50%, #cbd5e0 100%);
     }
     
-    .header-staff .subtitle {
-      font-size: 14px;
-      opacity: 0.9;
+    .header-professional .logo {
+      font-size: 24px;
+      font-weight: 300;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
     }
     
-    /* 날짜별 섹션 */
-    .date-section {
-      background: #4a5568;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
+    .header-professional .document-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    .header-professional .document-info {
+      font-size: 13px;
+      opacity: 0.8;
+      letter-spacing: 1px;
+    }
+    
+    /* 콘텐츠 영역 */
+    .content {
+      padding: 50px;
+    }
+    
+    .section {
+      margin-bottom: 40px;
+    }
+    
+    .section-header {
+      border-bottom: 2px solid #2d3748;
+      padding-bottom: 10px;
       margin-bottom: 20px;
-      font-size: 16px;
-      font-weight: bold;
     }
     
-    /* 티타임 테이블 */
-    .timetable-table {
+    .section-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #2d3748;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .formal-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      border-radius: 8px;
-      overflow: hidden;
+      margin: 20px 0;
     }
     
-    .timetable-table th {
-      background: #f7fafc;
-      padding: 12px;
+    .formal-table th {
+      background: #2d3748;
+      color: white;
+      padding: 12px 20px;
       text-align: left;
-      font-weight: bold;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       font-size: 13px;
-      color: #4a5568;
-      border-bottom: 2px solid #e2e8f0;
     }
     
-    .timetable-table td {
-      padding: 10px 12px;
+    .formal-table td {
+      padding: 12px 20px;
       border-bottom: 1px solid #e2e8f0;
-      font-size: 13px;
+      color: #4a5568;
     }
     
-    .timetable-table tr:hover {
+    .formal-table tr:nth-child(even) {
       background: #f7fafc;
     }
     
-    .timetable-table tr:last-child td {
-      border-bottom: none;
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+      margin: 30px 0;
     }
     
-    .time-slot {
-      font-weight: bold;
+    .info-block {
+      background: #f7fafc;
+      padding: 25px;
+      border-left: 3px solid #4a5568;
+    }
+    
+    .info-block h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      color: #2d3748;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .info-block p {
+      margin: 0;
       color: #4a5568;
       font-size: 14px;
     }
     
-    .course-name {
-      color: #718096;
-      font-size: 12px;
+    .signature-section {
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid #cbd5e0;
+      text-align: right;
     }
     
-    .participant-name {
-      font-weight: 600;
+    .signature-date {
+      font-size: 14px;
+      color: #718096;
+      margin-bottom: 20px;
+    }
+    
+    .signature-name {
+      font-size: 18px;
+      font-weight: 700;
       color: #2d3748;
+      margin-bottom: 5px;
     }
     
-    .team-info {
+    .signature-title {
+      font-size: 14px;
       color: #718096;
-      font-size: 12px;
     }
     
-    /* 요약 정보 */
-    .summary-section {
-      background: #f7fafc;
-      padding: 20px;
-      border-radius: 8px;
-      margin-top: 30px;
-    }
-    
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-    }
-    
-    .summary-item {
-      background: white;
-      padding: 15px;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
+    /* 푸터 */
+    .footer {
+      background: #2d3748;
+      color: white;
+      padding: 30px 50px;
       text-align: center;
-    }
-    
-    .summary-value {
-      font-size: 24px;
-      font-weight: bold;
-      color: #4a5568;
-    }
-    
-    .summary-label {
-      font-size: 13px;
-      color: #718096;
-      margin-top: 5px;
-    }
-    
-    /* 참가자 목록 그리드 */
-    .participants-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-top: 20px;
-      padding: 20px;
-      background: #f7fafc;
-      border-radius: 8px;
-    }
-    
-    .participant-item {
-      background: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      border: 1px solid #e2e8f0;
       font-size: 12px;
+      opacity: 0.8;
     }
     
     @media print {
       body { background: white; }
-      .container { box-shadow: none; max-width: 100%; }
-      .timetable-table { page-break-inside: avoid; }
+      .container { box-shadow: none; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header-staff">
-      <div class="title">티타임표 - 스탭용</div>
-      <div class="subtitle">2박3일 순천버스핑 · 파인힐스CC</div>
+    <div class="header-professional">
+      <div class="logo">Singsing Golf Tour</div>
+      <div class="document-title">공식 운영 문서</div>
+      <div class="document-info">Document No. 2025-001 | Date: 2025.01.15</div>
     </div>
     
-    <div class="date-section">
-      2025년 4월 14일 월요일 - 파인코스
-    </div>
-    
-    <table class="timetable-table">
-      <thead>
-        <tr>
-          <th style="width: 80px;">티타임</th>
-          <th style="width: 80px;">팀번호</th>
-          <th>참가자 1</th>
-          <th>참가자 2</th>
-          <th>참가자 3</th>
-          <th>참가자 4</th>
-          <th style="width: 100px;">탑승지</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="time-slot">13:08</td>
-          <td class="team-info">1팀</td>
-          <td><span class="participant-name">홍길동</span></td>
-          <td><span class="participant-name">김철수</span></td>
-          <td><span class="participant-name">이영희</span></td>
-          <td><span class="participant-name">박민수</span></td>
-          <td class="team-info">강남</td>
-        </tr>
-        <tr>
-          <td class="time-slot">13:08</td>
-          <td class="team-info">2팀</td>
-          <td><span class="participant-name">최정훈</span></td>
-          <td><span class="participant-name">강민정</span></td>
-          <td><span class="participant-name">윤서준</span></td>
-          <td><span class="participant-name">송민호</span></td>
-          <td class="team-info">잠실</td>
-        </tr>
-        <tr>
-          <td class="time-slot">13:08</td>
-          <td class="team-info">3팀</td>
-          <td><span class="participant-name">정태훈</span></td>
-          <td><span class="participant-name">한지민</span></td>
-          <td><span class="participant-name">오현우</span></td>
-          <td><span class="participant-name">백서진</span></td>
-          <td class="team-info">수원</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <div class="summary-section">
-      <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #2d3748;">일일 요약</h3>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-value">13:08</div>
-          <div class="summary-label">티오프 시간</div>
+    <div class="content">
+      <div class="section">
+        <div class="section-header">
+          <h2>Executive Summary</h2>
         </div>
-        <div class="summary-item">
-          <div class="summary-value">7팀</div>
-          <div class="summary-label">총 팀 수</div>
+        <p style="color: #4a5568; line-height: 1.8;">
+          본 문서는 싱싱골프투어의 2025년 상반기 운영 계획을 담고 있습니다.<br>
+          최고급 골프 투어 서비스를 통해 고객 만족도를 극대화하고자 합니다.
+        </p>
+      </div>
+      
+      <div class="section">
+        <div class="section-header">
+          <h2>Financial Overview</h2>
         </div>
-        <div class="summary-item">
-          <div class="summary-value">28명</div>
-          <div class="summary-label">총 인원</div>
+        <table class="formal-table">
+          <tr>
+            <th>Category</th>
+            <th>Q1 2025</th>
+            <th>Q2 2025</th>
+            <th>Total</th>
+          </tr>
+          <tr>
+            <td>Revenue</td>
+            <td>KRW 1,200M</td>
+            <td>KRW 1,500M</td>
+            <td>KRW 2,700M</td>
+          </tr>
+          <tr>
+            <td>Operating Cost</td>
+            <td>KRW 800M</td>
+            <td>KRW 950M</td>
+            <td>KRW 1,750M</td>
+          </tr>
+          <tr>
+            <td>Net Profit</td>
+            <td>KRW 400M</td>
+            <td>KRW 550M</td>
+            <td>KRW 950M</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="info-grid">
+        <div class="info-block">
+          <h3>Mission Statement</h3>
+          <p>최고의 골프 여행 경험을 통해 고객의 삶에 가치를 더하는 프리미엄 서비스</p>
         </div>
-        <div class="summary-item">
-          <div class="summary-value">파인코스</div>
-          <div class="summary-label">라운드 코스</div>
+        <div class="info-block">
+          <h3>Core Values</h3>
+          <p>Excellence, Integrity, Innovation, Customer-Centricity</p>
         </div>
+      </div>
+      
+      <div class="signature-section">
+        <div class="signature-date">2025년 1월 15일</div>
+        <div class="signature-name">홍길동</div>
+        <div class="signature-title">대표이사 / CEO</div>
       </div>
     </div>
     
-    <div style="margin-top: 30px;">
-      <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #2d3748;">탑승지별 참가자 목록</h3>
-      <div class="participants-grid">
-        <div class="participant-item"><strong>강남:</strong> 12명</div>
-        <div class="participant-item"><strong>잠실:</strong> 8명</div>
-        <div class="participant-item"><strong>수원:</strong> 8명</div>
-        <div class="participant-item"><strong>총계:</strong> 28명</div>
+    <div class="footer">
+      Singsing Golf Tour Co., Ltd. | Business Registration No. 123-45-67890<br>
+      149-200 Beopjo-ro, Yeongtong-gu, Suwon-si, Gyeonggi-do, Republic of Korea
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  // E그룹: 변동컬러 (추천/바이럴/링크/모바일문서) - 테마 토글 가능
+  const generateDynamicHTML = () => {
+    const themes = {
+      blue: {
+        primary: '#1a4aa3',
+        secondary: '#3a6bc5',
+        accent: '#4f8bf9',
+        light: '#e8f0ff'
+      },
+      green: {
+        primary: '#2a8d46',
+        secondary: '#3bb962',
+        accent: '#4bd679',
+        light: '#e6f7eb'
+      },
+      orange: {
+        primary: '#e17b20',
+        secondary: '#f3a953',
+        accent: '#ffbd69',
+        light: '#fff4e6'
+      }
+    };
+    
+    const theme = themes[dynamicTheme];
+    
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 모바일</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    
+    :root {
+      --primary-color: ${theme.primary};
+      --secondary-color: ${theme.secondary};
+      --accent-color: ${theme.accent};
+      --light-color: ${theme.light};
+      --text-color: #333333;
+      --white: #ffffff;
+      --light-gray: #f8f9fa;
+      --gray: #aaaaaa;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --transition-speed: 0.5s;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      transition: background-color var(--transition-speed) ease, 
+                  color var(--transition-speed) ease,
+                  border-color var(--transition-speed) ease;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: var(--light-gray);
+      color: var(--text-color);
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+    
+    .header {
+      position: relative;
+      height: 180px;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 40px 20px 20px;
+      border-radius: 0 0 30px 30px;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .slogan {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 300;
+      color: var(--white);
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 8px 0;
+    }
+    
+    .header h1 {
+      margin: 20px 0 10px;
+      font-size: 32px;
+      font-weight: 700;
+    }
+    
+    .header p {
+      margin: 0;
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    
+    .section-title {
+      margin: 30px 20px 15px;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--primary-color);
+    }
+    
+    .section {
+      margin: 20px;
+      padding: 20px;
+      background-color: var(--white);
+      border-radius: 15px;
+      box-shadow: var(--card-shadow);
+      position: relative;
+    }
+    
+    .section-number {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      width: 30px;
+      height: 30px;
+      background-color: var(--primary-color);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+    
+    .section h2 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      color: var(--primary-color);
+    }
+    
+    .section p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-color);
+    }
+    
+    .card {
+      background-color: var(--white);
+      border-radius: 15px;
+      margin: 15px 20px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .card-header {
+      background-color: var(--primary-color);
+      color: var(--white);
+      padding: 15px 20px;
+    }
+    
+    .card-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .card-header p {
+      margin: 5px 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .card-body {
+      padding: 15px 20px;
+    }
+    
+    .card-body p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-color);
+    }
+    
+    .card-body .highlight {
+      color: var(--accent-color);
+      font-weight: 500;
+    }
+    
+    .btn {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: var(--white);
+      padding: 6px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 14px;
+      float: right;
+      margin-top: 10px;
+    }
+    
+    .btn:hover {
+      background-color: var(--secondary-color);
+    }
+    
+    .contact {
+      background-color: var(--white);
+      border-radius: 15px;
+      margin: 20px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .contact h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: var(--gray);
+      font-weight: 400;
+    }
+    
+    .contact p {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: var(--white);
+      padding: 15px 0;
+      text-align: center;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      font-size: 14px;
+      color: var(--gray);
+    }
+    
+    .footer a {
+      text-decoration: none;
+      color: var(--primary-color);
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="slogan">싱싱골프투어와 함께하는 즐거운 골프 여행!</div>
+      <h1>싱싱골프투어</h1>
+      <p>순천 2박3일 / 05/19(월)~21(수)</p>
+    </div>
+    
+    <h2 class="section-title">투어 안내</h2>
+    
+    <div class="section">
+      <div class="section-number">1</div>
+      <h2>상품 정보</h2>
+      <p>일정, 식사, 골프장, 숙박 안내</p>
+    </div>
+    
+    <div class="section">
+      <div class="section-number">2</div>
+      <h2>탑승지 안내</h2>
+      <p>탑승 시간, 위치, 주차 정보</p>
+    </div>
+    
+    <div class="section">
+      <div class="section-number">3</div>
+      <h2>객실 배정</h2>
+      <p>팀 명단 및 객실 배정표</p>
+    </div>
+    
+    <div class="section">
+      <div class="section-number">4</div>
+      <h2>라운딩 시간표</h2>
+      <p>일자별 티오프 시간 및 조 편성</p>
+    </div>
+    
+    <h2 class="section-title">관련 문서</h2>
+    
+    <div class="card">
+      <div class="card-header">
+        <h3>5월의 순천</h3>
+        <p>2025년 5월 10일</p>
+      </div>
+      <div class="card-body">
+        <p>싱싱골프투어가 선정한 <span class="highlight">5월 순천의 아름다운 풍경</span>과 함께하는 특별한 여행. 순천만 습지와 순천만국가정원의 봄꽃이 만개한 이 시기에 여유로운 골프와 함께 자연의 아름다움을 만끽하세요.</p>
+        <a href="#" class="btn">보기</a>
       </div>
     </div>
+    
+    <div class="contact">
+      <h3>담당 기사님</h3>
+      <p>010-5254-9876</p>
+    </div>
+  </div>
+  
+  <div class="footer">
+    싱싱골프투어 | <a href="tel:031-215-3990">031-215-3990</a>
   </div>
 </body>
 </html>`;
@@ -855,17 +1155,20 @@ export default function DesignTemplatesPage() {
   const handlePreview = () => {
     let html = '';
     switch (activeTemplate) {
-      case 'contract':
+      case 'a-contract':
         html = generateContractHTML();
         break;
-      case 'operational':
+      case 'b-operational':
         html = generateOperationalHTML();
         break;
-      case 'timetable-customer':
-        html = generateTimetableCustomerHTML();
+      case 'c-promotional':
+        html = generatePromotionalHTML();
         break;
-      case 'timetable-staff':
-        html = generateTimetableStaffHTML();
+      case 'd-professional':
+        html = generateProfessionalHTML();
+        break;
+      case 'e-dynamic':
+        html = generateDynamicHTML();
         break;
     }
     
@@ -879,17 +1182,20 @@ export default function DesignTemplatesPage() {
   const handleCopyHTML = () => {
     let html = '';
     switch (activeTemplate) {
-      case 'contract':
+      case 'a-contract':
         html = generateContractHTML();
         break;
-      case 'operational':
+      case 'b-operational':
         html = generateOperationalHTML();
         break;
-      case 'timetable-customer':
-        html = generateTimetableCustomerHTML();
+      case 'c-promotional':
+        html = generatePromotionalHTML();
         break;
-      case 'timetable-staff':
-        html = generateTimetableStaffHTML();
+      case 'd-professional':
+        html = generateProfessionalHTML();
+        break;
+      case 'e-dynamic':
+        html = generateDynamicHTML();
         break;
     }
     
@@ -903,17 +1209,17 @@ export default function DesignTemplatesPage() {
       <p className="text-gray-600 mb-8">싱싱골프투어 통합 디자인 시스템</p>
       
       {/* 템플릿 선택 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
         <Card 
-          className={`cursor-pointer transition-all ${activeTemplate === 'contract' ? 'ring-2 ring-blue-700 shadow-lg' : 'hover:shadow-md'}`}
-          onClick={() => setActiveTemplate('contract')}
+          className={`cursor-pointer transition-all ${activeTemplate === 'a-contract' ? 'ring-2 ring-blue-700 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('a-contract')}
         >
           <CardHeader>
             <div className="flex items-center gap-3">
               <FileText className="w-8 h-8 text-blue-700" />
               <div>
-                <CardTitle className="text-lg">A그룹: 계약 문서</CardTitle>
-                <CardDescription>권위감 · 신뢰감 · 전문성</CardDescription>
+                <CardTitle className="text-lg">A그룹: 계약문서</CardTitle>
+                <CardDescription>권위감·신뢰감</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -921,28 +1227,27 @@ export default function DesignTemplatesPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded" style={{ backgroundColor: '#2c5282' }}></div>
-                <span className="text-sm">진한 네이비 (#2c5282)</span>
+                <span className="text-sm">진한 네이비</span>
               </div>
               <ul className="space-y-1 text-sm text-gray-600">
-                <li>• 고객용 일정표 (견적서/계약서)</li>
+                <li>• 고객용 일정표</li>
                 <li>• 직사각형 레이아웃</li>
-                <li>• 권위있는 헤더 디자인</li>
-                <li>• 15px 폰트 크기</li>
+                <li>• 권위있는 헤더</li>
               </ul>
             </div>
           </CardContent>
         </Card>
         
         <Card 
-          className={`cursor-pointer transition-all ${activeTemplate === 'operational' ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}
-          onClick={() => setActiveTemplate('operational')}
+          className={`cursor-pointer transition-all ${activeTemplate === 'b-operational' ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('b-operational')}
         >
           <CardHeader>
             <div className="flex items-center gap-3">
               <BedDouble className="w-8 h-8 text-blue-500" />
               <div>
-                <CardTitle className="text-lg">B그룹: 실행 문서</CardTitle>
-                <CardDescription>친근감 · 편안함 · 실용성</CardDescription>
+                <CardTitle className="text-lg">B그룹: 실행문서</CardTitle>
+                <CardDescription>친근감·실용성</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -950,57 +1255,55 @@ export default function DesignTemplatesPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded" style={{ backgroundColor: '#4a6fa5' }}></div>
-                <span className="text-sm">밝은 블루 (#4a6fa5)</span>
+                <span className="text-sm">밝은 블루</span>
               </div>
               <ul className="space-y-1 text-sm text-gray-600">
-                <li>• 탑승안내서, 객실배정표</li>
-                <li>• 둥근 모서리 디자인</li>
-                <li>• 친근한 헤더 스타일</li>
-                <li>• 14px 폰트 크기</li>
+                <li>• 탑승안내서</li>
+                <li>• 둥근 모서리</li>
+                <li>• 친근한 스타일</li>
               </ul>
             </div>
           </CardContent>
         </Card>
         
         <Card 
-          className={`cursor-pointer transition-all ${activeTemplate === 'timetable-customer' ? 'ring-2 ring-purple-600 shadow-lg' : 'hover:shadow-md'}`}
-          onClick={() => setActiveTemplate('timetable-customer')}
+          className={`cursor-pointer transition-all ${activeTemplate === 'c-promotional' ? 'ring-2 ring-purple-600 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('c-promotional')}
         >
           <CardHeader>
             <div className="flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-purple-600" />
+              <Sparkles className="w-8 h-8 text-purple-600" />
               <div>
-                <CardTitle className="text-lg">C그룹: 티타임표 (고객용)</CardTitle>
-                <CardDescription>시각적 · 직관적 · 간단</CardDescription>
+                <CardTitle className="text-lg">C그룹: 홍보문서</CardTitle>
+                <CardDescription>화려함·트렌드</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #6b46c1, #8b5cf6)' }}></div>
-                <span className="text-sm">퍼플 그라데이션</span>
+                <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)' }}></div>
+                <span className="text-sm">그라데이션</span>
               </div>
               <ul className="space-y-1 text-sm text-gray-600">
-                <li>• 티타임 정보 카드</li>
-                <li>• 시간대별 색상 구분</li>
-                <li>• 요약 정보 대시보드</li>
-                <li>• 비주얼 중심 디자인</li>
+                <li>• 프로모션</li>
+                <li>• 애니메이션</li>
+                <li>• 비주얼 중심</li>
               </ul>
             </div>
           </CardContent>
         </Card>
         
         <Card 
-          className={`cursor-pointer transition-all ${activeTemplate === 'timetable-staff' ? 'ring-2 ring-gray-600 shadow-lg' : 'hover:shadow-md'}`}
-          onClick={() => setActiveTemplate('timetable-staff')}
+          className={`cursor-pointer transition-all ${activeTemplate === 'd-professional' ? 'ring-2 ring-gray-600 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('d-professional')}
         >
           <CardHeader>
             <div className="flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-gray-600" />
+              <Briefcase className="w-8 h-8 text-gray-600" />
               <div>
-                <CardTitle className="text-lg">C그룹: 티타임표 (스탭용)</CardTitle>
-                <CardDescription>상세 · 전문적 · 데이터</CardDescription>
+                <CardTitle className="text-lg">D그룹: 고급문서</CardTitle>
+                <CardDescription>권위·전문성</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -1008,13 +1311,56 @@ export default function DesignTemplatesPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #4a5568, #718096)' }}></div>
-                <span className="text-sm">그레이 그라데이션</span>
+                <span className="text-sm">그레이컬러</span>
               </div>
               <ul className="space-y-1 text-sm text-gray-600">
-                <li>• 상세 참가자 테이블</li>
-                <li>• 탑승지별 분류</li>
-                <li>• 팀별 조편표</li>
-                <li>• 전문가용 레이아웃</li>
+                <li>• 실용문서</li>
+                <li>• 미니멀 디자인</li>
+                <li>• 격식있는 포맷</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card 
+          className={`cursor-pointer transition-all ${activeTemplate === 'e-dynamic' ? 'ring-2 ring-indigo-600 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('e-dynamic')}
+        >
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Palette className="w-8 h-8 text-indigo-600" />
+              <div>
+                <CardTitle className="text-lg">E그룹: 변동컬러</CardTitle>
+                <CardDescription>모바일·링크</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 justify-between">
+                <span className="text-sm">테마 토글:</span>
+                <div className="flex gap-1">
+                  <button 
+                    className={`w-6 h-6 rounded-full border-2 ${dynamicTheme === 'blue' ? 'border-gray-800' : 'border-gray-300'}`}
+                    style={{ backgroundColor: '#1a4aa3' }}
+                    onClick={(e) => { e.stopPropagation(); setDynamicTheme('blue'); }}
+                  />
+                  <button 
+                    className={`w-6 h-6 rounded-full border-2 ${dynamicTheme === 'green' ? 'border-gray-800' : 'border-gray-300'}`}
+                    style={{ backgroundColor: '#2a8d46' }}
+                    onClick={(e) => { e.stopPropagation(); setDynamicTheme('green'); }}
+                  />
+                  <button 
+                    className={`w-6 h-6 rounded-full border-2 ${dynamicTheme === 'orange' ? 'border-gray-800' : 'border-gray-300'}`}
+                    style={{ backgroundColor: '#e17b20' }}
+                    onClick={(e) => { e.stopPropagation(); setDynamicTheme('orange'); }}
+                  />
+                </div>
+              </div>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• 모바일 최적화</li>
+                <li>• 3가지 테마</li>
+                <li>• 반응형 디자인</li>
               </ul>
             </div>
           </CardContent>
@@ -1025,7 +1371,7 @@ export default function DesignTemplatesPage() {
       <div className="bg-gray-50 rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">선택된 템플릿 미리보기</h2>
         <div className="bg-white border rounded-lg p-8 min-h-[400px]">
-          {activeTemplate === 'contract' && (
+          {activeTemplate === 'a-contract' && (
             <div>
               <div className="text-center mb-6" style={{ backgroundColor: '#2c5282', color: 'white', padding: '30px', margin: '-32px -32px 32px -32px' }}>
                 <div className="text-2xl font-bold mb-2">싱싱골프투어</div>
@@ -1044,7 +1390,7 @@ export default function DesignTemplatesPage() {
             </div>
           )}
           
-          {activeTemplate === 'operational' && (
+          {activeTemplate === 'b-operational' && (
             <div>
               <div className="text-center mb-6" style={{ backgroundColor: '#4a6fa5', color: 'white', padding: '25px', borderRadius: '10px' }}>
                 <div className="text-xl font-bold mb-1">싱싱골프투어</div>
@@ -1066,58 +1412,87 @@ export default function DesignTemplatesPage() {
             </div>
           )}
           
-          {activeTemplate === 'timetable-customer' && (
+          {activeTemplate === 'c-promotional' && (
             <div>
-              <div className="text-center mb-6 p-6 rounded-lg" style={{ background: 'linear-gradient(135deg, #6b46c1, #8b5cf6)', color: 'white' }}>
-                <div className="text-2xl font-bold mb-2">티타임표</div>
-                <div className="text-sm opacity-90">2박3일 순천버스핑 · 파인힐스CC</div>
+              <div className="text-center mb-6 p-8 rounded-lg" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)', color: 'white' }}>
+                <div className="text-3xl font-bold mb-2">특별 프로모션</div>
+                <div className="text-lg opacity-90">2025년 봄 시즌 특가!</div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="p-3 text-center text-white font-semibold" style={{ background: 'linear-gradient(135deg, #3b82f6, #60a5fa)' }}>
-                    4월 14일
-                  </div>
-                  <div className="p-4 text-center">
-                    <div className="text-2xl font-bold mb-2">13:08</div>
-                    <div className="text-3xl font-bold text-gray-600 mb-1">28/28</div>
-                    <div className="text-sm text-gray-500">파인코스</div>
-                  </div>
+              <div className="bg-gradient-to-r from-yellow-400 to-pink-400 text-white p-4 rounded-lg text-center mb-4 font-bold text-lg">
+                🎉 조기 예약 고객님께 20% 할인 혜택! 🎉
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
+                  <div className="text-2xl mb-2">⛳</div>
+                  <div className="font-semibold">프리미엄 골프장</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
+                  <div className="text-2xl mb-2">🏨</div>
+                  <div className="font-semibold">특급 호텔</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-pink-50 to-yellow-50 rounded-lg">
+                  <div className="text-2xl mb-2">🍴</div>
+                  <div className="font-semibold">특선 요리</div>
                 </div>
               </div>
             </div>
           )}
           
-          {activeTemplate === 'timetable-staff' && (
+          {activeTemplate === 'd-professional' && (
             <div>
-              <div className="text-center mb-6 p-5 rounded-lg" style={{ background: 'linear-gradient(135deg, #4a5568, #718096)', color: 'white' }}>
-                <div className="text-xl font-bold mb-1">티타임표 - 스탭용</div>
-                <div className="text-sm opacity-90">2박3일 순천버스핑 · 파인힐스CC</div>
+              <div className="p-6 rounded-t-lg" style={{ background: 'linear-gradient(135deg, #4a5568, #718096)', color: 'white' }}>
+                <div className="text-sm font-light tracking-widest mb-2">SINGSING GOLF TOUR</div>
+                <div className="text-2xl font-bold mb-1">공식 운영 문서</div>
+                <div className="text-xs opacity-80">Document No. 2025-001 | Date: 2025.01.15</div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
+              <div className="p-6 border-l-4 border-gray-500">
+                <h3 className="text-lg font-bold mb-3 uppercase tracking-wide">Executive Summary</h3>
+                <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border p-2 text-left">티타임</th>
-                      <th className="border p-2 text-left">팀</th>
-                      <th className="border p-2 text-left">참가자 1</th>
-                      <th className="border p-2 text-left">참가자 2</th>
-                      <th className="border p-2 text-left">참가자 3</th>
-                      <th className="border p-2 text-left">참가자 4</th>
-                      <th className="border p-2 text-left">탑승지</th>
+                    <tr className="bg-gray-800 text-white">
+                      <th className="p-2 text-left">Category</th>
+                      <th className="p-2 text-left">Q1 2025</th>
+                      <th className="p-2 text-left">Q2 2025</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td className="border p-2 font-semibold">13:08</td>
-                      <td className="border p-2">1팀</td>
-                      <td className="border p-2">홍길동</td>
-                      <td className="border p-2">김철수</td>
-                      <td className="border p-2">이영희</td>
-                      <td className="border p-2">박민수</td>
-                      <td className="border p-2">강남</td>
+                    <tr className="bg-gray-50">
+                      <td className="p-2">Revenue</td>
+                      <td className="p-2">KRW 1,200M</td>
+                      <td className="p-2">KRW 1,500M</td>
                     </tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+          
+          {activeTemplate === 'e-dynamic' && (
+            <div>
+              <div className="text-center mb-6 p-6 rounded-b-3xl" style={{ 
+                background: dynamicTheme === 'blue' ? 'linear-gradient(135deg, #1a4aa3, #3a6bc5)' : 
+                           dynamicTheme === 'green' ? 'linear-gradient(135deg, #2a8d46, #3bb962)' :
+                           'linear-gradient(135deg, #e17b20, #f3a953)', 
+                color: 'white' 
+              }}>
+                <div className="text-xs opacity-80 mb-2">싱싱골프투어와 함께하는 즐거운 골프 여행!</div>
+                <div className="text-2xl font-bold mb-1">싱싱골프투어</div>
+                <div className="text-sm opacity-90">순천 2박3일 / 05/19(월)~21(수)</div>
+              </div>
+              <div className="px-4">
+                <h3 className="font-semibold mb-3" style={{ color: dynamicTheme === 'blue' ? '#1a4aa3' : dynamicTheme === 'green' ? '#2a8d46' : '#e17b20' }}>투어 안내</h3>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((num) => (
+                    <div key={num} className="bg-white p-4 rounded-lg shadow-sm border relative">
+                      <div className="absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" 
+                           style={{ backgroundColor: dynamicTheme === 'blue' ? '#1a4aa3' : dynamicTheme === 'green' ? '#2a8d46' : '#e17b20' }}>
+                        {num}
+                      </div>
+                      <div className="font-semibold mb-1">상품 정보</div>
+                      <div className="text-sm text-gray-600">일정, 식사, 골프장, 숙박 안내</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -1146,8 +1521,9 @@ export default function DesignTemplatesPage() {
               <ul className="mt-1 ml-4 space-y-1 text-gray-700">
                 <li>• A그룹 (#2c5282): 진중하고 권위있는 느낌</li>
                 <li>• B그룹 (#4a6fa5): 부드럽고 친근한 느낌</li>
-                <li>• C그룹 고객용 (#6b46c1): 화려하고 시각적인 느낌</li>
-                <li>• C그룹 스탭용 (#4a5568): 전문적이고 실무적인 느낌</li>
+                <li>• C그룹 (#f093fb): 화려하고 트렌디한 느낌</li>
+                <li>• D그룹 (#4a5568): 고급스럽고 전문적인 느낌</li>
+                <li>• E그룹 (변동): 3가지 테마 선택 가능</li>
               </ul>
             </div>
             <div>
@@ -1155,8 +1531,9 @@ export default function DesignTemplatesPage() {
               <ul className="mt-1 ml-4 space-y-1 text-gray-700">
                 <li>• A그룹: 직사각형, 격식있는 구조</li>
                 <li>• B그룹: 둥근 모서리, 유연한 구조</li>
-                <li>• C그룹 고객용: 카드 형식, 비주얼 중심</li>
-                <li>• C그룹 스탭용: 테이블 형식, 데이터 중심</li>
+                <li>• C그룹: 그라데이션, 화려한 효과</li>
+                <li>• D그룹: 미니멀, 권위있는 구조</li>
+                <li>• E그룹: 모바일 최적화, 반응형</li>
               </ul>
             </div>
           </div>
@@ -1170,10 +1547,11 @@ export default function DesignTemplatesPage() {
             <p><strong className="text-green-700">HTML 복사:</strong> 생성된 HTML을 복사하여 필요에 맞게 수정하세요.</p>
             <p><strong className="text-green-700">커스터마이징:</strong> 색상, 폰트 크기, 여백 등을 조정하여 사용하세요.</p>
             <div className="mt-2 p-3 bg-green-100 rounded text-xs">
-              <strong>티타임표 선택 가이드:</strong>
+              <strong>E그룹 테마 토글 가이드:</strong>
               <ul className="mt-1 ml-4">
-                <li>• 고객용: 시각적이고 간단한 정보만 필요한 경우</li>
-                <li>• 스탭용: 참가자 이름, 팀 편성 등 상세 정보가 필요한 경우</li>
+                <li>• 블루: 신뢰감 있는 기본 테마</li>
+                <li>• 그린: 자연친화적인 편안한 테마</li>
+                <li>• 오렌지: 활력있고 젊은 테마</li>
               </ul>
             </div>
           </div>
