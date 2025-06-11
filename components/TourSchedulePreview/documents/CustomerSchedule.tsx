@@ -134,13 +134,25 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       
       ${createFooter()}
     </div>
-    
-    <style>
-      ${getScheduleStyles(isStaff)}
-    </style>
   `;
   
-  return htmlWrapper(`${tourData.title} - 일정표`, content);
+  // CSS를 head 태그에 포함시키기 위해 수정
+  const fullHTML = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${tourData.title} - 일정표</title>
+  <style>
+    ${getScheduleStyles(isStaff)}
+  </style>
+</head>
+<body>
+  ${content}
+</body>
+</html>`;
+  
+  return fullHTML;
 }
 
 function formatUsageContent(content: string): string {
