@@ -12,13 +12,9 @@ export function generateBoardingGuideHTML(
     return generateStaffBoardingHTML(tourData, journeyItems, participants);
   }
   
-  // journeyItems에서 탑승지와 경유지 분리
+  // journeyItems에서 탑승지만 추출 (첫날만)
   const boardingItems = journeyItems.filter(item => 
-    item.spot && item.spot.category === 'boarding'
-  );
-  
-  const waypointItems = journeyItems.filter(item => 
-    item.spot && ['rest_area', 'tourist_spot', 'restaurant'].includes(item.spot.category)
+    item.spot && item.spot.category === 'boarding' && item.day_number === 1
   );
   
   const content = `
@@ -27,7 +23,7 @@ export function generateBoardingGuideHTML(
         <div class="route-header-box">
           <div class="route-header-title">싱싱골프투어</div>
           <div class="route-header-subtitle">${tourData.title}</div>
-          <div class="route-header-date">${formatDate(tourData.start_date)} ~ ${formatDate(tourData.end_date)}</div>
+          <div class="route-header-date">${formatDate(tourData.start_date, true)} ~ ${formatDate(tourData.end_date, true)}</div>
         </div>
         
         <div class="boarding-cards">
@@ -52,7 +48,7 @@ export function generateBoardingGuideHTML(
                         <span class="time-prefix">${timePrefix}</span>
                         <span class="card-time">${displayTime}</span>
                       </div>
-                      <div class="card-date">${formatDate(tourData.start_date)}</div>
+                      <div class="card-date">${formatDate(tourData.start_date, true)}</div>
                     </div>
                   </div>
                   
@@ -67,43 +63,6 @@ export function generateBoardingGuideHTML(
                       <p class="location-desc">${boardingSpot.description}</p>
                     </div>
                   ` : ''}
-                </div>
-              </div>
-            `;
-          }).join('')}
-          
-          ${waypointItems.map((item, waypointIndex) => {
-            const orderNumber = boardingItems.length + waypointIndex + 1;
-            const spot = item.spot;
-            if (!spot) return '';
-            
-            const isRestStop = spot.category === 'rest_area';
-            const isTourist = spot.category === 'tourist_spot';
-            const icon = isRestStop ? '☕' : isTourist ? '🏛️' : '🍽️';
-            const { timePrefix, displayTime } = formatTime(item.arrival_time || '미정');
-            
-            return `
-              <div class="boarding-card waypoint-stop">
-                <div class="card-border ${isRestStop ? 'rest-stop' : isTourist ? 'tourist-stop' : ''}"></div>
-                <div class="card-content">
-                  <div class="route-header">
-                    <div class="route-number ${isRestStop ? 'rest' : isTourist ? 'tourist' : ''}">${orderNumber}</div>
-                    <div class="route-info-main">
-                      <div class="card-title">
-                        <span class="waypoint-icon">${icon}</span>
-                        <span class="location-name">${spot.name}</span>
-                      </div>
-                      <div class="time-wrapper">
-                        <span class="time-prefix">${timePrefix}</span>
-                        <span class="card-time waypoint-time">${displayTime}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="waypoint-info">
-                    <div class="waypoint-duration">체류시간: 약 ${item.stay_duration || '30분'}</div>
-                    ${spot.description ? `<div class="waypoint-desc">${spot.description}</div>` : ''}
-                  </div>
                 </div>
               </div>
             `;
@@ -237,9 +196,6 @@ function getBoardingGuideStyles(): string {
       background: #4a6fa5;
     }
     
-    .card-border.rest-stop { background: #F59E0B; }
-    .card-border.tourist-stop { background: #10B981; }
-    
     .card-content {
       padding: 20px;
     }
@@ -264,9 +220,6 @@ function getBoardingGuideStyles(): string {
       margin-right: 15px;
       flex-shrink: 0;
     }
-    
-    .route-number.rest { background: #F59E0B; }
-    .route-number.tourist { background: #10B981; }
     
     .card-title {
       font-size: 18px;
@@ -302,11 +255,6 @@ function getBoardingGuideStyles(): string {
     
     .location-info { margin-top: 15px; }
     .location-desc { font-size: 14px; line-height: 1.6; color: #333; }
-    
-    .waypoint-icon { font-size: 20px; }
-    .waypoint-info { margin-top: 15px; }
-    .waypoint-duration { font-size: 14px; color: #4a6fa5; font-weight: bold; margin-bottom: 5px; }
-    .waypoint-desc { font-size: 14px; color: #666; line-height: 1.6; }
     
     .contact-box {
       margin-top: 30px;

@@ -175,10 +175,20 @@ export default function TourDocumentPreview({ tourId }: TourDocumentPreviewProps
   return (
     <div className="bg-white rounded-lg shadow-lg p-8 max-w-6xl mx-auto">
       {/* 헤더 */}
-      <div className="text-center mb-8 border-b pb-6">
-        <h1 className="text-3xl font-bold mb-2">일정표</h1>
-        <p className="text-lg text-gray-600">
-          {tourInfo?.tour_product?.name} - {tourInfo?.start_date}
+      <div className="bg-blue-900 text-white p-6 -m-8 mb-8 rounded-t-lg">
+        <h1 className="text-2xl font-bold mb-2">싱싱골프투어</h1>
+        <p className="text-xl mb-1">
+          {tourInfo?.title || tourInfo?.tour_product?.name || '2박 3일 순천버스핑'}
+        </p>
+        <p className="text-lg opacity-90">
+          {tourInfo?.start_date && tourInfo?.end_date ? (() => {
+            const startDate = new Date(tourInfo.start_date);
+            const endDate = new Date(tourInfo.end_date);
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const startDay = days[startDate.getDay()];
+            const endDay = days[endDate.getDay()];
+            return `${startDate.getMonth() + 1}월 ${startDate.getDate()}일 (${startDay}) ~ ${endDate.getMonth() + 1}월 ${endDate.getDate()}일 (${endDay})`;
+          })() : ''}
         </p>
       </div>
 

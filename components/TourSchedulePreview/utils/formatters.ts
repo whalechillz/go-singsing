@@ -39,10 +39,13 @@ export const formatDate = (date: string | Date, includeWeekday: boolean = true):
   const d = typeof date === 'string' ? new Date(date) : date;
   const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
   
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  
   if (includeWeekday) {
-    return `${d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace('. ', '월 ').replace('.', '일')} (${weekdays[d.getDay()]})`;
+    return `${month}월 ${day}일 (${weekdays[d.getDay()]})`;
   }
-  return d.toLocaleDateString('ko-KR');
+  return `${d.getFullYear()}. ${month}. ${day}.`;
 };
 
 // 일정 아이콘 결정 함수

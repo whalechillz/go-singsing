@@ -49,7 +49,7 @@ export function useTourData(tourId: string) {
       // 첫날 탑승지 정보 추출
       const boardingItems = journeyItems?.filter(item => 
         item.day_number === 1 && 
-        item.spot?.category === 'boarding_place'
+        (item.spot?.category === 'boarding' || item.spot?.category === 'boarding_place')
       ).map(item => ({
         id: item.id,
         tour_id: item.tour_id,
@@ -73,28 +73,7 @@ export function useTourData(tourId: string) {
       })) || [];
       
       setTourBoardingPlaces(boardingItems);
-
-      // 경유지 정보 추출
-      const waypointItems = journeyItems?.filter(item => 
-        item.spot && (
-          item.spot.category === 'rest_area' || 
-          item.spot.category === 'tourist_spot' ||
-          item.spot.category === 'restaurant'
-        )
-      ).map(item => ({
-        id: item.id,
-        tour_id: item.tour_id,
-        waypoint_name: item.spot.name,
-        waypoint_time: item.arrival_time,
-        waypoint_duration: item.stay_duration || item.spot.recommended_duration || 30,
-        waypoint_description: item.notes || item.spot.description,
-        visit_date: item.day_date || new Date(new Date(tourInfo.start_date).getTime() + (item.day_number - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        order_no: item.order_index,
-        is_waypoint: true,
-        attraction_data: item.spot
-      })) || [];
-      
-      setTourWaypoints(waypointItems);
+      setTourWaypoints([]);
     } catch (error) {
       console.error('Error in fetchTourBoardingPlaces:', error);
       setTourBoardingPlaces([]);

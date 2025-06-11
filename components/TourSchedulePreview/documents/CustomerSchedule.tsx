@@ -3,9 +3,14 @@ import { createHeader, createAuthorityHeader, createSection, createInfoBox, crea
 import { formatDate, formatTextWithBold, getScheduleIcon, simplifyCourseName } from '../utils/formatters';
 
 export function generateCustomerScheduleHTML(tourData: TourData, productData: ProductData | null, isStaff: boolean = false): string {
+  // 날짜 및 제목 정보 준비
+  const dateStr = tourData.start_date && tourData.end_date ? 
+    `${formatDate(tourData.start_date, true)} ~ ${formatDate(tourData.end_date, true)}` : '';
+  const subtitle = `${tourData.title}\n${dateStr}`;
+  
   const content = `
     <div class="container">
-      ${createAuthorityHeader('싱싱골프투어', tourData.title, '수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990')}
+      ${createAuthorityHeader('싱싱골프투어', subtitle, '수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990')}
       
       ${createSection('상품 정보', createInfoBox([
         { label: '상품명', value: tourData.title, important: true },
@@ -31,7 +36,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
           ${tourData.schedules?.map((schedule: any, idx: number) => `
             <div class="day-schedule">
               <div class="day-title">
-                <div>Day ${idx + 1} - ${formatDate(schedule.date)}</div>
+                <div>Day ${idx + 1} - ${formatDate(schedule.date, true)}</div>
                 <div class="day-round">${schedule.title ? simplifyCourseName(schedule.title) : ''}</div>
               </div>
               <div class="day-content">
@@ -64,6 +69,15 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
           `).join('') || '<div style="padding: 20px; text-align: center; color: #666;">일정 정보가 없습니다.</div>'}
         </div>
       </div>
+      
+      ${tourData.notices ? `
+      <div class="section">
+        <div class="section-title">기타 안내</div>
+        <div class="notice-box">
+          ${tourData.notices.split('\n').map(notice => `<div class="notice-item">${notice}</div>`).join('')}
+        </div>
+      </div>
+      ` : ''}
       
       ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour) ? `
       <div class="section detailed-usage-section">
@@ -218,6 +232,18 @@ function getScheduleStyles(isStaff: boolean = false): string {
       font-weight: 500;
       margin-bottom: 10px;
       opacity: 0.95;
+    }
+    
+    .header-authority .subtitle > div:first-child {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .header-authority .subtitle > div:last-child {
+      font-size: 18px;
+      font-weight: 400;
+      opacity: 0.9;
     }
     
     .header-authority .company-info {
@@ -393,6 +419,21 @@ function getScheduleStyles(isStaff: boolean = false): string {
     .notice-list li {
       margin-bottom: 8px;
       line-height: 1.6;
+    }
+    
+    .notice-item {
+      padding: 8px 0;
+      line-height: 1.6;
+      position: relative;
+      padding-left: 20px;
+    }
+    
+    .notice-item:before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #2c5282;
+      font-weight: bold;
     }
     
     /* 상세 이용 안내 스타일 */

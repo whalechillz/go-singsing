@@ -115,7 +115,7 @@ export const createHeader = (logoText: string = '싱싱골프투어', companyInf
 export const createAuthorityHeader = (title: string, subtitle?: string, companyInfo?: string): string => `
   <div class="header-authority">
     <div class="logo">${title}</div>
-    ${subtitle ? `<div class="subtitle">${subtitle}</div>` : ''}
+    ${subtitle ? `<div class="subtitle">${subtitle.split('\n').map(line => `<div>${line}</div>`).join('')}</div>` : ''}
     ${companyInfo ? `<div class="company-info">${companyInfo}</div>` : ''}
   </div>
 `;
