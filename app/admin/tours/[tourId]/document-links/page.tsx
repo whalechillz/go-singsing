@@ -53,6 +53,45 @@ export default function DocumentLinksPage() {
   // 수정 폼 상태
   const [editDocumentType, setEditDocumentType] = useState('');
   const [editExpirationDays, setEditExpirationDays] = useState('');
+  
+  // 테마 정의
+  const themes = {
+    blue: {
+      name: '클래식 블루',
+      primary: '#2c5282',
+      secondary: '#3182ce',
+      accent: '#4299e1',
+      light: '#e7f3ff'
+    },
+    purple: {
+      name: '엘레강트 퍼플',
+      primary: '#6B46C1',
+      secondary: '#7C3AED',
+      accent: '#9333EA',
+      light: '#f3e8ff'
+    },
+    green: {
+      name: '내추럴 그린',
+      primary: '#22543d',
+      secondary: '#38a169',
+      accent: '#48bb78',
+      light: '#e6fffa'
+    },
+    red: {
+      name: '다이나믹 레드',
+      primary: '#c53030',
+      secondary: '#e53e3e',
+      accent: '#f56565',
+      light: '#fff5f5'
+    },
+    dark: {
+      name: '다크 모드',
+      primary: '#1a202c',
+      secondary: '#2d3748',
+      accent: '#4a5568',
+      light: '#2d3748'
+    }
+  };
 
   const documentTypeOptions = [
     { value: 'portal', label: '🎨 통합 표지 (포털)' },
