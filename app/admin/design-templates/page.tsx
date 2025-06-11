@@ -1152,7 +1152,7 @@ export default function DesignTemplatesPage() {
 </html>`;
   };
 
-  // F그룹: 견적서 템플릿 (미리보기와 동일) - 보라색 그라데이션, 물결 디자인
+  // F그룹: 견적서 템플릿 - 왼쪽 원본과 동일한 디자인
   const generateQuoteHTML = () => {
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -1161,7 +1161,7 @@ export default function DesignTemplatesPage() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>싱싱골프투어 - 견적서</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
     
     * {
       margin: 0;
@@ -1171,37 +1171,61 @@ export default function DesignTemplatesPage() {
     
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      background: linear-gradient(to bottom right, #dbeafe, white, #f3e8ff);
+      background: #6366f1;
       min-height: 100vh;
       color: #1f2937;
     }
     
     /* 헤더 */
     .header {
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(to right, #6366f1, #8b5cf6);
+      background: #6366f1;
       color: white;
-      padding: 64px 0;
+      padding: 32px 0 50px;
+      text-align: center;
     }
     
-    .header::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background: white;
-      clip-path: ellipse(200% 100% at 50% 100%);
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 900px;
+      margin: 0 auto 30px;
+      padding: 0 20px;
+    }
+    
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .header-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 8px;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+    
+    .header-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
     
     .header-content {
       max-width: 900px;
       margin: 0 auto;
       text-align: center;
-      position: relative;
-      z-index: 1;
     }
     
     .header-date {
@@ -1210,20 +1234,21 @@ export default function DesignTemplatesPage() {
       gap: 8px;
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(10px);
-      padding: 8px 16px;
+      padding: 10px 20px;
       border-radius: 9999px;
-      font-size: 14px;
-      margin-bottom: 16px;
+      font-size: 16px;
+      margin-bottom: 20px;
     }
     
     .header h1 {
-      font-size: 48px;
+      font-size: 52px;
       font-weight: 700;
       margin-bottom: 16px;
+      letter-spacing: -1px;
     }
     
     .header-subtitle {
-      font-size: 20px;
+      font-size: 22px;
       opacity: 0.9;
       margin-bottom: 32px;
     }
@@ -1231,51 +1256,49 @@ export default function DesignTemplatesPage() {
     .header-badges {
       display: flex;
       justify-content: center;
-      gap: 16px;
+      gap: 20px;
       flex-wrap: wrap;
     }
     
     .badge {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(10px);
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 16px;
     }
     
     /* 본문 컨테이너 */
     .container {
       max-width: 900px;
-      margin: -40px auto 0;
-      padding: 0 20px 40px;
-      position: relative;
-      z-index: 10;
+      margin: 0 auto;
+      padding: 0 20px 60px;
     }
     
     /* 견적 요약 카드 */
     .quote-summary {
-      background: linear-gradient(to bottom right, #4f46e5, #6366f1);
+      background: #5b5fc7;
       color: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      margin-bottom: 32px;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      margin-bottom: 40px;
     }
     
     .quote-summary h3 {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
     
     .price-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-bottom: 20px;
     }
     
     .price-item {
@@ -1286,110 +1309,106 @@ export default function DesignTemplatesPage() {
     
     .price-label {
       opacity: 0.9;
-      font-size: 14px;
+      font-size: 16px;
     }
     
     .price-value {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: 700;
     }
     
     .total-price {
       border-top: 1px solid rgba(255, 255, 255, 0.3);
-      padding-top: 16px;
+      padding-top: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     
     .total-price .label {
-      font-size: 18px;
+      font-size: 20px;
     }
     
     .total-price .value {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
     }
     
     .validity-notice {
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(10px);
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 14px;
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 16px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      margin-top: 20px;
     }
     
     /* 섹션 */
     .section {
       background: white;
-      border-radius: 16px;
-      padding: 32px;
-      margin-bottom: 24px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
     
     .section-title {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 700;
       color: #1f2937;
-      margin-bottom: 24px;
+      margin-bottom: 30px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
     }
     
     /* 일정 카드 */
     .schedule-card {
       border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 16px;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
       cursor: pointer;
       transition: all 0.3s ease;
     }
     
     .schedule-card:hover {
       border-color: #6366f1;
-      box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1);
-    }
-    
-    .schedule-card.active {
-      border-color: #4f46e5;
-      background: #eff6ff;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15);
     }
     
     .schedule-header {
       display: flex;
       align-items: start;
-      gap: 16px;
+      gap: 20px;
     }
     
     .day-number {
-      width: 64px;
-      height: 64px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       color: white;
       flex-shrink: 0;
     }
     
     .day-number.first {
-      background: linear-gradient(to right, #10b981, #059669);
+      background: #10b981;
     }
     
     .day-number.middle {
-      background: linear-gradient(to right, #3b82f6, #2563eb);
+      background: #3b82f6;
     }
     
     .day-number.last {
-      background: linear-gradient(to right, #ef4444, #dc2626);
+      background: #ef4444;
     }
     
     .schedule-content {
@@ -1397,25 +1416,25 @@ export default function DesignTemplatesPage() {
     }
     
     .schedule-date {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       color: #1f2937;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     
     .schedule-highlights {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
     }
     
     .highlight-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
       font-weight: 500;
     }
     
@@ -1448,23 +1467,24 @@ export default function DesignTemplatesPage() {
     .include-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
+      gap: 30px;
+      margin-bottom: 30px;
     }
     
     .include-box {
       background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
     
     .include-box h3 {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     
     .include-box.includes h3 {
@@ -1482,52 +1502,53 @@ export default function DesignTemplatesPage() {
     .include-list li {
       display: flex;
       align-items: start;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 10px;
+      margin-bottom: 12px;
       color: #4b5563;
-      font-size: 14px;
+      font-size: 16px;
     }
     
     /* 방문 예정지 */
     .spots-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
     }
     
     .spot-card {
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
       transition: all 0.3s ease;
     }
     
     .spot-card:hover {
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      transform: translateY(-4px);
     }
     
     .spot-image {
       width: 100%;
-      height: 128px;
+      height: 140px;
       object-fit: cover;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      border-radius: 10px;
+      margin-bottom: 16px;
     }
     
     .spot-name {
+      font-size: 18px;
       font-weight: 700;
       color: #1f2937;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
     
     .spot-category {
       display: inline-block;
-      padding: 2px 8px;
+      padding: 4px 10px;
       border-radius: 9999px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 500;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     
     .spot-category.tourist {
@@ -1546,23 +1567,25 @@ export default function DesignTemplatesPage() {
     }
     
     .spot-address {
-      font-size: 13px;
+      font-size: 14px;
       color: #6b7280;
       display: flex;
       align-items: start;
-      gap: 4px;
+      gap: 6px;
     }
     
     /* 문의하기 */
     .contact-section {
       background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 20px;
+      padding: 40px;
       text-align: center;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
     
     .contact-section h3 {
-      font-size: 18px;
+      font-size: 24px;
       font-weight: 700;
       color: #1f2937;
       margin-bottom: 16px;
@@ -1570,32 +1593,33 @@ export default function DesignTemplatesPage() {
     
     .contact-section p {
       color: #6b7280;
-      margin-bottom: 16px;
-      font-size: 14px;
+      margin-bottom: 24px;
+      font-size: 16px;
     }
     
     .contact-items {
       display: flex;
       justify-content: center;
-      gap: 24px;
+      gap: 40px;
       flex-wrap: wrap;
     }
     
     .contact-item {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
     
     .contact-icon {
-      width: 40px;
-      height: 40px;
+      width: 50px;
+      height: 50px;
       background: #dbeafe;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #2563eb;
+      font-size: 20px;
     }
     
     .contact-info {
@@ -1603,12 +1627,13 @@ export default function DesignTemplatesPage() {
     }
     
     .contact-number {
-      font-weight: 500;
+      font-size: 18px;
+      font-weight: 600;
       color: #1f2937;
     }
     
     .contact-time {
-      font-size: 12px;
+      font-size: 14px;
       color: #6b7280;
     }
     
@@ -1616,8 +1641,8 @@ export default function DesignTemplatesPage() {
     .footer {
       background: #1f2937;
       color: white;
-      padding: 48px 0;
-      margin-top: 64px;
+      padding: 60px 0;
+      margin-top: 60px;
     }
     
     .footer-content {
@@ -1630,38 +1655,43 @@ export default function DesignTemplatesPage() {
     .footer-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
-      margin-bottom: 32px;
+      gap: 40px;
+      margin-bottom: 40px;
       text-align: left;
     }
     
     .footer-section h4 {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       margin-bottom: 16px;
     }
     
     .footer-section p {
-      font-size: 14px;
+      font-size: 16px;
       color: #9ca3af;
-      line-height: 1.6;
+      line-height: 1.8;
     }
     
     .footer-divider {
       border-top: 1px solid #374151;
-      padding-top: 32px;
-      margin-top: 32px;
+      padding-top: 40px;
+      margin-top: 40px;
     }
     
     .footer-bottom {
-      font-size: 14px;
+      font-size: 16px;
       color: #9ca3af;
       text-align: center;
     }
     
     @media (max-width: 768px) {
       .header h1 {
-        font-size: 32px;
+        font-size: 36px;
+      }
+      
+      .header-top {
+        flex-direction: column;
+        gap: 20px;
       }
       
       .include-grid,
@@ -1679,6 +1709,10 @@ export default function DesignTemplatesPage() {
         background: white;
       }
       
+      .header {
+        background: #6366f1;
+      }
+      
       .section {
         box-shadow: none;
         border: 1px solid #e5e7eb;
@@ -1689,6 +1723,23 @@ export default function DesignTemplatesPage() {
 <body>
   <!-- 헤더 -->
   <div class="header">
+    <div class="header-top">
+      <div class="logo">싱싱골프투어</div>
+      <div class="header-actions">
+        <a href="#" class="header-btn">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 3L9.65 4.35L14.3 9H3V11H14.3L9.65 15.65L11 17L18 10L11 3Z" fill="white"/>
+          </svg>
+          링크하기
+        </a>
+        <a href="#" class="header-btn">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 7H13V3C13 2.45 12.55 2 12 2H8C7.45 2 7 2.45 7 3V7H3C2.45 7 2 7.45 2 8C2 8.55 2.45 9 3 9H7V17C7 17.55 7.45 18 8 18H12C12.55 18 13 17.55 13 17V9H17C17.55 9 18 8.55 18 8C18 7.45 17.55 7 17 7Z" fill="white"/>
+          </svg>
+          저장하기
+        </a>
+      </div>
+    </div>
     <div class="header-content">
       <div class="header-date">
         📅 2025년 6월 11일 ~ 2025년 6월 13일
@@ -2157,7 +2208,7 @@ export default function DesignTemplatesPage() {
               <Quote className="w-8 h-8 text-purple-600" />
               <div>
                 <CardTitle className="text-lg">F그룹: 견적문서</CardTitle>
-                <CardDescription>심플·그라데이션</CardDescription>
+                <CardDescription>원본 견적서 디자인</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -2165,12 +2216,12 @@ export default function DesignTemplatesPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(to right, #6366f1, #8b5cf6)' }}></div>
-                <span className="text-sm">보라색 그라데이션</span>
+                <span className="text-sm">진한 보라색</span>
               </div>
               <ul className="space-y-1 text-sm text-gray-600">
-                <li>• 견적서</li>
-                <li>• 물결 디자인</li>
-                <li>• 깔끔한 레이아웃</li>
+                <li>• 견적서 전용</li>
+                <li>• 상단 버튼 포함</li>
+                <li>• 진한 색감</li>
               </ul>
             </div>
           </CardContent>
@@ -2309,56 +2360,100 @@ export default function DesignTemplatesPage() {
           
           {activeTemplate === 'f-quote' && (
             <div>
-              <div className="relative overflow-hidden mb-6" style={{ 
-                background: 'linear-gradient(to right, #6366f1, #8b5cf6)', 
+              <div className="mb-6" style={{ 
+                background: '#6366f1', 
                 color: 'white', 
-                padding: '40px 20px 60px',
+                padding: '24px',
                 margin: '-32px -32px 32px -32px'
               }}>
-                <div className="text-center relative z-10">
-                  <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm mb-3">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="text-xl font-bold">싱싱골프투어</div>
+                  <div className="flex gap-3">
+                    <button className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/30 transition-colors">
+                      링크하기
+                    </button>
+                    <button className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/30 transition-colors">
+                      저장하기
+                    </button>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm mb-4">
                     📅 2025년 6월 11일 ~ 2025년 6월 13일
                   </div>
-                  <h1 className="text-3xl font-bold mb-2">순천 풀패키지 견적서</h1>
-                  <p className="text-lg opacity-90">2박 3일의 특별한 여행</p>
+                  <h1 className="text-4xl font-bold mb-3">순천 풀패키지 견적서</h1>
+                  <p className="text-xl opacity-90 mb-6">2박 3일의 특별한 여행</p>
+                  <div className="flex justify-center gap-4 flex-wrap">
+                    <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                      📍 파인힐스CC
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                      👥 20명
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                      🏨 골프텔
+                    </div>
+                  </div>
                 </div>
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-20 bg-white"
-                  style={{ clipPath: 'ellipse(200% 100% at 50% 100%)' }}
-                ></div>
               </div>
               
               <div className="px-4">
-                <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-6 rounded-xl mb-6">
+                <div className="text-white p-6 rounded-2xl mb-6" style={{ background: '#5b5fc7' }}>
                   <h3 className="text-lg font-bold mb-4">견적 요약</h3>
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="flex justify-between">
                       <span className="opacity-90">1인 요금</span>
-                      <span className="font-bold">900,000원</span>
+                      <span className="font-bold text-xl">900,000원</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="opacity-90">인원</span>
-                      <span className="font-bold">20명</span>
+                      <span className="font-bold text-xl">20명</span>
                     </div>
                   </div>
                   <div className="pt-4 border-t border-white/30 flex justify-between items-center">
                     <span className="text-lg">총 예상 금액</span>
                     <span className="text-2xl font-bold">18,000,000원</span>
                   </div>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 mt-4 text-sm">
+                    ℹ️ 견적 유효기간: 2025년 6월 18일까지
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-2xl p-6 shadow-md mb-4">
+                  <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                    📅 여행 일정
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="border-2 border-gray-200 rounded-xl p-4 hover:border-indigo-500 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">
+                          D1
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg mb-2">6/11(수)</h3>
+                          <div className="flex gap-2">
+                            <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm">출발</span>
+                            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm">골프</span>
+                            <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-md text-sm">식사</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-4 rounded-lg shadow-sm border">
-                    <h4 className="font-semibold mb-2 text-green-600">✅ 포함 사항</h4>
-                    <ul className="text-sm space-y-1 text-gray-600">
+                  <div className="bg-white p-5 rounded-2xl shadow-md">
+                    <h4 className="font-bold mb-3 text-green-600 text-lg">✅ 포함 사항</h4>
+                    <ul className="space-y-2 text-gray-600">
                       <li>• 왕복 전용버스</li>
                       <li>• 그린피 및 카트비</li>
                       <li>• 숙박 (2박)</li>
                     </ul>
                   </div>
-                  <div className="bg-white p-4 rounded-lg shadow-sm border">
-                    <h4 className="font-semibold mb-2 text-gray-600">ℹ️ 불포함 사항</h4>
-                    <ul className="text-sm space-y-1 text-gray-600">
+                  <div className="bg-white p-5 rounded-2xl shadow-md">
+                    <h4 className="font-bold mb-3 text-gray-600 text-lg">ℹ️ 불포함 사항</h4>
+                    <ul className="space-y-2 text-gray-600">
                       <li>• 개인 경비</li>
                       <li>• 캐디피</li>
                       <li>• 중식 및 석식</li>
@@ -2396,7 +2491,7 @@ export default function DesignTemplatesPage() {
                 <li>• C그룹 (#f093fb): 화려하고 트렌디한 느낌</li>
                 <li>• D그룹 (#4a5568): 고급스럽고 전문적인 느낌</li>
                 <li>• E그룹 (변동): 3가지 테마 선택 가능</li>
-                <li>• F그룹 (#6366f1): 심플하고 모던한 느낌</li>
+                <li>• F그룹 (#6366f1): 진한 보라색, 공식적인 느낌</li>
               </ul>
             </div>
             <div>
@@ -2407,7 +2502,7 @@ export default function DesignTemplatesPage() {
                 <li>• C그룹: 그라데이션, 화려한 효과</li>
                 <li>• D그룹: 미니멀, 권위있는 구조</li>
                 <li>• E그룹: 모바일 최적화, 반응형</li>
-                <li>• F그룹: 물결 디자인, 그라데이션</li>
+                <li>• F그룹: 상단 버튼, 진한 색감</li>
               </ul>
             </div>
           </div>
@@ -2424,9 +2519,9 @@ export default function DesignTemplatesPage() {
               <strong>F그룹 사용 가이드:</strong>
               <ul className="mt-1 ml-4">
                 <li>• 견적서 전용 디자인</li>
-                <li>• 물결 모양의 헤더 디자인</li>
-                <li>• 보라색 그라데이션으로 심플하면서도 모던한 느낌</li>
-                <li>• 방문 예정지 섹션 포함</li>
+                <li>• 상단에 링크하기/저장하기 버튼</li>
+                <li>• 진한 보라색 배경으로 공식적인 느낌</li>
+                <li>• 더 큰 폰트와 더 풍부한 디자인</li>
               </ul>
             </div>
           </div>

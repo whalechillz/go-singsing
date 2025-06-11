@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 견적서</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #f5f7fc;
+      min-height: 100vh;
+      color: #1f2937;
+    }
+    
+    /* 헤더 */
+    .header {
+      background: linear-gradient(135deg, #5865F2 0%, #8F5FEB 100%);
+      color: white;
+      padding: 60px 0 80px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .header-title {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    
+    .header-date {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    
+    /* 본문 컨테이너 */
+    .container {
+      max-width: 1200px;
+      margin: -60px auto 40px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    
+    /* 왼쪽 섹션 */
+    .left-section {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    /* 견적 요약 카드 */
+    .quote-summary {
+      background: #4F46E5;
+      color: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+    }
+    
+    .quote-summary h3 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    
+    .price-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .price-item {
+      text-align: center;
+    }
+    
+    .price-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+    
+    .price-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .total-price {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .total-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    
+    .total-value {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(to right, #fff, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .validity-notice {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 16px;
+    }
+    
+    /* 문의하기 카드 */
+    .contact-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .contact-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+    }
+    
+    .contact-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .contact-item:last-child {
+      border-bottom: none;
+    }
+    
+    .contact-icon {
+      width: 40px;
+      height: 40px;
+      background: #eff6ff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .contact-info {
+      flex: 1;
+    }
+    
+    .contact-method {
+      font-size: 13px;
+      color: #6b7280;
+    }
+    
+    .contact-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    /* 오른쪽 섹션 */
+    .right-section {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* 템플릿 미리보기 카드 */
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    
+    .template-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .template-card:hover {
+      border-color: #6366f1;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+      transform: translateY(-2px);
+    }
+    
+    .template-card.active {
+      border-color: #4f46e5;
+      background: #eff6ff;
+    }
+    
+    .template-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    
+    .template-a { background: #2c5282; color: white; }
+    .template-b { background: #4a6fa5; color: white; }
+    .template-c { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
+    .template-d { background: #4a5568; color: white; }
+    .template-e { background: #1a4aa3; color: white; }
+    .template-f { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+    
+    .template-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    
+    .template-desc {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+    
+    .template-features {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #f3f4f6;
+    }
+    
+    .template-feature {
+      font-size: 11px;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    
+    /* 여행 일정 카드 */
+    .schedule-cards {
+      display: flex;
+      gap: 16px;
+    }
+    
+    .schedule-card {
+      flex: 1;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .schedule-card:hover {
+      border-color: #6366f1;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+    }
+    
+    .schedule-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+    
+    .schedule-card.day1::before { background: #10b981; }
+    .schedule-card.day2::before { background: #3b82f6; }
+    .schedule-card.day3::before { background: #ef4444; }
+    
+    .day-badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 16px;
+    }
+    
+    .day-badge.day1 { background: #10b981; }
+    .day-badge.day2 { background: #3b82f6; }
+    .day-badge.day3 { background: #ef4444; }
+    
+    .schedule-date {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+    
+    .schedule-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .schedule-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .tag-departure { background: #dbeafe; color: #1e40af; }
+    .tag-golf { background: #d1fae5; color: #065f46; }
+    .tag-meal { background: #fed7aa; color: #9a3412; }
+    .tag-tour { background: #ede9fe; color: #5b21b6; }
+    .tag-arrival { background: #fee2e2; color: #991b1b; }
+    
+    /* 포함/불포함 사항 */
+    .include-section {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 24px;
+    }
+    
+    .include-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    
+    .include-box {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .include-box.includes {
+      border-color: #d1fae5;
+      background: #f0fdf4;
+    }
+    
+    .include-box.excludes {
+      border-color: #fee2e2;
+      background: #fef2f2;
+    }
+    
+    .include-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .include-title.includes { color: #059669; }
+    .include-title.excludes { color: #dc2626; }
+    
+    .include-list {
+      list-style: none;
+    }
+    
+    .include-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    
+    .include-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .include-icon.check {
+      background: #d1fae5;
+      color: #059669;
+    }
+    
+    .include-icon.x {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    
+    /* 방문 예정지 */
+    .spots-section {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .spots-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    
+    .spot-card {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .spot-card:hover {
+      background: #f3f4f6;
+      transform: translateY(-2px);
+    }
+    
+    .spot-icon {
+      width: 64px;
+      height: 64px;
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+    
+    .spot-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    
+    .spot-category {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    @media (max-width: 1024px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .template-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .spots-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 640px) {
+      .header-title {
+        font-size: 28px;
+      }
+      
+      .price-grid {
+        flex-direction: column;
+        gap: 16px;
+      }
+      
+      .schedule-cards {
+        flex-direction: column;
+      }
+      
+      .include-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="header-content">
+      <h1 class="header-title">순천 풀패키지 견적서</h1>
+      <p class="header-date">2박 3일의 특별한 여행</p>
+    </div>
+  </div>
+
+  <!-- 메인 컨텐츠 -->
+  <div class="container">
+    <div class="content-grid">
+      <!-- 왼쪽 섹션 -->
+      <div class="left-section">
+        <!-- 견적 요약 -->
+        <div class="quote-summary">
+          <h3>견적 요약</h3>
+          <div class="price-grid">
+            <div class="price-item">
+              <div class="price-label">1인 요금</div>
+              <div class="price-value">900,000원</div>
+            </div>
+            <div class="price-item">
+              <div class="price-label">인원</div>
+              <div class="price-value">20명</div>
+            </div>
+          </div>
+          <div class="total-price">
+            <div class="total-label">총 예상 금액</div>
+            <div class="total-value">18,000,000원</div>
+          </div>
+          <div class="validity-notice">
+            📅 견적 유효기간: 2025년 6월 18일까지
+          </div>
+        </div>
+        
+        <!-- 문의하기 -->
+        <div class="contact-card">
+          <h3 class="contact-title">문의하기</h3>
+          <div class="contact-item">
+            <div class="contact-icon">📞</div>
+            <div class="contact-info">
+              <div class="contact-method">전화번호</div>
+              <div class="contact-value">031-215-3990</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">✉️</div>
+            <div class="contact-info">
+              <div class="contact-method">이메일</div>
+              <div class="contact-value">singsinggolf@naver.com</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">💬</div>
+            <div class="contact-info">
+              <div class="contact-method">카카오톡</div>
+              <div class="contact-value">@싱싱골프투어</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 오른쪽 섹션 -->
+      <div class="right-section">
+        <h2 class="section-title">
+          📋 선택된 템플릿 미리보기
+        </h2>
+        
+        <!-- 템플릿 카드들 -->
+        <div class="template-grid">
+          <div class="template-card">
+            <div class="template-icon template-a">📄</div>
+            <div class="template-name">A그룹: 계약문서</div>
+            <div class="template-desc">권위있는 네이비</div>
+            <div class="template-features">
+              <div class="template-feature">• 직사각형 레이아웃</div>
+              <div class="template-feature">• 격식있는 헤더</div>
+            </div>
+          </div>
+          
+          <div class="template-card">
+            <div class="template-icon template-b">🚌</div>
+            <div class="template-name">B그룹: 실행문서</div>
+            <div class="template-desc">친근한 블루</div>
+            <div class="template-features">
+              <div class="template-feature">• 둥근 모서리</div>
+              <div class="template-feature">• 친근한 스타일</div>
+            </div>
+          </div>
+          
+          <div class="template-card">
+            <div class="template-icon template-c">✨</div>
+            <div class="template-name">C그룹: 홍보문서</div>
+            <div class="template-desc">화려한 그라데이션</div>
+            <div class="template-features">
+              <div class="template-feature">• 애니메이션</div>
+              <div class="template-feature">• 비주얼 중심</div>
+            </div>
+          </div>
+          
+          <div class="template-card">
+            <div class="template-icon template-d">💼</div>
+            <div class="template-name">D그룹: 고급문서</div>
+            <div class="template-desc">전문적인 그레이</div>
+            <div class="template-features">
+              <div class="template-feature">• 미니멀 디자인</div>
+              <div class="template-feature">• 격식있는 포맷</div>
+            </div>
+          </div>
+          
+          <div class="template-card">
+            <div class="template-icon template-e">🎨</div>
+            <div class="template-name">E그룹: 변동컬러</div>
+            <div class="template-desc">3가지 테마</div>
+            <div class="template-features">
+              <div class="template-feature">• 모바일 최적화</div>
+              <div class="template-feature">• 반응형 디자인</div>
+            </div>
+          </div>
+          
+          <div class="template-card active">
+            <div class="template-icon template-f">💜</div>
+            <div class="template-name">F그룹: 견적문서</div>
+            <div class="template-desc">보라색 그라데이션</div>
+            <div class="template-features">
+              <div class="template-feature">• 물결 디자인</div>
+              <div class="template-feature">• 깔끔한 레이아웃</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 여행 일정 -->
+        <h2 class="section-title">
+          📅 여행 일정
+        </h2>
+        <div class="schedule-cards">
+          <div class="schedule-card day1">
+            <div class="day-badge day1">D1</div>
+            <div class="schedule-date">6/11(수)</div>
+            <div class="schedule-tags">
+              <span class="schedule-tag tag-departure">출발</span>
+              <span class="schedule-tag tag-golf">골프</span>
+              <span class="schedule-tag tag-meal">식사</span>
+            </div>
+          </div>
+          
+          <div class="schedule-card day2">
+            <div class="day-badge day2">D2</div>
+            <div class="schedule-date">6/12(목)</div>
+            <div class="schedule-tags">
+              <span class="schedule-tag tag-golf">골프</span>
+              <span class="schedule-tag tag-tour">관광</span>
+            </div>
+          </div>
+          
+          <div class="schedule-card day3">
+            <div class="day-badge day3">D3</div>
+            <div class="schedule-date">6/13(금)</div>
+            <div class="schedule-tags">
+              <span class="schedule-tag tag-golf">골프</span>
+              <span class="schedule-tag tag-arrival">도착</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 포함/불포함 사항 -->
+    <div class="include-section">
+      <h2 class="section-title">
+        📋 포함/불포함 사항
+      </h2>
+      <div class="include-grid">
+        <div class="include-box includes">
+          <h3 class="include-title includes">
+            <span class="include-icon check">✓</span>
+            포함 사항
+          </h3>
+          <ul class="include-list">
+            <li>
+              <span class="include-icon check">✓</span>
+              왕복 전용버스
+            </li>
+            <li>
+              <span class="include-icon check">✓</span>
+              그린피 및 카트비
+            </li>
+            <li>
+              <span class="include-icon check">✓</span>
+              숙박 (2박)
+            </li>
+            <li>
+              <span class="include-icon check">✓</span>
+              조식 제공
+            </li>
+            <li>
+              <span class="include-icon check">✓</span>
+              여행자 보험
+            </li>
+          </ul>
+        </div>
+        
+        <div class="include-box excludes">
+          <h3 class="include-title excludes">
+            <span class="include-icon x">×</span>
+            불포함 사항
+          </h3>
+          <ul class="include-list">
+            <li>
+              <span class="include-icon x">×</span>
+              개인 경비
+            </li>
+            <li>
+              <span class="include-icon x">×</span>
+              캐디피
+            </li>
+            <li>
+              <span class="include-icon x">×</span>
+              중식 및 석식
+            </li>
+            <li>
+              <span class="include-icon x">×</span>
+              음료 및 주류
+            </li>
+            <li>
+              <span class="include-icon x">×</span>
+              개인 라운딩 용품
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 방문 예정지 -->
+    <div class="spots-section">
+      <h2 class="section-title">
+        📸 방문 예정지
+      </h2>
+      <div class="spots-grid">
+        <div class="spot-card">
+          <div class="spot-icon">🏛️</div>
+          <div class="spot-name">남대문</div>
+          <div class="spot-category">관광명소</div>
+        </div>
+        
+        <div class="spot-card">
+          <div class="spot-icon">🌿</div>
+          <div class="spot-name">순천만 습지</div>
+          <div class="spot-category">관광명소</div>
+        </div>
+        
+        <div class="spot-card">
+          <div class="spot-icon">🍖</div>
+          <div class="spot-name">한정식당</div>
+          <div class="spot-category">맛집</div>
+        </div>
+        
+        <div class="spot-card">
+          <div class="spot-icon">🚗</div>
+          <div class="spot-name">죽도휴게소</div>
+          <div class="spot-category">휴게소</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
