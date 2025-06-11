@@ -160,7 +160,7 @@ export function generateSimplifiedHTML(tourData: TourData | null, productData: P
     </div>
     
     <div class="footer">
-      <p>싱싱골프투어 ☎ 031-215-3990</p>
+      <p>간편일정 ☎ 031-215-3990</p>
     </div>
   </div>
 </body>

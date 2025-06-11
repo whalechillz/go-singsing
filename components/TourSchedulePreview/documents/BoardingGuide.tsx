@@ -21,7 +21,7 @@ export function generateBoardingGuideHTML(
     <div class="container">
       <div class="route-section">
         <div class="route-header-box">
-          <div class="route-header-title">싱싱골프투어</div>
+          <div class="route-header-title">탑승안내(고객용)</div>
           <div class="route-header-subtitle">${tourData.title}</div>
           <div class="route-header-date">${formatDate(tourData.start_date, true)} ~ ${formatDate(tourData.end_date, true)}</div>
         </div>
@@ -163,9 +163,10 @@ function getBoardingGuideStyles(): string {
     }
     
     .route-header-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
       margin-bottom: 10px;
+      letter-spacing: -0.5px;
     }
     
     .route-header-subtitle {
