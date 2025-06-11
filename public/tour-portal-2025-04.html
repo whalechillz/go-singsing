@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 2박3일 순천버스핑</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f7fafc;
+      color: #2d3748;
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding-bottom: 30px;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+      color: white;
+      text-align: center;
+      padding: 60px 20px 40px;
+      border-radius: 0 0 30px 30px;
+    }
+    
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+    
+    .header .tour-title {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    
+    .header .tour-date {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    .header .company-info {
+      font-size: 12px;
+      margin-top: 20px;
+      opacity: 0.8;
+    }
+    
+    .section-title {
+      margin: 30px 20px 15px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #2c5282;
+    }
+    
+    .link-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 0 20px;
+    }
+    
+    .link-card {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+    }
+    
+    .link-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+    
+    .link-card .icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    
+    .link-card h3 {
+      font-size: 16px;
+      font-weight: 500;
+      color: #2c5282;
+      margin-bottom: 5px;
+    }
+    
+    .link-card p {
+      font-size: 13px;
+      color: #718096;
+    }
+    
+    .link-card.available {
+      background: white;
+    }
+    
+    .link-card.preparing {
+      background: #f7fafc;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .info-section {
+      background: #e7f3ff;
+      border-radius: 15px;
+      margin: 30px 20px;
+      padding: 20px;
+    }
+    
+    .info-section h3 {
+      font-size: 16px;
+      color: #2c5282;
+      margin-bottom: 10px;
+    }
+    
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #cbd5e0;
+    }
+    
+    .info-item:last-child {
+      border-bottom: none;
+    }
+    
+    .contact-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      margin: 20px;
+      padding: 25px;
+      color: white;
+      text-align: center;
+    }
+    
+    .contact-button {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      text-decoration: none;
+      margin: 5px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .contact-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>싱싱골프투어</h1>
+      <div class="tour-title">2박3일 순천버스핑</div>
+      <div class="tour-date">2025년 4월 14일 ~ 4월 16일</div>
+      <div class="company-info">
+        수원시 영통구 법조로149번길 200<br>
+        고객센터 TEL 031-215-3990
+      </div>
+    </div>
+    
+    <h2 class="section-title">📋 투어 문서</h2>
+    
+    <div class="link-grid">
+      <a href="https://go.singsinggolf.kr/s/vlybk7we" class="link-card available">
+        <div class="icon">📅</div>
+        <h3>간편일정</h3>
+        <p>전체 일정 한눈에</p>
+      </a>
+      
+      <a href="https://go.singsinggolf.kr/s/u2i1wkf7" class="link-card available">
+        <div class="icon">👥</div>
+        <h3>참가자 명단</h3>
+        <p>팀 구성 확인</p>
+      </a>
+      
+      <a href="https://go.singsinggolf.kr/s/6evot6oy" class="link-card available">
+        <div class="icon">🏨</div>
+        <h3>객실 배정표</h3>
+        <p>숙소 배정 확인</p>
+      </a>
+      
+      <div class="link-card preparing">
+        <div class="icon">⛳</div>
+        <h3>티타임표</h3>
+        <p>준비중</p>
+      </div>
+    </div>
+    
+    <div class="info-section">
+      <h3>📍 투어 정보</h3>
+      <div class="info-item">
+        <span>골프장</span>
+        <span>파인힐스, 힐스코스, 레이크코스</span>
+      </div>
+      <div class="info-item">
+        <span>숙소</span>
+        <span>골프텔</span>
+      </div>
+      <div class="info-item">
+        <span>포함사항</span>
+        <span>그린피, 숙박, 조식, 전일석식</span>
+      </div>
+      <div class="info-item">
+        <span>버스</span>
+        <span>캐디피 별도</span>
+      </div>
+    </div>
+    
+    <div class="contact-section">
+      <h3 style="margin-bottom: 15px;">문의사항이 있으신가요?</h3>
+      <a href="tel:031-215-3990" class="contact-button">📞 고객센터</a>
+      <a href="tel:010-1234-5678" class="contact-button">💬 담당자</a>
+    </div>
+  </div>
+</body>
+</html>

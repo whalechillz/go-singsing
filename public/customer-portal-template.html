@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 고객님을 위한 투어 안내</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    
+    :root {
+      --primary-color: #2c5282;
+      --secondary-color: #3182ce;
+      --accent-color: #4299e1;
+      --light-color: #e7f3ff;
+      --text-color: #2d3748;
+      --white: #ffffff;
+      --light-gray: #f7fafc;
+      --gray: #718096;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: var(--light-gray);
+      color: var(--text-color);
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding-bottom: 30px;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 50px 20px 40px;
+      border-radius: 0 0 30px 30px;
+    }
+    
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+    
+    .header .tour-info {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    
+    .link-section {
+      margin: 30px 20px;
+    }
+    
+    .link-card {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: inherit;
+    }
+    
+    .link-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--hover-shadow);
+    }
+    
+    .link-icon {
+      font-size: 32px;
+      margin-right: 15px;
+    }
+    
+    .link-content h3 {
+      font-size: 18px;
+      margin-bottom: 5px;
+      color: var(--primary-color);
+    }
+    
+    .link-content p {
+      font-size: 14px;
+      color: var(--gray);
+    }
+    
+    .notice {
+      background: #fff8dc;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px;
+      text-align: center;
+    }
+    
+    .notice h3 {
+      color: #d4a574;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>싱싱골프투어</h1>
+      <div class="tour-info">2박3일 순천버스핑</div>
+      <div>2025년 4월 14일 ~ 4월 16일</div>
+    </div>
+    
+    <div class="link-section">
+      <!-- 여기에 실제 링크들을 넣으세요 -->
+      <a href="https://go.singsinggolf.kr/s/vlybk7we" class="link-card">
+        <div class="link-icon">📅</div>
+        <div class="link-content">
+          <h3>간편일정</h3>
+          <p>전체 투어 일정을 한눈에 확인하세요</p>
+        </div>
+      </a>
+      
+      <a href="#" class="link-card">
+        <div class="link-icon">👥</div>
+        <div class="link-content">
+          <h3>참가자 명단</h3>
+          <p>함께하는 팀원들을 확인하세요</p>
+        </div>
+      </a>
+      
+      <a href="#" class="link-card">
+        <div class="link-icon">🏨</div>
+        <div class="link-content">
+          <h3>객실 배정표</h3>
+          <p>숙소 배정 정보를 확인하세요</p>
+        </div>
+      </a>
+      
+      <a href="#" class="link-card">
+        <div class="link-icon">⛳</div>
+        <div class="link-content">
+          <h3>티타임표</h3>
+          <p>라운딩 시간과 조 편성을 확인하세요</p>
+        </div>
+      </a>
+    </div>
+    
+    <div class="notice">
+      <h3>📞 문의사항이 있으신가요?</h3>
+      <p>싱싱골프투어 고객센터: 031-215-3990</p>
+    </div>
+  </div>
+</body>
+</html>

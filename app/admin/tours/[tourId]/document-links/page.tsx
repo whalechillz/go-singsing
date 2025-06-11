@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2 } from 'lucide-react';
+import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, QrCode } from 'lucide-react';
 
 interface DocumentLink {
   id: string;
@@ -16,6 +16,7 @@ interface DocumentLink {
   created_at: string;
   first_viewed_at?: string | null;
   last_viewed_at?: string | null;
+  settings?: any;
 }
 
 interface Tour {
@@ -36,6 +37,12 @@ export default function DocumentLinksPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<DocumentLink | null>(null);
+  const [isPortalModalOpen, setIsPortalModalOpen] = useState(false);
+  const [portalTheme, setPortalTheme] = useState('blue');
+  const [showContactInfo, setShowContactInfo] = useState(true);
+  const [enableThemeSelector, setEnableThemeSelector] = useState(true);
+  const [managerPhone, setManagerPhone] = useState('010-1234-5678');
+  const [driverPhone, setDriverPhone] = useState('010-5254-9876');
   
   // 새 문서 링크 폼 상태
   const [newDocumentType, setNewDocumentType] = useState('customer_all');
@@ -46,6 +53,7 @@ export default function DocumentLinksPage() {
   const [editExpirationDays, setEditExpirationDays] = useState('');
 
   const documentTypeOptions = [
+    { value: 'portal', label: '🎨 통합 표지 (포털)' },
     { value: 'customer_all', label: '✅ 고객용 통합 문서 (추천)' },
     { value: 'staff_all', label: '✅ 스탭용 통합 문서 (추천)' },
     { value: 'golf_timetable', label: '⛳ 골프장 전용 티타임표' },
@@ -229,10 +237,49 @@ export default function DocumentLinksPage() {
       alert('문서 링크 수정 중 오류가 발생했습니다.');
     }
   };
+  
+  const handleCreatePortal = async () => {
+    try {
+      const portalSettings = {
+        theme: portalTheme,
+        showContact: showContactInfo,
+        enableThemeSelector: enableThemeSelector,
+        contactNumbers: {
+          manager: managerPhone,
+          driver: driverPhone
+        }
+      };
+
+      const { data, error } = await supabase
+        .from('public_document_links')
+        .insert({
+          tour_id: tourId,
+          document_type: 'portal',
+          public_url: generatePublicUrl(),
+          expires_at: null,
+          is_active: true,
+          view_count: 0,
+          settings: portalSettings
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setDocumentLinks([data, ...documentLinks]);
+      setIsPortalModalOpen(false);
+      alert('통합 표지가 생성되었습니다.');
+    } catch (error) {
+      console.error('Error creating portal:', error);
+      alert('통합 표지 생성 중 오류가 발생했습니다.');
+    }
+  };
 
   const getDocumentUrl = (link: DocumentLink) => {
     // document_type에 따라 다른 경로 사용
-    const prefix = link.document_type === 'quote' ? 'q' : 's';
+    let prefix = 's';
+    if (link.document_type === 'quote') prefix = 'q';
+    else if (link.document_type === 'portal') prefix = 'portal';
     return `${window.location.origin}/${prefix}/${link.public_url}`;
   };
 
@@ -261,13 +308,36 @@ export default function DocumentLinksPage() {
         </p>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 flex gap-3 flex-wrap">
+        <button
+          onClick={() => setIsPortalModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl"
+        >
+          <Palette className="w-4 h-4 mr-2" />
+          통합 표지 생성
+        </button>
         <button
           onClick={() => setIsCreateModalOpen(true)}
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
           새 문서 링크 생성
+        </button>
+        <button
+          className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+          title="QR코드 생성 (준비중)"
+          disabled
+        >
+          <QrCode className="w-4 h-4 mr-2" />
+          QR코드 생성
+        </button>
+        <button
+          className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+          title="전체 링크 복사 (준비중)"
+          disabled
+        >
+          <Share2 className="w-4 h-4 mr-2" />
+          전체 링크 복사
         </button>
       </div>
 
@@ -305,6 +375,11 @@ export default function DocumentLinksPage() {
                       {link.document_type === 'golf_timetable' && (
                         <p className="text-xs text-orange-600 ml-8">
                           티타임표만 표시 - 골프장 공유용
+                        </p>
+                      )}
+                      {link.document_type === 'portal' && (
+                        <p className="text-xs text-purple-600 ml-8">
+                          고객님을 위한 시각적인 통합 안내 페이지
                         </p>
                       )}
                     </div>
@@ -520,6 +595,153 @@ export default function DocumentLinksPage() {
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 수정
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 통합 표지 생성 모달 */}
+      {isPortalModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">🎨 통합 표지 생성</h2>
+              <button
+                onClick={() => setIsPortalModalOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              고객님들이 쉽게 접근할 수 있는 시각적인 통합 안내 페이지를 생성합니다.
+              모든 문서를 한곳에서 확인할 수 있는 포털 페이지입니다.
+            </p>
+            
+            <div className="space-y-6">
+              {/* 테마 선택 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  🎨 테마 색상
+                </label>
+                <div className="flex gap-3">
+                  {[
+                    { value: 'blue', label: '클래식 블루', color: 'bg-blue-600' },
+                    { value: 'purple', label: '엘레강트 퍼플', color: 'bg-purple-600' },
+                    { value: 'green', label: '내추럴 그린', color: 'bg-green-600' },
+                    { value: 'red', label: '다이나믹 레드', color: 'bg-red-600' },
+                    { value: 'dark', label: '다크 모드', color: 'bg-gray-800' }
+                  ].map((theme) => (
+                    <button
+                      key={theme.value}
+                      onClick={() => setPortalTheme(theme.value)}
+                      className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                        portalTheme === theme.value
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <div className={`w-6 h-6 rounded-full ${theme.color}`} />
+                        <span className="text-sm font-medium">{theme.label}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* 옵션 설정 */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium text-gray-700">⚙️ 표시 옵션</h3>
+                
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={showContactInfo}
+                    onChange={(e) => setShowContactInfo(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">
+                    비상연락처 섹션 표시 (담당 매니저, 기사님 연락처)
+                  </span>
+                </label>
+                
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={enableThemeSelector}
+                    onChange={(e) => setEnableThemeSelector(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">
+                    고객이 테마를 변경할 수 있도록 허용
+                  </span>
+                </label>
+              </div>
+              
+              {/* 연락처 입력 */}
+              {showContactInfo && (
+                <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-700">📞 비상연락처 정보</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="manager-phone" className="block text-sm text-gray-600 mb-1">
+                        담당 매니저 연락처
+                      </label>
+                      <input
+                        id="manager-phone"
+                        type="tel"
+                        value={managerPhone}
+                        onChange={(e) => setManagerPhone(e.target.value)}
+                        placeholder="010-1234-5678"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="driver-phone" className="block text-sm text-gray-600 mb-1">
+                        기사님 연락처
+                      </label>
+                      <input
+                        id="driver-phone"
+                        type="tel"
+                        value={driverPhone}
+                        onChange={(e) => setDriverPhone(e.target.value)}
+                        placeholder="010-5254-9876"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* 미리보기 */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">✨ 생성될 통합 표지</h3>
+                <p className="text-sm text-gray-600">
+                  • 모든 투어 문서를 한눈에 볼 수 있는 통합 페이지<br/>
+                  • 모바일 최적화된 반응형 디자인<br/>
+                  • 고객 친화적인 UI/UX<br/>
+                  • 원터치로 각 문서 접근 가능
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setIsPortalModalOpen(false)}
+                className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleCreatePortal}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all"
+              >
+                통합 표지 생성
               </button>
             </div>
           </div>
