@@ -23,13 +23,13 @@ type TourForm = {
   // 문서 표시 옵션
   show_staff_info: boolean;
   show_footer_message: boolean;
-  show_company_phones: boolean;
+  show_company_phone: boolean;
   show_golf_phones: boolean;
   
   // 푸터 및 연락처
   footer_message: string;
   company_phone: string;
-  company_mobile: string;
+  // company_mobile: string; // 설정 관리에서 가져오기
   golf_reservation_phone: string;
   golf_reservation_mobile: string;
   
@@ -62,13 +62,13 @@ const TourEditPage: React.FC = () => {
     // 문서 표시 옵션 (기본값)
     show_staff_info: true,
     show_footer_message: true,
-    show_company_phones: true,
+    show_company_phone: true,
     show_golf_phones: true,
     
     // 푸터 및 연락처 (기본값)
     footer_message: "♡ 즐거운 하루 되시길 바랍니다. ♡",
     company_phone: "031-215-3990",
-    company_mobile: "010-3332-9020",
+    // company_mobile: "010-3332-9020", // 설정에서 가져오기
     golf_reservation_phone: "",
     golf_reservation_mobile: "",
     
@@ -119,13 +119,13 @@ const TourEditPage: React.FC = () => {
           // 문서 표시 옵션
           show_staff_info: tourData.show_staff_info ?? true,
           show_footer_message: tourData.show_footer_message ?? true,
-          show_company_phones: tourData.show_company_phones ?? true,
+          show_company_phone: tourData.show_company_phone ?? true,
           show_golf_phones: tourData.show_golf_phones ?? true,
           
           // 푸터 및 연락처
           footer_message: tourData.footer_message || "♡ 즐거운 하루 되시길 바랍니다. ♡",
           company_phone: tourData.company_phone || "031-215-3990",
-          company_mobile: tourData.company_mobile || "010-3332-9020",
+          // company_mobile: tourData.company_mobile || "010-3332-9020", // 설정에서
           golf_reservation_phone: tourData.golf_reservation_phone || "",
           golf_reservation_mobile: tourData.golf_reservation_mobile || "",
           
@@ -239,11 +239,11 @@ const TourEditPage: React.FC = () => {
         max_participants: form.max_participants ? Number(form.max_participants) : null,
         show_staff_info: form.show_staff_info,
         show_footer_message: form.show_footer_message,
-        show_company_phones: form.show_company_phones,
+        show_company_phone: form.show_company_phone,
         show_golf_phones: form.show_golf_phones,
         footer_message: form.footer_message,
         company_phone: form.company_phone,
-        company_mobile: form.company_mobile,
+        // company_mobile: form.company_mobile, // 제거
         golf_reservation_phone: form.golf_reservation_phone,
         golf_reservation_mobile: form.golf_reservation_mobile,
         other_notices: form.other_notices,
@@ -601,8 +601,8 @@ const TourEditPage: React.FC = () => {
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    name="show_company_phones"
-                    checked={form.show_company_phones}
+                    name="show_company_phone"
+                    checked={form.show_company_phone}
                     onChange={handleChange}
                     className="w-4 h-4"
                   />
@@ -638,6 +638,7 @@ const TourEditPage: React.FC = () => {
                     className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800"
                   />
                 </label>
+                {/* 회사 업무핸드폰은 설정 관리에서 관리
                 <label className="flex flex-col gap-1">
                   <span className="text-sm text-gray-600">회사 업무핸드폰</span>
                   <input
@@ -648,6 +649,11 @@ const TourEditPage: React.FC = () => {
                     className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800"
                   />
                 </label>
+                */}
+                <div className="text-sm text-gray-600">
+                  <p>업무 핸드폰은 설정 관리에서 통합 관리됩니다.</p>
+                  <p className="text-xs text-gray-500 mt-1">설정 → 담당자 직통 핸드폰</p>
+                </div>
                 <label className="flex flex-col gap-1">
                   <span className="text-sm text-gray-600">골프장 예약실</span>
                   <input
