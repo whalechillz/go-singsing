@@ -175,9 +175,13 @@ function formatUsageContent(content: string): string {
       if (/^\d+\.\s/.test(line)) {
         return `<div class="usage-list-item">${line}</div>`;
       }
-      return line;
+      // 빈 줄은 작은 간격으로
+      if (line.trim() === '') {
+        return '<div style="height: 5px;"></div>';
+      }
+      return `<div class="usage-line">${line}</div>`;
     })
-    .join('<br>');
+    .join('');
 }
 
 function getScheduleStyles(isStaff: boolean = false): string {
@@ -494,7 +498,7 @@ function getScheduleStyles(isStaff: boolean = false): string {
     .usage-content {
       display: none;
       font-size: 14px;
-      line-height: 1.8;
+      line-height: 1.5;
       color: #4a5568;
     }
     
@@ -503,20 +507,13 @@ function getScheduleStyles(isStaff: boolean = false): string {
     }
     
     .usage-list-item {
-      padding-left: 15px;
-      margin-bottom: 8px;
-      position: relative;
+      margin-bottom: 6px;
+      line-height: 1.5;
     }
     
-    .usage-list-item:before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 8px;
-      width: 4px;
-      height: 4px;
-      background: #2c5282;
-      border-radius: 50%;
+    .usage-line {
+      margin-bottom: 4px;
+      line-height: 1.5;
     }
     
     /* 하단 안내문구 스타일 */
