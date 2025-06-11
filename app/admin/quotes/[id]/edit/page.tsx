@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter, useParams } from "next/navigation";
+import React from "react";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -17,7 +18,21 @@ import {
   Copy,
   Eye,
   Save,
-  Share2
+  Share2,
+  MapPin,
+  Trash2,
+  Route,
+  Navigation,
+  Coffee,
+  Utensils,
+  Camera,
+  Bus,
+  ChevronRight,
+  ChevronDown,
+  Edit2,
+  ShoppingCart,
+  MoreHorizontal,
+  Activity
 } from "lucide-react";
 import Link from "next/link";
 import { generatePublicUrl, getPublicLinkUrl, getInternalQuoteUrl } from "@/utils/publicLink";
@@ -32,6 +47,65 @@ interface TourProduct {
   excluded_items?: string | null;
 }
 
+interface Attraction {
+  id: string;
+  name: string;
+  type: string;
+  category: string;
+  created_at?: string;
+  duration?: number;
+}
+
+interface TouristAttraction {
+  id: string;
+  name: string;
+  category: string;
+  sub_category?: string;
+  address?: string;
+  description?: string;
+  image_url?: string;
+  features?: string[];
+  is_active: boolean;
+  boarding_info?: string;
+}
+
+interface ScheduleItem {
+  time: string;
+  title: string;
+  description?: string;
+  attraction_id?: string;
+  attraction?: Attraction | TouristAttraction;
+  spot_id?: string;
+  spot?: TouristAttraction;
+  duration?: string;
+  note?: string;
+}
+
+interface DaySchedule {
+  day: number;
+  date: string;
+  title: string;
+  items: ScheduleItem[];
+}
+
+// 카테고리 설정
+const categoryConfig: Record<string, { 
+  label: string; 
+  icon: any; 
+  color: string;
+}> = {
+  'boarding': { label: '탑승지', icon: Bus, color: 'blue' },
+  'tourist_spot': { label: '관광명소', icon: Camera, color: 'blue' },
+  'rest_area': { label: '휴게소', icon: Coffee, color: 'gray' },
+  'restaurant': { label: '맛집', icon: Utensils, color: 'orange' },
+  'shopping': { label: '쇼핑', icon: ShoppingCart, color: 'purple' },
+  'activity': { label: '액티비티', icon: Activity, color: 'green' },
+  'mart': { label: '마트', icon: ShoppingCart, color: 'indigo' },
+  'golf_round': { label: '골프 라운드', icon: Activity, color: 'emerald' },
+  'club_meal': { label: '클럽식', icon: Utensils, color: 'rose' },
+  'others': { label: '기타', icon: MoreHorizontal, color: 'slate' }
+};
+
 export default function EditQuotePage() {
   const router = useRouter();
   const params = useParams();
@@ -41,6 +115,13 @@ export default function EditQuotePage() {
   const [saving, setSaving] = useState(false);
   const [tourProducts, setTourProducts] = useState<TourProduct[]>([]);
   const [documentLink, setDocumentLink] = useState<any>(null);
+  const [attractions, setAttractions] = useState<Attraction[]>([]);
+  const [touristAttractions, setTouristAttractions] = useState<TouristAttraction[]>([]);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [editingDay, setEditingDay] = useState<number | null>(null);
+  const [editingItem, setEditingItem] = useState<{dayIndex: number, itemIndex: number, item: ScheduleItem} | null>(null);
+  const [activeTab, setActiveTab] = useState<'basic' | 'schedule'>('basic');
+  const [expandedDays, setExpandedDays] = useState<number[]>([]);
   
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -83,7 +164,7 @@ export default function EditQuotePage() {
           "여행자 보험"
         ]
       },
-      schedules: [] as any[],
+      schedules: [] as DaySchedule[],
       additional_options: [] as string[],
       special_requests: ""
     }
@@ -92,6 +173,8 @@ export default function EditQuotePage() {
   useEffect(() => {
     fetchTourProducts();
     fetchQuoteData();
+    fetchAttractions();
+    fetchTouristAttractions();
   }, [quoteId]);
 
   const fetchTourProducts = async () => {
@@ -105,6 +188,35 @@ export default function EditQuotePage() {
       setTourProducts(data || []);
     } catch (error) {
       console.error("Error fetching tour products:", error);
+    }
+  };
+
+  const fetchAttractions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("attractions")
+        .select("*")
+        .order("name");
+      
+      if (error) throw error;
+      setAttractions(data || []);
+    } catch (error) {
+      console.error("Error fetching attractions:", error);
+    }
+  };
+
+  const fetchTouristAttractions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("tourist_attractions")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      
+      if (error) throw error;
+      setTouristAttractions(data || []);
+    } catch (error) {
+      console.error("Error fetching tourist attractions:", error);
     }
   };
 
@@ -163,6 +275,11 @@ export default function EditQuotePage() {
             special_requests: ""
           }
         });
+        
+        // 일정이 있으면 자동으로 일정 탭 확장
+        if (quoteData?.schedules?.length > 0) {
+          setExpandedDays(quoteData.schedules.map((_: any, index: number) => index));
+        }
       }
     } catch (error) {
       console.error("Error fetching quote:", error);
@@ -322,6 +439,130 @@ export default function EditQuotePage() {
     return { nights: days - 1, days };
   };
 
+  // 일정 관련 함수들
+  const initializeSchedules = () => {
+    if (!formData.start_date || !formData.end_date) return;
+    
+    const start = new Date(formData.start_date);
+    const end = new Date(formData.end_date);
+    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    const schedules: DaySchedule[] = [];
+    
+    for (let i = 0; i < days; i++) {
+      const currentDate = new Date(start);
+      currentDate.setDate(start.getDate() + i);
+      
+      schedules.push({
+        day: i + 1,
+        date: currentDate.toISOString().split('T')[0],
+        title: `${i + 1}일차`,
+        items: []
+      });
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      quote_data: {
+        ...prev.quote_data,
+        schedules
+      }
+    }));
+    
+    // 모든 일정을 확장
+    setExpandedDays(schedules.map((_, index) => index));
+  };
+
+  const addScheduleItem = (dayIndex: number, item: TouristAttraction | Attraction) => {
+    const newItem: ScheduleItem = {
+      time: "09:00",
+      title: item.name,
+      spot_id: 'id' in item ? item.id : undefined,
+      spot: 'category' in item ? item : undefined,
+      attraction_id: 'type' in item ? item.id : undefined,
+      attraction: 'type' in item ? item : undefined
+    };
+    
+    setFormData(prev => {
+      const newSchedules = [...prev.quote_data.schedules];
+      if (!newSchedules[dayIndex].items) {
+        newSchedules[dayIndex].items = [];
+      }
+      newSchedules[dayIndex].items.push(newItem);
+      
+      return {
+        ...prev,
+        quote_data: {
+          ...prev.quote_data,
+          schedules: newSchedules
+        }
+      };
+    });
+  };
+
+  const removeScheduleItem = (dayIndex: number, itemIndex: number) => {
+    setFormData(prev => {
+      const newSchedules = [...prev.quote_data.schedules];
+      newSchedules[dayIndex].items.splice(itemIndex, 1);
+      
+      return {
+        ...prev,
+        quote_data: {
+          ...prev.quote_data,
+          schedules: newSchedules
+        }
+      };
+    });
+  };
+
+  const updateScheduleItem = (dayIndex: number, itemIndex: number, updates: Partial<ScheduleItem>) => {
+    setFormData(prev => {
+      const newSchedules = [...prev.quote_data.schedules];
+      newSchedules[dayIndex].items[itemIndex] = {
+        ...newSchedules[dayIndex].items[itemIndex],
+        ...updates
+      };
+      
+      return {
+        ...prev,
+        quote_data: {
+          ...prev.quote_data,
+          schedules: newSchedules
+        }
+      };
+    });
+  };
+
+  const moveScheduleItem = (dayIndex: number, itemIndex: number, direction: 'up' | 'down') => {
+    setFormData(prev => {
+      const newSchedules = [...prev.quote_data.schedules];
+      const items = [...newSchedules[dayIndex].items];
+      const targetIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1;
+      
+      if (targetIndex < 0 || targetIndex >= items.length) return prev;
+      
+      // Swap items
+      [items[itemIndex], items[targetIndex]] = [items[targetIndex], items[itemIndex]];
+      newSchedules[dayIndex].items = items;
+      
+      return {
+        ...prev,
+        quote_data: {
+          ...prev.quote_data,
+          schedules: newSchedules
+        }
+      };
+    });
+  };
+
+  const toggleDayExpansion = (dayIndex: number) => {
+    setExpandedDays(prev => 
+      prev.includes(dayIndex) 
+        ? prev.filter(d => d !== dayIndex)
+        : [...prev, dayIndex]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -339,7 +580,6 @@ export default function EditQuotePage() {
           customer_name: formData.customer_name || null,
           customer_phone: formData.customer_phone || null,
           quote_expires_at: formData.quote_expires_at,
-          // quote_status: formData.quote_status, // 데이터베이스에 해당 컴럼이 없음
           quote_data: formData.quote_data,
           quote_notes: formData.quote_notes || null,
           updated_at: new Date().toISOString()
@@ -365,8 +605,6 @@ export default function EditQuotePage() {
       setSaving(false);
     }
   };
-
-
 
   const handleCreatePublicLink = async () => {
     try {
@@ -408,6 +646,27 @@ export default function EditQuotePage() {
     alert(isPublicLink ? '고객용 공개 링크가 복사되었습니다.' : '내부용 링크가 복사되었습니다.');
   };
 
+  const getIconForItem = (item: ScheduleItem) => {
+    const category = item.spot?.category || item.attraction?.category || 'others';
+    const Icon = categoryConfig[category]?.icon || MoreHorizontal;
+    
+    // 정적 클래스 맵핑
+    const colorClasses: Record<string, string> = {
+      'blue': 'text-blue-500',
+      'gray': 'text-gray-500',
+      'orange': 'text-orange-500',
+      'purple': 'text-purple-500',
+      'green': 'text-green-500',
+      'indigo': 'text-indigo-500',
+      'emerald': 'text-emerald-500',
+      'rose': 'text-rose-500',
+      'slate': 'text-slate-500'
+    };
+    
+    const colorClass = colorClasses[categoryConfig[category]?.color || 'gray'] || 'text-gray-500';
+    return <Icon className={`w-4 h-4 ${colorClass}`} />;
+  };
+
   const duration = calculateDays();
 
   if (loading) {
@@ -420,7 +679,7 @@ export default function EditQuotePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-6">
         {/* 헤더 */}
         <div className="mb-6">
           <Link
@@ -453,6 +712,32 @@ export default function EditQuotePage() {
                   공개 링크 생성
                 </button>
               )}
+
+              {/* 기본 정보 */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-gray-600" />
+                  기본 정보
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      투어 상품 선택
+                    </label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      value={formData.tour_product_id}
+                      onChange={(e) => handleProductChange(e.target.value)}
+                    >
+                      <option value="">직접 입력</option>
+                      {tourProducts.map(product => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} ({product.golf_course})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
               <button
                 onClick={() => handleCopyLink(false)}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -475,465 +760,158 @@ export default function EditQuotePage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 공개 링크 정보 */}
-          {documentLink && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-gray-600" />
-                공개 링크 정보
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-600 mb-1">공개 링크</p>
-                      <p className="font-mono text-sm bg-white px-3 py-2 rounded border border-gray-200">
-                        {window.location.origin}/q/{documentLink.public_url}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink(true)}
-                      className="ml-4 p-2 text-blue-600 hover:bg-blue-100 rounded transition-colors"
-                      title="공개 링크 복사"
-                    >
-                      <Copy className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">상태</label>
-                    <p className="font-medium">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        documentLink.is_active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {documentLink.is_active ? '활성' : '비활성'}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">생성일</label>
-                    <p className="font-medium">
-                      {new Date(documentLink.created_at).toLocaleDateString('ko-KR')}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">만료일</label>
-                    <p className="font-medium">
-                      {documentLink.expires_at 
-                        ? new Date(documentLink.expires_at).toLocaleDateString('ko-KR')
-                        : '무제한'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">조회수</label>
-                    <p className="font-medium">{documentLink.view_count || 0}회</p>
-                  </div>
-                </div>
-                
-                {documentLink.first_viewed_at && (
-                  <div className="text-sm text-gray-500">
-                    처음 확인: {new Date(documentLink.first_viewed_at).toLocaleString('ko-KR')}
-                    {documentLink.last_viewed_at && documentLink.last_viewed_at !== documentLink.first_viewed_at && (
-                      <> · 마지막 확인: {new Date(documentLink.last_viewed_at).toLocaleString('ko-KR')}</>
-                    )}
-                  </div>
-                )}
-                
-                <div className="flex gap-2 pt-4 border-t">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const isActive = documentLink.is_active;
-                      const action = isActive ? '비활성화' : '활성화';
-                      
-                      if (confirm(`링크를 ${action}하시겠습니까?`)) {
-                        const { error } = await supabase
-                          .from("public_document_links")
-                          .update({ is_active: !isActive })
-                          .eq("id", documentLink.id);
-                        
-                        if (!error) {
-                          alert(`링크가 ${action}되었습니다.`);
-                          setDocumentLink({ ...documentLink, is_active: !isActive });
-                        } else {
-                          console.error('Error updating link status:', error);
-                          alert(`링크 ${action} 중 오류가 발생했습니다.`);
-                        }
-                      }
-                    }}
-                    className={`px-4 py-2 rounded-lg transition-colors text-sm ${
-                      documentLink.is_active 
-                        ? 'bg-red-50 text-red-700 hover:bg-red-100' 
-                        : 'bg-green-50 text-green-700 hover:bg-green-100'
-                    }`}
-                  >
-                    링크 {documentLink.is_active ? '비활성화' : '활성화'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const newExpiryDate = prompt('새 만료일을 입력하세요 (YYYY-MM-DD)', formData.quote_expires_at);
-                      if (newExpiryDate) {
-                        const { error } = await supabase
-                          .from("public_document_links")
-                          .update({ expires_at: newExpiryDate })
-                          .eq("id", documentLink.id);
-                        
-                        if (!error) {
-                          alert('만료일이 업데이트되었습니다.');
-                          setDocumentLink({ ...documentLink, expires_at: newExpiryDate });
-                        }
-                      }
-                    }}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-                  >
-                    만료일 수정
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 기본 정보 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gray-600" />
-              기본 정보
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  투어 상품 선택
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.tour_product_id}
-                  onChange={(e) => handleProductChange(e.target.value)}
-                >
-                  <option value="">직접 입력</option>
-                  {tourProducts.map(product => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} ({product.golf_course})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  견적서 제목 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="예: 2025년 6월 제주도 골프투어 견적서"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  출발일 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  도착일 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.end_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                  min={formData.start_date}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  1인 요금 (원) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.price}
-                  onChange={(e) => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                  placeholder="900000"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  예상 인원
-                </label>
-                <input
-                  type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.quote_data.participants.estimated_count}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    max_participants: parseInt(e.target.value) || 20,
-                    quote_data: {
-                      ...prev.quote_data,
-                      participants: {
-                        ...prev.quote_data.participants,
-                        estimated_count: parseInt(e.target.value) || 20
-                      }
-                    }
-                  }))}
-                />
-              </div>
-            </div>
-
-            {duration.days > 0 && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-700">
-                  <strong>{duration.nights}박 {duration.days}일</strong> 일정 • 
-                  총 예상 금액: <strong>{(formData.price * formData.quote_data.participants.estimated_count).toLocaleString()}원</strong>
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* 고객 정보 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5 text-gray-600" />
-              고객 정보
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  고객명
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.customer_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
-                  placeholder="홍길동"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  연락처
-                </label>
-                <input
-                  type="tel"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.customer_phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, customer_phone: e.target.value }))}
-                  placeholder="010-1234-5678"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  단체명
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.quote_data.participants.group_name}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    quote_data: {
-                      ...prev.quote_data,
-                      participants: {
-                        ...prev.quote_data.participants,
-                        group_name: e.target.value
-                      }
-                    }
-                  }))}
-                  placeholder="○○ 동호회"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  총무
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.quote_data.participants.leader_name}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    quote_data: {
-                      ...prev.quote_data,
-                      participants: {
-                        ...prev.quote_data.participants,
-                        leader_name: e.target.value
-                      }
-                    }
-                  }))}
-                  placeholder="김총무"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 포함/불포함 사항 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-gray-600" />
-              포함/불포함 사항
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-700">포함 사항</h3>
-                  <button
-                    type="button"
-                    onClick={handleIncludeAdd}
-                    className="text-sm text-blue-600 hover:text-blue-700"
-                  >
-                    <Plus className="w-4 h-4 inline" /> 추가
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {formData.quote_data.includeExclude.includes.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded">
-                      <span className="text-sm text-gray-700">{item}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeInclude(index)}
-                        className="text-gray-500 hover:text-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-700">불포함 사항</h3>
-                  <button
-                    type="button"
-                    onClick={handleExcludeAdd}
-                    className="text-sm text-blue-600 hover:text-blue-700"
-                  >
-                    <Plus className="w-4 h-4 inline" /> 추가
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {formData.quote_data.includeExclude.excludes.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <span className="text-sm text-gray-700">{item}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeExclude(index)}
-                        className="text-gray-500 hover:text-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 견적 설정 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-gray-600" />
-              견적 설정
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  견적 유효기간 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.quote_expires_at}
-                  onChange={(e) => setFormData(prev => ({ ...prev, quote_expires_at: e.target.value }))}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-              
-              {/*
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  견적 상태
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.quote_status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, quote_status: e.target.value as any }))}
-                >
-                  <option value="draft">작성중</option>
-                  <option value="sent">발송됨</option>
-                  <option value="viewed">열람됨</option>
-                  <option value="accepted">수락됨</option>
-                  <option value="rejected">거절됨</option>
-                </select>
-              </div>
-              */}
-            </div>
-            
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                추가 안내사항
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                rows={4}
-                value={formData.quote_notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, quote_notes: e.target.value }))}
-                placeholder="견적서에 포함될 추가 안내사항을 입력하세요."
-              />
-            </div>
-          </div>
-
-          {/* 액션 버튼 */}
-          <div className="flex justify-end gap-3">
-            <Link
-              href="/admin/quotes"
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              취소
-            </Link>
+        {/* 탭 네비게이션 */}
+        <div className="bg-white rounded-lg shadow-sm mb-6">
+          <div className="flex border-b">
             <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              type="button"
+              onClick={() => setActiveTab('basic')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'basic'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <Save className="w-4 h-4" />
-              {saving ? "저장 중..." : "저장"}
+              기본 정보
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('schedule')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'schedule'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              일정 관리
             </button>
           </div>
-        </form>
-      </div>
-    </div>
-  );
-}
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {activeTab === 'basic' && (
+            <div className="space-y-6">
+              {/* 공개 링크 정보 */}
+              {documentLink && (
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Share2 className="w-5 h-5 text-gray-600" />
+                    공개 링크 정보
+                  </h2>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-600 mb-1">공개 링크</p>
+                          <p className="font-mono text-sm bg-white px-3 py-2 rounded border border-gray-200">
+                            {window.location.origin}/q/{documentLink.public_url}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyLink(true)}
+                          className="ml-4 p-2 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                          title="공개 링크 복사"
+                        >
+                          <Copy className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">상태</label>
+                        <p className="font-medium">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            documentLink.is_active 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {documentLink.is_active ? '활성' : '비활성'}
+                          </span>
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">생성일</label>
+                        <p className="font-medium">
+                          {new Date(documentLink.created_at).toLocaleDateString('ko-KR')}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">만료일</label>
+                        <p className="font-medium">
+                          {documentLink.expires_at 
+                            ? new Date(documentLink.expires_at).toLocaleDateString('ko-KR')
+                            : '무제한'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">조회수</label>
+                        <p className="font-medium">{documentLink.view_count || 0}회</p>
+                      </div>
+                    </div>
+                    
+                    {documentLink.first_viewed_at && (
+                      <div className="text-sm text-gray-500">
+                        처음 확인: {new Date(documentLink.first_viewed_at).toLocaleString('ko-KR')}
+                        {documentLink.last_viewed_at && documentLink.last_viewed_at !== documentLink.first_viewed_at && (
+                          <> · 마지막 확인: {new Date(documentLink.last_viewed_at).toLocaleString('ko-KR')}</>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="flex gap-2 pt-4 border-t">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const isActive = documentLink.is_active;
+                          const action = isActive ? '비활성화' : '활성화';
+                          
+                          if (confirm(`링크를 ${action}하시겠습니까?`)) {
+                            const { error } = await supabase
+                              .from("public_document_links")
+                              .update({ is_active: !isActive })
+                              .eq("id", documentLink.id);
+                            
+                            if (!error) {
+                              alert(`링크가 ${action}되었습니다.`);
+                              setDocumentLink({ ...documentLink, is_active: !isActive });
+                            } else {
+                              console.error('Error updating link status:', error);
+                              alert(`링크 ${action} 중 오류가 발생했습니다.`);
+                            }
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                          documentLink.is_active 
+                            ? 'bg-red-50 text-red-700 hover:bg-red-100' 
+                            : 'bg-green-50 text-green-700 hover:bg-green-100'
+                        }`}
+                      >
+                        링크 {documentLink.is_active ? '비활성화' : '활성화'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const newExpiryDate = prompt('새 만료일을 입력하세요 (YYYY-MM-DD)', formData.quote_expires_at);
+                          if (newExpiryDate) {
+                            const { error } = await supabase
+                              .from("public_document_links")
+                              .update({ expires_at: newExpiryDate })
+                              .eq("id", documentLink.id);
+                            
+                            if (!error) {
+                              alert('만료일이 업데이트되었습니다.');
+                              setDocumentLink({ ...documentLink, expires_at: newExpiryDate });
+                            }
+                          }
+                        }}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                      >
+                        만료일 수정
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
