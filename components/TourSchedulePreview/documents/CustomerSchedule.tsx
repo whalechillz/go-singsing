@@ -75,80 +75,73 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour || productData.usage_locker) ? `
       <div class="section detailed-usage-section">
         <div class="section-title">상세 이용 안내</div>
-        <div class="usage-grid">
-          ${productData.usage_round ? `
-            <div class="usage-item">
-              <div class="usage-header">
-                <span class="usage-icon">⛳</span>
-                <h4>라운딩 규정</h4>
-              </div>
-              <div class="usage-content">
+        <div class="usage-container">
+          <div class="usage-tabs">
+            ${productData.usage_round ? '<button class="usage-tab active" data-tab="round">라운딩 규정</button>' : ''}
+            ${productData.usage_hotel ? '<button class="usage-tab" data-tab="hotel">숙소 이용</button>' : ''}
+            ${productData.usage_meal ? '<button class="usage-tab" data-tab="meal">식사 안내</button>' : ''}
+            ${productData.usage_locker ? '<button class="usage-tab" data-tab="locker">락카 이용</button>' : ''}
+            ${productData.usage_bus ? '<button class="usage-tab" data-tab="bus">버스 이용</button>' : ''}
+            ${productData.usage_tour ? '<button class="usage-tab" data-tab="tour">관광지 투어</button>' : ''}
+          </div>
+          
+          <div class="usage-content-wrapper">
+            ${productData.usage_round ? `
+              <div class="usage-content active" data-content="round" data-title="라운딩 규정">
                 ${formatUsageContent(productData.usage_round)}
               </div>
-            </div>
-          ` : ''}
-          
-          ${productData.usage_hotel ? `
-            <div class="usage-item">
-              <div class="usage-header">
-                <span class="usage-icon">🏨</span>
-                <h4>숙소 이용</h4>
-              </div>
-              <div class="usage-content">
+            ` : ''}
+            
+            ${productData.usage_hotel ? `
+              <div class="usage-content" data-content="hotel" data-title="숙소 이용">
                 ${formatUsageContent(productData.usage_hotel)}
               </div>
-            </div>
-          ` : ''}
-          
-          ${productData.usage_meal ? `
-            <div class="usage-item">
-              <div class="usage-header">
-                <span class="usage-icon">🍽️</span>
-                <h4>식사 안내</h4>
-              </div>
-              <div class="usage-content">
+            ` : ''}
+            
+            ${productData.usage_meal ? `
+              <div class="usage-content" data-content="meal" data-title="식사 안내">
                 ${formatUsageContent(productData.usage_meal)}
               </div>
-            </div>
-          ` : ''}
-          
-          ${productData.usage_locker ? `
-            <div class="usage-item">
-              <div class="usage-header">
-                <span class="usage-icon">🔐</span>
-                <h4>락카 이용</h4>
-              </div>
-              <div class="usage-content">
+            ` : ''}
+            
+            ${productData.usage_locker ? `
+              <div class="usage-content" data-content="locker" data-title="락카 이용">
                 ${formatUsageContent(productData.usage_locker)}
               </div>
-            </div>
-          ` : ''}
-          
-          ${productData.usage_bus ? `
-            <div class="usage-item">
-              <div class="usage-header">
-                <span class="usage-icon">🚌</span>
-                <h4>버스 이용</h4>
-              </div>
-              <div class="usage-content">
+            ` : ''}
+            
+            ${productData.usage_bus ? `
+              <div class="usage-content" data-content="bus" data-title="버스 이용">
                 ${formatUsageContent(productData.usage_bus)}
               </div>
-            </div>
-          ` : ''}
-          
-          ${productData.usage_tour ? `
-            <div class="usage-item">
-              <div class="usage-header">
-                <span class="usage-icon">🎯</span>
-                <h4>관광지 투어</h4>
-              </div>
-              <div class="usage-content">
+            ` : ''}
+            
+            ${productData.usage_tour ? `
+              <div class="usage-content" data-content="tour" data-title="관광지 투어">
                 ${formatUsageContent(productData.usage_tour)}
               </div>
-            </div>
-          ` : ''}
+            ` : ''}
+          </div>
         </div>
       </div>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const tabs = document.querySelectorAll('.usage-tab');
+          const contents = document.querySelectorAll('.usage-content');
+          
+          tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+              const targetTab = this.getAttribute('data-tab');
+              
+              tabs.forEach(t => t.classList.remove('active'));
+              contents.forEach(c => c.classList.remove('active'));
+              
+              this.classList.add('active');
+              document.querySelector(\`.usage-content[data-content="\${targetTab}"]\`).classList.add('active');
+            });
+          });
+        });
+      </script>
       ` : ''}
       
       ${tourData.notices ? `
@@ -448,53 +441,64 @@ function getScheduleStyles(isStaff: boolean = false): string {
       font-weight: bold;
     }
     
-    /* 상세 이용 안내 스타일 */
+    /* 상세 이용 안내 탭 스타일 */
     .detailed-usage-section {
       margin-top: 40px;
       padding-top: 30px;
       border-top: 2px solid #ddd;
     }
     
-    .usage-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
+    .usage-container {
       margin-top: 20px;
     }
     
-    .usage-item {
-      background: #f8f9fa;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    
-    .usage-header {
+    .usage-tabs {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 0;
+      border-bottom: 1px solid #ddd;
     }
     
-    .usage-icon {
-      font-size: 20px;
+    .usage-tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    
+    .usage-tab:hover {
       color: #2c5282;
+      background: #f8f9fa;
     }
     
-    .usage-header h4 {
-      margin: 0;
-      font-size: 16px;
+    .usage-tab.active {
+      color: #2c5282;
       font-weight: 600;
-      color: #2c5282;
+      border-bottom-color: #2c5282;
+      background: none;
+    }
+    
+    .usage-content-wrapper {
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 0 0 5px 5px;
     }
     
     .usage-content {
+      display: none;
       font-size: 14px;
       line-height: 1.8;
       color: #4a5568;
+    }
+    
+    .usage-content.active {
+      display: block;
     }
     
     .usage-list-item {
@@ -545,15 +549,13 @@ function getScheduleStyles(isStaff: boolean = false): string {
         font-size: 16px;
       }
       
-      .usage-item {
-        background: linear-gradient(to bottom, #f8fbff 0%, #ffffff 100%);
-        box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
-        transition: all 0.3s ease;
+      .usage-tab {
+        font-weight: 600;
       }
       
-      .usage-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.15);
+      .usage-content-wrapper {
+        background: linear-gradient(to bottom, #f8fbff 0%, #ffffff 100%);
+        box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
       }
     ` : ''}
     
@@ -572,6 +574,26 @@ function getScheduleStyles(isStaff: boolean = false): string {
       .day-title { font-size: 16px; }
       .timeline-text { font-size: 14px; }
       .usage-content { font-size: 14px; }
+      
+      /* 인쇄 시 모든 탭 내용 표시 */
+      .usage-tabs { display: none; }
+      .usage-content {
+        display: block !important;
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+      }
+      .usage-content:last-child {
+        border-bottom: none;
+      }
+      .usage-content::before {
+        content: attr(data-title);
+        display: block;
+        font-weight: bold;
+        color: #2c5282;
+        margin-bottom: 10px;
+      }
     }
   `;
 }
