@@ -1,11 +1,11 @@
 import { TourData, ProductData } from '../types';
-import { createHeader, createSection, createInfoBox, createNoticeBox, createFooter, htmlWrapper } from '../utils/generators';
+import { createHeader, createAuthorityHeader, createSection, createInfoBox, createNoticeBox, createFooter, htmlWrapper } from '../utils/generators';
 import { formatDate, formatTextWithBold, getScheduleIcon, simplifyCourseName } from '../utils/formatters';
 
 export function generateCustomerScheduleHTML(tourData: TourData, productData: ProductData | null, isStaff: boolean = false): string {
   const content = `
     <div class="container">
-      ${createHeader('싱싱골프투어', '수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990')}
+      ${createAuthorityHeader('싱싱골프투어', tourData.title, '수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990')}
       
       ${createSection('상품 정보', createInfoBox([
         { label: '상품명', value: tourData.title, important: true },
@@ -195,6 +195,35 @@ function getScheduleStyles(isStaff: boolean = false): string {
       padding-bottom: 30px;
       border-bottom: 3px solid #2c5282;
       margin-bottom: 30px;
+    }
+    
+    /* A그룹 권위있는 스타일 헤더 */
+    .header-authority {
+      background-color: #2c5282;
+      color: white;
+      padding: 30px;
+      text-align: center;
+      margin: -30px -30px 30px -30px;
+    }
+    
+    .header-authority .logo {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      letter-spacing: 0.5px;
+    }
+    
+    .header-authority .subtitle {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      opacity: 0.95;
+    }
+    
+    .header-authority .company-info {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.6;
     }
     
     .logo {

@@ -111,6 +111,15 @@ export const createHeader = (logoText: string = '싱싱골프투어', companyInf
   </div>
 `;
 
+// A그룹 권위있는 스타일 헤더 템플릿
+export const createAuthorityHeader = (title: string, subtitle?: string, companyInfo?: string): string => `
+  <div class="header-authority">
+    <div class="logo">${title}</div>
+    ${subtitle ? `<div class="subtitle">${subtitle}</div>` : ''}
+    ${companyInfo ? `<div class="company-info">${companyInfo}</div>` : ''}
+  </div>
+`;
+
 // 푸터 템플릿
 export const createFooter = (message: string = '♡ 즐거운 하루 되시길 바랍니다. ♡', phone: string = '031-215-3990'): string => `
   <div class="footer">
