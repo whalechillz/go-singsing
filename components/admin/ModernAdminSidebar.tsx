@@ -85,6 +85,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/design-templates')) return 'design-templates';
     if (pathname.startsWith('/admin/font-styles')) return 'font-styles';
     if (pathname.startsWith('/admin/schedule-templates')) return 'schedule-templates';
+    if (pathname.startsWith('/admin/statistics')) return 'statistics';
+    if (pathname.startsWith('/admin/settings')) return 'settings';
     return 'dashboard';
   };
   
@@ -181,8 +183,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'memo-templates', label: '메모 템플릿', href: '/admin/memo-templates' },
       ]
     },
-    // { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },
-    // { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
+    { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },
+    { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
   ];
 
   const handleNavClick = (item: NavItem | NavSubItem, parentId?: string) => {

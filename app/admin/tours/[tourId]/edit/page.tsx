@@ -3,6 +3,7 @@ import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, X, Users, Phone, FileText, Settings, Info } from "lucide-react";
+import DetailedUsageGuide from "@/components/DetailedUsageGuide";
 
 type StaffMember = {
   id?: string;
@@ -434,6 +435,8 @@ const TourEditPage: React.FC = () => {
               <span className="font-medium">기타 안내문구 (일정표 하단)</span>
               <textarea name="other_notices" value={form.other_notices} onChange={handleChange} className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[60px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
             </label>
+            
+            <DetailedUsageGuide className="mt-6" />
           </>
         )}
         

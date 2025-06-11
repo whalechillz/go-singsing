@@ -3,6 +3,7 @@ import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, X, Users, Phone, FileText, Settings } from "lucide-react";
+import DetailedUsageGuide from "@/components/DetailedUsageGuide";
 
 type StaffMember = {
   name: string;
@@ -268,6 +269,8 @@ const TourNewPage: React.FC = () => {
                 <strong>참고:</strong> 여행상품에서 설정한 라운딩 주의사항 및 이용 안내가 고객 문서에 자동으로 표시됩니다.
               </p>
             </div>
+            
+            <DetailedUsageGuide className="mt-6" />
           </>
         )}
         
