@@ -1,5 +1,5 @@
 import { TourData, ProductData } from '../types';
-import { createHeader, createSection, createInfoBox, createNoticeBox, createFooter, htmlWrapper, getCommonStyles } from '../utils/generators';
+import { createHeader, createSection, createInfoBox, createNoticeBox, createFooter, htmlWrapper } from '../utils/generators';
 import { formatDate, formatTextWithBold, getScheduleIcon, simplifyCourseName } from '../utils/formatters';
 
 export function generateCustomerScheduleHTML(tourData: TourData, productData: ProductData | null, isStaff: boolean = false): string {
@@ -65,7 +65,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
         </div>
       </div>
       
-      ${productData ? `
+      ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour) ? `
       <div class="section detailed-usage-section">
         <div class="section-title">상세 이용 안내</div>
         <div class="usage-grid">
@@ -136,7 +136,6 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
     </div>
     
     <style>
-      ${getCommonStyles()}
       ${getScheduleStyles(isStaff)}
     </style>
   `;
@@ -160,7 +159,62 @@ function formatUsageContent(content: string): string {
 
 function getScheduleStyles(isStaff: boolean = false): string {
   return `
-    /* 기본 스타일 - 기존 CSS 템플릿 사용 */
+    /* 공통 스타일 */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+    }
+    
+    .header {
+      text-align: center;
+      padding-bottom: 30px;
+      border-bottom: 3px solid #2c5282;
+      margin-bottom: 30px;
+    }
+    
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2c5282;
+      margin-bottom: 10px;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c5282;
+      padding: 10px;
+      background: #e7f3ff;
+      margin-bottom: 15px;
+      border-left: 4px solid #2c5282;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #ddd;
+      text-align: center;
+      color: #666;
+    }
+    
+    /* 일정 스타일 */
     .day-schedule {
       margin-bottom: 25px;
       border: 1px solid #ddd;

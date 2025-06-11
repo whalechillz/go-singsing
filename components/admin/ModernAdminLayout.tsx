@@ -38,6 +38,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     if (pathname.startsWith('/admin/promotions')) return '홍보 페이지';
     if (pathname.startsWith('/admin/quotes')) return '견적 관리';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
+    if (pathname.startsWith('/admin/design-templates')) return '디자인 템플릿';
     if (pathname.startsWith('/admin/statistics')) return '통계';
     if (pathname.startsWith('/admin/settings')) return '설정';
     return '대시보드';

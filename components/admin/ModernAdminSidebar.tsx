@@ -81,6 +81,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/promotions')) return 'promotions';
     if (pathname.startsWith('/admin/quotes')) return 'quotes';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
+    if (pathname.startsWith('/admin/design-templates')) return 'design-templates';
     return 'dashboard';
   };
   
@@ -148,6 +149,12 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       label: '투어별 문서 링크', 
       icon: <FileText className="w-5 h-5" />,
       href: '/admin/tour-documents'
+    },
+    { 
+      id: 'design-templates', 
+      label: '디자인 템플릿', 
+      icon: <Palette className="w-5 h-5" />,
+      href: '/admin/design-templates'
     },
     { 
       id: 'memo-management', 
