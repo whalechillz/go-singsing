@@ -6,7 +6,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
   // 날짜 및 제목 정보 준비
   const dateStr = tourData.start_date && tourData.end_date ? 
     `${formatDate(tourData.start_date, true)} ~ ${formatDate(tourData.end_date, true)}` : '';
-  const subtitle = `${tourData.title}\n${dateStr}`;
+  const subtitle = `${tourData.title}`;
   
   const content = `
     <div class="container">
@@ -70,14 +70,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
         </div>
       </div>
       
-      ${tourData.notices ? `
-      <div class="section">
-        <div class="section-title">기타 안내</div>
-        <div class="notice-box">
-          ${tourData.notices.split('\n').map(notice => `<div class="notice-item">${notice}</div>`).join('')}
-        </div>
-      </div>
-      ` : ''}
+
       
       ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour) ? `
       <div class="section detailed-usage-section">
@@ -143,6 +136,12 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
             </div>
           ` : ''}
         </div>
+      </div>
+      ` : ''}
+      
+      ${tourData.notices ? `
+      <div class="bottom-notice-section">
+        ${tourData.notices.split('\n').map(notice => notice.trim() ? `<p class="bottom-notice-item">${notice}</p>` : '').join('')}
       </div>
       ` : ''}
       
@@ -501,6 +500,26 @@ function getScheduleStyles(isStaff: boolean = false): string {
       height: 4px;
       background: #2c5282;
       border-radius: 50%;
+    }
+    
+    /* 하단 안내문구 스타일 */
+    .bottom-notice-section {
+      margin: 40px 0 30px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-left: 3px solid #2c5282;
+      border-radius: 5px;
+    }
+    
+    .bottom-notice-item {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #555;
+    }
+    
+    .bottom-notice-item:last-child {
+      margin-bottom: 0;
     }
     
     /* 스탭용 추가 스타일 */
