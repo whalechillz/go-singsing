@@ -24,7 +24,7 @@ export function generateTeeTimeHTML(
               <p class="subtitle">${tourData.title} / ${tourData.tour_period || `${formatDate(tourData.start_date, false)} ~ ${formatDate(tourData.end_date, false)}`}</p>
             </div>
             <div class="logo-section">
-              <div class="logo-text">티타임표 (스탭용)</div>
+              <div class="logo-text">싱싱골프투어</div>
             </div>
           </div>
         </div>
@@ -227,7 +227,7 @@ export function generateTeeTimeHTML(
         
         <div class="footer">
           <div class="footer-message">${tourData.footer_message || '즐거운 라운딩 되세요!'}</div>
-          <div class="footer-brand">티타임표</div>
+          <div class="footer-brand">싱싱골프투어</div>
         </div>
       ` : `
         ${tourData.staff && tourData.staff.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `
@@ -443,10 +443,9 @@ function getStaffTeeTimeStyles(): string {
     }
     
     .logo-text {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-      letter-spacing: -0.5px;
     }
     
     .day-header {

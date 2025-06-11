@@ -10,7 +10,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
   
   const content = `
     <div class="container">
-      ${createAuthorityHeader('일정표', subtitle, '수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990')}
+      ${createAuthorityHeader('싱싱골프투어', subtitle, '수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990')}
       
       ${createSection('상품 정보', createInfoBox([
         { label: '상품명', value: tourData.title, important: true },
@@ -225,6 +225,7 @@ function getScheduleStyles(isStaff: boolean = false): string {
       font-weight: bold;
       margin-bottom: 15px;
       letter-spacing: 0.5px;
+      color: white;
     }
     
     .header-authority .subtitle {
