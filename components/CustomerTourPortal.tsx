@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Users, Hotel, Clock, Bus, MapPin, Calendar, Phone, Menu, X, Palette, ChevronRight, Copy, ExternalLink, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
+import { FileText, Users, Hotel, Clock, Bus, MapPin, Calendar, Phone, Menu, X, Palette, ChevronRight, Copy, ExternalLink, CheckCircle2, AlertCircle, UserPlus, Info } from 'lucide-react';
 
 interface TourData {
   id: string;
@@ -28,6 +28,7 @@ interface PortalSettings {
     manager?: string;
     driver?: string;
   };
+  targetAudience?: 'customer' | 'staff' | 'golf';
 }
 
 interface CustomerTourPortalProps {
@@ -80,7 +81,13 @@ const documentTypeInfo: Record<string, { icon: string; label: string; desc?: str
   customer_boarding: { icon: '🚌', label: '탑승 안내', desc: '출발 시간 및 탑승 위치' },
   room_assignment: { icon: '🏨', label: '객실 배정표', desc: '숙소 배정 확인' },
   customer_timetable: { icon: '⛳', label: '티타임표', desc: '라운딩 시간' },
-  customer_all: { icon: '📚', label: '통합 문서', desc: '탭으로 전환 가능' }
+  customer_all: { icon: '📚', label: '통합 문서', desc: '탭으로 전환 가능' },
+  staff_all: { icon: '💼', label: '스탭용 통합', desc: '스탭 전용 문서' },
+  staff_schedule: { icon: '🗓️', label: '스탭 일정표', desc: '상세 운영 일정' },
+  staff_boarding: { icon: '🚐', label: '스탭 탑승안내', desc: '운행 상세 정보' },
+  room_assignment_staff: { icon: '🏪', label: '스탭 객실배정', desc: '스탭 숙소 배정' },
+  staff_timetable: { icon: '🏆', label: '스탭 티타임표', desc: '상세 운영 정보' },
+  golf_timetable: { icon: '🏌️', label: '골프장 티타임표', desc: '골프장 공유용' }
 };
 
 export default function CustomerTourPortal({ 
@@ -93,7 +100,6 @@ export default function CustomerTourPortal({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [daysInfo, setDaysInfo] = useState<{ type: 'before' | 'during' | 'after' | 'expired'; days: number } | null>(null);
-  const [showAllDocumentFrame, setShowAllDocumentFrame] = useState(false);
 
   useEffect(() => {
     // 로컬 스토리지에서 테마 불러오기
@@ -152,10 +158,40 @@ export default function CustomerTourPortal({
 
   const theme = themes[currentTheme as keyof typeof themes];
 
-  // 필수 문서와 추가 문서 분류
-  const essentialDocs = ['simplified', 'customer_all', 'room_assignment', 'customer_timetable'];
-  const essentialLinks = documentLinks.filter(link => essentialDocs.includes(link.document_type));
-  const additionalLinks = documentLinks.filter(link => !essentialDocs.includes(link.document_type));
+  // 대상에 따른 문서 필터링
+  const targetAudience = portalSettings.targetAudience || 'customer';
+  
+  const getFilteredLinks = () => {
+    if (targetAudience === 'customer') {
+      // 고객용: 고객 관련 문서만
+      return documentLinks.filter(link => 
+        ['simplified', 'customer_all', 'customer_schedule', 'customer_boarding', 
+         'room_assignment', 'customer_timetable'].includes(link.document_type)
+      );
+    } else if (targetAudience === 'staff') {
+      // 스탭용: 스탭 관련 문서만
+      return documentLinks.filter(link => 
+        ['staff_all', 'staff_schedule', 'staff_boarding', 
+         'room_assignment_staff', 'staff_timetable'].includes(link.document_type)
+      );
+    } else if (targetAudience === 'golf') {
+      // 골프장용: 티타임표만
+      return documentLinks.filter(link => 
+        ['golf_timetable'].includes(link.document_type)
+      );
+    }
+    return documentLinks;
+  };
+  
+  const filteredLinks = getFilteredLinks();
+  const essentialDocs = targetAudience === 'golf' 
+    ? ['golf_timetable']
+    : targetAudience === 'staff'
+    ? ['staff_all', 'room_assignment_staff', 'staff_timetable']
+    : ['simplified', 'customer_all', 'room_assignment', 'customer_timetable'];
+  
+  const essentialLinks = filteredLinks.filter(link => essentialDocs.includes(link.document_type));
+  const additionalLinks = filteredLinks.filter(link => !essentialDocs.includes(link.document_type));
 
   return (
     <div className="min-h-screen bg-gray-50" style={{ 
@@ -212,30 +248,30 @@ export default function CustomerTourPortal({
           {/* D-Day 표시 */}
           {daysInfo && (
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full">
-              {daysInfo.type === 'before' && (
-                <>
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="font-semibold">D-{daysInfo.days}</span>
-                </>
-              )}
-              {daysInfo.type === 'during' && (
-                <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="font-semibold">진행중</span>
-                </>
-              )}
-              {daysInfo.type === 'after' && (
-                <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="font-semibold">종료 (D+{daysInfo.days})</span>
-                </>
-              )}
-              {daysInfo.type === 'expired' && (
-                <>
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="font-semibold">종료됨</span>
-                </>
-              )}
+            {daysInfo.type === 'before' && (
+            <>
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-semibold">D-{daysInfo.days}</span>
+            </>
+            )}
+            {daysInfo.type === 'during' && (
+            <>
+            <CheckCircle2 className="w-5 h-5" />
+            <span className="font-semibold">진행중</span>
+            </>
+            )}
+            {daysInfo.type === 'after' && (
+            <>
+            <CheckCircle2 className="w-5 h-5" />
+            <span className="font-semibold">종료 (D+{daysInfo.days})</span>
+            </>
+            )}
+            {daysInfo.type === 'expired' && (
+            <>
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-semibold">종료됨</span>
+            </>
+            )}
             </div>
           )}
           
@@ -287,19 +323,14 @@ export default function CustomerTourPortal({
           <div className="grid grid-cols-2 gap-4">
             {essentialLinks.map((link) => {
               const info = documentTypeInfo[link.document_type];
-              const isAllDoc = link.document_type === 'customer_all';
               
               return (
-                <div
+                <a
                   key={link.id}
-                  onClick={() => {
-                    if (isAllDoc) {
-                      setShowAllDocumentFrame(!showAllDocumentFrame);
-                    } else {
-                      window.open(getDocumentUrl(link), '_blank');
-                    }
-                  }}
-                  className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer relative overflow-hidden"
+                  href={getDocumentUrl(link)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
                 >
                   <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                     필수
@@ -307,55 +338,15 @@ export default function CustomerTourPortal({
                   <div className="text-3xl mb-3">{info?.icon || '📄'}</div>
                   <h3 className="font-medium text-gray-800 mb-1">{info?.label || link.document_type}</h3>
                   <p className="text-sm text-gray-600">{info?.desc}</p>
-                  {isAllDoc && (
-                    <div className="mt-2 flex items-center justify-between">
-                      <p className="text-xs text-blue-600">클릭하여 미리보기</p>
-                      <ExternalLink className="w-3 h-3 text-gray-400" />
-                    </div>
-                  )}
-                </div>
+                  <div className="mt-2 flex items-center justify-center">
+                    <span className="text-xs text-blue-600">터치하여 열기</span>
+                    <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
+                  </div>
+                </a>
               );
             })}
           </div>
         </section>
-        
-        {/* 통합 문서 iframe */}
-        {showAllDocumentFrame && essentialLinks.find(link => link.document_type === 'customer_all') && (
-          <section className="mb-8">
-            <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-              <div className="p-4 border-b bg-gray-50">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-gray-800">📚 통합 문서 미리보기</h3>
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={getDocumentUrl(essentialLinks.find(link => link.document_type === 'customer_all')!)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
-                    >
-                      <span>새 탭에서 열기</span>
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                    <button
-                      onClick={() => setShowAllDocumentFrame(false)}
-                      className="text-gray-500 hover:text-gray-700 p-1"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600">
-                  일정표, 탑승안내, 객실배정, 티타임표를 탭으로 전환하며 볼 수 있습니다.
-                </p>
-              </div>
-              <iframe
-                src={getDocumentUrl(essentialLinks.find(link => link.document_type === 'customer_all')!)}
-                className="w-full h-[600px] border-0"
-                title="통합 문서"
-              />
-            </div>
-          </section>
-        )}
 
         {/* 추가 문서 섹션 */}
         {additionalLinks.length > 0 && (
@@ -386,7 +377,7 @@ export default function CustomerTourPortal({
                             <div className="text-sm text-gray-600">{info.desc}</div>
                           )}
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
                       </a>
                     </li>
                   );

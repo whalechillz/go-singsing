@@ -41,8 +41,10 @@ export default function DocumentLinksPage() {
   const [portalTheme, setPortalTheme] = useState('blue');
   const [showContactInfo, setShowContactInfo] = useState(true);
   const [enableThemeSelector, setEnableThemeSelector] = useState(true);
-  const [managerPhone, setManagerPhone] = useState('010-1234-5678');
-  const [driverPhone, setDriverPhone] = useState('010-5254-9876');
+  const [managerPhone, setManagerPhone] = useState('');
+  const [driverPhone, setDriverPhone] = useState('');
+  const [targetAudience, setTargetAudience] = useState<'customer' | 'staff' | 'golf'>('customer');
+  const [showOnlyDriver, setShowOnlyDriver] = useState(false);
   
   // 새 문서 링크 폼 상태
   const [newDocumentType, setNewDocumentType] = useState('customer_all');
@@ -71,7 +73,40 @@ export default function DocumentLinksPage() {
 
   useEffect(() => {
     fetchData();
+    // 투어 정보에서 연락처 가져오기
+    fetchTourContacts();
   }, [tourId]);
+  
+  const fetchTourContacts = async () => {
+    try {
+      // 투어 정보에서 기본 연락처 가져오기
+      const { data: tourData, error: tourError } = await supabase
+        .from('singsing_tours')
+        .select('*')
+        .eq('id', tourId)
+        .single();
+        
+      if (!tourError && tourData) {
+        // 투어 정보에 연락처가 있다면 설정
+        if (tourData.manager_phone) {
+          setManagerPhone(tourData.manager_phone);
+        }
+        if (tourData.driver_phone) {
+          setDriverPhone(tourData.driver_phone);
+        }
+      }
+      
+      // 아직 설정된 연락처가 없다면 기본값 사용
+      if (!managerPhone) {
+        setManagerPhone('010-1234-5678');
+      }
+      if (!driverPhone) {
+        setDriverPhone('010-9876-5432');
+      }
+    } catch (error) {
+      console.error('Error fetching tour contacts:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -245,9 +280,10 @@ export default function DocumentLinksPage() {
         showContact: showContactInfo,
         enableThemeSelector: enableThemeSelector,
         contactNumbers: {
-          manager: managerPhone,
+          manager: showOnlyDriver ? '' : managerPhone,
           driver: driverPhone
-        }
+        },
+        targetAudience: targetAudience
       };
 
       const { data, error } = await supabase
@@ -615,12 +651,64 @@ export default function DocumentLinksPage() {
               </button>
             </div>
             
-            <p className="text-gray-600 mb-6">
-              고객님들이 쉽게 접근할 수 있는 시각적인 통합 안내 페이지를 생성합니다.
-              모든 문서를 한곳에서 확인할 수 있는 포털 페이지입니다.
-            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                <Info className="w-5 h-5" />
+                통합 표지란?
+              </h4>
+              <p className="text-sm text-blue-800 mb-2">
+                고객님의 핸드폰에서 투어 문서를 쉽게 볼 수 있도록 만든 특별한 페이지입니다.
+              </p>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• 복잡한 링크 대신 하나의 직관적인 페이지</li>
+                <li>• 큰 아이콘과 글씨로 60대도 쉽게 사용</li>
+                <li>• 터치 한 번에 문서 열기</li>
+              </ul>
+            </div>
             
             <div className="space-y-6">
+              {/* 대상 선택 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  🎯 대상 선택
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setTargetAudience('customer')}
+                    className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                      targetAudience === 'customer'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">고객용</div>
+                    <div className="text-xs text-gray-600 mt-1">고객님에게 보여줄 문서만</div>
+                  </button>
+                  <button
+                    onClick={() => setTargetAudience('staff')}
+                    className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                      targetAudience === 'staff'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">스탭용</div>
+                    <div className="text-xs text-gray-600 mt-1">스탭 전용 문서만</div>
+                  </button>
+                  <button
+                    onClick={() => setTargetAudience('golf')}
+                    className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                      targetAudience === 'golf'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">골프장용</div>
+                    <div className="text-xs text-gray-600 mt-1">티타임표만</div>
+                  </button>
+                </div>
+              </div>
+              
               {/* 테마 선택 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -660,13 +748,32 @@ export default function DocumentLinksPage() {
                   <input
                     type="checkbox"
                     checked={showContactInfo}
-                    onChange={(e) => setShowContactInfo(e.target.checked)}
+                    onChange={(e) => {
+                      setShowContactInfo(e.target.checked);
+                      if (!e.target.checked) {
+                        setShowOnlyDriver(false);
+                      }
+                    }}
                     className="w-4 h-4 text-blue-600 rounded"
                   />
                   <span className="text-sm text-gray-700">
-                    비상연락처 섹션 표시 (담당 매니저, 기사님 연락처)
+                    비상연락처 섹션 표시
                   </span>
                 </label>
+                
+                {showContactInfo && (
+                  <label className="flex items-center gap-3 ml-7">
+                    <input
+                      type="checkbox"
+                      checked={showOnlyDriver}
+                      onChange={(e) => setShowOnlyDriver(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-sm text-gray-600">
+                      기사님 연락처만 표시
+                    </span>
+                  </label>
+                )}
                 
                 <label className="flex items-center gap-3">
                   <input
@@ -687,21 +794,26 @@ export default function DocumentLinksPage() {
                   <h3 className="text-sm font-medium text-gray-700">📞 비상연락처 정보</h3>
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="manager-phone" className="block text-sm text-gray-600 mb-1">
-                        담당 매니저 연락처
-                      </label>
-                      <input
-                        id="manager-phone"
-                        type="tel"
-                        value={managerPhone}
-                        onChange={(e) => setManagerPhone(e.target.value)}
-                        placeholder="010-1234-5678"
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                    {!showOnlyDriver && (
+                      <div>
+                        <label htmlFor="manager-phone" className="block text-sm text-gray-600 mb-1">
+                          담당 매니저 연락처
+                        </label>
+                        <input
+                          id="manager-phone"
+                          type="tel"
+                          value={managerPhone}
+                          onChange={(e) => setManagerPhone(e.target.value)}
+                          placeholder="자동 불러오기 또는 직접 입력"
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {managerPhone ? '투어 스탭에서 자동 불러옴' : '등록된 매니저 없음'}
+                        </p>
+                      </div>
+                    )}
                     
-                    <div>
+                    <div className={showOnlyDriver ? 'col-span-2' : ''}>
                       <label htmlFor="driver-phone" className="block text-sm text-gray-600 mb-1">
                         기사님 연락처
                       </label>
@@ -710,9 +822,12 @@ export default function DocumentLinksPage() {
                         type="tel"
                         value={driverPhone}
                         onChange={(e) => setDriverPhone(e.target.value)}
-                        placeholder="010-5254-9876"
+                        placeholder="자동 불러오기 또는 직접 입력"
                         className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {driverPhone ? '투어 스탭에서 자동 불러옴' : '등록된 기사 없음'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -720,13 +835,19 @@ export default function DocumentLinksPage() {
               
               {/* 미리보기 */}
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">✨ 생성될 통합 표지</h3>
-                <p className="text-sm text-gray-600">
-                  • 모든 투어 문서를 한눈에 볼 수 있는 통합 페이지<br/>
-                  • 모바일 최적화된 반응형 디자인<br/>
-                  • 고객 친화적인 UI/UX<br/>
-                  • 원터치로 각 문서 접근 가능
-                </p>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">✨ 생성될 통합 표지 미리보기</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>• <strong>대상:</strong> {targetAudience === 'customer' ? '고객용' : targetAudience === 'staff' ? '스탭용' : '골프장용'} 문서만 표시</p>
+                  {targetAudience === 'customer' && <p className="ml-4 text-xs">표시 문서: 간편일정, 통합문서, 객실배정, 티타임표</p>}
+                  {targetAudience === 'staff' && <p className="ml-4 text-xs">표시 문서: 스탭용 통합, 객실배정, 티타임표</p>}
+                  {targetAudience === 'golf' && <p className="ml-4 text-xs">표시 문서: 티타임표만</p>}
+                  <p>• <strong>테마:</strong> {themes[portalTheme as keyof typeof themes].name}</p>
+                  <p>• <strong>연락처:</strong> {showContactInfo ? (showOnlyDriver ? '기사님만' : '매니저 + 기사님') : '표시 안 함'}</p>
+                  <p>• <strong>테마 변경:</strong> {enableThemeSelector ? '고객이 변경 가능' : '고정'}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    💡 60대 고객님도 쉽게 사용할 수 있도록 크고 명확한 디자인
+                  </p>
+                </div>
               </div>
             </div>
             
