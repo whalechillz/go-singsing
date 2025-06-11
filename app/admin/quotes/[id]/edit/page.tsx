@@ -504,7 +504,19 @@ export default function EditQuotePage() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">상태</label>
+                    <p className="font-medium">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        documentLink.is_active 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {documentLink.is_active ? '활성' : '비활성'}
+                      </span>
+                    </p>
+                  </div>
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">생성일</label>
                     <p className="font-medium">
@@ -538,21 +550,31 @@ export default function EditQuotePage() {
                   <button
                     type="button"
                     onClick={async () => {
-                      if (confirm('링크를 비활성화하시겠습니까?')) {
+                      const isActive = documentLink.is_active;
+                      const action = isActive ? '비활성화' : '활성화';
+                      
+                      if (confirm(`링크를 ${action}하시겠습니까?`)) {
                         const { error } = await supabase
                           .from("public_document_links")
-                          .update({ is_active: false })
+                          .update({ is_active: !isActive })
                           .eq("id", documentLink.id);
                         
                         if (!error) {
-                          alert('링크가 비활성화되었습니다.');
-                          setDocumentLink({ ...documentLink, is_active: false });
+                          alert(`링크가 ${action}되었습니다.`);
+                          setDocumentLink({ ...documentLink, is_active: !isActive });
+                        } else {
+                          console.error('Error updating link status:', error);
+                          alert(`링크 ${action} 중 오류가 발생했습니다.`);
                         }
                       }
                     }}
-                    className="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm"
+                    className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                      documentLink.is_active 
+                        ? 'bg-red-50 text-red-700 hover:bg-red-100' 
+                        : 'bg-green-50 text-green-700 hover:bg-green-100'
+                    }`}
                   >
-                    링크 비활성화
+                    링크 {documentLink.is_active ? '비활성화' : '활성화'}
                   </button>
                   <button
                     type="button"
