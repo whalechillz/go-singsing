@@ -383,10 +383,10 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
                                         )}
                                         </div>
                                         {/* 이미지 표시 */}
-                                        {item.display_options?.show_image && item.spot?.image_url && (
+                                        {item.display_options?.show_image && item.spot?.main_image_url && (
                                           <div className="mb-2 rounded-lg overflow-hidden">
                                         <img 
-                                          src={item.spot.image_url} 
+                                          src={item.spot.main_image_url} 
                                           alt={item.spot.name}
                                           className="w-full h-32 object-cover"
                                         />
@@ -544,6 +544,77 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
                 </ul>
               </div>
             </div>
+
+            {/* 방문 예정지 */}
+            {journeyItems.length > 0 && (() => {
+              // 중복 제거를 위한 Map 사용
+              const uniqueSpots = new Map();
+              journeyItems.forEach(item => {
+                if (item.spot && ['tourist_spot', 'restaurant', 'shopping', 'activity', 'rest_area'].includes(item.spot.category)) {
+                  if (!uniqueSpots.has(item.spot.id)) {
+                    uniqueSpots.set(item.spot.id, item);
+                  }
+                }
+              });
+              
+              const touristSpots = Array.from(uniqueSpots.values());
+              
+              if (touristSpots.length === 0) return null;
+              
+              return (
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <Camera className="w-6 h-6 text-purple-600" />
+                    방문 예정지
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {touristSpots.map((item, index) => (
+                      <div key={item.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                        {item.spot?.main_image_url && (
+                          <div className="mb-3 rounded-lg overflow-hidden h-32">
+                            <img 
+                              src={item.spot.main_image_url} 
+                              alt={item.spot.name}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <h4 className="font-bold text-gray-900 mb-1">{item.spot?.name}</h4>
+                          {item.spot?.category && (
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mb-2 ${
+                              item.spot.category === 'tourist_spot' ? 'bg-purple-100 text-purple-700' :
+                              item.spot.category === 'restaurant' ? 'bg-orange-100 text-orange-700' :
+                              item.spot.category === 'shopping' ? 'bg-pink-100 text-pink-700' :
+                              item.spot.category === 'rest_area' ? 'bg-gray-100 text-gray-700' :
+                              'bg-blue-100 text-blue-700'
+                            }`}>
+                              {item.spot.category === 'tourist_spot' ? '관광명소' :
+                               item.spot.category === 'restaurant' ? '맛집' :
+                               item.spot.category === 'shopping' ? '쇼핑' :
+                               item.spot.category === 'rest_area' ? '휴게소' :
+                               '액티비티'}
+                            </span>
+                          )}
+                          {item.spot?.address && (
+                            <p className="text-sm text-gray-600 flex items-start gap-1">
+                              <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                              {item.spot.address}
+                            </p>
+                          )}
+                          {item.spot?.description && (
+                            <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                              {item.spot.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* 오른쪽: 요약 정보 */}
