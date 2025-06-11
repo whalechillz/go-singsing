@@ -3,10 +3,10 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, Copy, FileText, Calendar, BedDouble, Sparkles, Briefcase, Palette } from 'lucide-react';
+import { Eye, Copy, FileText, Calendar, BedDouble, Sparkles, Briefcase, Palette, Quote } from 'lucide-react';
 
 export default function DesignTemplatesPage() {
-  const [activeTemplate, setActiveTemplate] = React.useState<'a-contract' | 'b-operational' | 'c-promotional' | 'd-professional' | 'e-dynamic'>('a-contract');
+  const [activeTemplate, setActiveTemplate] = React.useState<'a-contract' | 'b-operational' | 'c-promotional' | 'd-professional' | 'e-dynamic' | 'f-quote'>('a-contract');
   const [dynamicTheme, setDynamicTheme] = React.useState<'blue' | 'green' | 'orange'>('blue');
 
   // A그룹: 브랜드컬러 (계약문서) - #2c5282
@@ -1152,6 +1152,782 @@ export default function DesignTemplatesPage() {
 </html>`;
   };
 
+  // F그룹: 견적서 템플릿 (미리보기와 동일) - 보라색 그라데이션, 물결 디자인
+  const generateQuoteHTML = () => {
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 견적서</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(to bottom right, #dbeafe, white, #f3e8ff);
+      min-height: 100vh;
+      color: #1f2937;
+    }
+    
+    /* 헤더 */
+    .header {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(to right, #6366f1, #8b5cf6);
+      color: white;
+      padding: 64px 0;
+    }
+    
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: white;
+      clip-path: ellipse(200% 100% at 50% 100%);
+    }
+    
+    .header-content {
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .header h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .header-subtitle {
+      font-size: 20px;
+      opacity: 0.9;
+      margin-bottom: 32px;
+    }
+    
+    .header-badges {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    /* 본문 컨테이너 */
+    .container {
+      max-width: 900px;
+      margin: -40px auto 0;
+      padding: 0 20px 40px;
+      position: relative;
+      z-index: 10;
+    }
+    
+    /* 견적 요약 카드 */
+    .quote-summary {
+      background: linear-gradient(to bottom right, #4f46e5, #6366f1);
+      color: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 32px;
+    }
+    
+    .quote-summary h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .price-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .price-label {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .price-value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .total-price {
+      border-top: 1px solid rgba(255, 255, 255, 0.3);
+      padding-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .total-price .label {
+      font-size: 18px;
+    }
+    
+    .total-price .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .validity-notice {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* 섹션 */
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* 일정 카드 */
+    .schedule-card {
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .schedule-card:hover {
+      border-color: #6366f1;
+      box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .schedule-card.active {
+      border-color: #4f46e5;
+      background: #eff6ff;
+    }
+    
+    .schedule-header {
+      display: flex;
+      align-items: start;
+      gap: 16px;
+    }
+    
+    .day-number {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    
+    .day-number.first {
+      background: linear-gradient(to right, #10b981, #059669);
+    }
+    
+    .day-number.middle {
+      background: linear-gradient(to right, #3b82f6, #2563eb);
+    }
+    
+    .day-number.last {
+      background: linear-gradient(to right, #ef4444, #dc2626);
+    }
+    
+    .schedule-content {
+      flex: 1;
+    }
+    
+    .schedule-date {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+    
+    .schedule-highlights {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .highlight-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .highlight-badge.departure {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .highlight-badge.golf {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .highlight-badge.tour {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+    
+    .highlight-badge.meal {
+      background: #fed7aa;
+      color: #9a3412;
+    }
+    
+    .highlight-badge.arrival {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    /* 포함/불포함 그리드 */
+    .include-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    
+    .include-box {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .include-box h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .include-box.includes h3 {
+      color: #059669;
+    }
+    
+    .include-box.excludes h3 {
+      color: #6b7280;
+    }
+    
+    .include-list {
+      list-style: none;
+    }
+    
+    .include-list li {
+      display: flex;
+      align-items: start;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #4b5563;
+      font-size: 14px;
+    }
+    
+    /* 방문 예정지 */
+    .spots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    
+    .spot-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .spot-card:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .spot-image {
+      width: 100%;
+      height: 128px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .spot-name {
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    
+    .spot-category {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .spot-category.tourist {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+    
+    .spot-category.restaurant {
+      background: #fed7aa;
+      color: #9a3412;
+    }
+    
+    .spot-category.rest {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .spot-address {
+      font-size: 13px;
+      color: #6b7280;
+      display: flex;
+      align-items: start;
+      gap: 4px;
+    }
+    
+    /* 문의하기 */
+    .contact-section {
+      background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+    }
+    
+    .contact-section h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+    }
+    
+    .contact-section p {
+      color: #6b7280;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    
+    .contact-items {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .contact-icon {
+      width: 40px;
+      height: 40px;
+      background: #dbeafe;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2563eb;
+    }
+    
+    .contact-info {
+      text-align: left;
+    }
+    
+    .contact-number {
+      font-weight: 500;
+      color: #1f2937;
+    }
+    
+    .contact-time {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    /* 푸터 */
+    .footer {
+      background: #1f2937;
+      color: white;
+      padding: 48px 0;
+      margin-top: 64px;
+    }
+    
+    .footer-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+    
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    
+    .footer-section h4 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .footer-section p {
+      font-size: 14px;
+      color: #9ca3af;
+      line-height: 1.6;
+    }
+    
+    .footer-divider {
+      border-top: 1px solid #374151;
+      padding-top: 32px;
+      margin-top: 32px;
+    }
+    
+    .footer-bottom {
+      font-size: 14px;
+      color: #9ca3af;
+      text-align: center;
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 32px;
+      }
+      
+      .include-grid,
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .contact-items {
+        flex-direction: column;
+      }
+    }
+    
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .section {
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="header-content">
+      <div class="header-date">
+        📅 2025년 6월 11일 ~ 2025년 6월 13일
+      </div>
+      <h1>순천 풀패키지 견적서</h1>
+      <p class="header-subtitle">2박 3일의 특별한 여행</p>
+      <div class="header-badges">
+        <div class="badge">
+          📍 파인힐스CC
+        </div>
+        <div class="badge">
+          👥 20명
+        </div>
+        <div class="badge">
+          🏨 골프텔
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 컨텐츠 -->
+  <div class="container">
+    <!-- 견적 요약 -->
+    <div class="quote-summary">
+      <h3>견적 요약</h3>
+      <div class="price-grid">
+        <div class="price-item">
+          <span class="price-label">1인 요금</span>
+          <span class="price-value">900,000원</span>
+        </div>
+        <div class="price-item">
+          <span class="price-label">인원</span>
+          <span class="price-value">20명</span>
+        </div>
+      </div>
+      <div class="total-price">
+        <span class="label">총 예상 금액</span>
+        <span class="value">18,000,000원</span>
+      </div>
+      <div class="validity-notice">
+        ℹ️ 견적 유효기간: 2025년 6월 18일까지
+      </div>
+    </div>
+
+    <!-- 여행 일정 -->
+    <div class="section">
+      <h2 class="section-title">
+        📅 여행 일정
+      </h2>
+      
+      <div class="schedule-card">
+        <div class="schedule-header">
+          <div class="day-number first">D1</div>
+          <div class="schedule-content">
+            <h3 class="schedule-date">6/11(수)</h3>
+            <div class="schedule-highlights">
+              <span class="highlight-badge departure">출발</span>
+              <span class="highlight-badge golf">골프</span>
+              <span class="highlight-badge meal">식사</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="schedule-card">
+        <div class="schedule-header">
+          <div class="day-number middle">D2</div>
+          <div class="schedule-content">
+            <h3 class="schedule-date">6/12(목)</h3>
+            <div class="schedule-highlights">
+              <span class="highlight-badge golf">골프</span>
+              <span class="highlight-badge tour">관광</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="schedule-card">
+        <div class="schedule-header">
+          <div class="day-number last">D3</div>
+          <div class="schedule-content">
+            <h3 class="schedule-date">6/13(금)</h3>
+            <div class="schedule-highlights">
+              <span class="highlight-badge golf">골프</span>
+              <span class="highlight-badge arrival">도착</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 포함/불포함 사항 -->
+    <div class="include-grid">
+      <div class="include-box includes">
+        <h3>
+          ✅ 포함 사항
+        </h3>
+        <ul class="include-list">
+          <li>
+            <span>✓</span>
+            <span>왕복 전용버스</span>
+          </li>
+          <li>
+            <span>✓</span>
+            <span>그린피 및 카트비</span>
+          </li>
+          <li>
+            <span>✓</span>
+            <span>숙박 (2박)</span>
+          </li>
+          <li>
+            <span>✓</span>
+            <span>조식 제공</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="include-box excludes">
+        <h3>
+          ℹ️ 불포함 사항
+        </h3>
+        <ul class="include-list">
+          <li>
+            <span>×</span>
+            <span>개인 경비</span>
+          </li>
+          <li>
+            <span>×</span>
+            <span>캐디피</span>
+          </li>
+          <li>
+            <span>×</span>
+            <span>중식 및 석식</span>
+          </li>
+          <li>
+            <span>×</span>
+            <span>여행자 보험</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 방문 예정지 -->
+    <div class="section">
+      <h2 class="section-title">
+        📸 방문 예정지
+      </h2>
+      
+      <div class="spots-grid">
+        <div class="spot-card">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Namdaemun.jpg/1200px-Namdaemun.jpg" alt="남대문" class="spot-image">
+          <h4 class="spot-name">남대문</h4>
+          <span class="spot-category tourist">관광명소</span>
+          <p class="spot-address">
+            📍 서울특별시 중구 세종대로 40
+          </p>
+        </div>
+        
+        <div class="spot-card">
+          <img src="https://via.placeholder.com/250x128" alt="순천만 습지" class="spot-image">
+          <h4 class="spot-name">순천만 습지</h4>
+          <span class="spot-category tourist">관광명소</span>
+          <p class="spot-address">
+            📍 전남 순천시 순천만길 513-25
+          </p>
+        </div>
+        
+        <div class="spot-card">
+          <img src="https://via.placeholder.com/250x128" alt="맛집" class="spot-image">
+          <h4 class="spot-name">한정식당</h4>
+          <span class="spot-category restaurant">맛집</span>
+          <p class="spot-address">
+            📍 서울시 강남구 테헤란로
+          </p>
+        </div>
+        
+        <div class="spot-card">
+          <img src="https://via.placeholder.com/250x128" alt="휴게소" class="spot-image">
+          <h4 class="spot-name">죽도휴게소</h4>
+          <span class="spot-category rest">휴게소</span>
+          <p class="spot-address">
+            📍 경상북도 울진군 울진읍
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 문의하기 -->
+    <div class="contact-section">
+      <h3>문의하기</h3>
+      <p>견적에 대해 궁금하신 점이 있으시면 언제든 연락주세요.</p>
+      <div class="contact-items">
+        <div class="contact-item">
+          <div class="contact-icon">📞</div>
+          <div class="contact-info">
+            <div class="contact-number">031-215-3990</div>
+            <div class="contact-time">평일 09:00 - 18:00</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">✉️</div>
+          <div class="contact-info">
+            <div class="contact-number">singsinggolf@naver.com</div>
+            <div class="contact-time">24시간 접수 가능</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    <div class="footer-content">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h4>싱싱골프투어</h4>
+          <p>고품격 골프 여행의 시작,<br>싱싱골프투어가 함께합니다.</p>
+        </div>
+        <div class="footer-section">
+          <h4>운영시간</h4>
+          <p>평일: 09:00 - 18:00<br>토요일: 09:00 - 13:00<br>일요일/공휴일: 휴무</p>
+        </div>
+        <div class="footer-section">
+          <h4>연락처</h4>
+          <p>전화: 031-215-3990<br>이메일: singsinggolf@naver.com<br>카카오톡: @싱싱골프투어</p>
+        </div>
+      </div>
+      <div class="footer-divider">
+        <div class="footer-bottom">
+          <p>© 2025 싱싱골프투어. All rights reserved.</p>
+          <p>본 견적서는 싱싱골프투어에서 발행한 공식 견적서입니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
   const handlePreview = () => {
     let html = '';
     switch (activeTemplate) {
@@ -1169,6 +1945,9 @@ export default function DesignTemplatesPage() {
         break;
       case 'e-dynamic':
         html = generateDynamicHTML();
+        break;
+      case 'f-quote':
+        html = generateQuoteHTML();
         break;
     }
     
@@ -1197,6 +1976,9 @@ export default function DesignTemplatesPage() {
       case 'e-dynamic':
         html = generateDynamicHTML();
         break;
+      case 'f-quote':
+        html = generateQuoteHTML();
+        break;
     }
     
     navigator.clipboard.writeText(html);
@@ -1209,7 +1991,7 @@ export default function DesignTemplatesPage() {
       <p className="text-gray-600 mb-8">싱싱골프투어 통합 디자인 시스템</p>
       
       {/* 템플릿 선택 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
         <Card 
           className={`cursor-pointer transition-all ${activeTemplate === 'a-contract' ? 'ring-2 ring-blue-700 shadow-lg' : 'hover:shadow-md'}`}
           onClick={() => setActiveTemplate('a-contract')}
@@ -1365,6 +2147,34 @@ export default function DesignTemplatesPage() {
             </div>
           </CardContent>
         </Card>
+        
+        <Card 
+          className={`cursor-pointer transition-all ${activeTemplate === 'f-quote' ? 'ring-2 ring-purple-600 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('f-quote')}
+        >
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Quote className="w-8 h-8 text-purple-600" />
+              <div>
+                <CardTitle className="text-lg">F그룹: 견적문서</CardTitle>
+                <CardDescription>심플·그라데이션</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(to right, #6366f1, #8b5cf6)' }}></div>
+                <span className="text-sm">보라색 그라데이션</span>
+              </div>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• 견적서</li>
+                <li>• 물결 디자인</li>
+                <li>• 깔끔한 레이아웃</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
       {/* 미리보기 섹션 */}
@@ -1496,6 +2306,68 @@ export default function DesignTemplatesPage() {
               </div>
             </div>
           )}
+          
+          {activeTemplate === 'f-quote' && (
+            <div>
+              <div className="relative overflow-hidden mb-6" style={{ 
+                background: 'linear-gradient(to right, #6366f1, #8b5cf6)', 
+                color: 'white', 
+                padding: '40px 20px 60px',
+                margin: '-32px -32px 32px -32px'
+              }}>
+                <div className="text-center relative z-10">
+                  <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm mb-3">
+                    📅 2025년 6월 11일 ~ 2025년 6월 13일
+                  </div>
+                  <h1 className="text-3xl font-bold mb-2">순천 풀패키지 견적서</h1>
+                  <p className="text-lg opacity-90">2박 3일의 특별한 여행</p>
+                </div>
+                <div 
+                  className="absolute bottom-0 left-0 right-0 h-20 bg-white"
+                  style={{ clipPath: 'ellipse(200% 100% at 50% 100%)' }}
+                ></div>
+              </div>
+              
+              <div className="px-4">
+                <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-6 rounded-xl mb-6">
+                  <h3 className="text-lg font-bold mb-4">견적 요약</h3>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex justify-between">
+                      <span className="opacity-90">1인 요금</span>
+                      <span className="font-bold">900,000원</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-90">인원</span>
+                      <span className="font-bold">20명</span>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-white/30 flex justify-between items-center">
+                    <span className="text-lg">총 예상 금액</span>
+                    <span className="text-2xl font-bold">18,000,000원</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-4 rounded-lg shadow-sm border">
+                    <h4 className="font-semibold mb-2 text-green-600">✅ 포함 사항</h4>
+                    <ul className="text-sm space-y-1 text-gray-600">
+                      <li>• 왕복 전용버스</li>
+                      <li>• 그린피 및 카트비</li>
+                      <li>• 숙박 (2박)</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-sm border">
+                    <h4 className="font-semibold mb-2 text-gray-600">ℹ️ 불포함 사항</h4>
+                    <ul className="text-sm space-y-1 text-gray-600">
+                      <li>• 개인 경비</li>
+                      <li>• 캐디피</li>
+                      <li>• 중식 및 석식</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
@@ -1524,6 +2396,7 @@ export default function DesignTemplatesPage() {
                 <li>• C그룹 (#f093fb): 화려하고 트렌디한 느낌</li>
                 <li>• D그룹 (#4a5568): 고급스럽고 전문적인 느낌</li>
                 <li>• E그룹 (변동): 3가지 테마 선택 가능</li>
+                <li>• F그룹 (#6366f1): 심플하고 모던한 느낌</li>
               </ul>
             </div>
             <div>
@@ -1534,6 +2407,7 @@ export default function DesignTemplatesPage() {
                 <li>• C그룹: 그라데이션, 화려한 효과</li>
                 <li>• D그룹: 미니멀, 권위있는 구조</li>
                 <li>• E그룹: 모바일 최적화, 반응형</li>
+                <li>• F그룹: 물결 디자인, 그라데이션</li>
               </ul>
             </div>
           </div>
@@ -1547,11 +2421,12 @@ export default function DesignTemplatesPage() {
             <p><strong className="text-green-700">HTML 복사:</strong> 생성된 HTML을 복사하여 필요에 맞게 수정하세요.</p>
             <p><strong className="text-green-700">커스터마이징:</strong> 색상, 폰트 크기, 여백 등을 조정하여 사용하세요.</p>
             <div className="mt-2 p-3 bg-green-100 rounded text-xs">
-              <strong>E그룹 테마 토글 가이드:</strong>
+              <strong>F그룹 사용 가이드:</strong>
               <ul className="mt-1 ml-4">
-                <li>• 블루: 신뢰감 있는 기본 테마</li>
-                <li>• 그린: 자연친화적인 편안한 테마</li>
-                <li>• 오렌지: 활력있고 젊은 테마</li>
+                <li>• 견적서 전용 디자인</li>
+                <li>• 물결 모양의 헤더 디자인</li>
+                <li>• 보라색 그라데이션으로 심플하면서도 모던한 느낌</li>
+                <li>• 방문 예정지 섹션 포함</li>
               </ul>
             </div>
           </div>
