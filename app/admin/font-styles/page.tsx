@@ -37,6 +37,14 @@ export default function FontStylesPage() {
               <RainbowText text="애니메이션" variant="animated" className="text-sm" />
               <RainbowText text="네온 효과" variant="neon" className="text-sm" />
             </div>
+            <div className="mt-4 p-3 bg-gradient-to-r from-pink-100 to-blue-100 rounded-lg">
+              <p className="text-xs font-semibold text-gray-700 mb-2">🌈 C그룹 무지개빛 그라데이션 예시:</p>
+              <div className="space-y-1">
+                <p className="text-xs bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent font-bold">빨강 → 노랑</p>
+                <p className="text-xs bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent font-bold">초록 → 파랑</p>
+                <p className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent font-bold">보라 → 분홍</p>
+              </div>
+            </div>
             <div className="mt-3 text-xs text-gray-600">
               <strong>적합한 용도:</strong>
               <ul className="mt-1">
@@ -262,6 +270,54 @@ export default function FontStylesPage() {
             <li><strong>가독성:</strong> 본문은 항상 읽기 쉬운 폰트로</li>
             <li><strong>일관성:</strong> 한 문서에 3개 이하 폰트 사용</li>
             <li><strong>목적 우선:</strong> 디자인보다 메시지 전달이 중요</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* 현재 사용 중인 폰트 */}
+      <div className="mt-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4">현재 싱싱공프투어에서 사용 중인 폰트</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Noto Sans KR */}
+          <div className="bg-white p-5 rounded-lg shadow-sm">
+            <h3 className="font-bold text-lg mb-3" style={{ fontFamily: 'Noto Sans KR' }}>Noto Sans KR</h3>
+            <p className="text-sm text-gray-600 mb-3">현재 메인 폰트로 사용 중 (D그룹)</p>
+            <div className="space-y-2">
+              <p style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>일반 텍스트 - Regular 400</p>
+              <p style={{ fontFamily: 'Noto Sans KR', fontWeight: 500 }}>중간 강조 - Medium 500</p>
+              <p style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>강한 강조 - Bold 700</p>
+            </div>
+            <div className="mt-3 p-3 bg-blue-50 rounded text-xs">
+              <strong>사용처:</strong> 시스템 전체 UI, 본문 텍스트, 일반 안내문
+            </div>
+          </div>
+
+          {/* Pretendard 예시 (필요 시 추가) */}
+          <div className="bg-white p-5 rounded-lg shadow-sm">
+            <h3 className="font-bold text-lg mb-3">Pretendard</h3>
+            <p className="text-sm text-gray-600 mb-3">추가 도입 예정 (D그룹)</p>
+            <div className="space-y-2">
+              <p className="font-light">가볍고 깨끗한 - Light 300</p>
+              <p className="font-normal">일반 텍스트 - Regular 400</p>
+              <p className="font-semibold">강조 텍스트 - SemiBold 600</p>
+            </div>
+            <div className="mt-3 p-3 bg-green-50 rounded text-xs">
+              <strong>추천 사용처:</strong> 현대적인 디자인, 프로모션 페이지
+            </div>
+          </div>
+        </div>
+
+        {/* 폰트 분류 안내 */}
+        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h4 className="font-semibold text-sm mb-2 text-yellow-800">💡 폰트 그룹 분류 가이드</h4>
+          <ul className="text-xs text-gray-700 space-y-1">
+            <li><strong>A그룹:</strong> 화려한 그라데이션, 애니메이션 효과</li>
+            <li><strong>B그룹:</strong> 필기체, 연한 색상, 감성적 표현</li>
+            <li><strong>C그룹:</strong> 강렬한 포인트, 긴급/할인 강조</li>
+            <li><strong>D그룹:</strong> 모던 산세리프 (Noto Sans KR, Pretendard)</li>
+            <li><strong>E그룹:</strong> 클래식 세리프, 격식 있는 문서</li>
+            <li><strong>F그룹:</strong> 디스플레이, 로고/브랜딩</li>
           </ul>
         </div>
       </div>

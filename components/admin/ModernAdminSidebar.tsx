@@ -20,7 +20,8 @@ import {
   UserCog,
   Shield,
   Phone,
-  Calculator
+  Calculator,
+  Type
 } from 'lucide-react';
 
 interface NavSubItem {
@@ -82,6 +83,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/quotes')) return 'quotes';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     if (pathname.startsWith('/admin/design-templates')) return 'design-templates';
+    if (pathname.startsWith('/admin/font-styles')) return 'font-styles';
     if (pathname.startsWith('/admin/schedule-templates')) return 'schedule-templates';
     return 'dashboard';
   };
@@ -156,6 +158,12 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       label: '디자인 템플릿', 
       icon: <Palette className="w-5 h-5" />,
       href: '/admin/design-templates'
+    },
+    { 
+      id: 'font-styles', 
+      label: '폰트 스타일', 
+      icon: <Type className="w-5 h-5" />,
+      href: '/admin/font-styles'
     },
     { 
       id: 'schedule-templates', 
