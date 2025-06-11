@@ -229,7 +229,8 @@ export function useTourData(tourId: string) {
             return {
               time,
               content,
-              attraction_data: item.spot
+              attraction_data: item.spot,
+              display_options: item.display_options
             } as ScheduleItem;
           });
         });

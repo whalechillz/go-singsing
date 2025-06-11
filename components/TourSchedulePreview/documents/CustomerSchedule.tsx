@@ -45,7 +45,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
                           <div class="timeline-content">
                             ${item.time ? `<span class="timeline-time">${item.time.split(':').slice(0, 2).join(':')}</span>` : ''}
                             <span class="timeline-text">${item.content}</span>
-                            ${item.attraction_data && item.attraction_data.main_image_url ? `
+                            ${item.attraction_data && item.attraction_data.main_image_url && item.display_options?.show_image !== false ? `
                               <div class="timeline-image-wrapper">
                                 <img src="${item.attraction_data.main_image_url}" alt="${item.attraction_data.name}" class="timeline-image" />
                               </div>

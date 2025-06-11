@@ -43,6 +43,9 @@ export interface ScheduleItem {
   time: string;
   content: string;
   attraction_data?: any;
+  display_options?: {
+    show_image?: boolean;
+  };
 }
 
 export interface Staff {
@@ -127,6 +130,9 @@ export interface JourneyItem {
   menu_breakfast?: string;
   menu_lunch?: string;
   menu_dinner?: string;
+  display_options?: {
+    show_image?: boolean;
+  };
 }
 
 export const DOCUMENT_TYPES = [
