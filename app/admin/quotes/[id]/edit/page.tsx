@@ -542,11 +542,10 @@ export default function EditQuotePage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      출발일 <span className="text-red-500">*</span>
+                      출발일
                     </label>
                     <input
                       type="date"
-                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       value={formData.start_date}
                       onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
@@ -555,11 +554,10 @@ export default function EditQuotePage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      도착일 <span className="text-red-500">*</span>
+                      도착일
                     </label>
                     <input
                       type="date"
-                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       value={formData.end_date}
                       onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}

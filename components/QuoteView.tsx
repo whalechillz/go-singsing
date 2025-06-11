@@ -379,12 +379,22 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
                                       <div className="flex items-center gap-2 mb-1">
                                         <h4 className="font-medium text-gray-900">{item.spot?.name || '알 수 없음'}</h4>
                                         {item.arrival_time && (
-                                          <span className="text-xs text-gray-500">{item.arrival_time}</span>
+                                        <span className="text-xs text-gray-500">{item.arrival_time}</span>
                                         )}
+                                        </div>
+                                        {/* 이미지 표시 */}
+                                        {item.display_options?.show_image && item.spot?.image_url && (
+                                          <div className="mb-2 rounded-lg overflow-hidden">
+                                        <img 
+                                          src={item.spot.image_url} 
+                                          alt={item.spot.name}
+                                          className="w-full h-32 object-cover"
+                                        />
                                       </div>
-                                      {item.spot?.address && (
-                                        <p className="text-sm text-gray-600">{item.spot.address}</p>
-                                      )}
+                                    )}
+                                    {item.spot?.address && (
+                                      <p className="text-sm text-gray-600">{item.spot.address}</p>
+                                    )}
                                       {item.meal_type && item.meal_menu && (
                                         <p className="text-sm text-orange-600 mt-1">
                                           {item.meal_type}: {item.meal_menu}
