@@ -1,5 +1,5 @@
 import { TourData, ProductData } from '../types';
-import { createHeader, createAuthorityHeader, createSection, createInfoBox, createNoticeBox, createFooter, htmlWrapper } from '../utils/generators';
+import { createHeader, createAuthorityHeader, createSection, createInfoBox, createNoticeBox, htmlWrapper } from '../utils/generators';
 import { formatDate, formatTextWithBold, getScheduleIcon, simplifyCourseName } from '../utils/formatters';
 
 export function generateCustomerScheduleHTML(tourData: TourData, productData: ProductData | null, isStaff: boolean = false): string {
@@ -144,13 +144,24 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       </script>
       ` : ''}
       
-      ${tourData.notices ? `
+      ${tourData.other_notices ? `
       <div class="bottom-notice-section">
-        ${tourData.notices.split('\n').map(notice => notice.trim() ? `<p class="bottom-notice-item">${notice}</p>` : '').join('')}
+        ${tourData.other_notices.split('\n').map(notice => notice.trim() ? `<p class="bottom-notice-item">${notice}</p>` : '').join('')}
       </div>
       ` : ''}
       
-      ${createFooter()}
+      ${(tourData.footer_message || tourData.company_phone || tourData.company_mobile) ? `
+      <div class="footer">
+        ${tourData.footer_message ? `<p>${tourData.footer_message}</p>` : ''}
+        ${(tourData.company_phone || tourData.company_mobile) ? `
+          <p>
+            싱싱골프투어 
+            ${tourData.company_phone ? `☎ ${tourData.company_phone}` : ''}
+            ${tourData.company_mobile ? `📱 ${tourData.company_mobile}` : ''}
+          </p>
+        ` : ''}
+      </div>
+      ` : ''}
     </div>
   `;
   
@@ -276,6 +287,14 @@ function getScheduleStyles(isStaff: boolean = false): string {
       background: #e7f3ff;
       margin-bottom: 15px;
       border-left: 4px solid #2c5282;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #ddd;
+      text-align: center;
+      color: #666;
     }
     
     .footer {

@@ -14,7 +14,6 @@ export interface TourData {
   golf_reservation_phone?: string;
   golf_reservation_mobile?: string;
   footer_message?: string;
-  notices?: string;
   special_notices?: any[];
   reservation_notices?: any[];
   other_notices?: string;
