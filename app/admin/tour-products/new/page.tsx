@@ -55,7 +55,7 @@ const initialForm: TourProductForm = {
     { order: 1, content: "티오프 시간: 사전 예약 순서에 따라 배정되며, 현장에서 변경이 제한됩니다." },
     { order: 2, content: "객실 배정: 예약 접수 순서대로 진행되오니 참고 부탁드립니다." },
     { order: 3, content: "식사 서비스: 불참 시에도 별도 환불이 불가하오니 양해 바랍니다." },
-    { order: 4, content: "리무진 좌석: 가는 날 좌석은 오는 날에도 동일하게 이용해 주세요." }
+    { order: 4, content: "리무진 좌석: 가는 날 좌석은 오는 날에도 동일하게 이용해 주세요. 멀미 증상이 있으신 분은 사전 요청시 앞좌석 배정 가능." }
   ]
 };
 
@@ -318,7 +318,7 @@ const TourProductNewPage = () => {
           {/* 일반 공지사항 */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">일반 공지사항</h2>
+              <h2 className="text-lg font-semibold text-gray-800">예약 안내 사항</h2>
               <button
                 type="button"
                 onClick={handleAddNotice}
@@ -354,7 +354,7 @@ const TourProductNewPage = () => {
 
           {/* 이용 안내 */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-800 pb-2 border-b">이용 안내</h2>
+            <h2 className="text-lg font-semibold text-gray-800 pb-2 border-b">상세 이용 안내</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

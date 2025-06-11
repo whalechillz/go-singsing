@@ -74,8 +74,11 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       
       ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour || productData.usage_locker) ? `
       <div class="section detailed-usage-section">
-        <div class="section-title">상세 이용 안내</div>
-        <div class="usage-container">
+        <button class="usage-toggle-btn" onclick="toggleDetailedUsageSection()">
+          <span class="toggle-icon-detailed">▶</span>
+          <span class="section-title">상세 이용 안내</span>
+        </button>
+        <div class="usage-container" id="usageContainer" style="display: none;">
           <div class="usage-tabs">
             ${productData.usage_round ? '<button class="usage-tab active" data-tab="round">라운딩 규정</button>' : ''}
             ${productData.usage_hotel ? '<button class="usage-tab" data-tab="hotel">숙소 이용</button>' : ''}
@@ -125,6 +128,18 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
         </div>
       </div>
       <script>
+        function toggleDetailedUsageSection() {
+          const container = document.getElementById('usageContainer');
+          const icon = document.querySelector('.toggle-icon-detailed');
+          if (container.style.display === 'none') {
+            container.style.display = 'block';
+            icon.textContent = '▼';
+          } else {
+            container.style.display = 'none';
+            icon.textContent = '▶';
+          }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
           const tabs = document.querySelectorAll('.usage-tab');
           const contents = document.querySelectorAll('.usage-content');
@@ -467,8 +482,37 @@ function getScheduleStyles(isStaff: boolean = false): string {
       border-top: 2px solid #ddd;
     }
     
+    /* 햄버거 메뉴 토글 버튼 */
+    .usage-toggle-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 20px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c5282;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .usage-toggle-btn:hover {
+      background: #e9ecef;
+      border-color: #2c5282;
+    }
+    
+    .toggle-icon-detailed {
+      font-size: 14px;
+      transition: transform 0.3s ease;
+      display: inline-block;
+    }
+    
     .usage-container {
       margin-top: 20px;
+      transition: all 0.3s ease;
     }
     
     .usage-tabs {
@@ -595,6 +639,8 @@ function getScheduleStyles(isStaff: boolean = false): string {
       .usage-content { font-size: 14px; }
       
       /* 인쇄 시 모든 탭 내용 표시 */
+      .usage-toggle-btn { display: none; }
+      .usage-container { display: block !important; }
       .usage-tabs { display: none; }
       .usage-content {
         display: block !important;
