@@ -29,7 +29,7 @@ type TourForm = {
   // 푸터 및 연락처
   footer_message: string;
   company_phone: string;
-  // company_mobile: string; // 설정 관리에서 가져오기
+  company_mobile: string; // 임시로 다시 추가
   golf_reservation_phone: string;
   golf_reservation_mobile: string;
   
@@ -68,7 +68,7 @@ const TourEditPage: React.FC = () => {
     // 푸터 및 연락처 (기본값)
     footer_message: "♡ 즐거운 하루 되시길 바랍니다. ♡",
     company_phone: "031-215-3990",
-    // company_mobile: "010-3332-9020", // 설정에서 가져오기
+    company_mobile: "010-3332-9020", // 임시 기본값
     golf_reservation_phone: "",
     golf_reservation_mobile: "",
     
@@ -125,7 +125,7 @@ const TourEditPage: React.FC = () => {
           // 푸터 및 연락처
           footer_message: tourData.footer_message || "♡ 즐거운 하루 되시길 바랍니다. ♡",
           company_phone: tourData.company_phone || "031-215-3990",
-          // company_mobile: tourData.company_mobile || "010-3332-9020", // 설정에서
+          company_mobile: tourData.company_mobile || "010-3332-9020", // 임시
           golf_reservation_phone: tourData.golf_reservation_phone || "",
           golf_reservation_mobile: tourData.golf_reservation_mobile || "",
           
@@ -243,7 +243,7 @@ const TourEditPage: React.FC = () => {
         show_golf_phones: form.show_golf_phones,
         footer_message: form.footer_message,
         company_phone: form.company_phone,
-        // company_mobile: form.company_mobile, // 제거
+        company_mobile: form.company_mobile || "010-3332-9020", // 임시
         golf_reservation_phone: form.golf_reservation_phone,
         golf_reservation_mobile: form.golf_reservation_mobile,
         other_notices: form.other_notices,
