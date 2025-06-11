@@ -78,6 +78,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/customers')) return 'customers';
     if (pathname.startsWith('/admin/messages')) return 'messages';
     if (pathname.startsWith('/admin/campaigns')) return 'campaigns';
+    if (pathname.startsWith('/admin/promotions')) return 'promotions';
     if (pathname.startsWith('/admin/quotes')) return 'quotes';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     return 'dashboard';
@@ -128,6 +129,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'customers', label: '고객 데이터베이스', href: '/admin/customers' },
         { id: 'messages', label: '메시지 발송', href: '/admin/messages' },
         { id: 'campaigns', label: '마케팅 캠페인', href: '/admin/campaigns' },
+        { id: 'promotions', label: '홍보 페이지', href: '/admin/promotions' },
       ]
     },
     { 
