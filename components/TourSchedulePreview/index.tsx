@@ -71,12 +71,12 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   return (
     <div className="max-w-7xl mx-auto p-4">
       {/* 문서 선택 탭 */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-6 flex gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {DOCUMENT_TYPES.map((doc) => (
           <button
             key={doc.id}
             onClick={() => setActiveTab(doc.id)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
               activeTab === doc.id
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 hover:bg-gray-200'
