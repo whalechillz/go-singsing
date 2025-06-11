@@ -31,10 +31,16 @@ export function generateRoomAssignmentHTML(
 
   const content = `
     <div class="container">
-      <div class="header">
-        <h1>객실 배정표${isStaff ? ' (스탭용)' : ''}</h1>
-        <p>${tourData.title}</p>
+      <div class="header-authority">
+        <div class="logo">싱싱골프투어</div>
+        <div class="subtitle">${tourData.title}</div>
+        <div class="date-info">${tourData.start_date && tourData.end_date ? 
+          `${new Date(tourData.start_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} ~ ${new Date(tourData.end_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
+        </div>
+        <div class="company-info">수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990</div>
       </div>
+      
+      <div class="page-title">객실 배정표${isStaff ? ' (스탭용)' : ''}</div>
       
       <div class="content">
         ${rooms.sort((a, b) => {
@@ -114,9 +120,19 @@ export function generateRoomAssignmentHTML(
 
 function getRoomAssignmentStyles(): string {
   return `
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+    
     @page {
       size: A4 portrait;
       margin: 10mm;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      color: #333;
     }
     
     .container {
@@ -127,25 +143,51 @@ function getRoomAssignmentStyles(): string {
       padding: 0;
     }
     
-    .header {
+    /* A그룹 권위있는 스타일 헤더 */
+    .header-authority {
+      background-color: #2c5282;
+      color: white;
+      padding: 30px;
       text-align: center;
-      padding: 15px;
-      background: #e6eef7;
-      margin-bottom: 15px;
+      margin-bottom: 30px;
     }
     
-    .header h1 {
-      font-size: 20px;
-      color: #4a6fa5;
-      margin: 0 0 8px 0;
+    .header-authority .logo {
+      font-size: 28px;
       font-weight: bold;
+      margin-bottom: 15px;
+      letter-spacing: 0.5px;
+      color: white;
     }
     
-    .header p {
-      font-size: 14px;
-      color: #555;
-      margin: 0;
+    .header-authority .subtitle {
+      font-size: 20px;
       font-weight: 500;
+      margin-bottom: 5px;
+      opacity: 0.95;
+    }
+    
+    .header-authority .date-info {
+      font-size: 16px;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+    
+    .header-authority .company-info {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+    
+    .page-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c5282;
+      padding: 10px;
+      background: #e7f3ff;
+      margin-bottom: 20px;
+      border-left: 4px solid #2c5282;
+      text-align: center;
     }
     
     .content {
@@ -293,10 +335,12 @@ function getRoomAssignmentStyles(): string {
         break-inside: avoid;
       }
       
-      .header {
-        background: #e6eef7 !important;
+      .header-authority {
+        background: #2c5282 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        margin: -10mm -10mm 30px -10mm;
+        padding: 20px 30px;
       }
       
       .room-header {
@@ -314,12 +358,25 @@ function getRoomAssignmentStyles(): string {
     
     @media screen {
       .container {
-        padding: 20px;
+        padding: 0;
         max-width: 1200px;
+      }
+      
+      .header-authority {
+        margin: 0 0 30px 0;
       }
       
       .content {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        padding: 0 20px;
+      }
+      
+      .page-title {
+        margin: 0 20px 20px 20px;
+      }
+      
+      .internal-info {
+        margin: 15px 20px;
       }
     }
   `;
