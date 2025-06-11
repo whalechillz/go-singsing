@@ -3,265 +3,872 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, Copy } from 'lucide-react';
-
-// 샘플 데이터
-const sampleTourData = {
-  id: 'sample-tour',
-  title: '2박3일 순천비스팀 골프투어',
-  start_date: '2025-04-14',
-  end_date: '2025-04-16',
-  tour_product_id: 'sample-product',
-  schedules: [
-    {
-      id: 'day1',
-      tour_id: 'sample-tour',
-      date: '2025-04-14',
-      day_number: 1,
-      title: 'Day 1 일정',
-      meal_breakfast: false,
-      meal_lunch: true,
-      meal_dinner: true,
-      menu_breakfast: '',
-      menu_lunch: '골프장 클럽하우스',
-      menu_dinner: '한정식',
-      schedule_items: [
-        {
-          time: '05:00',
-          content: '강남 집결',
-          attraction_data: {
-            name: '강남 집결지',
-            category: 'boarding',
-            main_image_url: 'https://via.placeholder.com/300x200',
-            description: '강남역 1번 출구 앞 집결'
-          },
-          display_options: { show_image: true }
-        },
-        {
-          time: '10:00',
-          content: '파인밸리CC 도착',
-          attraction_data: {
-            name: '파인밸리CC',
-            category: 'golf_round',
-            main_image_url: 'https://via.placeholder.com/300x200',
-            description: '18홀 골프 라운드'
-          },
-          display_options: { show_image: true }
-        }
-      ]
-    }
-  ]
-};
-
-const sampleProductData = {
-  id: 'sample-product',
-  name: '순천비스팀 2박3일',
-  golf_course: '파인밸리CC',
-  hotel: '파인밸리 골프텔',
-  courses: ['파인코스', '밸리코스'],
-  included_items: '그린피(18홀×3일), 숙박 2박, 전일정 클럽식, 카트비, 라커피',
-  excluded_items: '캐디피',
-  general_notices: [
-    { content: '티오프 시간 30분 전 골프장 도착' },
-    { content: '개인 골프용품 지참' }
-  ],
-  usage_round: `1. 티오프 15분 전까지 카트 대기선 도착 필수
-2. 3인 플레이 시 4인 요금 적용
-3. 추가 라운드는 프론트 데스크에 문의`,
-  usage_hotel: `1. 체크인 시간: 15시 이후
-2. 체크아웃 시간: 11시
-3. 객실 내 흡연 금지 (벌금 10만원)`,
-  usage_meal: `1. 조식: 클럽하우스 뷔페 (06:30~09:00)
-2. 중식/석식: 클럽하우스 한식당
-3. 특별 요청사항은 사전 신청 필수`,
-  usage_bus: `1. 출발 20분 전 도착
-2. 탑승 시간은 변경될 수 있음
-3. 짐은 지정 좌석 그대로 이용`
-};
+import { Eye, Copy, FileText, Calendar, BedDouble } from 'lucide-react';
 
 export default function DesignTemplatesPage() {
-  const [activeExample, setActiveExample] = React.useState<'customer' | 'staff'>('customer');
+  const [activeTemplate, setActiveTemplate] = React.useState<'contract' | 'operational' | 'timetable-customer' | 'timetable-staff'>('contract');
 
-  // HTML 생성 함수
-  const generateExampleHTML = (isStaff: boolean) => {
-    const primaryColor = isStaff ? '#4a6fa5' : '#2c5282';
-    const backgroundColor = isStaff ? 'linear-gradient(to bottom, #f8fbff 0%, #ffffff 100%)' : '#ffffff';
+  // A그룹 (계약 문서) - 권위있는 디자인
+  const generateContractHTML = () => {
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 일정표</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
     
-    return `
-      <!DOCTYPE html>
-      <html lang="ko">
-      <head>
-        <meta charset="UTF-8">
-        <title>일정표 디자인 예시 - ${isStaff ? '스탭용' : '고객용'}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
-          
-          body {
-            margin: 0;
-            padding: 20px;
-            font-family: 'Noto Sans KR', sans-serif;
-            font-size: ${isStaff ? '14px' : '15px'};
-            line-height: 1.6;
-            color: #333;
-            background: #f5f5f5;
-          }
-          
-          .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: ${backgroundColor};
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          }
-          
-          .header {
-            text-align: center;
-            padding-bottom: 30px;
-            border-bottom: 3px solid ${primaryColor};
-            margin-bottom: 30px;
-            ${isStaff ? 'background: linear-gradient(135deg, #4a90e2 0%, #5ca3f2 100%); padding: 30px; margin: -30px -30px 30px -30px; color: white;' : ''}
-          }
-          
-          .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: ${isStaff ? 'white' : primaryColor};
-            margin-bottom: 10px;
-          }
-          
-          .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: ${primaryColor};
-            padding: 10px;
-            background: ${isStaff ? 'linear-gradient(90deg, #e7f3ff 0%, transparent 100%)' : '#e7f3ff'};
-            margin-bottom: 15px;
-            border-left: 4px solid ${primaryColor};
-          }
-          
-          .day-schedule {
-            margin-bottom: 25px;
-            border: 1px solid #ddd;
-            border-radius: ${isStaff ? '10px' : '5px'};
-            overflow: hidden;
-            ${isStaff ? 'box-shadow: 0 2px 8px rgba(0,0,0,0.08);' : ''}
-          }
-          
-          .day-title {
-            background: ${isStaff ? 'linear-gradient(135deg, #4a90e2 0%, #5ca3f2 100%)' : primaryColor};
-            color: white;
-            padding: ${isStaff ? '15px 25px' : '12px 20px'};
-            font-weight: bold;
-            font-size: ${isStaff ? '16px' : '15px'};
-          }
-          
-          .timeline-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-            ${isStaff ? 'transition: background 0.3s ease;' : ''}
-          }
-          
-          ${isStaff ? '.timeline-item:hover { background: #f8fbff; }' : ''}
-          
-          .timeline-time {
-            font-weight: bold;
-            color: ${primaryColor};
-            margin-right: 10px;
-          }
-          
-          .usage-item {
-            background: ${isStaff ? 'linear-gradient(to bottom, #f8fbff 0%, #ffffff 100%)' : '#f8f9fa'};
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            ${isStaff ? 'box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1); transition: all 0.3s ease;' : ''}
-          }
-          
-          ${isStaff ? '.usage-item:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(74, 144, 226, 0.15); }' : ''}
-          
-          .usage-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e2e8f0;
-          }
-          
-          .usage-icon {
-            font-size: 20px;
-            ${isStaff ? 'background: linear-gradient(135deg, #4a90e2, #5ca3f2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;' : 'color: ' + primaryColor + ';'}
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">싱싱골프투어</div>
-            <div>수원시 영통구 법조로149번길 200 | TEL 031-215-3990</div>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+    }
+    
+    /* A그룹 헤더 - 권위있는 스타일 */
+    .header-contract {
+      background-color: #2c5282;
+      color: white;
+      padding: 30px;
+      text-align: center;
+      margin: -30px -30px 30px -30px;
+    }
+    
+    .header-contract .logo {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      letter-spacing: 0.5px;
+    }
+    
+    .header-contract .subtitle {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      opacity: 0.95;
+    }
+    
+    .header-contract .company-info {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c5282;
+      padding: 10px;
+      background: #e7f3ff;
+      margin-bottom: 15px;
+      border-left: 4px solid #2c5282;
+    }
+    
+    .info-box {
+      border: 1px solid #ddd;
+      padding: 0;
+    }
+    
+    .info-row {
+      display: flex;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    
+    .info-label {
+      width: 120px;
+      padding: 12px;
+      background: #f8f9fa;
+      font-weight: bold;
+      color: #555;
+      border-right: 1px solid #eee;
+    }
+    
+    .info-value {
+      flex: 1;
+      padding: 12px;
+    }
+    
+    .day-schedule {
+      margin-bottom: 25px;
+      border: 1px solid #ddd;
+      overflow: hidden;
+    }
+    
+    .day-title {
+      background: #2c5282;
+      color: white;
+      padding: 12px 20px;
+      font-weight: bold;
+    }
+    
+    @media print {
+      body { margin: 0; }
+      .container { max-width: 100%; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-contract">
+      <div class="logo">싱싱골프투어</div>
+      <div class="subtitle">2박3일 순천버스핑</div>
+      <div class="company-info">
+        수원시 영통구 법조로149번길 200<br>
+        고객센터 TEL 031-215-3990
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">상품 정보</div>
+      <div class="info-box">
+        <div class="info-row">
+          <div class="info-label">상품명</div>
+          <div class="info-value">2박3일 순천버스핑</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">일정</div>
+          <div class="info-value">2025. 4. 14. ~ 2025. 4. 16.</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">골프장</div>
+          <div class="info-value">파인힐스CC</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">숙소</div>
+          <div class="info-value">파인힐스 골프텔</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">일정 안내</div>
+      <div class="day-schedule">
+        <div class="day-title">Day 1 - 2025년 4월 14일 (월)</div>
+        <div style="padding: 20px;">
+          <div style="padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+            <span style="font-weight: bold; color: #2c5282; margin-right: 10px;">13:08</span>
+            파인코스
           </div>
-          
-          <div class="section">
-            <div class="section-title">상품 정보</div>
-            <div style="border: 1px solid #ddd; padding: 20px;">
-              <strong>상품명:</strong> 2박3일 순천비스팀 골프투어<br>
-              <strong>일정:</strong> 2025. 4. 14. ~ 2025. 4. 16.<br>
-              <strong>골프장:</strong> 파인밸리CC<br>
-              <strong>숙소:</strong> 파인밸리 골프텔
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">일정 안내</div>
-            <div class="day-schedule">
-              <div class="day-title">Day 1 - 2025년 4월 14일 (월)</div>
-              <div class="timeline-item">
-                <span class="timeline-time">05:00</span> 강남 집결
-              </div>
-              <div class="timeline-item">
-                <span class="timeline-time">10:00</span> 파인밸리CC 도착 및 라운드
-              </div>
-              <div class="timeline-item">
-                <span class="timeline-time">18:00</span> 석식 (한정식)
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">상세 이용 안내</div>
-            <div class="usage-item">
-              <div class="usage-header">
-                <span class="usage-icon">⛳</span>
-                <h4 style="margin: 0; color: ${primaryColor};">라운딩 규정</h4>
-              </div>
-              <div>
-                1. 티오프 15분 전까지 카트 대기선 도착 필수<br>
-                2. 3인 플레이 시 4인 요금 적용<br>
-                3. 추가 라운드는 프론트 데스크에 문의
-              </div>
-            </div>
-            
-            <div class="usage-item">
-              <div class="usage-header">
-                <span class="usage-icon">🏨</span>
-                <h4 style="margin: 0; color: ${primaryColor};">숙소 이용</h4>
-              </div>
-              <div>
-                1. 체크인 시간: 15시 이후<br>
-                2. 체크아웃 시간: 11시<br>
-                3. 객실 내 흡연 금지 (벌금 10만원)
-              </div>
-            </div>
+          <div style="padding: 10px 0;">
+            <span style="font-weight: bold; color: #2c5282; margin-right: 10px;">19:00</span>
+            석식 (한정식)
           </div>
         </div>
-      </body>
-      </html>
-    `;
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  // B그룹 (실행 문서) - 친근한 디자인
+  const generateOperationalHTML = () => {
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 탑승 안내</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f7fa;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    /* B그룹 헤더 - 친근한 스타일 */
+    .header-operational {
+      background-color: #4a6fa5;
+      color: white;
+      padding: 25px;
+      text-align: center;
+    }
+    
+    .header-operational .logo {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .header-operational .doc-title {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .header-operational .tour-title {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #4a6fa5;
+      padding: 10px;
+      background: linear-gradient(90deg, #e7f3ff 0%, transparent 100%);
+      margin-bottom: 15px;
+      border-left: 4px solid #4a6fa5;
+      border-radius: 4px;
+    }
+    
+    .boarding-list {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .boarding-item {
+      background: white;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .boarding-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(74, 111, 165, 0.1);
+    }
+    
+    .boarding-time {
+      font-size: 18px;
+      font-weight: bold;
+      color: #4a6fa5;
+    }
+    
+    .boarding-location {
+      flex: 1;
+    }
+    
+    .boarding-count {
+      background: #4a6fa5;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+    
+    @media print {
+      body { background: white; }
+      .container { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-operational">
+      <div class="logo">싱싱골프투어</div>
+      <div class="doc-title">탑승 안내</div>
+      <div class="tour-title">2박3일 순천버스핑</div>
+    </div>
+    
+    <div class="content">
+      <div class="section">
+        <div class="section-title">탑승 장소 및 시간</div>
+        <div class="boarding-list">
+          <div class="boarding-item">
+            <div class="boarding-time">05:00</div>
+            <div class="boarding-location">
+              <strong>강남역</strong><br>
+              <span style="color: #666; font-size: 13px;">1번 출구 앞</span>
+            </div>
+            <div class="boarding-count">12명</div>
+          </div>
+          
+          <div class="boarding-item">
+            <div class="boarding-time">05:30</div>
+            <div class="boarding-location">
+              <strong>잠실역</strong><br>
+              <span style="color: #666; font-size: 13px;">8번 출구 앞</span>
+            </div>
+            <div class="boarding-count">8명</div>
+          </div>
+          
+          <div class="boarding-item">
+            <div class="boarding-time">06:00</div>
+            <div class="boarding-location">
+              <strong>수원역</strong><br>
+              <span style="color: #666; font-size: 13px;">역전 로터리</span>
+            </div>
+            <div class="boarding-count">8명</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">안내 사항</div>
+        <div style="background: #fff3e0; padding: 20px; border-radius: 8px; border-left: 4px solid #ff9800;">
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>출발 20분 전까지 탑승 장소에 도착해 주세요</li>
+            <li>탑승 시간은 교통 상황에 따라 변경될 수 있습니다</li>
+            <li>신분증을 반드시 지참해 주세요</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  // C그룹 - 티타임표 고객용 디자인 (간단한 정보)
+  const generateTimetableCustomerHTML = () => {
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 티타임표</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f7fa;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* 티타임표 헤더 스타일 */
+    .header-timetable {
+      background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .header-timetable .title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .header-timetable .subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    /* 티타임 카드 스타일 */
+    .timetable-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .time-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .time-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .time-header {
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    
+    .time-header.morning {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+    }
+    
+    .time-header.afternoon {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      color: white;
+    }
+    
+    .time-header.late {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      color: white;
+    }
+    
+    .time-content {
+      padding: 20px;
+    }
+    
+    .time-slot {
+      font-size: 24px;
+      font-weight: bold;
+      color: #374151;
+      margin-bottom: 10px;
+    }
+    
+    .participant-count {
+      font-size: 36px;
+      font-weight: bold;
+      color: #6b7280;
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .participant-label {
+      font-size: 14px;
+      color: #9ca3af;
+      text-align: center;
+    }
+    
+    /* 날짜 섹션 */
+    .date-section {
+      background: #6366f1;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    /* 요약 정보 */
+    .summary-section {
+      background: #f3f4f6;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 30px;
+    }
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      text-align: center;
+    }
+    
+    .summary-item {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    
+    .summary-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #6366f1;
+    }
+    
+    .summary-label {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-timetable">
+      <div class="title">티타임표</div>
+      <div class="subtitle">2박3일 순천버스핑 · 파인힐스CC</div>
+    </div>
+    
+    <div class="date-section">
+      2025년 4월 14일 월요일
+    </div>
+    
+    <div class="timetable-grid">
+      <div class="time-card">
+        <div class="time-header morning">
+          4월 14일 · 오전
+        </div>
+        <div class="time-content">
+          <div class="time-slot">13:08</div>
+          <div class="participant-count">28/28</div>
+          <div class="participant-label">파인코스</div>
+        </div>
+      </div>
+      
+      <div class="time-card">
+        <div class="time-header afternoon">
+          4월 15일 · 오전
+        </div>
+        <div class="time-content">
+          <div class="time-slot">07:30</div>
+          <div class="participant-count">28/28</div>
+          <div class="participant-label">밸리코스</div>
+        </div>
+      </div>
+      
+      <div class="time-card">
+        <div class="time-header late">
+          4월 16일 · 오전
+        </div>
+        <div class="time-content">
+          <div class="time-slot">08:00</div>
+          <div class="participant-count">28/28</div>
+          <div class="participant-label">레이크코스</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="summary-section">
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-value">3</div>
+          <div class="summary-label">총 라운드</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">28</div>
+          <div class="summary-label">총 인원</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">7</div>
+          <div class="summary-label">총 팀</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  // C그룹 - 티타임표 스탭용 디자인 (상세 정보)
+  const generateTimetableStaffHTML = () => {
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>싱싱골프투어 - 티타임표 (스탭용)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #333;
+      background: #f5f7fa;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* 스탭용 헤더 - 전문적인 스타일 */
+    .header-staff {
+      background: linear-gradient(135deg, #4a5568 0%, #718096 100%);
+      color: white;
+      padding: 25px;
+      text-align: center;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .header-staff .title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .header-staff .subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    /* 날짜별 섹션 */
+    .date-section {
+      background: #4a5568;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    
+    /* 티타임 테이블 */
+    .timetable-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .timetable-table th {
+      background: #f7fafc;
+      padding: 12px;
+      text-align: left;
+      font-weight: bold;
+      font-size: 13px;
+      color: #4a5568;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .timetable-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 13px;
+    }
+    
+    .timetable-table tr:hover {
+      background: #f7fafc;
+    }
+    
+    .timetable-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .time-slot {
+      font-weight: bold;
+      color: #4a5568;
+      font-size: 14px;
+    }
+    
+    .course-name {
+      color: #718096;
+      font-size: 12px;
+    }
+    
+    .participant-name {
+      font-weight: 600;
+      color: #2d3748;
+    }
+    
+    .team-info {
+      color: #718096;
+      font-size: 12px;
+    }
+    
+    /* 요약 정보 */
+    .summary-section {
+      background: #f7fafc;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 30px;
+    }
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    
+    .summary-item {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    
+    .summary-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4a5568;
+    }
+    
+    .summary-label {
+      font-size: 13px;
+      color: #718096;
+      margin-top: 5px;
+    }
+    
+    /* 참가자 목록 그리드 */
+    .participants-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+      padding: 20px;
+      background: #f7fafc;
+      border-radius: 8px;
+    }
+    
+    .participant-item {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      font-size: 12px;
+    }
+    
+    @media print {
+      body { background: white; }
+      .container { box-shadow: none; max-width: 100%; }
+      .timetable-table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-staff">
+      <div class="title">티타임표 - 스탭용</div>
+      <div class="subtitle">2박3일 순천버스핑 · 파인힐스CC</div>
+    </div>
+    
+    <div class="date-section">
+      2025년 4월 14일 월요일 - 파인코스
+    </div>
+    
+    <table class="timetable-table">
+      <thead>
+        <tr>
+          <th style="width: 80px;">티타임</th>
+          <th style="width: 80px;">팀번호</th>
+          <th>참가자 1</th>
+          <th>참가자 2</th>
+          <th>참가자 3</th>
+          <th>참가자 4</th>
+          <th style="width: 100px;">탑승지</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="time-slot">13:08</td>
+          <td class="team-info">1팀</td>
+          <td><span class="participant-name">홍길동</span></td>
+          <td><span class="participant-name">김철수</span></td>
+          <td><span class="participant-name">이영희</span></td>
+          <td><span class="participant-name">박민수</span></td>
+          <td class="team-info">강남</td>
+        </tr>
+        <tr>
+          <td class="time-slot">13:08</td>
+          <td class="team-info">2팀</td>
+          <td><span class="participant-name">최정훈</span></td>
+          <td><span class="participant-name">강민정</span></td>
+          <td><span class="participant-name">윤서준</span></td>
+          <td><span class="participant-name">송민호</span></td>
+          <td class="team-info">잠실</td>
+        </tr>
+        <tr>
+          <td class="time-slot">13:08</td>
+          <td class="team-info">3팀</td>
+          <td><span class="participant-name">정태훈</span></td>
+          <td><span class="participant-name">한지민</span></td>
+          <td><span class="participant-name">오현우</span></td>
+          <td><span class="participant-name">백서진</span></td>
+          <td class="team-info">수원</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div class="summary-section">
+      <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #2d3748;">일일 요약</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-value">13:08</div>
+          <div class="summary-label">티오프 시간</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">7팀</div>
+          <div class="summary-label">총 팀 수</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">28명</div>
+          <div class="summary-label">총 인원</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">파인코스</div>
+          <div class="summary-label">라운드 코스</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 30px;">
+      <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #2d3748;">탑승지별 참가자 목록</h3>
+      <div class="participants-grid">
+        <div class="participant-item"><strong>강남:</strong> 12명</div>
+        <div class="participant-item"><strong>잠실:</strong> 8명</div>
+        <div class="participant-item"><strong>수원:</strong> 8명</div>
+        <div class="participant-item"><strong>총계:</strong> 28명</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
   };
 
   const handlePreview = () => {
-    const html = generateExampleHTML(activeExample === 'staff');
+    let html = '';
+    switch (activeTemplate) {
+      case 'contract':
+        html = generateContractHTML();
+        break;
+      case 'operational':
+        html = generateOperationalHTML();
+        break;
+      case 'timetable-customer':
+        html = generateTimetableCustomerHTML();
+        break;
+      case 'timetable-staff':
+        html = generateTimetableStaffHTML();
+        break;
+    }
+    
     const newWindow = window.open('', '_blank');
     if (newWindow) {
       newWindow.document.write(html);
@@ -270,117 +877,255 @@ export default function DesignTemplatesPage() {
   };
 
   const handleCopyHTML = () => {
-    const html = generateExampleHTML(activeExample === 'staff');
+    let html = '';
+    switch (activeTemplate) {
+      case 'contract':
+        html = generateContractHTML();
+        break;
+      case 'operational':
+        html = generateOperationalHTML();
+        break;
+      case 'timetable-customer':
+        html = generateTimetableCustomerHTML();
+        break;
+      case 'timetable-staff':
+        html = generateTimetableStaffHTML();
+        break;
+    }
+    
     navigator.clipboard.writeText(html);
     alert('HTML이 클립보드에 복사되었습니다.');
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">문서 디자인 템플릿</h1>
+    <div className="container mx-auto p-6 max-w-7xl">
+      <h1 className="text-3xl font-bold mb-2">문서 디자인 템플릿</h1>
+      <p className="text-gray-600 mb-8">싱싱골프투어 통합 디자인 시스템</p>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      {/* 템플릿 선택 카드 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card 
-          className={`cursor-pointer transition-all ${activeExample === 'customer' ? 'ring-2 ring-blue-500' : ''}`}
-          onClick={() => setActiveExample('customer')}
+          className={`cursor-pointer transition-all ${activeTemplate === 'contract' ? 'ring-2 ring-blue-700 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('contract')}
         >
           <CardHeader>
-            <CardTitle>고객용 디자인</CardTitle>
-            <CardDescription>60대 고객을 위한 깔끔하고 가독성 좋은 디자인</CardDescription>
+            <div className="flex items-center gap-3">
+              <FileText className="w-8 h-8 text-blue-700" />
+              <div>
+                <CardTitle className="text-lg">A그룹: 계약 문서</CardTitle>
+                <CardDescription>권위감 · 신뢰감 · 전문성</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-sm">
-              <li>• 네이비 블루 (#2c5282) 메인 컬러</li>
-              <li>• 폰트 크기 15px (인쇄 시 16px)</li>
-              <li>• 단색 배경, 그라데이션 없음</li>
-              <li>• 심플한 박스 스타일</li>
-              <li>• 최소한의 애니메이션</li>
-            </ul>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#2c5282' }}></div>
+                <span className="text-sm">진한 네이비 (#2c5282)</span>
+              </div>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• 고객용 일정표 (견적서/계약서)</li>
+                <li>• 직사각형 레이아웃</li>
+                <li>• 권위있는 헤더 디자인</li>
+                <li>• 15px 폰트 크기</li>
+              </ul>
+            </div>
           </CardContent>
         </Card>
         
         <Card 
-          className={`cursor-pointer transition-all ${activeExample === 'staff' ? 'ring-2 ring-blue-500' : ''}`}
-          onClick={() => setActiveExample('staff')}
+          className={`cursor-pointer transition-all ${activeTemplate === 'operational' ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('operational')}
         >
           <CardHeader>
-            <CardTitle>스탭용 디자인</CardTitle>
-            <CardDescription>40-50대 스탭을 위한 현대적이고 화려한 디자인</CardDescription>
+            <div className="flex items-center gap-3">
+              <BedDouble className="w-8 h-8 text-blue-500" />
+              <div>
+                <CardTitle className="text-lg">B그룹: 실행 문서</CardTitle>
+                <CardDescription>친근감 · 편안함 · 실용성</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-sm">
-              <li>• 밝은 블루 (#4a90e2) 그라데이션</li>
-              <li>• 폰트 크기 14px</li>
-              <li>• 그라데이션 배경 효과</li>
-              <li>• 호버 애니메이션</li>
-              <li>• 그림자 효과</li>
-            </ul>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#4a6fa5' }}></div>
+                <span className="text-sm">밝은 블루 (#4a6fa5)</span>
+              </div>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• 탑승안내서, 객실배정표</li>
+                <li>• 둥근 모서리 디자인</li>
+                <li>• 친근한 헤더 스타일</li>
+                <li>• 14px 폰트 크기</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card 
+          className={`cursor-pointer transition-all ${activeTemplate === 'timetable-customer' ? 'ring-2 ring-purple-600 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('timetable-customer')}
+        >
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Calendar className="w-8 h-8 text-purple-600" />
+              <div>
+                <CardTitle className="text-lg">C그룹: 티타임표 (고객용)</CardTitle>
+                <CardDescription>시각적 · 직관적 · 간단</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #6b46c1, #8b5cf6)' }}></div>
+                <span className="text-sm">퍼플 그라데이션</span>
+              </div>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• 티타임 정보 카드</li>
+                <li>• 시간대별 색상 구분</li>
+                <li>• 요약 정보 대시보드</li>
+                <li>• 비주얼 중심 디자인</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card 
+          className={`cursor-pointer transition-all ${activeTemplate === 'timetable-staff' ? 'ring-2 ring-gray-600 shadow-lg' : 'hover:shadow-md'}`}
+          onClick={() => setActiveTemplate('timetable-staff')}
+        >
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Calendar className="w-8 h-8 text-gray-600" />
+              <div>
+                <CardTitle className="text-lg">C그룹: 티타임표 (스탭용)</CardTitle>
+                <CardDescription>상세 · 전문적 · 데이터</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded" style={{ background: 'linear-gradient(135deg, #4a5568, #718096)' }}></div>
+                <span className="text-sm">그레이 그라데이션</span>
+              </div>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• 상세 참가자 테이블</li>
+                <li>• 탑승지별 분류</li>
+                <li>• 팀별 조편표</li>
+                <li>• 전문가용 레이아웃</li>
+              </ul>
+            </div>
           </CardContent>
         </Card>
       </div>
       
+      {/* 미리보기 섹션 */}
       <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">디자인 미리보기</h2>
-        <div className="bg-white border rounded-lg p-8">
-          <div className="text-center mb-6">
-            <div className="text-2xl font-bold" style={{ color: activeExample === 'staff' ? '#4a90e2' : '#2c5282' }}>
-              싱싱골프투어
-            </div>
-            <div className="text-sm text-gray-600 mt-2">
-              수원시 영통구 법조로149번길 200 | TEL 031-215-3990
-            </div>
-          </div>
-          
-          <div className="mb-6">
-            <div 
-              className="text-lg font-bold p-3 mb-3" 
-              style={{ 
-                backgroundColor: activeExample === 'staff' ? '#e7f3ff' : '#e7f3ff',
-                borderLeft: `4px solid ${activeExample === 'staff' ? '#4a90e2' : '#2c5282'}`,
-                color: activeExample === 'staff' ? '#4a90e2' : '#2c5282'
-              }}
-            >
-              상품 정보
-            </div>
-            {/* 상품 정보 내용 */}
-          </div>
-          
-          <div className="mb-6">
-            <div 
-              className="text-lg font-bold p-3 mb-3" 
-              style={{ 
-                backgroundColor: activeExample === 'staff' ? '#e7f3ff' : '#e7f3ff',
-                borderLeft: `4px solid ${activeExample === 'staff' ? '#4a90e2' : '#2c5282'}`,
-                color: activeExample === 'staff' ? '#4a90e2' : '#2c5282'
-              }}
-            >
-              일정 안내
-            </div>
-            <div 
-              className="border rounded overflow-hidden"
-              style={{ 
-                boxShadow: activeExample === 'staff' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-                borderRadius: activeExample === 'staff' ? '10px' : '5px'
-              }}
-            >
-              <div 
-                className="text-white font-bold p-3"
-                style={{ 
-                  background: activeExample === 'staff' 
-                    ? 'linear-gradient(135deg, #4a90e2 0%, #5ca3f2 100%)' 
-                    : '#2c5282',
-                  fontSize: activeExample === 'staff' ? '16px' : '15px'
-                }}
-              >
-                Day 1 - 2025년 4월 14일 (월)
+        <h2 className="text-xl font-semibold mb-4">선택된 템플릿 미리보기</h2>
+        <div className="bg-white border rounded-lg p-8 min-h-[400px]">
+          {activeTemplate === 'contract' && (
+            <div>
+              <div className="text-center mb-6" style={{ backgroundColor: '#2c5282', color: 'white', padding: '30px', margin: '-32px -32px 32px -32px' }}>
+                <div className="text-2xl font-bold mb-2">싱싱골프투어</div>
+                <div className="text-lg mb-1">2박3일 순천버스핑</div>
+                <div className="text-sm opacity-90">수원시 영통구 법조로149번길 200 | TEL 031-215-3990</div>
               </div>
-              {/* 일정 내용 */}
+              <div className="mb-4">
+                <div className="font-bold text-lg mb-2" style={{ color: '#2c5282' }}>상품 정보</div>
+                <div className="border rounded p-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><strong>상품명:</strong> 2박3일 순천버스핑</div>
+                    <div><strong>골프장:</strong> 파인힐스CC</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+          
+          {activeTemplate === 'operational' && (
+            <div>
+              <div className="text-center mb-6" style={{ backgroundColor: '#4a6fa5', color: 'white', padding: '25px', borderRadius: '10px' }}>
+                <div className="text-xl font-bold mb-1">싱싱골프투어</div>
+                <div className="text-lg mb-1">탑승 안내</div>
+                <div className="text-sm opacity-90">2박3일 순천버스핑</div>
+              </div>
+              <div className="space-y-3">
+                <div className="p-4 bg-gray-50 rounded-lg flex items-center justify-between hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-4">
+                    <div className="text-2xl font-bold" style={{ color: '#4a6fa5' }}>05:00</div>
+                    <div>
+                      <div className="font-semibold">강남역</div>
+                      <div className="text-sm text-gray-600">1번 출구 앞</div>
+                    </div>
+                  </div>
+                  <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm">12명</div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTemplate === 'timetable-customer' && (
+            <div>
+              <div className="text-center mb-6 p-6 rounded-lg" style={{ background: 'linear-gradient(135deg, #6b46c1, #8b5cf6)', color: 'white' }}>
+                <div className="text-2xl font-bold mb-2">티타임표</div>
+                <div className="text-sm opacity-90">2박3일 순천버스핑 · 파인힐스CC</div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="p-3 text-center text-white font-semibold" style={{ background: 'linear-gradient(135deg, #3b82f6, #60a5fa)' }}>
+                    4월 14일
+                  </div>
+                  <div className="p-4 text-center">
+                    <div className="text-2xl font-bold mb-2">13:08</div>
+                    <div className="text-3xl font-bold text-gray-600 mb-1">28/28</div>
+                    <div className="text-sm text-gray-500">파인코스</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTemplate === 'timetable-staff' && (
+            <div>
+              <div className="text-center mb-6 p-5 rounded-lg" style={{ background: 'linear-gradient(135deg, #4a5568, #718096)', color: 'white' }}>
+                <div className="text-xl font-bold mb-1">티타임표 - 스탭용</div>
+                <div className="text-sm opacity-90">2박3일 순천버스핑 · 파인힐스CC</div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border p-2 text-left">티타임</th>
+                      <th className="border p-2 text-left">팀</th>
+                      <th className="border p-2 text-left">참가자 1</th>
+                      <th className="border p-2 text-left">참가자 2</th>
+                      <th className="border p-2 text-left">참가자 3</th>
+                      <th className="border p-2 text-left">참가자 4</th>
+                      <th className="border p-2 text-left">탑승지</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border p-2 font-semibold">13:08</td>
+                      <td className="border p-2">1팀</td>
+                      <td className="border p-2">홍길동</td>
+                      <td className="border p-2">김철수</td>
+                      <td className="border p-2">이영희</td>
+                      <td className="border p-2">박민수</td>
+                      <td className="border p-2">강남</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
-      <div className="flex gap-4">
+      {/* 액션 버튼 */}
+      <div className="flex gap-4 mb-8">
         <Button onClick={handlePreview} className="flex items-center gap-2">
           <Eye className="h-4 w-4" />
           새 창에서 미리보기
@@ -391,14 +1136,48 @@ export default function DesignTemplatesPage() {
         </Button>
       </div>
       
-      <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-        <h3 className="font-semibold mb-2">사용 방법</h3>
-        <ol className="list-decimal list-inside space-y-1 text-sm">
-          <li>위에서 원하는 디자인 템플릿을 선택합니다 (고객용 또는 스탭용)</li>
-          <li>"새 창에서 미리보기"로 실제 디자인을 확인합니다</li>
-          <li>"HTML 복사"로 템플릿 코드를 복사하여 사용합니다</li>
-          <li>복사한 HTML을 수정하여 실제 문서에 적용합니다</li>
-        </ol>
+      {/* 디자인 가이드라인 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-blue-50 p-6 rounded-lg">
+          <h3 className="font-semibold mb-4 text-blue-900">📐 디자인 원칙</h3>
+          <div className="space-y-3 text-sm">
+            <div>
+              <strong className="text-blue-700">색상 체계:</strong>
+              <ul className="mt-1 ml-4 space-y-1 text-gray-700">
+                <li>• A그룹 (#2c5282): 진중하고 권위있는 느낌</li>
+                <li>• B그룹 (#4a6fa5): 부드럽고 친근한 느낌</li>
+                <li>• C그룹 고객용 (#6b46c1): 화려하고 시각적인 느낌</li>
+                <li>• C그룹 스탭용 (#4a5568): 전문적이고 실무적인 느낌</li>
+              </ul>
+            </div>
+            <div>
+              <strong className="text-blue-700">레이아웃:</strong>
+              <ul className="mt-1 ml-4 space-y-1 text-gray-700">
+                <li>• A그룹: 직사각형, 격식있는 구조</li>
+                <li>• B그룹: 둥근 모서리, 유연한 구조</li>
+                <li>• C그룹 고객용: 카드 형식, 비주얼 중심</li>
+                <li>• C그룹 스탭용: 테이블 형식, 데이터 중심</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-green-50 p-6 rounded-lg">
+          <h3 className="font-semibold mb-4 text-green-900">✏️ 사용 가이드</h3>
+          <div className="space-y-3 text-sm text-gray-700">
+            <p><strong className="text-green-700">템플릿 선택:</strong> 문서의 용도와 대상에 맞는 템플릿을 선택하세요.</p>
+            <p><strong className="text-green-700">미리보기:</strong> 실제 렌더링된 모습을 새 창에서 확인할 수 있습니다.</p>
+            <p><strong className="text-green-700">HTML 복사:</strong> 생성된 HTML을 복사하여 필요에 맞게 수정하세요.</p>
+            <p><strong className="text-green-700">커스터마이징:</strong> 색상, 폰트 크기, 여백 등을 조정하여 사용하세요.</p>
+            <div className="mt-2 p-3 bg-green-100 rounded text-xs">
+              <strong>티타임표 선택 가이드:</strong>
+              <ul className="mt-1 ml-4">
+                <li>• 고객용: 시각적이고 간단한 정보만 필요한 경우</li>
+                <li>• 스탭용: 참가자 이름, 팀 편성 등 상세 정보가 필요한 경우</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
