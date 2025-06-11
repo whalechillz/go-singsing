@@ -214,11 +214,11 @@ export function generateTeeTimeHTML(
           </div>
         ` : ''}
         
-        ${tourData.notices ? `
+        ${tourData.other_notices ? `
           <div class="info-section">
             <div class="info-title">안내사항</div>
             <ul class="info-list">
-              ${tourData.notices.split('\n').map((notice: string) => 
+              ${tourData.other_notices.split('\n').map((notice: string) => 
                 notice.trim() ? `<li>${notice.replace(/^[•·\\-]\\s*/, '')}</li>` : ''
               ).join('')}
             </ul>
