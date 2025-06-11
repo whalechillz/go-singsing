@@ -72,7 +72,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       
 
       
-      ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour) ? `
+      ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour || productData.usage_locker) ? `
       <div class="section detailed-usage-section">
         <div class="section-title">상세 이용 안내</div>
         <div class="usage-grid">
@@ -108,6 +108,18 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
               </div>
               <div class="usage-content">
                 ${formatUsageContent(productData.usage_meal)}
+              </div>
+            </div>
+          ` : ''}
+          
+          ${productData.usage_locker ? `
+            <div class="usage-item">
+              <div class="usage-header">
+                <span class="usage-icon">🔐</span>
+                <h4>락카 이용</h4>
+              </div>
+              <div class="usage-content">
+                ${formatUsageContent(productData.usage_locker)}
               </div>
             </div>
           ` : ''}
