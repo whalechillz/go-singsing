@@ -1,14 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabaseClient'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Save, Plus, Trash2, Edit2 } from 'lucide-react'
-import { toast } from "@/hooks/use-toast"
 import {
   Dialog,
   DialogContent,
@@ -39,7 +35,7 @@ export default function SettingsPage() {
     description: ''
   })
   
-  const supabase = createClientComponentClient()
+
 
   useEffect(() => {
     fetchSettings()
@@ -56,11 +52,7 @@ export default function SettingsPage() {
       setSettings(data || [])
     } catch (error) {
       console.error('Error fetching settings:', error)
-      toast({
-        title: "오류",
-        description: "설정을 불러오는 중 오류가 발생했습니다.",
-        variant: "destructive"
-      })
+      alert("설정을 불러오는 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)
     }
@@ -78,20 +70,13 @@ export default function SettingsPage() {
 
       if (error) throw error
 
-      toast({
-        title: "저장 완료",
-        description: "설정이 저장되었습니다."
-      })
+      alert("설정이 저장되었습니다.")
       
       setEditingId(null)
       fetchSettings()
     } catch (error) {
       console.error('Error saving setting:', error)
-      toast({
-        title: "오류",
-        description: "저장 중 오류가 발생했습니다.",
-        variant: "destructive"
-      })
+      alert("저장 중 오류가 발생했습니다.")
     }
   }
 
@@ -103,21 +88,14 @@ export default function SettingsPage() {
 
       if (error) throw error
 
-      toast({
-        title: "추가 완료",
-        description: "새 설정이 추가되었습니다."
-      })
+      alert("새 설정이 추가되었습니다.")
       
       setIsAddModalOpen(false)
       setFormData({ key: '', value: '', description: '' })
       fetchSettings()
     } catch (error) {
       console.error('Error adding setting:', error)
-      toast({
-        title: "오류",
-        description: "추가 중 오류가 발생했습니다.",
-        variant: "destructive"
-      })
+      alert("추가 중 오류가 발생했습니다.")
     }
   }
 
@@ -132,19 +110,12 @@ export default function SettingsPage() {
 
       if (error) throw error
 
-      toast({
-        title: "삭제 완료",
-        description: "설정이 삭제되었습니다."
-      })
+      alert("설정이 삭제되었습니다.")
       
       fetchSettings()
     } catch (error) {
       console.error('Error deleting setting:', error)
-      toast({
-        title: "오류",
-        description: "삭제 중 오류가 발생했습니다.",
-        variant: "destructive"
-      })
+      alert("삭제 중 오류가 발생했습니다.")
     }
   }
 
@@ -183,26 +154,32 @@ export default function SettingsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="key">키 (영문)</Label>
-                <Input
+                <label htmlFor="key" className="text-sm font-medium">키 (영문)</label>
+                <input
                   id="key"
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.key}
                   onChange={(e) => setFormData({ ...formData, key: e.target.value })}
                   placeholder="예: company_address"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="value">값</Label>
-                <Input
+                <label htmlFor="value" className="text-sm font-medium">값</label>
+                <input
                   id="value"
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="description">설명</Label>
-                <Input
+                <label htmlFor="description" className="text-sm font-medium">설명</label>
+                <input
                   id="description"
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
@@ -270,7 +247,8 @@ export default function SettingsPage() {
             <CardContent>
               {editingId === setting.id ? (
                 isTextarea(setting.key) ? (
-                  <Textarea
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={setting.value}
                     onChange={(e) => {
                       const updated = settings.map(s => 
@@ -281,7 +259,8 @@ export default function SettingsPage() {
                     rows={3}
                   />
                 ) : (
-                  <Input
+                  <input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     type={getInputType(setting.key)}
                     value={setting.value}
                     onChange={(e) => {
