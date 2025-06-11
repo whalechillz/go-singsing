@@ -37,12 +37,12 @@ export function useDocumentHTML({
 
       switch (activeTab) {
         case 'customer_schedule':
-          html = generateCustomerScheduleHTML(tourData, productData);
+          html = generateCustomerScheduleHTML(tourData, productData, false);
           break;
 
         case 'staff_schedule':
           // 스탭용 일정표는 고객용과 동일하되, 추가 정보 포함
-          html = generateCustomerScheduleHTML(tourData, productData);
+          html = generateCustomerScheduleHTML(tourData, productData, true);
           break;
 
         case 'customer_boarding':
