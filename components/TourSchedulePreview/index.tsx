@@ -40,6 +40,44 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     }
   }, [searchParams]);
 
+  // 문서가 렌더링된 후 탭 기능을 위한 이벤트 리스너 추가
+  useEffect(() => {
+    // 탭 클릭 기능
+    const handleTabClick = (e: Event) => {
+      const tab = e.target as HTMLElement;
+      const targetTab = tab.getAttribute('data-tab');
+      if (!targetTab) return;
+
+      const tabs = document.querySelectorAll('.usage-tab');
+      const contents = document.querySelectorAll('.usage-content');
+      
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      
+      tab.classList.add('active');
+      const targetContent = document.querySelector(`.usage-content[data-content="${targetTab}"]`);
+      if (targetContent) {
+        targetContent.classList.add('active');
+      }
+    };
+
+    // 이벤트 리스너 연결
+    setTimeout(() => {
+      const tabs = document.querySelectorAll('.usage-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', handleTabClick);
+      });
+    }, 100);
+
+    // 클린업
+    return () => {
+      const tabs = document.querySelectorAll('.usage-tab');
+      tabs.forEach(tab => {
+        tab.removeEventListener('click', handleTabClick);
+      });
+    };
+  }, [documentHTML, activeTab]);
+
   const handlePrint = () => {
     window.print();
   };
