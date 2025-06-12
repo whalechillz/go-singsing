@@ -32,68 +32,67 @@ export function generateBoardingGuideHTML(
             const { timePrefix, displayTime } = formatTime(departureTime);
             
             return `
-              <div class="boarding-card-modern">
-                <div class="card-header-section">
-                  <h3 class="boarding-title">${boardingSpot.name} ${boardingSpot.address ? `(${boardingSpot.address.split(' ')[1] || ''})` : ''}</h3>
-                  <div class="boarding-time-display">
-                    <span class="time-prefix-modern">${timePrefix}</span>
-                    <span class="time-main">${displayTime}</span>
+              <div class="boarding-card">
+                <div class="card-border"></div>
+                <div class="card-content">
+                  <div class="card-title">${boardingSpot.name}</div>
+                  <div class="card-time">${timePrefix} ${displayTime}</div>
+                  <div class="card-date">${formatDate(tourData.start_date, true)}</div>
+                  <div class="card-info">
+                    <div class="info-parking">주차: ${boardingSpot.parking_info || '제한적'}</div>
+                    <div class="info-arrival">${item.arrival_time ? item.arrival_time.slice(0, 5) : getArrivalTime(item.departure_time || '미정')} 도착</div>
                   </div>
-                  <div class="boarding-date">${formatDate(tourData.start_date, true)}</div>
-                  <div class="boarding-info-row">
-                    <span class="info-label">주차:</span>
-                    <span class="info-value">${boardingSpot.parking_info || '제한적'}</span>
-                    <span class="info-divider"></span>
-                    <span class="info-value departure">${item.arrival_time ? item.arrival_time.slice(0, 5) : getArrivalTime(item.departure_time || '미정')} 도착</span>
-                  </div>
-                </div>
-                
-                ${boardingSpot.description || boardingSpot.address || boardingSpot.naver_map_url ? `
-                  <div class="location-details-section">
-                    ${boardingSpot.description ? `
-                      <div class="detail-box">
-                        <span class="detail-icon">📍</span>
-                        <div class="detail-content">
-                          <h4 class="detail-title">버스탑승지</h4>
-                          <p class="detail-text">${boardingSpot.description}</p>
+                  
+                  ${boardingSpot.description || boardingSpot.address || boardingSpot.naver_map_url ? `
+                    <div class="location-info">
+                      ${boardingSpot.description ? `
+                        <div class="location-section">
+                          <p class="location-title">버스탑승지</p>
+                          <p class="location-main">${boardingSpot.description}</p>
+                          ${boardingSpot.address ? `<p class="location-sub">${boardingSpot.address}</p>` : ''}
                         </div>
-                      </div>
-                    ` : ''}
-                    
-                    ${boardingSpot.address || boardingSpot.naver_map_url ? `
-                      <div class="detail-box">
-                        <span class="detail-icon">📍</span>
-                        <div class="detail-content">
-                          <h4 class="detail-title">주차장 오는길</h4>
-                          <p class="detail-text">${boardingSpot.address || boardingSpot.name}</p>
+                      ` : ''}
+                      
+                      ${boardingSpot.parking_detail || boardingSpot.naver_map_url ? `
+                        <div class="location-section">
+                          <p class="location-title">주차장 오는길</p>
+                          <p class="location-main">${boardingSpot.parking_detail || boardingSpot.name + ' 주차장'}</p>
                           ${boardingSpot.naver_map_url ? `
-                            <a href="${boardingSpot.naver_map_url}" target="_blank" class="map-button">네이버 지도에서 보기</a>
+                            <a href="${boardingSpot.naver_map_url}" class="map-link" target="_blank">네이버 지도에서 보기</a>
                           ` : ''}
                         </div>
-                      </div>
-                    ` : ''}
-                  </div>
-                ` : ''}
+                      ` : ''}
+                    </div>
+                  ` : ''}
+                </div>
               </div>
             `;
           }).join('')}
         </div>
       </div>
       
-      ${tourData.staff && tourData.staff.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `
-        <div class="emergency-contact-section">
-          <div class="emergency-contact-title">비상 연락처</div>
-          <div class="emergency-contact-grid">
-            ${tourData.staff.filter((staff: any) => staff.role.includes('기사')).map((staff: any) => `
-              <div class="emergency-contact-item">
-                <span class="contact-name">${staff.name} ${staff.role}</span>
-                <span class="contact-phone">TEL. ${staff.phone}</span>
-              </div>
-            `).join('')}
-          </div>
+      <!-- 탑승 주의사항 -->
+      ${tourData.bus_info ? `
+        <div class="common-info">
+          <h3 class="section-title">탑승 주의사항</h3>
+          <ul class="notice-list">
+            ${tourData.bus_info.split('\n').map((notice: string) => 
+              notice.trim() ? `<li class="notice-item">${notice.replace(/^[•·\-\*]\s*/, '')}</li>` : ''
+            ).join('')}
+          </ul>
+          
+          ${tourData.staff && tourData.staff.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `
+            <div class="contact-box">
+              ${tourData.staff.filter((staff: any) => staff.role.includes('기사')).map((staff: any) => `
+                <div class="contact-title">비상 연락처 - ${staff.name} ${staff.role}</div>
+                <div class="contact-phone">${staff.phone}</div>
+              `).join('')}
+            </div>
+          ` : ''}
         </div>
-      ` : ''}    
+      ` : ''}
       
+      <!-- 푸터 -->
       <div class="footer">
         <p>즐거운 골프 여행 되시길 바랍니다</p>
         <p>싱싱골프투어 | 031-215-3990</p>
@@ -220,136 +219,127 @@ function getBoardingGuideStyles(): string {
       display: flex;
       flex-direction: column;
       gap: 20px;
+      margin-bottom: 25px;
     }
     
-    .boarding-card-modern {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    .boarding-card {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #e2e8f0;
+      position: relative;
     }
     
-    .card-header-section {
-      padding: 24px;
-      text-align: center;
-      border-bottom: 1px solid #f3f4f6;
+    .card-border {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background-color: #3182ce;
+      border-radius: 10px 0 0 10px;
     }
     
-    .boarding-title {
+    .card-content {
+      padding: 20px 20px 20px 26px;
+    }
+    
+    .card-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #2c5282;
+      margin-bottom: 15px;
+    }
+    
+    .card-time {
+      font-size: 32px;
+      font-weight: bold;
+      color: #e53e3e;
+      margin-bottom: 5px;
+    }
+    
+    .card-date {
       font-size: 16px;
+      color: #4a5568;
+      margin-bottom: 10px;
+    }
+    
+    .card-info {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    
+    .info-parking, .info-arrival {
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    
+    .info-parking {
+      background-color: #ebf8ff;
+      color: #2B6CB0;
+    }
+    
+    .info-arrival {
+      background-color: #fff5f5;
+      color: #e53e3e;
+    }
+    
+    .location-info {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .location-section {
+      background-color: #f8fafc;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .location-title {
       font-weight: 600;
-      color: #374151;
-      margin: 0 0 16px 0;
-    }
-    
-    .boarding-time-display {
-      margin-bottom: 8px;
-    }
-    
-    .time-prefix-modern {
-      font-size: 14px;
-      color: #6b7280;
-      margin-right: 8px;
-    }
-    
-    .time-main {
-      font-size: 36px;
-      font-weight: 700;
-      color: #dc2626;
-    }
-    
-    .boarding-date {
-      font-size: 14px;
-      color: #6b7280;
-      margin-bottom: 20px;
-    }
-    
-    .boarding-info-row {
+      color: #2d3748;
+      margin-bottom: 5px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 12px 20px;
-      background: #f9fafb;
-      border-radius: 8px;
-      font-size: 14px;
     }
     
-    .info-label {
-      color: #6b7280;
+    .location-title:before {
+      content: "📍";
+      margin-right: 5px;
     }
     
-    .info-value {
-      color: #374151;
-      font-weight: 500;
-    }
-    
-    .info-divider {
-      width: 1px;
-      height: 16px;
-      background: #e5e7eb;
-      margin: 0 8px;
-    }
-    
-    .info-value.departure {
-      color: #dc2626;
-    }
-    
-    .location-details-section {
-      padding: 24px;
-    }
-    
-    .detail-box {
-      display: flex;
-      gap: 16px;
-      padding: 16px;
-      background: #f9fafb;
-      border-radius: 12px;
-      margin-bottom: 16px;
-    }
-    
-    .detail-box:last-child {
-      margin-bottom: 0;
-    }
-    
-    .detail-icon {
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    
-    .detail-content {
-      flex: 1;
-    }
-    
-    .detail-title {
-      font-size: 14px;
+    .location-main {
       font-weight: 600;
-      color: #374151;
-      margin: 0 0 4px 0;
+      color: #2d3748;
+      margin-bottom: 2px;
     }
     
-    .detail-text {
+    .location-sub {
+      color: #718096;
       font-size: 13px;
-      color: #6b7280;
-      margin: 0 0 12px 0;
-      line-height: 1.5;
     }
     
-    .map-button {
+    .map-link {
       display: inline-block;
-      padding: 8px 16px;
-      background: #3b82f6;
+      background-color: #3182ce;
       color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
       text-decoration: none;
-      border-radius: 8px;
+      margin-top: 5px;
       font-size: 13px;
-      font-weight: 500;
-      transition: background 0.2s;
     }
     
-    .map-button:hover {
-      background: #2563eb;
+    .map-link:hover {
+      background-color: #2c5282;
     }
     
     .emergency-contact-section {
@@ -401,40 +391,11 @@ function getBoardingGuideStyles(): string {
       font-size: 14px;
     }
     
-    /* 모바일 반응형 */
-    @media (max-width: 768px) {
-      .boarding-card-modern {
-        border-radius: 12px;
-      }
-      
-      .card-header-section {
-        padding: 20px;
-      }
-      
-      .boarding-title {
-        font-size: 15px;
-      }
-      
-      .time-main {
-        font-size: 32px;
-      }
-      
-      .boarding-info-row {
-        padding: 10px 16px;
-        font-size: 13px;
-      }
-      
-      .location-details-section {
-        padding: 20px;
-      }
-      
-      .detail-box {
-        padding: 12px;
-      }
-      
-      .map-button {
-        font-size: 12px;
-        padding: 6px 12px;
+    /* 넓은 화면에서 2개씩 표시 */
+    @media (min-width: 768px) {
+      .boarding-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
       }
     }
     
