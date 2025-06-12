@@ -68,17 +68,19 @@ export function getCommonHeaderStyles(isStaff: boolean = false): string {
     }
     
     .document-title-section {
-      background: #f8f9fa;
-      padding: 15px;
+      background: ${isStaff ? '#f3e8ff' : '#e7f3ff'};
+      padding: 15px 20px;
       margin-bottom: 20px;
-      text-align: center;
-      border-radius: 8px;
+      border-left: 5px solid ${colors.primaryColor};
+      border-radius: 0;
     }
     
     .document-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: bold;
-      color: ${colors.primaryColor};
+      color: #333;
+      text-align: left;
+      margin: 0;
     }
     
     /* 모바일 최적화 */
@@ -103,7 +105,11 @@ export function getCommonHeaderStyles(isStaff: boolean = false): string {
       }
       
       .document-title {
-        font-size: 16px;
+        font-size: 14px;
+      }
+      
+      .document-title-section {
+        padding: 12px 15px;
       }
     }
     
@@ -139,7 +145,8 @@ export function generateCommonFooter(tourData: any, isStaff: boolean = false): s
             </div>
           </div>
         ` : ''}
-        <div class="footer-message">싱싱골프투어와 함께하는 즐거운 여행</div>
+        <div class="footer-message">${tourData.footer_message || '즐거운 골프 여행 되시길 바랍니다'}</div>
+        <div class="footer-brand">싱싱골프투어</div>
       </div>
     `;
   } else {
@@ -164,9 +171,8 @@ export function generateCommonFooter(tourData: any, isStaff: boolean = false): s
           </div>
         ` : ''}
         
-        ${tourData.footer_message ? `
-          <div class="footer-message">${tourData.footer_message}</div>
-        ` : ''}
+        <div class="footer-message">${tourData.footer_message || '즐거운 골프 여행 되시길 바랍니다'}</div>
+        <div class="footer-brand">싱싱골프투어</div>
       </div>
     `;
   }
@@ -249,7 +255,12 @@ export function getCommonFooterStyles(isStaff: boolean = false): string {
     .footer-message {
       font-size: 14px;
       color: ${colors.primaryColor};
-      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+    
+    .footer-brand {
+      font-size: 13px;
+      color: #666;
     }
     
     /* 모바일 최적화 */

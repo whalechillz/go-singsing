@@ -1,6 +1,7 @@
 import { TourData } from '../types';
 import { htmlWrapper, getCommonStyles } from '../utils/generators';
 import { formatTime, formatDate, getArrivalTime } from '../utils/formatters';
+import { generateCommonHeader, getCommonHeaderStyles, generateCommonFooter, getCommonFooterStyles } from '../utils/commonStyles';
 
 export function generateBoardingGuideHTML(
   tourData: TourData,
@@ -19,12 +20,9 @@ export function generateBoardingGuideHTML(
   
   const content = `
     <div class="container">
+      ${generateCommonHeader(tourData, '탑승 안내', false)}
+      
       <div class="route-section">
-        <div class="route-header-box">
-          <div class="route-header-title">싱싱골프투어</div>
-          <div class="route-header-subtitle">${tourData.title}</div>
-          <div class="route-header-date">${formatDate(tourData.start_date, true)} ~ ${formatDate(tourData.end_date, true)}</div>
-        </div>
         
         <div class="boarding-cards">
           ${boardingItems.map((item, index) => {
@@ -79,13 +77,12 @@ export function generateBoardingGuideHTML(
         </div>
       ` : ''}
       
-      <div class="footer">
-        <p>즐거운 골프 여행 되시길 바랍니다</p>
-        <p>싱싱골프투어 | 031-215-3990</p>
-      </div>
+      ${generateCommonFooter(tourData, false)}
     </div>
     
     <style>
+      ${getCommonHeaderStyles(false)}
+      ${getCommonFooterStyles(false)}
       ${getBoardingGuideStyles()}
     </style>
   `;
@@ -131,17 +128,10 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
   
   const content = `
     <div class="container">
-      <div class="route-header-box">
-        <div class="route-header-title">싱싱골프투어</div>
-        <div class="route-header-subtitle">${tourData.title}</div>
-        <div class="route-header-date">${formatDate(tourData.start_date, true)} ~ ${formatDate(tourData.end_date, true)}</div>
-      </div>
+      ${generateCommonHeader(tourData, '탑승안내 (스탭용)', true)}
       
-      <div class="summary-section">
-        <div class="summary-title">탑승안내 (스탭용)</div>
-        <div class="summary-info">
-          <span>총 참가자: <strong>${participants.length}명</strong></span>
-        </div>
+      <div class="document-title-section staff">
+        <div class="document-title">총 참가자: ${participants.length}명</div>
       </div>
       
       ${orderedLocations.map((location) => {
@@ -191,13 +181,12 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
         </div>
       ` : ''}
       
-      <div class="footer">
-        <p>즐거운 골프 여행 되시길 바랍니다</p>
-        <p>싱싱골프투어 | 031-215-3990</p>
-      </div>
+      ${generateCommonFooter(tourData, true)}
     </div>
     
     <style>
+      ${getCommonHeaderStyles(true)}
+      ${getCommonFooterStyles(true)}
       ${getStaffBoardingStyles()}
     </style>
   `;
@@ -207,30 +196,7 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
 
 function getBoardingGuideStyles(): string {
   return `
-    .route-header-box {
-      text-align: center;
-      padding: 20px;
-      background: #2c5282;
-      color: white;
-      margin-bottom: 30px;
-      border-radius: 10px;
-    }
-    
-    .route-header-title {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    
-    .route-header-subtitle {
-      font-size: 18px;
-      margin-bottom: 5px;
-    }
-    
-    .route-header-date {
-      font-size: 16px;
-      opacity: 0.9;
-    }
+    /* 탑승 안내 전용 스타일 */
     
     .boarding-cards {
       display: flex;
@@ -343,57 +309,9 @@ function getStaffBoardingStyles(): string {
       padding: 30px;
     }
     
-    .route-header-box {
-      text-align: center;
-      padding: 30px;
-      background: #2c5282;
-      color: white;
-      margin: -30px -30px 30px -30px;
-    }
+    /* 헤더 스타일은 공통 스타일에서 처리 */
     
-    .route-header-title {
-      font-size: 28px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      letter-spacing: 0.5px;
-    }
-    
-    .route-header-subtitle {
-      font-size: 22px;
-      font-weight: 500;
-      margin-bottom: 10px;
-      opacity: 0.95;
-    }
-    
-    .route-header-date {
-      font-size: 18px;
-      opacity: 0.9;
-    }
-    
-    .summary-section {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 30px;
-      text-align: center;
-    }
-    
-    .summary-title {
-      font-size: 20px;
-      font-weight: bold;
-      color: #2c5282;
-      margin-bottom: 10px;
-    }
-    
-    .summary-info {
-      font-size: 16px;
-      color: #555;
-    }
-    
-    .summary-info strong {
-      color: #2c5282;
-      font-size: 18px;
-    }
+    /* 문서 제목 스타일은 공통 스타일에서 처리 */
     
     .location-section {
       margin-bottom: 25px;
@@ -475,24 +393,14 @@ function getStaffBoardingStyles(): string {
       margin-bottom: 5px;
     }
     
-    .footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 2px solid #e0e0e0;
-      text-align: center;
-      color: #666;
-    }
-    
-    .footer p {
-      margin: 5px 0;
-    }
+    /* footer 스타일은 공통 스타일에서 처리 */
     
     /* 인쇄용 스타일 */
     @media print {
       body { margin: 0; padding: 0; }
       .container { max-width: 100%; padding: 20px; }
       .location-section { break-inside: avoid; }
-      .summary-section { break-inside: avoid; }
+      .document-title-section { break-inside: avoid; }
     }
   `;
 }

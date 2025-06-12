@@ -95,14 +95,7 @@ export function generateSimplifiedHTML(tourData: TourData | null, productData: P
       border-bottom: none;
     }
     
-    .footer {
-      text-align: center;
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-      color: #666;
-      font-size: 14px;
-    }
+    /* footer 스타일은 공통 스타일에서 처리 */
     
     @media print {
       .container {
