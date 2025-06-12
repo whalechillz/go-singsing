@@ -134,7 +134,7 @@ export function generateBoardingGuideHTML(
         
         return `
           <div class="footer">
-            <p>즐거운 골프 여행 되시길 바랍니다</p>
+            <p>♡ 안전한 탑승과 즐거운 여행 되세요 ♡</p>
             ${contactInfo.length > 0 ? `
               <div class="contact-info">
                 <p class="contact-info-title">연락처</p>
@@ -240,7 +240,7 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
       }).join('')}
       
       <div class="footer">
-        <p>즐거운 골프 여행 되시길 바랍니다</p>
+        <p>♡ 안전한 탑승과 즐거운 여행 되세요 ♡</p>
         ${(() => {
           const phoneSettings = tourData.phone_display_settings?.staff_boarding;
           const contactInfo = [];
@@ -493,7 +493,7 @@ function getBoardingGuideStyles(): string {
     /* 푸터 스타일 */
     .footer {
       text-align: center;
-      padding: 15px;
+      padding: 25px;
       background-color: #2c5282;
       color: white;
       border-radius: 10px;
@@ -504,6 +504,13 @@ function getBoardingGuideStyles(): string {
     .footer p {
       margin: 5px 0;
       font-size: 14px;
+    }
+    
+    .footer > p:first-child {
+      font-size: 15px;
+      margin-bottom: 10px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
     }
     
     /* 연락처 스타일 */
@@ -668,8 +675,9 @@ function getStaffBoardingStyles(): string {
     
     .footer {
       margin-top: 40px;
-      padding-top: 20px;
-      border-top: 2px solid #e0e0e0;
+      padding: 30px;
+      background: #f8f9fa;
+      border-radius: 10px;
       text-align: center;
       color: #666;
     }
@@ -677,6 +685,14 @@ function getStaffBoardingStyles(): string {
     .footer p {
       margin: 5px 0;
       font-size: 14px;
+    }
+    
+    .footer > p:first-child {
+      font-size: 15px;
+      color: #6B46C1;
+      margin-bottom: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
     }
     
     /* 연락처 스타일 */

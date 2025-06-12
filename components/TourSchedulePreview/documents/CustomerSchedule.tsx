@@ -189,9 +189,12 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
           contactInfo.push({ label: '골프장', phone: tourData.golf_reservation_phone });
         }
         
-        return contactInfo.length > 0 || tourData.footer_message ? `
+        // 문서별 푸터 메시지
+        const footerMessage = '♡ 즐거운 골프 여행이 되시길 바랍니다 ♡';
+        
+        return contactInfo.length > 0 || footerMessage ? `
           <div class="footer">
-            ${tourData.footer_message ? `<p>${tourData.footer_message}</p>` : ''}
+            ${footerMessage ? `<p>${footerMessage}</p>` : ''}
             ${contactInfo.length > 0 ? `
               <div class="contact-info">
                 <p class="contact-title">연락처</p>
@@ -341,10 +344,19 @@ function getScheduleStyles(isStaff: boolean = false): string {
     
     .footer {
       margin-top: 40px;
-      padding-top: 20px;
-      border-top: 2px solid #ddd;
+      padding: 30px;
+      background: #f8f9fa;
+      border-radius: 10px;
       text-align: center;
       color: #666;
+    }
+    
+    .footer > p:first-child {
+      font-size: 15px;
+      color: #2c5282;
+      margin-bottom: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
     }
     
     .contact-info {
@@ -704,6 +716,13 @@ function getScheduleStyles(isStaff: boolean = false): string {
       .summary-icon { display: none; }
       .usage-details[open] {
         margin-bottom: 20px;
+      }
+      
+      /* 푸터 인쇄 스타일 */
+      .footer {
+        background: #f8f9fa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
     }
   `;

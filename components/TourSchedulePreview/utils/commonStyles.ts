@@ -127,6 +127,29 @@ export function getCommonHeaderStyles(isStaff: boolean = false): string {
   `;
 }
 
+// 문서별 푸터 메시지 가져오기
+function getDocumentFooterMessage(documentType: string | undefined, tourData: any): string {
+  const messages: Record<string, string> = {
+    'customer_schedule': '♡ 즐거운 골프 여행이 되시길 바랍니다 ♡',
+    'customer_boarding': '♡ 안전한 탑승과 즐거운 여행 되세요 ♡',
+    'staff_boarding': '♡ 안전한 탑승과 즐거운 여행 되세요 ♡',
+    'room_assignment': '♡ 편안한 휴식이 되시길 바랍니다 ♡',
+    'room_assignment_staff': '♡ 편안한 휴식이 되시길 바랍니다 ♡',
+    'customer_timetable': '♡ 멋진 라운딩 되시길 응원합니다 ♡',
+    'staff_timetable': '♡ 멋진 라운딩 되시길 응원합니다 ♡',
+    'tee_time': '♡ 멋진 라운딩 되시길 응원합니다 ♡',
+    'simplified': '♡ 행복한 추억 만드시길 바랍니다 ♡'
+  };
+  
+  // 문서 타입에 맞는 메시지가 있으면 사용, 없으면 기본 푸터 메시지 사용
+  if (documentType && messages[documentType]) {
+    return messages[documentType];
+  }
+  
+  // 기본 푸터 메시지 (투어 설정에서 가져옴)
+  return tourData.footer_message || '♡ 즐거운 하루 되시길 바랍니다 ♡';
+}
+
 // 공통 푸터 HTML
 export function generateCommonFooter(tourData: any, isStaff: boolean = false, documentType?: string): string {
   // 문서에 따른 전화번호 표시 설정 가져오기
@@ -176,9 +199,12 @@ export function generateCommonFooter(tourData: any, isStaff: boolean = false, do
     }
   }
   
+  // 문서별 푸터 메시지 가져오기
+  const footerMessage = getDocumentFooterMessage(documentType, tourData);
+  
   return `
     <div class="footer-common">
-      ${tourData.footer_message ? `<div class="footer-message">${tourData.footer_message}</div>` : ''}
+      ${footerMessage ? `<div class="footer-message">${footerMessage}</div>` : ''}
       ${contactInfo.length > 0 ? `
         <div class="contact-info">
           <p class="contact-title">연락처</p>
@@ -208,16 +234,27 @@ export function getCommonFooterStyles(isStaff: boolean = false): string {
       text-align: center;
     }
     
+    /* 푸터 메시지 스타일 */
+    .footer-message {
+      font-size: 15px;
+      color: ${colors.primaryColor};
+      margin-bottom: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+    
     /* 연락처 정보 스타일 */
     .contact-info {
-      margin-top: 15px;
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
     }
     
     .contact-title {
       font-weight: bold;
-      font-size: 16px;
-      color: ${colors.primaryColor};
-      margin-bottom: 10px;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
     }
     
     .contact-items {
