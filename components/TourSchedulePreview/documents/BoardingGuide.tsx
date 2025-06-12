@@ -32,36 +32,48 @@ export function generateBoardingGuideHTML(
             const { timePrefix, displayTime } = formatTime(departureTime);
             
             return `
-              <div class="boarding-card route-stop">
-                <div class="card-border"></div>
-                <div class="card-content">
-                  <div class="route-header">
-                    <div class="route-number">${index + 1}</div>
-                    <div class="route-info-main">
-                      <div class="card-title">
-                        <span class="location-name">${boardingSpot.name}</span>
-                        <span class="location-type">(탑승지)</span>
-                      </div>
-                      <div class="time-wrapper">
-                        <span class="time-prefix">${timePrefix}</span>
-                        <span class="card-time">${displayTime}</span>
-                      </div>
-                      <div class="card-date">${formatDate(tourData.start_date, true)}</div>
-                    </div>
+              <div class="boarding-card-modern">
+                <div class="card-header-section">
+                  <h3 class="boarding-title">${boardingSpot.name} ${boardingSpot.address ? `(${boardingSpot.address.split(' ')[1] || ''})` : ''}</h3>
+                  <div class="boarding-time-display">
+                    <span class="time-prefix-modern">${timePrefix}</span>
+                    <span class="time-main">${displayTime}</span>
                   </div>
-                  
-                  <div class="card-info">
-                    <div class="info-parking">주차: ${boardingSpot.parking_info || '무료'}</div>
-                    <div class="info-arrival">${item.arrival_time ? item.arrival_time.slice(0, 5) : getArrivalTime(item.departure_time || '미정')} 도착</div>
-                    ${item.passenger_count ? `<div class="info-passenger">탑승인원: ${item.passenger_count}명</div>` : ''}
+                  <div class="boarding-date">${formatDate(tourData.start_date, true)}</div>
+                  <div class="boarding-info-row">
+                    <span class="info-label">주차:</span>
+                    <span class="info-value">${boardingSpot.parking_info || '제한적'}</span>
+                    <span class="info-divider"></span>
+                    <span class="info-value departure">${item.arrival_time ? item.arrival_time.slice(0, 5) : getArrivalTime(item.departure_time || '미정')} 도착</span>
                   </div>
-                  
-                  ${boardingSpot.description ? `
-                    <div class="location-info">
-                      <p class="location-desc">${boardingSpot.description}</p>
-                    </div>
-                  ` : ''}
                 </div>
+                
+                ${boardingSpot.description || boardingSpot.address || boardingSpot.naver_map_url ? `
+                  <div class="location-details-section">
+                    ${boardingSpot.description ? `
+                      <div class="detail-box">
+                        <span class="detail-icon">📍</span>
+                        <div class="detail-content">
+                          <h4 class="detail-title">버스탑승지</h4>
+                          <p class="detail-text">${boardingSpot.description}</p>
+                        </div>
+                      </div>
+                    ` : ''}
+                    
+                    ${boardingSpot.address || boardingSpot.naver_map_url ? `
+                      <div class="detail-box">
+                        <span class="detail-icon">📍</span>
+                        <div class="detail-content">
+                          <h4 class="detail-title">주차장 오는길</h4>
+                          <p class="detail-text">${boardingSpot.address || boardingSpot.name}</p>
+                          ${boardingSpot.naver_map_url ? `
+                            <a href="${boardingSpot.naver_map_url}" target="_blank" class="map-button">네이버 지도에서 보기</a>
+                          ` : ''}
+                        </div>
+                      </div>
+                    ` : ''}
+                  </div>
+                ` : ''}
               </div>
             `;
           }).join('')}
@@ -198,83 +210,147 @@ function getBoardingGuideStyles(): string {
   return `
     /* 탑승 안내 전용 스타일 */
     
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
     .boarding-cards {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
     
-    .boarding-card {
-      border: 1px solid #ddd;
-      border-radius: 10px;
+    .boarding-card-modern {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border: 1px solid #e5e7eb;
     }
     
-    .card-border {
-      height: 5px;
-      background: #4a6fa5;
+    .card-header-section {
+      padding: 24px;
+      text-align: center;
+      border-bottom: 1px solid #f3f4f6;
     }
     
-    .card-content {
-      padding: 20px;
+    .boarding-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 16px 0;
     }
     
-    .route-header {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 15px;
+    .boarding-time-display {
+      margin-bottom: 8px;
     }
     
-    .route-number {
-      width: 40px;
-      height: 40px;
-      background: #4a6fa5;
-      color: white;
+    .time-prefix-modern {
+      font-size: 14px;
+      color: #6b7280;
+      margin-right: 8px;
+    }
+    
+    .time-main {
+      font-size: 36px;
+      font-weight: 700;
+      color: #dc2626;
+    }
+    
+    .boarding-date {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    
+    .boarding-info-row {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
-      font-weight: bold;
-      font-size: 18px;
-      margin-right: 15px;
+      gap: 12px;
+      padding: 12px 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    .info-label {
+      color: #6b7280;
+    }
+    
+    .info-value {
+      color: #374151;
+      font-weight: 500;
+    }
+    
+    .info-divider {
+      width: 1px;
+      height: 16px;
+      background: #e5e7eb;
+      margin: 0 8px;
+    }
+    
+    .info-value.departure {
+      color: #dc2626;
+    }
+    
+    .location-details-section {
+      padding: 24px;
+    }
+    
+    .detail-box {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .detail-box:last-child {
+      margin-bottom: 0;
+    }
+    
+    .detail-icon {
+      font-size: 20px;
       flex-shrink: 0;
     }
     
-    .card-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 5px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .detail-content {
+      flex: 1;
     }
     
-    .location-name { color: #2c5282; }
-    .location-type { font-size: 14px; color: #666; font-weight: normal; }
-    
-    .time-wrapper {
-      display: flex;
-      align-items: baseline;
-      gap: 5px;
-      margin-bottom: 5px;
+    .detail-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 4px 0;
     }
     
-    .time-prefix { font-size: 14px; color: #666; }
-    .card-time { font-size: 24px; font-weight: bold; color: #2c5282; }
-    .card-date { font-size: 14px; color: #666; }
-    
-    .card-info {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-top: 1px solid #eee;
-      border-bottom: 1px solid #eee;
-      margin: 15px 0;
+    .detail-text {
+      font-size: 13px;
+      color: #6b7280;
+      margin: 0 0 12px 0;
+      line-height: 1.5;
     }
     
-    .location-info { margin-top: 15px; }
-    .location-desc { font-size: 14px; line-height: 1.6; color: #333; }
+    .map-button {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #3b82f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    
+    .map-button:hover {
+      background: #2563eb;
+    }
     
     .emergency-contact-section {
       margin: 30px 0;
@@ -323,6 +399,71 @@ function getBoardingGuideStyles(): string {
     .footer p {
       margin: 5px 0;
       font-size: 14px;
+    }
+    
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      .boarding-card-modern {
+        border-radius: 12px;
+      }
+      
+      .card-header-section {
+        padding: 20px;
+      }
+      
+      .boarding-title {
+        font-size: 15px;
+      }
+      
+      .time-main {
+        font-size: 32px;
+      }
+      
+      .boarding-info-row {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+      
+      .location-details-section {
+        padding: 20px;
+      }
+      
+      .detail-box {
+        padding: 12px;
+      }
+      
+      .map-button {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+    }
+    
+    /* 인쇄용 스타일 */
+    @media print {
+      .boarding-card-modern {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #d1d5db;
+      }
+      
+      .time-main {
+        color: #dc2626 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .info-value.departure {
+        color: #dc2626 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .map-button {
+        background: #3b82f6 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
   `;
 }
