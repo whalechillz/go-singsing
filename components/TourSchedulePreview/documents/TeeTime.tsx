@@ -1,6 +1,7 @@
 import { TourData } from '../types';
 import { htmlWrapper } from '../utils/generators';
 import { formatDate, formatCourseDisplay, getCourseHeaderClass } from '../utils/formatters';
+import { generateCommonHeader, getCommonHeaderStyles, generateCommonFooter, getCommonFooterStyles } from '../utils/commonStyles';
 
 export function generateTeeTimeHTML(
   teeTimes: any[],
@@ -16,17 +17,9 @@ export function generateTeeTimeHTML(
 
   const content = `
     <div class="container">
+      ${generateCommonHeader(tourData, isStaff ? '티타임표 (스탭용)' : '티타임표', isStaff)}
+      
       ${isStaff ? `
-        <div class="header-authority">
-          <div class="logo">싱싱골프투어</div>
-          <div class="subtitle">${tourData.title}</div>
-          <div class="date-info">${tourData.start_date && tourData.end_date ? 
-            `${new Date(tourData.start_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} ~ ${new Date(tourData.end_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
-          </div>
-          <div class="company-info">수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990</div>
-        </div>
-        
-        <div class="page-title">티타임표 (스탭용)</div>
         
         <div class="stats-container">
           ${Object.entries(teeTimesByDate).map(([date, times]: [string, any]) => {
@@ -45,18 +38,7 @@ export function generateTeeTimeHTML(
             `;
           }).join('')}
         </div>
-      ` : `
-        <div class="header-authority">
-          <div class="logo">싱싱골프투어</div>
-          <div class="subtitle">${tourData.title}</div>
-          <div class="date-info">${tourData.start_date && tourData.end_date ? 
-            `${new Date(tourData.start_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} ~ ${new Date(tourData.end_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
-          </div>
-          <div class="company-info">수원시 영통구 법조로149번길 200<br>고객센터 TEL 031-215-3990</div>
-        </div>
-        
-        <div class="page-title">티타임표</div>
-      `}
+      ` : ''}
       
       ${Object.entries(teeTimesByDate).map(([date, times]: [string, any]) => {
         const dateStr = new Date(date).toLocaleDateString('ko-KR', { 
@@ -230,33 +212,15 @@ export function generateTeeTimeHTML(
           </div>
         ` : ''}
         
-        <div class="footer">
-          <div class="footer-message">${tourData.footer_message || '즐거운 라운딩 되세요!'}</div>
-          <div class="footer-brand">싱싱골프투어</div>
-        </div>
+        ${generateCommonFooter(tourData, false)}
       ` : `
-        ${tourData.staff && tourData.staff.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `
-          <div class="contact-info">
-            <div class="contact-title">비상 연락처</div>
-            <div class="contact-grid">
-              ${tourData.staff.filter((staff: any) => staff.role.includes('기사')).map((staff: any) => `
-                <div class="contact-item">
-                  <div class="contact-name">${staff.name} ${staff.role}</div>
-                  ${staff.phone ? `<div class="contact-phone">${staff.phone}</div>` : ''}
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-        
-        <div class="footer">
-          <div class="footer-message">♡ 즐거운 라운딩 되세요! ♡</div>
-          <div class="footer-detail">싱싱골프투어와 함께하는 특별한 하루</div>
-        </div>
+        ${generateCommonFooter(tourData, true)}
       `}
     </div>
     
     <style>
+      ${getCommonHeaderStyles(isStaff)}
+      ${getCommonFooterStyles(isStaff)}
       ${isStaff ? getStaffTeeTimeStyles() : getTeeTimeStyles()}
     </style>
   `;
@@ -289,41 +253,7 @@ function getTeeTimeStyles(): string {
       padding: 0;
     }
     
-    /* A그룹 권위있는 스타일 헤더 */
-    .header-authority {
-      background-color: #2c5282;
-      color: white;
-      padding: 30px;
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    
-    .header-authority .logo {
-      font-size: 28px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      letter-spacing: 0.5px;
-      color: white;
-    }
-    
-    .header-authority .subtitle {
-      font-size: 20px;
-      font-weight: 500;
-      margin-bottom: 5px;
-      opacity: 0.95;
-    }
-    
-    .header-authority .date-info {
-      font-size: 16px;
-      margin-bottom: 10px;
-      opacity: 0.9;
-    }
-    
-    .header-authority .company-info {
-      font-size: 14px;
-      opacity: 0.9;
-      line-height: 1.6;
-    }
+    /* 티타임표 고객용 스타일 */
     
     .page-title {
       font-size: 18px;
@@ -465,23 +395,7 @@ function getTeeTimeStyles(): string {
       margin-bottom: 5px;
     }
     
-    .footer {
-      margin-top: 40px;
-      text-align: center;
-      padding: 20px;
-      border-top: 2px solid #e5e7eb;
-    }
-    
-    .footer-message {
-      font-size: 16px;
-      color: #4a6fa5;
-      margin-bottom: 5px;
-    }
-    
-    .footer-brand {
-      font-size: 14px;
-      color: #999;
-    }
+    /* footer 스타일은 공통 스타일에서 처리 */
     
     @media print {
       @page {
@@ -499,13 +413,7 @@ function getTeeTimeStyles(): string {
         max-width: 190mm;
       }
       
-      .header-authority {
-        background: #2c5282 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        margin: -10mm -10mm 30px -10mm;
-        padding: 20px 30px;
-      }
+      /* 헤더 스타일은 공통 스타일에서 처리 */
       
       .date-header {
         background: #2c5282 !important;
@@ -520,15 +428,13 @@ function getTeeTimeStyles(): string {
         max-width: 1200px;
       }
       
-      .header-authority {
-        margin: 0 0 30px 0;
-      }
+      /* 헤더 스타일은 공통 스타일에서 처리 */
       
       .schedule-card {
         margin: 0 20px 20px 20px;
       }
       
-      .contact-section, .info-section, .footer {
+      .contact-section, .info-section {
         margin: 30px 20px;
       }
     }
@@ -560,43 +466,7 @@ function getStaffTeeTimeStyles(): string {
       padding: 0;
     }
     
-    /* 티타임표 전용 보라색 그라데이션 헤더 */
-    .header-authority {
-      background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 50%, #9333EA 100%);
-      color: white;
-      padding: 30px;
-      text-align: center;
-      margin-bottom: 30px;
-      box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
-    }
-    
-    .header-authority .logo {
-      font-size: 28px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      letter-spacing: 0.5px;
-      color: white;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    .header-authority .subtitle {
-      font-size: 20px;
-      font-weight: 500;
-      margin-bottom: 5px;
-      opacity: 0.95;
-    }
-    
-    .header-authority .date-info {
-      font-size: 16px;
-      margin-bottom: 10px;
-      opacity: 0.9;
-    }
-    
-    .header-authority .company-info {
-      font-size: 14px;
-      opacity: 0.9;
-      line-height: 1.6;
-    }
+    /* 티타임표 스탭용 스타일 */
     
     .page-title {
       font-size: 18px;
@@ -762,64 +632,7 @@ function getStaffTeeTimeStyles(): string {
       color: #95a5a6;
     }
     
-    .contact-info {
-      margin: 30px 0;
-      padding: 25px;
-      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-      border-radius: 15px;
-      box-shadow: 0 5px 15px rgba(252, 182, 159, 0.3);
-    }
-    
-    .contact-title {
-      font-weight: 700;
-      color: #2d3436;
-      margin-bottom: 15px;
-      font-size: 18px;
-    }
-    
-    .contact-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 15px;
-    }
-    
-    .contact-item {
-      padding: 15px;
-      border-radius: 10px;
-      background: white;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    .contact-name {
-      font-weight: 600;
-      color: #2d3436;
-      margin-bottom: 5px;
-    }
-    
-    .contact-phone {
-      color: #e67e22;
-      font-size: 16px;
-    }
-    
-    .footer {
-      margin-top: 40px;
-      text-align: center;
-      padding: 30px;
-      background: #f8f9fa;
-      border-radius: 15px;
-    }
-    
-    .footer-message {
-      font-size: 18px;
-      color: #667eea;
-      font-weight: 600;
-      margin-bottom: 5px;
-    }
-    
-    .footer-detail {
-      font-size: 14px;
-      color: #6c757d;
-    }
+    /* footer와 contact 스타일은 공통 스타일에서 처리 */
     
     @media print {
       @page {
@@ -837,13 +650,7 @@ function getStaffTeeTimeStyles(): string {
         max-width: 190mm;
       }
       
-      .header-authority {
-        background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 50%, #9333EA 100%) !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        margin: -10mm -10mm 30px -10mm;
-        padding: 20px 30px;
-      }
+      /* 헤더 스타일은 공통 스타일에서 처리 */
       
       .day-header {
         background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%) !important;
@@ -865,9 +672,7 @@ function getStaffTeeTimeStyles(): string {
         max-width: 1200px;
       }
       
-      .header-authority {
-        margin: 0 0 30px 0;
-      }
+      /* 헤더 스타일은 공통 스타일에서 처리 */
       
       .stats-container {
         padding: 0 20px;
@@ -881,9 +686,7 @@ function getStaffTeeTimeStyles(): string {
         padding: 0 20px;
       }
       
-      .contact-info, .footer {
-        margin: 30px 20px;
-      }
+      /* footer와 contact 스타일은 공통 스타일에서 처리 */
     }
   `;
 }
