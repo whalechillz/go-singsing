@@ -1,3 +1,6 @@
+// 이 파일은 page.tsx와 충돌하여 백업되었습니다.
+// Next.js에서는 같은 경로에 page.tsx와 route.ts를 동시에 가질 수 없습니다.
+
 // app/s/[url]/route.ts (새 파일)
 // 공개 링크 페이지에 대한 캐시 정책 설정
 
