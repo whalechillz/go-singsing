@@ -496,7 +496,9 @@ export default function CustomerTourPortal({
               <FileText className="w-5 h-5" style={{ color: theme.primary }} />
             </div>
             <h2 className="text-xl font-semibold" style={{ color: theme.primary }}>
-              고객님을 위한 투어 문서
+              {targetAudience === 'staff' ? '스탭을 위한 투어 문서' : 
+               targetAudience === 'golf' ? '골프장을 위한 투어 문서' : 
+               '고객님을 위한 투어 문서'}
             </h2>
           </div>
           

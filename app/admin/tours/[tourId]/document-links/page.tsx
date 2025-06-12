@@ -109,20 +109,20 @@ export default function DocumentLinksPage() {
   };
 
   const documentTypeOptions = [
-    { value: 'portal', label: '통합 표지 (포털)' },
-    { value: 'customer_all', label: '고객용 통합 문서 (추천)' },
-    { value: 'staff_all', label: '스탭용 통합 문서 (추천)' },
-    { value: 'golf_timetable', label: '골프장 전용 티타임표' },
+    { value: 'portal', label: '통합 표지 (포털)', icon: '🎯' },
+    { value: 'customer_all', label: '고객용 통합 문서 (추천)', icon: '📚' },
+    { value: 'staff_all', label: '스탭용 통합 문서 (추천)', icon: '📋' },
+    { value: 'golf_timetable', label: '골프장 전용 티타임표', icon: '⛳' },
     // 기존 개별 문서 타입들 (호환성 유지)
-    { value: 'customer_schedule', label: '고객용 일정표 (개별)' },
-    { value: 'staff_schedule', label: '스탭용 일정표 (개별)' },
-    { value: 'customer_boarding', label: '고객용 탑승안내 (개별)' },
-    { value: 'staff_boarding', label: '스탭용 탑승안내 (개별)' },
-    { value: 'room_assignment', label: '고객용 객실배정 (개별)' },
-    { value: 'room_assignment_staff', label: '스탭용 객실배정 (개별)' },
-    { value: 'customer_timetable', label: '고객용 티타임표 (개별)' },
-    { value: 'staff_timetable', label: '스탭용 티타임표 (개별)' },
-    { value: 'simplified', label: '간편일정' },
+    { value: 'customer_schedule', label: '고객용 일정표 (개별)', icon: '📅' },
+    { value: 'staff_schedule', label: '스탭용 일정표 (개별)', icon: '📅' },
+    { value: 'customer_boarding', label: '고객용 탑승안내 (개별)', icon: '🚌' },
+    { value: 'staff_boarding', label: '스탭용 탑승안내 (개별)', icon: '🚌' },
+    { value: 'room_assignment', label: '고객용 객실배정 (개별)', icon: '🏨' },
+    { value: 'room_assignment_staff', label: '스탭용 객실배정 (개별)', icon: '🏨' },
+    { value: 'customer_timetable', label: '고객용 티타임표 (개별)', icon: '⏰' },
+    { value: 'staff_timetable', label: '스탭용 티타임표 (개별)', icon: '⏰' },
+    { value: 'simplified', label: '간편일정', icon: '📄' },
   ];
 
   useEffect(() => {
@@ -694,7 +694,7 @@ export default function DocumentLinksPage() {
                       <div className="flex items-center gap-3 mb-1">
                         <FileText className="w-5 h-5 text-blue-600" />
                         <h3 className="text-lg font-semibold">
-                          {documentType?.label || link.document_type}
+                          {documentType?.icon} {documentType?.label || link.document_type}
                         </h3>
                         {link.document_type === 'portal' && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -831,7 +831,7 @@ export default function DocumentLinksPage() {
                 >
                   {documentTypeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {option.icon} {option.label}
                     </option>
                   ))}
                 </select>
@@ -900,7 +900,7 @@ export default function DocumentLinksPage() {
                 >
                   {documentTypeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {option.icon} {option.label}
                     </option>
                   ))}
                 </select>
@@ -968,7 +968,7 @@ export default function DocumentLinksPage() {
                 통합 표지란?
               </h4>
               <p className="text-sm text-blue-800 mb-2">
-                고객님의 핸드폰에서 투어 문서를 쉽게 볼 수 있도록 만든 특별한 페이지입니다.
+                {editTargetAudience === 'staff' ? '스탭이' : editTargetAudience === 'golf' ? '골프장에서' : '고객님의'} 핸드폰에서 투어 문서를 쉽게 볼 수 있도록 만든 특별한 페이지입니다.
               </p>
               <ul className="text-sm text-blue-700 space-y-1">
                 <li>• 복잡한 링크 대신 하나의 직관적인 페이지</li>
