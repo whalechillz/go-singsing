@@ -644,9 +644,23 @@ export default function DocumentLinksPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <>
+      <style jsx>{`
+        @keyframes rainbow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .rainbow-animation {
+          background-size: 200% 200%;
+          animation: rainbow 3s ease infinite;
+        }
+      `}</style>
+      <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">문서 링크 관리</h1>
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+          🎆 문서 링크 관리
+        </h1>
         <p className="text-gray-600">
           {tour?.title} ({new Date(tour?.start_date || '').toLocaleDateString('ko-KR')} ~ 
           {new Date(tour?.end_date || '').toLocaleDateString('ko-KR')})
@@ -662,39 +676,50 @@ export default function DocumentLinksPage() {
             setDriverPhone(contacts.driverPhone);
             setIsPortalModalOpen(true);
           }}
-          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl"
+          className="relative inline-flex items-center px-5 py-2.5 rounded-lg overflow-hidden group transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
         >
-          <Palette className="w-4 h-4 mr-2" />
-          통합 표지 생성
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 transition-all rainbow-animation" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <Palette className="relative w-5 h-5 mr-2 text-white z-10" />
+          <span className="relative text-white font-medium z-10">🌈 통합 표지 만들기</span>
         </button>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="relative inline-flex items-center px-5 py-2.5 rounded-lg overflow-hidden group transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          새 문서 링크 생성
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transition-all" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <Plus className="relative w-5 h-5 mr-2 text-white z-10" />
+          <span className="relative text-white font-medium z-10">✨ 새 문서 링크 생성</span>
         </button>
         <button
-          className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-          title="QR코드 생성 (준비중)"
+          className="relative inline-flex items-center px-5 py-2.5 rounded-lg overflow-hidden group opacity-50 cursor-not-allowed"
+          title="QR코드 생성 (공 개예정 🎉)"
           disabled
         >
-          <QrCode className="w-4 h-4 mr-2" />
-          QR코드 생성
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300" />
+          <QrCode className="relative w-5 h-5 mr-2 text-white z-10" />
+          <span className="relative text-white font-medium z-10">🖼️ QR코드 (공 개예정)</span>
         </button>
         <button
-          className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-          title="전체 링크 복사 (준비중)"
+          className="relative inline-flex items-center px-5 py-2.5 rounded-lg overflow-hidden group opacity-50 cursor-not-allowed"
+          title="전체 링크 복사 (공 개예정 🎆)"
           disabled
         >
-          <Share2 className="w-4 h-4 mr-2" />
-          전체 링크 복사
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300" />
+          <Share2 className="relative w-5 h-5 mr-2 text-white z-10" />
+          <span className="relative text-white font-medium z-10">📋 전체 복사 (공 개예정)</span>
         </button>
       </div>
 
       {documentLinks.length === 0 ? (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
-          아직 생성된 문서 링크가 없습니다. 위의 버튼을 클릭하여 새로운 링크를 생성하세요.
+        <div className="relative overflow-hidden bg-gradient-to-r from-yellow-50 via-pink-50 to-purple-50 border border-yellow-200 text-yellow-800 px-6 py-5 rounded-lg">
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-100/30 via-pink-100/30 to-purple-100/30 opacity-50" />
+          <p className="relative font-medium">
+            🎈 아직 생성된 문서 링크가 없어요! 
+            <br />
+            <span className="text-sm">위의 알록달록한 버튼을 눌러서 친구들과 나눌 새로운 링크를 만들어보세요 💕</span>
+          </p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -712,6 +737,11 @@ export default function DocumentLinksPage() {
                         <h3 className="text-lg font-semibold">
                           {documentType?.label || link.document_type}
                         </h3>
+                        {link.document_type === 'portal' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 text-white">
+                            🌈 특별
+                          </span>
+                        )}
                       </div>
                       {link.document_type === 'customer_all' && (
                         <p className="text-xs text-gray-500 ml-8">
@@ -786,10 +816,15 @@ export default function DocumentLinksPage() {
                       </button>
                       <button
                         onClick={() => handleShare(link)}
-                        className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
-                        title="공유하기"
+                        className="relative p-2 rounded-md transition-all transform hover:scale-110 group overflow-hidden"
+                        title="친구에게 공유하기 💝"
                       >
-                        <Share2 className="w-4 h-4" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 opacity-80 group-hover:opacity-100 transition-opacity rainbow-animation" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-80 transition-opacity blur-sm rainbow-animation" />
+                        <Share2 className="relative w-4 h-4 text-white z-10" />
+                        <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap shadow-lg">
+                          친구에게 공유 💝
+                        </span>
                       </button>
                     </div>
                     
@@ -1201,9 +1236,11 @@ export default function DocumentLinksPage() {
               </button>
               <button
                 onClick={handleCreatePortal}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all"
+                className="relative flex-1 px-4 py-2 rounded-md overflow-hidden group transition-all transform hover:scale-105"
               >
-                통합 표지 생성
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 transition-all rainbow-animation" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative text-white font-medium z-10">🎈 통합 표지 생성하기</span>
               </button>
             </div>
           </div>
@@ -1425,9 +1462,11 @@ export default function DocumentLinksPage() {
               </button>
               <button
                 onClick={handleUpdatePortal}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all"
+                className="relative flex-1 px-4 py-2 rounded-md overflow-hidden group transition-all transform hover:scale-105"
               >
-                통합 표지 수정
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 transition-all rainbow-animation" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative text-white font-medium z-10">🎉 통합 표지 수정하기</span>
               </button>
             </div>
           </div>
@@ -1439,7 +1478,9 @@ export default function DocumentLinksPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">문서 공유하기</h2>
+              <h2 className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                🌈 소중한 사람과 함께 나누기
+              </h2>
               <button
                 onClick={() => setShowShareModal(false)}
                 className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -1448,8 +1489,8 @@ export default function DocumentLinksPage() {
               </button>
             </div>
             
-            <p className="text-gray-600 mb-6">
-              어떤 방법으로 공유하시겠습니까?
+            <p className="text-gray-600 mb-6 text-center">
+              어떤 방법으로 사랑하는 사람들과 나누실까요? 💕
             </p>
             
             <div className="space-y-3">
@@ -1458,10 +1499,12 @@ export default function DocumentLinksPage() {
                   shareViaKakao(sharingLink);
                   setShowShareModal(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-yellow-400 hover:bg-yellow-500 rounded-lg transition-colors"
+                className="relative w-full flex items-center gap-3 px-4 py-3 rounded-lg overflow-hidden group transition-all transform hover:scale-105"
               >
-                <MessageCircle className="w-5 h-5" />
-                <span className="font-medium">카카오톡으로 공유</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 transition-all" />
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-pink-400 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <MessageCircle className="relative w-5 h-5 text-white z-10" />
+                <span className="relative font-medium text-white z-10">💛 카카오톡으로 따뜻한 마음 전하기</span>
               </button>
               
               <button
@@ -1469,10 +1512,12 @@ export default function DocumentLinksPage() {
                   shareViaSMS(sharingLink);
                   setShowShareModal(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-green-500 text-white hover:bg-green-600 rounded-lg transition-colors"
+                className="relative w-full flex items-center gap-3 px-4 py-3 rounded-lg overflow-hidden group transition-all transform hover:scale-105"
               >
-                <Smartphone className="w-5 h-5" />
-                <span className="font-medium">문자로 공유</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 transition-all" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-green-400 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Smartphone className="relative w-5 h-5 text-white z-10" />
+                <span className="relative font-medium text-white z-10">💚 문자로 소식 전하기</span>
               </button>
               
               <button
@@ -1480,10 +1525,12 @@ export default function DocumentLinksPage() {
                   shareViaEmail(sharingLink);
                   setShowShareModal(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors"
+                className="relative w-full flex items-center gap-3 px-4 py-3 rounded-lg overflow-hidden group transition-all transform hover:scale-105"
               >
-                <Mail className="w-5 h-5" />
-                <span className="font-medium">이메일로 공유</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transition-all" />
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Mail className="relative w-5 h-5 text-white z-10" />
+                <span className="relative font-medium text-white z-10">💙 이메일로 정성 담아 보내기</span>
               </button>
               
               <button
@@ -1491,16 +1538,20 @@ export default function DocumentLinksPage() {
                   copyToClipboard(getDocumentUrl(sharingLink));
                   setShowShareModal(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+                className="relative w-full flex items-center gap-3 px-4 py-3 rounded-lg overflow-hidden group transition-all transform hover:scale-105"
               >
-                <Copy className="w-5 h-5" />
-                <span className="font-medium">링크 복사</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-400 via-purple-400 to-pink-400 transition-all" />
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Copy className="relative w-5 h-5 text-white z-10" />
+                <span className="relative font-medium text-white z-10">💜 링크 복사하기</span>
               </button>
             </div>
             
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">공유할 링크:</p>
-              <p className="text-xs text-gray-500 break-all">
+            <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 via-pink-50 to-yellow-50 rounded-lg border border-purple-200">
+              <p className="text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                🌈 공유할 사랑스러운 링크:
+              </p>
+              <p className="text-xs text-gray-600 break-all bg-white/70 p-2 rounded">
                 {getDocumentUrl(sharingLink)}
               </p>
             </div>
@@ -1508,5 +1559,6 @@ export default function DocumentLinksPage() {
         </div>
       )}
     </div>
+    </>
   );
 }
