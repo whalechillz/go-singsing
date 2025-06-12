@@ -1,7 +1,7 @@
 import { TourData, ProductData } from '../types';
 import { htmlWrapper, getCommonStyles } from '../utils/generators';
 import { formatTime, formatDate, getArrivalTime } from '../utils/formatters';
-import { generateCommonHeader, getCommonHeaderStyles } from '../utils/commonStyles';
+import { generateCommonHeader, getCommonHeaderStyles, generateCommonFooter, getCommonFooterStyles } from '../utils/commonStyles';
 
 export function generateBoardingGuideHTML(
   tourData: TourData,
@@ -103,57 +103,12 @@ export function generateBoardingGuideHTML(
       ` : ''}
       
       <!-- 푸터 -->
-      ${(() => {
-        const phoneSettings = isStaff ? 
-          tourData.phone_display_settings?.staff_boarding : 
-          tourData.phone_display_settings?.customer_boarding;
-        const contactInfo = [];
-        
-        // 예약/일반 문의: 회사 대표번호
-        if (phoneSettings?.show_company_phone && tourData.company_phone) {
-          contactInfo.push({ label: '예약/일반 문의', phone: tourData.company_phone });
-        }
-        
-        // 현장 문의: 가이드 전화번호
-        if (phoneSettings?.show_guide_phone && tourData.staff) {
-          const guide = tourData.staff.find(s => s.role === '가이드');
-          if (guide?.phone) contactInfo.push({ label: '현장 문의', phone: guide.phone });
-        }
-        
-        // 긴급 연락처: 매니저 업무폰 (스탭용만)
-        if (isStaff && phoneSettings && 'show_manager_phone' in phoneSettings && phoneSettings.show_manager_phone && tourData.staff) {
-          const manager = tourData.staff.find(s => s.role === '매니저');
-          if (manager?.phone) contactInfo.push({ label: '긴급 연락처', phone: manager.phone });
-        }
-        
-        // 기사 전화번호 (기존 유지)
-        if (phoneSettings?.show_driver_phone && tourData.staff) {
-          const driver = tourData.staff.find(s => s.role === '기사');
-          if (driver?.phone) contactInfo.push({ label: '기사', phone: driver.phone });
-        }
-        
-        return !isStaff ? `
-          <div class="custom-footer">
-            <div class="custom-footer-message">♡ 안전한 탑승과 즐거운 여행 되세요 ♡</div>
-          </div>
-        ` : `
-          <div class="footer">
-            <p>♡ 안전한 탑승과 즐거운 여행 되세요 ♡</p>
-            ${contactInfo.length > 0 ? `
-              <div class="contact-info">
-                <p class="contact-info-title">연락처</p>
-                <div class="contact-items">
-                  ${contactInfo.map(item => `<span class="contact-item"><span class="contact-label">${item.label}:</span> <span class="contact-phone">${item.phone}</span></span>`).join(' | ')}
-                </div>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      })()}
+      ${generateCommonFooter(tourData, false, 'customer_boarding')}
     </div>
     
     <style>
       ${getCommonHeaderStyles(false)}
+      ${getCommonFooterStyles(false)}
       ${getBoardingGuideStyles()}
     </style>
   `;
@@ -243,49 +198,12 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
         `;
       }).join('')}
       
-      <div class="footer">
-        <p>♡ 안전한 탑승과 즐거운 여행 되세요 ♡</p>
-        ${(() => {
-          const phoneSettings = tourData.phone_display_settings?.staff_boarding;
-          const contactInfo = [];
-          
-          // 예약/일반 문의: 회사 대표번호
-          if (phoneSettings?.show_company_phone && tourData.company_phone) {
-            contactInfo.push({ label: '예약/일반 문의', phone: tourData.company_phone });
-          }
-          
-          // 현장 문의: 가이드 전화번호
-          if (phoneSettings?.show_guide_phone && tourData.staff) {
-            const guide = tourData.staff.find(s => s.role === '가이드');
-            if (guide?.phone) contactInfo.push({ label: '현장 문의', phone: guide.phone });
-          }
-          
-          // 긴급 연락처: 매니저 업무폰
-          if (phoneSettings && 'show_manager_phone' in phoneSettings && phoneSettings.show_manager_phone && tourData.staff) {
-            const manager = tourData.staff.find(s => s.role === '매니저');
-            if (manager?.phone) contactInfo.push({ label: '긴급 연락처', phone: manager.phone });
-          }
-          
-          // 기사 전화번호 (기존 유지)
-          if (phoneSettings?.show_driver_phone && tourData.staff) {
-            const driver = tourData.staff.find(s => s.role === '기사');
-            if (driver?.phone) contactInfo.push({ label: '기사', phone: driver.phone });
-          }
-          
-          return contactInfo.length > 0 ? `
-            <div class="contact-info">
-              <p class="contact-info-title">연락처</p>
-              <div class="contact-items">
-                ${contactInfo.map(item => `<span class="contact-item"><span class="contact-label">${item.label}:</span> <span class="contact-phone">${item.phone}</span></span>`).join(' | ')}
-              </div>
-            </div>
-          ` : '';
-        })()}
-      </div>
+      ${generateCommonFooter(tourData, true, 'staff_boarding')}
     </div>
     
     <style>
       ${getCommonHeaderStyles(true)}
+      ${getCommonFooterStyles(true)}
       ${getStaffBoardingStyles()}
     </style>
   `;
@@ -494,48 +412,6 @@ function getBoardingGuideStyles(): string {
       color: #e53e3e;
     }
     
-    /* 고객용 커스텀 푸터 스타일 */
-    .custom-footer {
-      margin-top: 40px;
-      padding: 30px;
-      background: #4a69bd;
-      background: linear-gradient(135deg, #4a69bd 0%, #5f7cdb 100%);
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(74, 105, 189, 0.2);
-    }
-    
-    .custom-footer-message {
-      font-size: 20px;
-      color: white;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* 푸터 스타일 */
-    .footer {
-      text-align: center;
-      padding: 25px;
-      background-color: #2c5282;
-      color: white;
-      border-radius: 10px;
-      margin-top: 20px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    .footer p {
-      margin: 5px 0;
-      font-size: 14px;
-    }
-    
-    .footer > p:first-child {
-      font-size: 15px;
-      margin-bottom: 10px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-    }
-    
     /* 연락처 스타일 */
     .contact-info {
       margin-top: 10px;
@@ -562,19 +438,6 @@ function getBoardingGuideStyles(): string {
     
     .contact-phone {
       font-weight: 500;
-    }
-    
-    /* 모바일 반응형 */
-    @media (max-width: 768px) {
-      .custom-footer {
-        margin-top: 30px;
-        padding: 20px;
-        border-radius: 12px;
-      }
-      
-      .custom-footer-message {
-        font-size: 16px;
-      }
     }
     
     /* 넓은 화면에서 2개씩 표시 */
@@ -615,20 +478,6 @@ function getBoardingGuideStyles(): string {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
-      
-      .custom-footer {
-        background: #4a69bd !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        page-break-inside: avoid;
-      }
-      
-      .footer {
-        background-color: #2c5282 !important;
-        color: white !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
     }
   `;
 }
@@ -653,10 +502,6 @@ function getStaffBoardingStyles(): string {
       padding: 30px;
     }
     
-    /* 헤더 스타일은 공통 스타일에서 처리 */
-    
-    /* 문서 제목 스타일은 공통 스타일에서 처리 */
-    
     .location-section {
       margin-bottom: 25px;
       border: 1px solid #ddd;
@@ -666,7 +511,7 @@ function getStaffBoardingStyles(): string {
     }
     
     .location-header {
-      background: #4a6fa5;
+      background: #2c5282;
       color: white;
       padding: 12px 20px;
       display: flex;
@@ -715,28 +560,6 @@ function getStaffBoardingStyles(): string {
     }
     
     .text-center { text-align: center; }
-    
-    .footer {
-      margin-top: 40px;
-      padding: 30px;
-      background: #f8f9fa;
-      border-radius: 10px;
-      text-align: center;
-      color: #666;
-    }
-    
-    .footer p {
-      margin: 5px 0;
-      font-size: 14px;
-    }
-    
-    .footer > p:first-child {
-      font-size: 15px;
-      color: #6B46C1;
-      margin-bottom: 12px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-    }
     
     /* 연락처 스타일 */
     .contact-info {

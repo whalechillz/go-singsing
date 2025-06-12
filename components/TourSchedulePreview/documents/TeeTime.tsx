@@ -212,9 +212,7 @@ export function generateTeeTimeHTML(
           </div>
         ` : ''}
         
-        <div class="custom-footer">
-          <div class="custom-footer-message">♡ 멋진 라운딩 되시길 응원합니다 ♡</div>
-        </div>
+        ${generateCommonFooter(tourData, false, 'tee_time')}
       ` : `
         ${productData?.usage_round ? `
           <div class="usage-section usage-round">
@@ -453,27 +451,6 @@ function getTeeTimeStyles(): string {
       white-space: pre-line;
     }
     
-    /* 고객용 커스텀 푸터 스타일 */
-    .custom-footer {
-      margin-top: 40px;
-      padding: 30px;
-      background: #4a69bd;
-      background: linear-gradient(135deg, #4a69bd 0%, #5f7cdb 100%);
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(74, 105, 189, 0.2);
-    }
-    
-    .custom-footer-message {
-      font-size: 20px;
-      color: white;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* footer 스타일은 공통 스타일에서 처리 */
-    
     @media print {
       @page {
         size: A4 portrait;
@@ -488,15 +465,6 @@ function getTeeTimeStyles(): string {
       .container {
         padding: 0;
         max-width: 190mm;
-      }
-      
-      /* 헤더 스타일은 공통 스타일에서 처리 */
-      
-      .custom-footer {
-        background: #4a69bd !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        page-break-inside: avoid;
       }
       
       .date-header {
@@ -516,26 +484,11 @@ function getTeeTimeStyles(): string {
       }
     }
     
-    /* 모바일 반응형 */
-    @media (max-width: 768px) {
-      .custom-footer {
-        margin-top: 30px;
-        padding: 20px;
-        border-radius: 12px;
-      }
-      
-      .custom-footer-message {
-        font-size: 16px;
-      }
-    }
-    
     @media screen {
       .container {
         padding: 0;
         max-width: 1200px;
       }
-      
-      /* 헤더 스타일은 공통 스타일에서 처리 */
       
       .schedule-card {
         margin: 0 20px 20px 20px;
@@ -578,23 +531,23 @@ function getStaffTeeTimeStyles(): string {
     .page-title {
       font-size: 18px;
       font-weight: bold;
-      color: #6B46C1;
+      color: #2c5282;
       padding: 10px;
-      background: #f3e8ff;
+      background: #e7f3ff;
       margin-bottom: 20px;
-      border-left: 4px solid #6B46C1;
+      border-left: 4px solid #2c5282;
       text-align: center;
     }
     
     .day-header {
-      background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+      background: #2c5282;
       color: white;
       padding: 15px 25px;
       margin: 30px 0 20px 0;
       font-size: 18px;
       font-weight: 600;
       border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(72, 198, 239, 0.3);
+      box-shadow: 0 5px 15px rgba(44, 82, 130, 0.3);
     }
     
     .table-container {
@@ -647,18 +600,18 @@ function getStaffTeeTimeStyles(): string {
       letter-spacing: 0.5px;
     }
     
-    .course-header-lake { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-    .course-header-pine { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-    .course-header-hills { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-    .course-header-valley { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
-    .course-header-ocean { background: linear-gradient(135deg, #3d84a8 0%, #48b1bf 100%); }
-    .course-header-default { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .course-header-lake { background: #2c5282; }
+    .course-header-pine { background: #2c5282; }
+    .course-header-hills { background: #2c5282; }
+    .course-header-valley { background: #2c5282; }
+    .course-header-ocean { background: #2c5282; }
+    .course-header-default { background: #2c5282; }
     
     .time-column {
       width: 90px;
       background: #f8f9ff;
       font-weight: 600;
-      color: #5a67d8;
+      color: #2c5282;
       font-size: 15px;
     }
     
@@ -715,10 +668,10 @@ function getStaffTeeTimeStyles(): string {
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     }
     
-    .stat-card:nth-of-type(1) { border-left-color: #4facfe; }
-    .stat-card:nth-of-type(2) { border-left-color: #43e97b; }
-    .stat-card:nth-of-type(3) { border-left-color: #fa709a; }
-    .stat-card:nth-of-type(4) { border-left-color: #a8edea; }
+    .stat-card:nth-of-type(1) { border-left-color: #2c5282; }
+    .stat-card:nth-of-type(2) { border-left-color: #4a6fa5; }
+    .stat-card:nth-of-type(3) { border-left-color: #2c5282; }
+    .stat-card:nth-of-type(4) { border-left-color: #4a6fa5; }
     
     .stat-title {
       font-size: 14px;
@@ -795,20 +748,18 @@ function getStaffTeeTimeStyles(): string {
         max-width: 190mm;
       }
       
-      /* 헤더 스타일은 공통 스타일에서 처리 */
-      
       .day-header {
-        background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%) !important;
+        background: #2c5282 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       
-      .course-header-lake { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; }
-      .course-header-pine { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important; }
-      .course-header-hills { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; }
-      .course-header-valley { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; }
-      .course-header-ocean { background: linear-gradient(135deg, #3d84a8 0%, #48b1bf 100%) !important; }
-      .course-header-default { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+      .course-header-lake { background: #2c5282 !important; }
+      .course-header-pine { background: #2c5282 !important; }
+      .course-header-hills { background: #2c5282 !important; }
+      .course-header-valley { background: #2c5282 !important; }
+      .course-header-ocean { background: #2c5282 !important; }
+      .course-header-default { background: #2c5282 !important; }
       
       .usage-section {
         background: #e8f4fd !important;
@@ -827,8 +778,6 @@ function getStaffTeeTimeStyles(): string {
         max-width: 1200px;
       }
       
-      /* 헤더 스타일은 공통 스타일에서 처리 */
-      
       .stats-container {
         padding: 0 20px;
       }
@@ -840,8 +789,6 @@ function getStaffTeeTimeStyles(): string {
       .table-container {
         padding: 0 20px;
       }
-      
-      /* footer와 contact 스타일은 공통 스타일에서 처리 */
       
       .usage-section {
         margin: 30px 20px;

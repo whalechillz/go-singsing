@@ -7,10 +7,10 @@ export const commonHeaderStyles = {
     accentColor: '#e7f3ff',
   },
   staff: {
-    headerBg: '#6B46C1',
-    primaryColor: '#6B46C1',
-    secondaryColor: '#9333EA',
-    accentColor: '#f3e8ff',
+    headerBg: '#2c5282',  // 통일된 색상
+    primaryColor: '#2c5282',  // 통일된 색상
+    secondaryColor: '#4a6fa5',  // 통일된 색상
+    accentColor: '#e7f3ff',  // 통일된 색상
   }
 };
 
@@ -68,10 +68,10 @@ export function getCommonHeaderStyles(isStaff: boolean = false): string {
     }
     
     .document-title-section {
-      background: ${isStaff ? '#f3e8ff' : '#e7f3ff'};
+      background: #e7f3ff;
       padding: 15px 20px;
       margin-bottom: 20px;
-      border-left: 5px solid ${colors.primaryColor};
+      border-left: 5px solid #2c5282;
       border-radius: 0;
     }
     
@@ -150,7 +150,7 @@ function getDocumentFooterMessage(documentType: string | undefined, tourData: an
   return tourData.footer_message || '♡ 즐거운 하루 되시길 바랍니다 ♡';
 }
 
-// 공통 푸터 HTML
+// 공통 푸터 HTML - 새로운 스타일 적용
 export function generateCommonFooter(tourData: any, isStaff: boolean = false, documentType?: string): string {
   // 문서에 따른 전화번호 표시 설정 가져오기
   const phoneSettings = documentType && tourData.phone_display_settings ? 
@@ -203,30 +203,58 @@ export function generateCommonFooter(tourData: any, isStaff: boolean = false, do
   const footerMessage = getDocumentFooterMessage(documentType, tourData);
   
   return `
-    <div class="footer-common">
-      ${footerMessage ? `<div class="footer-message">${footerMessage}</div>` : ''}
-      ${contactInfo.length > 0 ? `
-        <div class="contact-info">
-          <p class="contact-title">연락처</p>
-          <div class="contact-items">
-            ${contactInfo.map(item => `
-              <div class="contact-item">
-                <span class="contact-label">${item.label}:</span>
-                <span class="contact-phone">${item.phone}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : `<div class="footer-brand">싱싱골프투어</div>`}
+    <div class="custom-footer">
+      <div class="custom-footer-message">${footerMessage}</div>
     </div>
   `;
 }
 
 // 공통 푸터 스타일
 export function getCommonFooterStyles(isStaff: boolean = false): string {
-  const colors = isStaff ? commonHeaderStyles.staff : commonHeaderStyles.customer;
-  
   return `
+    /* 통일된 커스텀 푸터 스타일 */
+    .custom-footer {
+      margin-top: 40px;
+      padding: 30px;
+      background: #4a69bd;
+      background: linear-gradient(135deg, #4a69bd 0%, #5f7cdb 100%);
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(74, 105, 189, 0.2);
+    }
+    
+    .custom-footer-message {
+      font-size: 20px;
+      color: white;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      .custom-footer {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 12px;
+      }
+      
+      .custom-footer-message {
+        font-size: 16px;
+      }
+    }
+    
+    /* 인쇄용 스타일 */
+    @media print {
+      .custom-footer {
+        background: #4a69bd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        page-break-inside: avoid;
+      }
+    }
+    
+    /* 기존 스타일 (호환성 유지) */
     .footer-common {
       margin-top: 30px;
       padding: 20px;

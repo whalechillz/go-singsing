@@ -1,6 +1,7 @@
 import { TourData, ProductData } from '../types';
 import { createHeader, createAuthorityHeader, createSection, createInfoBox, createNoticeBox, htmlWrapper } from '../utils/generators';
 import { formatDate, formatTextWithBold, getScheduleIcon, simplifyCourseName } from '../utils/formatters';
+import { generateCommonFooter, getCommonFooterStyles } from '../utils/commonStyles';
 
 export function generateCustomerScheduleHTML(tourData: TourData, productData: ProductData | null, isStaff: boolean = false): string {
   // 날짜 및 제목 정보 준비
@@ -157,64 +158,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       </div>
       ` : ''}
       
-      ${(() => {
-        const phoneSettings = tourData.phone_display_settings?.customer_schedule;
-        const contactInfo = [];
-        
-        // 예약/일반 문의: 회사 대표번호
-        if (phoneSettings?.show_company_phone && tourData.company_phone) {
-          contactInfo.push({ label: '예약/일반 문의', phone: tourData.company_phone });
-        }
-        
-        // 현장 문의: 가이드 전화번호
-        if (phoneSettings?.show_guide_phone && tourData.staff) {
-          const guide = tourData.staff.find(s => s.role === '가이드');
-          if (guide?.phone) contactInfo.push({ label: '현장 문의', phone: guide.phone });
-        }
-        
-        // 긴급 연락처: 매니저 업무폰
-        if (tourData.staff) {
-          const manager = tourData.staff.find(s => s.role === '매니저');
-          if (manager?.phone) contactInfo.push({ label: '긴급 연락처', phone: manager.phone });
-        }
-        
-        // 기사 전화번호 (기존 유지)
-        if (phoneSettings?.show_driver_phone && tourData.staff) {
-          const driver = tourData.staff.find(s => s.role === '기사');
-          if (driver?.phone) contactInfo.push({ label: '기사', phone: driver.phone });
-        }
-        
-        // 골프장 전화번호 (기존 유지)
-        if (phoneSettings?.show_golf_phone && tourData.golf_reservation_phone) {
-          contactInfo.push({ label: '골프장', phone: tourData.golf_reservation_phone });
-        }
-        
-        // 문서별 푸터 메시지
-        const footerMessage = '♡ 즐거운 골프 여행이 되시길 바랍니다 ♡';
-        
-        return !isStaff ? `
-          <div class="custom-footer">
-            <div class="custom-footer-message">${footerMessage}</div>
-          </div>
-        ` : contactInfo.length > 0 || footerMessage ? `
-          <div class="footer">
-            ${footerMessage ? `<p>${footerMessage}</p>` : ''}
-            ${contactInfo.length > 0 ? `
-              <div class="contact-info">
-                <p class="contact-title">연락처</p>
-                <div class="contact-items">
-                  ${contactInfo.map(item => `
-                    <div class="contact-item">
-                      <span class="contact-label">${item.label}:</span>
-                      <span class="contact-phone">${item.phone}</span>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            ` : ''}
-          </div>
-        ` : '';
-      })()}
+      ${generateCommonFooter(tourData, isStaff, isStaff ? 'staff_schedule' : 'customer_schedule')}
     </div>
   `;
   
@@ -227,6 +171,7 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
   <title>${tourData.title} - 일정표</title>
   <style>
     ${getScheduleStyles(isStaff)}
+    ${getCommonFooterStyles(isStaff)}
   </style>
 </head>
 <body>
@@ -346,74 +291,7 @@ function getScheduleStyles(isStaff: boolean = false): string {
       border-left: 4px solid #2c5282;
     }
     
-    /* 고객용 커스텀 푸터 스타일 */
-    .custom-footer {
-      margin-top: 40px;
-      padding: 30px;
-      background: #4a69bd;
-      background: linear-gradient(135deg, #4a69bd 0%, #5f7cdb 100%);
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(74, 105, 189, 0.2);
-    }
-    
-    .custom-footer-message {
-      font-size: 20px;
-      color: white;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .footer {
-      margin-top: 40px;
-      padding: 30px;
-      background: #f8f9fa;
-      border-radius: 10px;
-      text-align: center;
-      color: #666;
-    }
-    
-    .footer > p:first-child {
-      font-size: 15px;
-      color: #2c5282;
-      margin-bottom: 12px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-    }
-    
-    .contact-info {
-      margin-top: 15px;
-    }
-    
-    .contact-title {
-      font-weight: bold;
-      font-size: 16px;
-      color: #2c5282;
-      margin-bottom: 10px;
-    }
-    
-    .contact-items {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-    }
-    
-    .contact-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    
-    .contact-label {
-      font-weight: 600;
-      color: #555;
-    }
-    
-    .contact-phone {
-      color: #2c5282;
-    }
+
     
     /* 일정 스타일 */
     .day-schedule {
@@ -675,7 +553,7 @@ function getScheduleStyles(isStaff: boolean = false): string {
       }
       
       .day-title {
-        background: #4a6fa5;
+        background: #2c5282;
         font-size: 16px;
       }
       
@@ -685,7 +563,7 @@ function getScheduleStyles(isStaff: boolean = false): string {
       }
       
       .usage-details[open] > .usage-summary {
-        background: #4a6fa5;
+        background: #2c5282;
       }
       
       .usage-content {
@@ -694,18 +572,7 @@ function getScheduleStyles(isStaff: boolean = false): string {
       }
     ` : ''}
     
-    /* 모바일 반응형 */
-    @media (max-width: 768px) {
-      .custom-footer {
-        margin-top: 30px;
-        padding: 20px;
-        border-radius: 12px;
-      }
-      
-      .custom-footer-message {
-        font-size: 16px;
-      }
-    }
+
     
     /* 인쇄용 스타일 */
     @media print {
@@ -753,19 +620,7 @@ function getScheduleStyles(isStaff: boolean = false): string {
       .usage-details[open] {
         margin-bottom: 20px;
       }
-      
-      /* 푸터 인쇄 스타일 */
-      .custom-footer {
-        background: #4a69bd !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        page-break-inside: avoid;
-      }
-      .footer {
-        background: #f8f9fa !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
+
     }
   `;
 }

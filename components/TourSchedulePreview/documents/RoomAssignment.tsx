@@ -133,11 +133,7 @@ export function generateRoomAssignmentHTML(
         ` : ''}
       ` : ''}
       
-      ${!isStaff ? `
-        <div class="custom-footer">
-          <div class="custom-footer-message">♡ 편안한 휴식이 되시길 바랍니다 ♡</div>
-        </div>
-      ` : generateCommonFooter(tourData, isStaff, 'room_assignment_staff')}
+      ${generateCommonFooter(tourData, isStaff, isStaff ? 'room_assignment_staff' : 'room_assignment')}
     </div>
     
     <style>
@@ -374,48 +370,10 @@ function getRoomAssignmentStyles(): string {
       }
     }
     
-    /* 고객용 커스텀 푸터 스타일 */
-    .custom-footer {
-      margin-top: 40px;
-      padding: 30px;
-      background: #4a69bd;
-      background: linear-gradient(135deg, #4a69bd 0%, #5f7cdb 100%);
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(74, 105, 189, 0.2);
-    }
-    
-    .custom-footer-message {
-      font-size: 20px;
-      color: white;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    @media print {
-      .custom-footer {
-        background: #4a69bd !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        page-break-inside: avoid;
-      }
-    }
-    
     /* 모바일 반응형 */
     @media (max-width: 768px) {
       .container {
         padding: 20px;
-      }
-      
-      .custom-footer {
-        margin-top: 30px;
-        padding: 20px;
-        border-radius: 12px;
-      }
-      
-      .custom-footer-message {
-        font-size: 16px;
       }
       
       .content {
