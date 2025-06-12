@@ -21,7 +21,6 @@ const TABS = [
   { key: "schedules", label: "일정 관리", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티타임 관리", icon: <Flag className="w-4 h-4" /> },
   { key: "schedule-preview", label: "문서 미리보기", icon: <FileText className="w-4 h-4" /> },
-  { key: "document-links", label: "문서 링크 관리", icon: <Link className="w-4 h-4" /> },
 ];
 
 type Tour = {
@@ -71,11 +70,7 @@ const TourDetailPage: React.FC = () => {
                   : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                 }`}
               onClick={() => {
-                if (tab.key === "document-links") {
-                  router.push(`/admin/tours/${tourId}/document-links`);
-                } else {
-                  setActiveTab(tab.key);
-                }
+                setActiveTab(tab.key);
               }}
               aria-label={tab.label}
             >
@@ -90,6 +85,15 @@ const TourDetailPage: React.FC = () => {
               )}
             </button>
           ))}
+          {/* 기타 기능 버튼 */}
+          <button
+            className="px-5 py-3 font-medium text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+            onClick={() => router.push(`/admin/tours/${tourId}/document-links`)}
+            aria-label="문서 링크 관리"
+          >
+            <Link className="w-4 h-4 text-gray-400" />
+            <span>문서 링크</span>
+          </button>
         </div>
       </div>
       

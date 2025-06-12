@@ -109,10 +109,10 @@ export default function DocumentLinksPage() {
   };
 
   const documentTypeOptions = [
-    { value: 'portal', label: '🎨 통합 표지 (포털)' },
-    { value: 'customer_all', label: '✅ 고객용 통합 문서 (추천)' },
-    { value: 'staff_all', label: '✅ 스탭용 통합 문서 (추천)' },
-    { value: 'golf_timetable', label: '⛳ 골프장 전용 티타임표' },
+    { value: 'portal', label: '통합 표지 (포털)' },
+    { value: 'customer_all', label: '고객용 통합 문서 (추천)' },
+    { value: 'staff_all', label: '스탭용 통합 문서 (추천)' },
+    { value: 'golf_timetable', label: '골프장 전용 티타임표' },
     // 기존 개별 문서 타입들 (호환성 유지)
     { value: 'customer_schedule', label: '고객용 일정표 (개별)' },
     { value: 'staff_schedule', label: '스탭용 일정표 (개별)' },
@@ -644,23 +644,9 @@ export default function DocumentLinksPage() {
   }
 
   return (
-    <>
-      <style jsx>{`
-        @keyframes rainbow {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .rainbow-animation {
-          background-size: 200% 200%;
-          animation: rainbow 3s ease infinite;
-        }
-      `}</style>
-      <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-          🎆 문서 링크 관리
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">문서 링크 관리</h1>
         <p className="text-gray-600">
           {tour?.title} ({new Date(tour?.start_date || '').toLocaleDateString('ko-KR')} ~ 
           {new Date(tour?.end_date || '').toLocaleDateString('ko-KR')})
@@ -676,50 +662,23 @@ export default function DocumentLinksPage() {
             setDriverPhone(contacts.driverPhone);
             setIsPortalModalOpen(true);
           }}
-          className="relative inline-flex items-center px-5 py-2.5 rounded-lg overflow-hidden group transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 transition-all rainbow-animation" />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <Palette className="relative w-5 h-5 mr-2 text-white z-10" />
-          <span className="relative text-white font-medium z-10">🌈 통합 표지 만들기</span>
+          <Palette className="w-4 h-4" />
+          통합 표지 만들기
         </button>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="relative inline-flex items-center px-5 py-2.5 rounded-lg overflow-hidden group transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transition-all" />
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <Plus className="relative w-5 h-5 mr-2 text-white z-10" />
-          <span className="relative text-white font-medium z-10">✨ 새 문서 링크 생성</span>
-        </button>
-        <button
-          className="relative inline-flex items-center px-5 py-2.5 rounded-lg overflow-hidden group opacity-50 cursor-not-allowed"
-          title="QR코드 생성 (공 개예정 🎉)"
-          disabled
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300" />
-          <QrCode className="relative w-5 h-5 mr-2 text-white z-10" />
-          <span className="relative text-white font-medium z-10">🖼️ QR코드 (공 개예정)</span>
-        </button>
-        <button
-          className="relative inline-flex items-center px-5 py-2.5 rounded-lg overflow-hidden group opacity-50 cursor-not-allowed"
-          title="전체 링크 복사 (공 개예정 🎆)"
-          disabled
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300" />
-          <Share2 className="relative w-5 h-5 mr-2 text-white z-10" />
-          <span className="relative text-white font-medium z-10">📋 전체 복사 (공 개예정)</span>
+          <Plus className="w-4 h-4" />
+          새 문서 링크 생성
         </button>
       </div>
 
       {documentLinks.length === 0 ? (
-        <div className="relative overflow-hidden bg-gradient-to-r from-yellow-50 via-pink-50 to-purple-50 border border-yellow-200 text-yellow-800 px-6 py-5 rounded-lg">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-100/30 via-pink-100/30 to-purple-100/30 opacity-50" />
-          <p className="relative font-medium">
-            🎈 아직 생성된 문서 링크가 없어요! 
-            <br />
-            <span className="text-sm">위의 알록달록한 버튼을 눌러서 친구들과 나눌 새로운 링크를 만들어보세요 💕</span>
-          </p>
+        <div className="bg-gray-50 border border-gray-200 text-gray-800 px-4 py-3 rounded-lg">
+          <p>아직 생성된 문서 링크가 없습니다.</p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -738,8 +697,8 @@ export default function DocumentLinksPage() {
                           {documentType?.label || link.document_type}
                         </h3>
                         {link.document_type === 'portal' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 text-white">
-                            🌈 특별
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            특별
                           </span>
                         )}
                       </div>
@@ -759,7 +718,7 @@ export default function DocumentLinksPage() {
                         </p>
                       )}
                       {link.document_type === 'portal' && (
-                        <p className="text-xs text-purple-600 ml-8">
+                        <p className="text-xs text-blue-600 ml-8">
                           고객님을 위한 시각적인 통합 안내 페이지
                         </p>
                       )}
@@ -994,7 +953,7 @@ export default function DocumentLinksPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">🎨 통합 표지 생성</h2>
+              <h2 className="text-xl font-semibold">통합 표지 생성</h2>
               <button
                 onClick={() => setIsPortalModalOpen(false)}
                 className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -1022,7 +981,7 @@ export default function DocumentLinksPage() {
               {/* 대상 선택 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  🎯 대상 선택
+                  대상 선택
                 </label>
                 <div className="flex gap-3">
                   <button
@@ -1064,7 +1023,7 @@ export default function DocumentLinksPage() {
               {/* 테마 선택 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  🎨 테마 색상
+                  테마 색상
                 </label>
                 <div className="flex gap-3">
                   {[
@@ -1094,7 +1053,7 @@ export default function DocumentLinksPage() {
               
               {/* 옵션 설정 */}
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-700">⚙️ 표시 옵션</h3>
+                <h3 className="text-sm font-medium text-gray-700">표시 옵션</h3>
                 
                 <label className="flex items-center gap-3">
                   <input
@@ -1143,7 +1102,7 @@ export default function DocumentLinksPage() {
               {/* 연락처 입력 */}
               {showContactInfo && (
                 <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-gray-700">📞 비상연락처 정보</h3>
+                  <h3 className="text-sm font-medium text-gray-700">비상연락처 정보</h3>
                   
                   <div className="grid grid-cols-2 gap-4">
                     {!showOnlyDriver && (
@@ -1188,7 +1147,7 @@ export default function DocumentLinksPage() {
               {/* 특별공지사항 입력 */}
               <div className="space-y-2">
                 <label htmlFor="special-notice" className="block text-sm font-medium text-gray-700">
-                  📢 특별공지사항 (선택)
+                  특별공지사항 (선택)
                 </label>
                 <textarea
                   id="special-notice"
@@ -1202,24 +1161,6 @@ export default function DocumentLinksPage() {
                   예: 호텔 체크인 시간 변경, 골프장 드레스 코드, 특별 준비물 등
                 </p>
               </div>
-              
-              {/* 미리보기 */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">✨ 생성될 통합 표지 미리보기</h3>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>• <strong>대상:</strong> {targetAudience === 'customer' ? '고객용' : targetAudience === 'staff' ? '스탭용' : '골프장용'} 문서만 표시</p>
-                  {targetAudience === 'customer' && <p className="ml-4 text-xs">표시 문서: 간편일정, 통합문서, 객실배정, 티타임표</p>}
-                  {targetAudience === 'staff' && <p className="ml-4 text-xs">표시 문서: 스탭용 통합, 객실배정, 티타임표</p>}
-                  {targetAudience === 'golf' && <p className="ml-4 text-xs">표시 문서: 티타임표만</p>}
-                  <p>• <strong>테마:</strong> {themes[portalTheme as keyof typeof themes].name}</p>
-                  <p>• <strong>연락처:</strong> {showContactInfo ? (showOnlyDriver ? '기사님만' : '매니저 + 기사님') : '표시 안 함'}</p>
-                  {specialNotice && <p>• <strong>특별공지:</strong> {specialNotice}</p>}
-                  <p>• <strong>테마 변경:</strong> {enableThemeSelector ? '고객이 변경 가능' : '고정'}</p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    💡 60대 고객님도 쉽게 사용할 수 있도록 크고 명확한 디자인
-                  </p>
-                </div>
-              </div>
             </div>
             
             <div className="flex gap-2 mt-6">
@@ -1231,11 +1172,9 @@ export default function DocumentLinksPage() {
               </button>
               <button
                 onClick={handleCreatePortal}
-                className="relative flex-1 px-4 py-2 rounded-md overflow-hidden group transition-all transform hover:scale-105"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 transition-all rainbow-animation" />
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className="relative text-white font-medium z-10">🎈 통합 표지 생성하기</span>
+                통합 표지 생성하기
               </button>
             </div>
           </div>
@@ -1247,7 +1186,7 @@ export default function DocumentLinksPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">🎨 통합 표지 수정</h2>
+              <h2 className="text-xl font-semibold">통합 표지 수정</h2>
               <button
                 onClick={() => setIsEditPortalModalOpen(false)}
                 className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -1260,7 +1199,7 @@ export default function DocumentLinksPage() {
               {/* 대상 선택 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  🎯 대상 선택
+                  대상 선택
                 </label>
                 <div className="flex gap-3">
                   <button
@@ -1302,7 +1241,7 @@ export default function DocumentLinksPage() {
               {/* 테마 선택 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  🎨 테마 색상
+                  테마 색상
                 </label>
                 <div className="flex gap-3">
                   {[
@@ -1332,7 +1271,7 @@ export default function DocumentLinksPage() {
               
               {/* 옵션 설정 */}
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-700">⚙️ 표시 옵션</h3>
+                <h3 className="text-sm font-medium text-gray-700">표시 옵션</h3>
                 
                 <label className="flex items-center gap-3">
                   <input
@@ -1381,7 +1320,7 @@ export default function DocumentLinksPage() {
               {/* 연락처 입력 */}
               {editShowContactInfo && (
                 <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-gray-700">📞 비상연락처 정보</h3>
+                  <h3 className="text-sm font-medium text-gray-700">비상연락처 정보</h3>
                   
                   <div className="grid grid-cols-2 gap-4">
                     {!editShowOnlyDriver && (
@@ -1420,7 +1359,7 @@ export default function DocumentLinksPage() {
               {/* 특별공지사항 입력 */}
               <div className="space-y-2">
                 <label htmlFor="edit-special-notice" className="block text-sm font-medium text-gray-700">
-                  📢 특별공지사항 (선택)
+                  특별공지사항 (선택)
                 </label>
                 <textarea
                   id="edit-special-notice"
@@ -1434,18 +1373,6 @@ export default function DocumentLinksPage() {
                   예: 호텔 체크인 시간 변경, 골프장 드레스 코드, 특별 준비물 등
                 </p>
               </div>
-              
-              {/* 미리보기 */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">✨ 수정될 통합 표지 미리보기</h3>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>• <strong>대상:</strong> {editTargetAudience === 'customer' ? '고객용' : editTargetAudience === 'staff' ? '스탭용' : '골프장용'} 문서만 표시</p>
-                  <p>• <strong>테마:</strong> {themes[editPortalTheme as keyof typeof themes].name}</p>
-                  <p>• <strong>연락처:</strong> {editShowContactInfo ? (editShowOnlyDriver ? '기사님만' : '매니저 + 기사님') : '표시 안 함'}</p>
-                  {editSpecialNotice && <p>• <strong>특별공지:</strong> {editSpecialNotice}</p>}
-                  <p>• <strong>테마 변경:</strong> {editEnableThemeSelector ? '고객이 변경 가능' : '고정'}</p>
-                </div>
-              </div>
             </div>
             
             <div className="flex gap-2 mt-6">
@@ -1457,11 +1384,9 @@ export default function DocumentLinksPage() {
               </button>
               <button
                 onClick={handleUpdatePortal}
-                className="relative flex-1 px-4 py-2 rounded-md overflow-hidden group transition-all transform hover:scale-105"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 transition-all rainbow-animation" />
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className="relative text-white font-medium z-10">🎉 통합 표지 수정하기</span>
+                통합 표지 수정하기
               </button>
             </div>
           </div>
@@ -1473,9 +1398,7 @@ export default function DocumentLinksPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                🌈 소중한 사람과 함께 나누기
-              </h2>
+              <h2 className="text-xl font-semibold">문서 공유하기</h2>
               <button
                 onClick={() => setShowShareModal(false)}
                 className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -1485,7 +1408,7 @@ export default function DocumentLinksPage() {
             </div>
             
             <p className="text-gray-600 mb-6 text-center">
-              어떤 방법으로 사랑하는 사람들과 나누실까요? 💕
+              공유 방법을 선택하세요
             </p>
             
             <div className="space-y-3">
@@ -1494,12 +1417,10 @@ export default function DocumentLinksPage() {
                   shareViaKakao(sharingLink);
                   setShowShareModal(false);
                 }}
-                className="relative w-full flex items-center gap-3 px-4 py-3 rounded-lg overflow-hidden group transition-all transform hover:scale-105"
+                className="w-full flex items-center gap-3 px-4 py-3 bg-yellow-50 hover:bg-yellow-100 border border-yellow-300 rounded-lg transition-colors"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 transition-all" />
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-pink-400 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <MessageCircle className="relative w-5 h-5 text-white z-10" />
-                <span className="relative font-medium text-white z-10">💛 카카오톡으로 따뜻한 마음 전하기</span>
+                <MessageCircle className="w-5 h-5 text-yellow-600" />
+                <span className="font-medium text-gray-900">카카오톡으로 공유</span>
               </button>
               
               <button
@@ -1507,12 +1428,10 @@ export default function DocumentLinksPage() {
                   shareViaSMS(sharingLink);
                   setShowShareModal(false);
                 }}
-                className="relative w-full flex items-center gap-3 px-4 py-3 rounded-lg overflow-hidden group transition-all transform hover:scale-105"
+                className="w-full flex items-center gap-3 px-4 py-3 bg-green-50 hover:bg-green-100 border border-green-300 rounded-lg transition-colors"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 transition-all" />
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-green-400 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Smartphone className="relative w-5 h-5 text-white z-10" />
-                <span className="relative font-medium text-white z-10">💚 문자로 소식 전하기</span>
+                <Smartphone className="w-5 h-5 text-green-600" />
+                <span className="font-medium text-gray-900">문자로 공유</span>
               </button>
               
               <button
@@ -1520,12 +1439,10 @@ export default function DocumentLinksPage() {
                   shareViaEmail(sharingLink);
                   setShowShareModal(false);
                 }}
-                className="relative w-full flex items-center gap-3 px-4 py-3 rounded-lg overflow-hidden group transition-all transform hover:scale-105"
+                className="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-lg transition-colors"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transition-all" />
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Mail className="relative w-5 h-5 text-white z-10" />
-                <span className="relative font-medium text-white z-10">💙 이메일로 정성 담아 보내기</span>
+                <Mail className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-gray-900">이메일로 공유</span>
               </button>
               
               <button
@@ -1533,20 +1450,18 @@ export default function DocumentLinksPage() {
                   copyToClipboard(getDocumentUrl(sharingLink));
                   setShowShareModal(false);
                 }}
-                className="relative w-full flex items-center gap-3 px-4 py-3 rounded-lg overflow-hidden group transition-all transform hover:scale-105"
+                className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-400 via-purple-400 to-pink-400 transition-all" />
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Copy className="relative w-5 h-5 text-white z-10" />
-                <span className="relative font-medium text-white z-10">💜 링크 복사하기</span>
+                <Copy className="w-5 h-5 text-gray-600" />
+                <span className="font-medium text-gray-900">링크 복사하기</span>
               </button>
             </div>
             
-            <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 via-pink-50 to-yellow-50 rounded-lg border border-purple-200">
-              <p className="text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                🌈 공유할 사랑스러운 링크:
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                공유할 링크:
               </p>
-              <p className="text-xs text-gray-600 break-all bg-white/70 p-2 rounded">
+              <p className="text-xs text-gray-600 break-all">
                 {getDocumentUrl(sharingLink)}
               </p>
             </div>
@@ -1554,6 +1469,5 @@ export default function DocumentLinksPage() {
         </div>
       )}
     </div>
-    </>
   );
 }
