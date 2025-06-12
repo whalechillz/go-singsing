@@ -6,7 +6,8 @@ import { uploadImage, deleteImage, validateImageFile } from '@/utils/imageUpload
 import { 
   Plus, Edit, Trash2, MapPin, Clock, Star, Tag, Image as ImageIcon, 
   Phone, Upload, X as XIcon, Search, Coffee, ShoppingBag, Activity,
-  Camera, Utensils, ShoppingCart, Home, Award, MoreHorizontal
+  Camera, Utensils, ShoppingCart, Home, Award, MoreHorizontal,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // 확장된 카테고리 타입
@@ -124,17 +125,18 @@ export default function SpotManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAttraction, setEditingAttraction] = useState<TouristAttraction | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadingAdditionalImage, setUploadingAdditionalImage] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string>('');
   const [galleryModal, setGalleryModal] = useState<{ isOpen: boolean; images: string[]; currentIndex: number }>({
     isOpen: false,
     images: [],
     currentIndex: 0
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const additionalImageInputRef = useRef<HTMLInputElement>(null);
   
   // Form states
+  // 모든 이미지를 통합 관리하기 위한 state
+  const [allImages, setAllImages] = useState<string[]>([]);
+  const [mainImageIndex, setMainImageIndex] = useState<number>(0);
+  
   const [formData, setFormData] = useState({
     name: '',
     category: 'boarding' as Category,
@@ -221,49 +223,71 @@ export default function SpotManagementPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 전체 이미지 갯수 확인
+    if (allImages.length >= 10) {
+      alert('최대 10장까지만 업로드할 수 있습니다.');
+      return;
+    }
+
     const validation = validateImageFile(file);
     if (!validation.valid) {
       alert(validation.error);
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
     setUploadingImage(true);
     try {
       const { url, error } = await uploadImage(file, 'tourist-attractions');
       if (error) {
         alert(`이미지 업로드에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
-        setImagePreview('');
       } else if (url) {
-        setFormData(prev => ({ ...prev, main_image_url: url }));
+        setAllImages(prev => [...prev, url]);
+        // 첫 번째 이미지면 자동으로 대표 이미지로 설정
+        if (allImages.length === 0) {
+          setMainImageIndex(0);
+        }
       }
     } catch (error: any) {
       alert(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     } finally {
       setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
-  const removeImage = async () => {
-    if (formData.main_image_url && formData.main_image_url.includes('supabase')) {
-      await deleteImage(formData.main_image_url);
+  const removeImage = async (index: number) => {
+    const imageUrl = allImages[index];
+    if (imageUrl && imageUrl.includes('supabase')) {
+      await deleteImage(imageUrl);
     }
-    setFormData(prev => ({ ...prev, main_image_url: '' }));
-    setImagePreview('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    
+    const newImages = allImages.filter((_, i) => i !== index);
+    setAllImages(newImages);
+    
+    // 대표 이미지가 삭제된 경우 인덱스 조정
+    if (index === mainImageIndex) {
+      setMainImageIndex(0);
+    } else if (index < mainImageIndex) {
+      setMainImageIndex(mainImageIndex - 1);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // 이미지가 있는데 대표 이미지가 선택되지 않은 경우
+    if (allImages.length > 0 && (mainImageIndex < 0 || mainImageIndex >= allImages.length)) {
+      alert('대표 이미지를 선택해주세요.');
+      return;
+    }
+    
     try {
+      // 이미지 분리: 대표 이미지와 추가 이미지
+      const mainImage = allImages[mainImageIndex] || null;
+      const additionalImages = allImages.filter((_, index) => index !== mainImageIndex);
+      
       const dataToSubmit = {
         name: formData.name,
         category: formData.category,
@@ -272,8 +296,8 @@ export default function SpotManagementPage() {
         address: formData.address || null,
         contact_info: formData.contact_info || null,
         operating_hours: formData.operating_hours || null,
-        main_image_url: formData.main_image_url || null,
-        image_urls: formData.image_urls.filter(img => img.trim()),
+        main_image_url: mainImage,
+        image_urls: additionalImages,
         features: formData.features.filter(feat => feat.trim()),
         tags: formData.tags.filter(tag => tag.trim()),
         region: formData.region || null,
@@ -335,6 +359,24 @@ export default function SpotManagementPage() {
 
   const handleEdit = (attraction: TouristAttraction) => {
     setEditingAttraction(attraction);
+    
+    // 모든 이미지를 하나의 배열로 통합
+    const images: string[] = [];
+    let mainIdx = 0;
+    
+    if (attraction.main_image_url) {
+      images.push(attraction.main_image_url);
+      mainIdx = 0;
+    }
+    
+    if (attraction.image_urls && attraction.image_urls.length > 0) {
+      const additionalImages = attraction.image_urls.filter(url => url && url.trim());
+      images.push(...additionalImages);
+    }
+    
+    setAllImages(images);
+    setMainImageIndex(mainIdx);
+    
     setFormData({
       name: attraction.name,
       category: attraction.category,
@@ -365,12 +407,13 @@ export default function SpotManagementPage() {
         price: ''
       }
     });
-    setImagePreview(attraction.main_image_url || '');
     setIsModalOpen(true);
   };
 
   const resetForm = () => {
     setEditingAttraction(null);
+    setAllImages([]);
+    setMainImageIndex(0);
     setFormData({
       name: '',
       category: 'boarding',
@@ -401,7 +444,6 @@ export default function SpotManagementPage() {
         price: ''
       }
     });
-    setImagePreview('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -428,56 +470,26 @@ export default function SpotManagementPage() {
     }));
   };
 
-  const handleAdditionalImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 전체 이미지 갯수 확인 (대표 이미지 + 추가 이미지)
-    const currentImageCount = formData.image_urls.filter(url => url.trim()).length + (formData.main_image_url ? 1 : 0);
-    if (currentImageCount >= 10) {
-      alert('최대 10장까지만 업로드할 수 있습니다.');
-      return;
+  // 이미지 순서 변경 함수
+  const moveImage = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= allImages.length) return;
+    
+    const newImages = [...allImages];
+    const [movedImage] = newImages.splice(fromIndex, 1);
+    newImages.splice(toIndex, 0, movedImage);
+    
+    // 대표 이미지 인덱스 조정
+    let newMainIndex = mainImageIndex;
+    if (fromIndex === mainImageIndex) {
+      newMainIndex = toIndex;
+    } else if (fromIndex < mainImageIndex && toIndex >= mainImageIndex) {
+      newMainIndex = mainImageIndex - 1;
+    } else if (fromIndex > mainImageIndex && toIndex <= mainImageIndex) {
+      newMainIndex = mainImageIndex + 1;
     }
-
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      alert(validation.error);
-      return;
-    }
-
-    setUploadingAdditionalImage(true);
-    try {
-      const { url, error } = await uploadImage(file, 'tourist-attractions');
-      if (error) {
-        alert(`이미지 업로드에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
-      } else if (url) {
-        // 빈 문자열이 있으면 그 자리에 넣고, 없으면 새로 추가
-        const emptyIndex = formData.image_urls.findIndex(img => !img.trim());
-        if (emptyIndex !== -1) {
-          updateArrayField('image_urls', emptyIndex, url);
-        } else {
-          setFormData(prev => ({
-            ...prev,
-            image_urls: [...prev.image_urls, url]
-          }));
-        }
-      }
-    } catch (error: any) {
-      alert(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
-    } finally {
-      setUploadingAdditionalImage(false);
-      if (additionalImageInputRef.current) {
-        additionalImageInputRef.current.value = '';
-      }
-    }
-  };
-
-  const removeAdditionalImage = async (index: number) => {
-    const imageUrl = formData.image_urls[index];
-    if (imageUrl && imageUrl.includes('supabase')) {
-      await deleteImage(imageUrl);
-    }
-    removeArrayField('image_urls', index);
+    
+    setAllImages(newImages);
+    setMainImageIndex(newMainIndex);
   };
 
   const getCategoryIcon = (category: Category, className: string = "w-4 h-4") => {
@@ -949,110 +961,136 @@ export default function SpotManagementPage() {
                 </div>
               )}
 
-              {/* 대표 이미지 */}
+              {/* 이미지 관리 */}
               <div>
-                <label className="block text-sm font-medium mb-1">대표 이미지</label>
-                <div className="space-y-2">
-                  {(imagePreview || formData.main_image_url) && (
+                <label className="block text-sm font-medium mb-1">이미지 관리</label>
+                
+                {/* 대표 이미지 미리보기 */}
+                {allImages.length > 0 && mainImageIndex >= 0 && mainImageIndex < allImages.length && (
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-medium text-gray-700 mb-2">현재 선택된 대표 이미지</p>
                     <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
                       <img 
-                        src={imagePreview || formData.main_image_url} 
-                        alt="미리보기"
+                        src={allImages[mainImageIndex]} 
+                        alt="대표 이미지 미리보기"
                         className="w-full h-full object-cover"
                       />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                      >
-                        <XIcon className="w-4 h-4" />
-                      </button>
+                      <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                        대표 이미지 (#{mainImageIndex + 1})
+                      </div>
                     </div>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                      id="image-upload"
-                    />
-                    <label
-                      htmlFor="image-upload"
-                      className="flex-1 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer flex items-center justify-center gap-2 text-gray-600 hover:text-gray-700"
-                    >
-                      {uploadingImage ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                          업로드 중...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4" />
-                          대표 이미지 업로드
-                        </>
-                      )}
-                    </label>
                   </div>
-                </div>
-              </div>
-
-              {/* 추가 이미지 */}
-              <div>
-                <label className="block text-sm font-medium mb-1">추가 이미지</label>
+                )}
                 <div className="grid grid-cols-3 gap-4 mb-4">
-                  {formData.image_urls.map((imageUrl, index) => (
-                    imageUrl && imageUrl.trim() && (
-                      <div key={index} className="relative h-32 bg-gray-100 rounded-lg overflow-hidden">
+                  {allImages.map((imageUrl, index) => (
+                    <div key={index} className="relative">
+                      <div className="relative h-32 bg-gray-100 rounded-lg overflow-hidden">
                         <img 
                           src={imageUrl} 
-                          alt={`추가 이미지 ${index + 1}`}
+                          alt={`이미지 ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
                         <button
                           type="button"
-                          onClick={() => removeAdditionalImage(index)}
+                          onClick={() => removeImage(index)}
                           className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                         >
                           <XIcon className="w-4 h-4" />
                         </button>
+                        
+                        {/* 이미지 번호 */}
+                        <div className="absolute top-2 left-2 bg-gray-900/70 text-white text-xs px-2 py-1 rounded-full">
+                          {index + 1}
+                        </div>
+                        
+                        {/* 순서 변경 버튼 */}
+                        <div className="absolute bottom-2 left-2 flex gap-1">
+                          {index > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => moveImage(index, index - 1)}
+                              className="p-1 bg-black/50 text-white rounded hover:bg-black/70 transition-colors"
+                              title="왼쪽으로 이동"
+                            >
+                              <ChevronLeft className="w-3 h-3" />
+                            </button>
+                          )}
+                          {index < allImages.length - 1 && (
+                            <button
+                              type="button"
+                              onClick={() => moveImage(index, index + 1)}
+                              className="p-1 bg-black/50 text-white rounded hover:bg-black/70 transition-colors"
+                              title="오른쪽으로 이동"
+                            >
+                              <ChevronRight className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    )
+                      
+                      {/* 대표 이미지 선택 라디오 버튼 */}
+                      <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="mainImage"
+                          checked={mainImageIndex === index}
+                          onChange={() => setMainImageIndex(index)}
+                          className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className={`text-sm ${mainImageIndex === index ? 'font-medium text-blue-600' : 'text-gray-600'}`}>
+                          대표 이미지
+                        </span>
+                      </label>
+                    </div>
                   ))}
                   
                   {/* 이미지 업로드 버튼 */}
-                  {(formData.image_urls.filter(url => url.trim()).length + (formData.main_image_url ? 1 : 0)) < 10 && (
-                    <div className="h-32">
-                      <input
-                        ref={additionalImageInputRef}
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                        onChange={handleAdditionalImageSelect}
-                        className="hidden"
-                        id="additional-image-upload"
-                      />
-                      <label
-                        htmlFor="additional-image-upload"
-                        className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer flex flex-col items-center justify-center gap-2 text-gray-600 hover:text-gray-700"
-                      >
-                        {uploadingAdditionalImage ? (
-                          <>
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                            <span className="text-xs">업로드 중...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="w-6 h-6" />
-                            <span className="text-xs">이미지 추가</span>
-                          </>
-                        )}
-                      </label>
+                  {allImages.length < 10 && (
+                    <div className="relative">
+                      <div className="h-32">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          id="image-upload"
+                        />
+                        <label
+                          htmlFor="image-upload"
+                          className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer flex flex-col items-center justify-center gap-2 text-gray-600 hover:text-gray-700"
+                        >
+                          {uploadingImage ? (
+                            <>
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                              <span className="text-xs">업로드 중...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="w-6 h-6" />
+                              <span className="text-xs">이미지 추가</span>
+                            </>
+                          )}
+                        </label>
+                      </div>
+                      <div className="mt-2 h-6"></div> {/* 라디오 버튼 자리 확보 */}
                     </div>
                   )}
                 </div>
-                <p className="text-sm text-gray-500">최대 10장까지 업로드 가능합니다. 대표 이미지와 함께 총 {formData.image_urls.filter(url => url.trim()).length + (formData.main_image_url ? 1 : 0)}장의 이미지가 등록되어 있습니다.</p>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">
+                    최대 10장까지 업로드 가능합니다. 현재 {allImages.length}장의 이미지가 등록되어 있습니다.
+                    {allImages.length > 0 && (
+                      <span className={mainImageIndex === -1 ? 'text-red-500 font-medium' : ''}>
+                        {' '}대표 이미지를 선택해주세요.
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    • 좌우 화살표 버튼으로 이미지 순서를 변경할 수 있습니다.<br/>
+                    • 라디오 버튼을 클릭하여 대표 이미지를 변경할 수 있습니다.
+                  </p>
+                </div>
               </div>
 
               {/* 특징 */}
