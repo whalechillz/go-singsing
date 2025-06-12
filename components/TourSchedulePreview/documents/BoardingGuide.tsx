@@ -1,7 +1,7 @@
 import { TourData } from '../types';
 import { htmlWrapper, getCommonStyles } from '../utils/generators';
 import { formatTime, formatDate, getArrivalTime } from '../utils/formatters';
-import { generateCommonHeader, getCommonHeaderStyles, generateCommonFooter, getCommonFooterStyles } from '../utils/commonStyles';
+import { generateCommonHeader, getCommonHeaderStyles } from '../utils/commonStyles';
 
 export function generateBoardingGuideHTML(
   tourData: TourData,
@@ -68,21 +68,28 @@ export function generateBoardingGuideHTML(
         </div>
       </div>
       
-      ${tourData.staff?.length ? `
-        <div class="contact-box">
-          <div class="contact-title">비상 연락처</div>
-          ${tourData.staff.map(staff => `
-            <div class="contact-phone">${staff.name} ${staff.role} - ${staff.phone}</div>
-          `).join('')}
+      ${tourData.staff && tourData.staff.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `
+        <div class="emergency-contact-section">
+          <div class="emergency-contact-title">비상 연락처</div>
+          <div class="emergency-contact-grid">
+            ${tourData.staff.filter((staff: any) => staff.role.includes('기사')).map((staff: any) => `
+              <div class="emergency-contact-item">
+                <span class="contact-name">${staff.name} ${staff.role}</span>
+                <span class="contact-phone">TEL. ${staff.phone}</span>
+              </div>
+            `).join('')}
+          </div>
         </div>
-      ` : ''}
+      ` : ''}    
       
-      ${generateCommonFooter(tourData, false)}
+      <div class="footer">
+        <p>즐거운 골프 여행 되시길 바랍니다</p>
+        <p>싱싱골프투어 | 031-215-3990</p>
+      </div>
     </div>
     
     <style>
       ${getCommonHeaderStyles(false)}
-      ${getCommonFooterStyles(false)}
       ${getBoardingGuideStyles()}
     </style>
   `;
@@ -172,21 +179,14 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
         `;
       }).join('')}
       
-      ${tourData.staff?.length ? `
-        <div class="contact-box">
-          <div class="contact-title">비상 연락처</div>
-          ${tourData.staff.map(staff => `
-            <div class="contact-phone">${staff.name} ${staff.role} - ${staff.phone}</div>
-          `).join('')}
-        </div>
-      ` : ''}
-      
-      ${generateCommonFooter(tourData, true)}
+      <div class="footer">
+        <p>즐거운 골프 여행 되시길 바랍니다</p>
+        <p>싱싱골프투어 | 031-215-3990</p>
+      </div>
     </div>
     
     <style>
       ${getCommonHeaderStyles(true)}
-      ${getCommonFooterStyles(true)}
       ${getStaffBoardingStyles()}
     </style>
   `;
@@ -276,16 +276,54 @@ function getBoardingGuideStyles(): string {
     .location-info { margin-top: 15px; }
     .location-desc { font-size: 14px; line-height: 1.6; color: #333; }
     
-    .contact-box {
-      margin-top: 30px;
+    .emergency-contact-section {
+      margin: 30px 0;
       padding: 20px;
-      background: #f8f9fa;
+      background: #e7f3ff;
       border-radius: 10px;
-      text-align: center;
+      border-left: 5px solid #2c5282;
     }
     
-    .contact-title { font-size: 16px; font-weight: bold; color: #2c5282; margin-bottom: 10px; }
-    .contact-phone { font-size: 14px; color: #333; margin-bottom: 5px; }
+    .emergency-contact-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2c5282;
+      margin-bottom: 15px;
+    }
+    
+    .emergency-contact-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .emergency-contact-item {
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .emergency-contact-item .contact-name {
+      font-weight: 500;
+      margin-right: 10px;
+    }
+    
+    .emergency-contact-item .contact-phone {
+      color: #2c5282;
+      font-weight: 500;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #e0e0e0;
+      text-align: center;
+      color: #666;
+    }
+    
+    .footer p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
   `;
 }
 
@@ -372,28 +410,18 @@ function getStaffBoardingStyles(): string {
     
     .text-center { text-align: center; }
     
-    .contact-box {
+    .footer {
       margin-top: 40px;
-      padding: 20px;
-      background: #f8f9fa;
-      border-radius: 10px;
+      padding-top: 20px;
+      border-top: 2px solid #e0e0e0;
       text-align: center;
+      color: #666;
     }
     
-    .contact-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #2c5282;
-      margin-bottom: 10px;
-    }
-    
-    .contact-phone {
+    .footer p {
+      margin: 5px 0;
       font-size: 14px;
-      color: #333;
-      margin-bottom: 5px;
     }
-    
-    /* footer 스타일은 공통 스타일에서 처리 */
     
     /* 인쇄용 스타일 */
     @media print {
