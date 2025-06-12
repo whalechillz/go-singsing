@@ -137,7 +137,7 @@ export function generateSimplifiedHTML(tourData: TourData | null, productData: P
       `).join('') || '<div>일정 정보가 없습니다.</div>'}
     </div>
     
-    ${generateCommonFooter(tourData, false)}
+    ${generateCommonFooter(tourData, false, 'simplified')}
   </div>
 </body>
 </html>`;
