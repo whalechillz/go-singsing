@@ -208,6 +208,12 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
 function getBoardingGuideStyles(): string {
   return `
     /* 탑승 안내 전용 스타일 */
+    body {
+      background-color: #f5f7fa;
+      color: #343a40;
+      line-height: 1.6;
+      font-size: 16px;
+    }
     
     .container {
       max-width: 800px;
@@ -342,48 +348,73 @@ function getBoardingGuideStyles(): string {
       background-color: #2c5282;
     }
     
-    .emergency-contact-section {
-      margin: 30px 0;
-      padding: 20px;
-      background: #e7f3ff;
+    /* 탑승 주의사항 스타일 */
+    .common-info {
+      background-color: white;
       border-radius: 10px;
-      border-left: 5px solid #2c5282;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 15px;
+      padding: 20px;
     }
     
-    .emergency-contact-title {
-      font-size: 16px;
+    .section-title {
+      font-size: 18px;
       font-weight: bold;
       color: #2c5282;
       margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
     }
     
-    .emergency-contact-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .notice-list {
+      list-style-type: none;
+      margin-left: 5px;
     }
     
-    .emergency-contact-item {
-      font-size: 14px;
-      color: #333;
+    .notice-item {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 10px;
     }
     
-    .emergency-contact-item .contact-name {
-      font-weight: 500;
-      margin-right: 10px;
+    .notice-item:before {
+      content: '※';
+      position: absolute;
+      left: 0;
+      color: #e53e3e;
     }
     
-    .emergency-contact-item .contact-phone {
-      color: #2c5282;
-      font-weight: 500;
-    }
-    
-    .footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 2px solid #e0e0e0;
+    .contact-box {
+      background-color: #edf2f7;
+      border-radius: 8px;
+      padding: 15px;
       text-align: center;
-      color: #666;
+      margin-top: 15px;
+    }
+    
+    .contact-title {
+      font-weight: bold;
+      color: #2c5282;
+      margin-bottom: 5px;
+    }
+    
+    .contact-phone {
+      font-size: 18px;
+      font-weight: bold;
+      color: #e53e3e;
+    }
+    
+    /* 푸터 스타일 */
+    .footer {
+      text-align: center;
+      padding: 15px;
+      background-color: #2c5282;
+      color: white;
+      border-radius: 10px;
+      margin-top: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     
     .footer p {
@@ -401,26 +432,37 @@ function getBoardingGuideStyles(): string {
     
     /* 인쇄용 스타일 */
     @media print {
-      .boarding-card-modern {
+      body {
+        background-color: white;
+      }
+      
+      .boarding-card {
         page-break-inside: avoid;
         box-shadow: none;
         border: 1px solid #d1d5db;
       }
       
-      .time-main {
-        color: #dc2626 !important;
+      .card-time {
+        color: #e53e3e !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       
-      .info-value.departure {
-        color: #dc2626 !important;
+      .info-arrival {
+        color: #e53e3e !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       
-      .map-button {
-        background: #3b82f6 !important;
+      .map-link {
+        background: #3182ce !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .footer {
+        background-color: #2c5282 !important;
         color: white !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
