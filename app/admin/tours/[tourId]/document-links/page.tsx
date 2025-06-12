@@ -133,6 +133,8 @@ export default function DocumentLinksPage() {
   
   const fetchTourContacts = async () => {
     try {
+      console.log('Fetching tour contacts for tourId:', tourId);
+      
       // 투어 스탭 정보에서 매니저와 기사 연락처 가져오기
       const { data: staffData, error: staffError } = await supabase
         .from('singsing_tour_staff')
@@ -140,8 +142,13 @@ export default function DocumentLinksPage() {
         .eq('tour_id', tourId)
         .order('order');
         
-      if (!staffError && staffData) {
-        // 매니저 찾기 (role이 '매니저' 또는 'manager'인 첫 번째 스탭)
+      console.log('Staff data:', staffData);
+      
+      let resultManagerPhone = '';
+      let resultDriverPhone = '';
+      
+      if (!staffError && staffData && staffData.length > 0) {
+        // 매니저 찾기 (role이 '매니저' 또는 'manager' 또는 '가이드' 또는 'guide'인 스탭)
         const manager = staffData.find(staff => 
           staff.role === '매니저' || 
           staff.role === 'manager' ||
@@ -149,40 +156,60 @@ export default function DocumentLinksPage() {
           staff.role === 'guide'
         );
         
-        // 기사 찾기 (role이 '기사' 또는 'driver'인 첫 번째 스탭)
+        // 기사 찾기 (role이 '기사' 또는 'driver'인 스탭)
         const driver = staffData.find(staff => 
           staff.role === '기사' || 
           staff.role === 'driver'
         );
         
+        console.log('Found manager:', manager);
+        console.log('Found driver:', driver);
+        
         if (manager && manager.phone) {
+          resultManagerPhone = manager.phone;
           setManagerPhone(manager.phone);
         }
         
         if (driver && driver.phone) {
+          resultDriverPhone = driver.phone;
           setDriverPhone(driver.phone);
         }
       }
       
       // 투어 정보에서도 확인 (폴백)
-      if (!managerPhone || !driverPhone) {
+      if (!resultManagerPhone || !resultDriverPhone) {
         const { data: tourData, error: tourError } = await supabase
           .from('singsing_tours')
           .select('*')
           .eq('id', tourId)
           .single();
           
+        console.log('Tour data:', tourData);
+          
         if (!tourError && tourData) {
-          if (!managerPhone && tourData.manager_phone) {
+          if (!resultManagerPhone && tourData.manager_phone) {
+            resultManagerPhone = tourData.manager_phone;
             setManagerPhone(tourData.manager_phone);
           }
-          if (!driverPhone && tourData.driver_phone) {
+          if (!resultDriverPhone && tourData.driver_phone) {
+            resultDriverPhone = tourData.driver_phone;
             setDriverPhone(tourData.driver_phone);
           }
         }
       }
+      
+      console.log('Final contacts:', { managerPhone: resultManagerPhone, driverPhone: resultDriverPhone });
+      
+      return {
+        managerPhone: resultManagerPhone,
+        driverPhone: resultDriverPhone
+      };
     } catch (error) {
       console.error('Error fetching tour contacts:', error);
+      return {
+        managerPhone: '',
+        driverPhone: ''
+      };
     }
   };
 
@@ -424,7 +451,7 @@ export default function DocumentLinksPage() {
     }
   };
   
-  const handleEditClick = (link: DocumentLink) => {
+  const handleEditClick = async (link: DocumentLink) => {
     if (link.document_type === 'portal') {
       // 포털 수정
       setEditingPortalLink(link);
@@ -441,11 +468,10 @@ export default function DocumentLinksPage() {
         setEditDriverPhone(settings.contactNumbers.driver || '');
         setEditShowOnlyDriver(!settings.contactNumbers.manager && !!settings.contactNumbers.driver);
       } else {
-        // 기존 연락처 다시 불러오기
-        fetchTourContacts().then(() => {
-          setEditManagerPhone(managerPhone);
-          setEditDriverPhone(driverPhone);
-        });
+        // 기존 연락처가 없으면 DB에서 다시 불러오기
+        const contacts = await fetchTourContacts();
+        setEditManagerPhone(contacts.managerPhone);
+        setEditDriverPhone(contacts.driverPhone);
         setEditShowOnlyDriver(false);
       }
       
@@ -617,7 +643,13 @@ export default function DocumentLinksPage() {
 
       <div className="mb-6 flex gap-3 flex-wrap">
         <button
-          onClick={() => setIsPortalModalOpen(true)}
+          onClick={async () => {
+            // 통합 표지 생성 모달을 열기 전에 연락처 다시 불러오기
+            const contacts = await fetchTourContacts();
+            setManagerPhone(contacts.managerPhone);
+            setDriverPhone(contacts.driverPhone);
+            setIsPortalModalOpen(true);
+          }}
           className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl"
         >
           <Palette className="w-4 h-4 mr-2" />
