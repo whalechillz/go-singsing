@@ -60,11 +60,11 @@ export function generateRoomAssignmentHTML(
                   <table class="participant-table">
                     <thead>
                       <tr>
-                        ${isStaff ? '<th width="30">No</th>' : '<th width="40">No</th>'}
+                        <th width="50">No</th>
                         <th>성명</th>
-                        ${isStaff ? '<th width="110">연락처</th>' : ''}
-                        <th width="80">팀</th>
-                        ${isStaff ? '<th width="100">비고</th>' : ''}
+                        ${isStaff ? '<th>연락처</th>' : ''}
+                        <th width="100">팀</th>
+                        ${isStaff ? '<th>비고</th>' : ''}
                       </tr>
                     </thead>
                     <tbody>
@@ -152,42 +152,44 @@ function getRoomAssignmentStyles(): string {
       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       line-height: 1.6;
       color: #333;
+      font-size: 14px;
     }
     
     .container {
       width: 100%;
-      max-width: 190mm;
+      max-width: 800px;
       margin: 0 auto;
       background: white;
-      padding: 0;
+      padding: 30px;
     }
     
     /* 객실 배정표 전용 스타일 */
     
     .content {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      padding: 0 5px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
     }
     
     .room-card {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      overflow: hidden;
       background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
       page-break-inside: avoid;
-      height: fit-content;
     }
     
     .room-card.comp-room {
       border: 2px solid #e74c3c;
+      box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
     }
     
     .room-header {
-      background: #a1b7d1;
-      color: #2c5282;
-      padding: 8px 10px;
+      background: #2c5282;
+      color: white;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -200,21 +202,20 @@ function getRoomAssignmentStyles(): string {
     }
     
     .room-number {
-      font-size: 13px;
+      font-size: 18px;
       font-weight: bold;
     }
     
     .room-type {
-      font-size: 11px;
-      flex: 1;
-      text-align: center;
+      font-size: 14px;
+      opacity: 0.9;
     }
     
     .room-capacity {
-      font-size: 11px;
-      background: rgba(255, 255, 255, 0.3);
-      padding: 2px 5px;
-      border-radius: 8px;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 12px;
     }
     
     .room-body {
@@ -224,39 +225,40 @@ function getRoomAssignmentStyles(): string {
     .empty-room {
       text-align: center;
       color: #999;
-      padding: 15px;
+      padding: 30px;
       font-style: italic;
-      font-size: 11px;
+      font-size: 14px;
     }
     
     .participant-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 10px;
+      font-size: 14px;
     }
     
     .participant-table th {
       background: #f8f9fa;
-      padding: 4px 3px;
+      padding: 12px 15px;
       text-align: center;
-      font-size: 10px;
+      font-size: 14px;
       color: #555;
-      border-bottom: 1px solid #ddd;
+      border-bottom: 2px solid #e5e7eb;
       font-weight: bold;
     }
     
     .participant-table td {
-      padding: 4px 3px;
-      font-size: 10px;
-      border-bottom: 1px solid #eee;
+      padding: 12px 15px;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
       text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     
     .participant-table tr:last-child td {
       border-bottom: none;
+    }
+    
+    .participant-table tbody tr:hover {
+      background: #f8f9fa;
     }
     
     .text-center {
@@ -264,44 +266,42 @@ function getRoomAssignmentStyles(): string {
     }
     
     .internal-info {
-      margin: 15px 5px;
-      padding: 10px;
+      margin: 20px 0;
+      padding: 20px;
       background: #fff3cd;
       border: 1px solid #ffeaa7;
-      border-radius: 4px;
+      border-radius: 10px;
     }
     
     .internal-info h3 {
-      margin: 0 0 8px 0;
-      font-size: 12px;
+      margin: 0 0 10px 0;
+      font-size: 16px;
       color: #856404;
     }
     
     .internal-info p {
-      margin: 3px 0;
-      font-size: 11px;
+      margin: 5px 0;
+      font-size: 14px;
       color: #856404;
     }
     
     /* 숙소 이용 안내 스타일 */
     .accommodation-info,
     .meal-info {
-      margin: 15px 5px;
-      padding: 15px;
+      margin: 30px 0;
+      padding: 25px;
       background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
+      border-radius: 10px;
+      border-left: 4px solid #2c5282;
       page-break-inside: avoid;
     }
     
     .accommodation-info h3,
     .meal-info h3 {
-      margin: 0 0 12px 0;
-      font-size: 14px;
+      margin: 0 0 15px 0;
+      font-size: 18px;
       color: #2c5282;
       font-weight: bold;
-      border-bottom: 2px solid #a1b7d1;
-      padding-bottom: 5px;
     }
     
     .notice-section {
@@ -309,10 +309,10 @@ function getRoomAssignmentStyles(): string {
     }
     
     .notice-section p {
-      margin: 3px 0;
-      font-size: 10px;
+      margin: 8px 0;
+      font-size: 14px;
       color: #495057;
-      line-height: 1.4;
+      line-height: 1.6;
     }
     
     @media print {
@@ -327,13 +327,13 @@ function getRoomAssignmentStyles(): string {
       }
       
       .container {
-        padding: 0;
-        max-width: 190mm;
+        padding: 20px;
+        max-width: 100%;
       }
       
       .content {
-        gap: 8px;
-        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        grid-template-columns: repeat(2, 1fr);
       }
       
       .room-card {
@@ -341,10 +341,8 @@ function getRoomAssignmentStyles(): string {
         break-inside: avoid;
       }
       
-      /* 헤더 스타일은 공통 스타일에서 처리 */
-      
       .room-header {
-        background: #a1b7d1 !important;
+        background: #2c5282 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -363,24 +361,29 @@ function getRoomAssignmentStyles(): string {
       }
     }
     
-    @media screen {
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
       .container {
-        padding: 0;
-        max-width: 1200px;
+        padding: 20px;
       }
       
       .content {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        padding: 0 20px;
+        grid-template-columns: 1fr;
+        gap: 15px;
       }
       
-      .internal-info {
-        margin: 15px 20px;
+      .room-header {
+        padding: 12px 16px;
       }
       
-      .accommodation-info,
-      .meal-info {
-        margin: 15px 20px;
+      .room-number {
+        font-size: 16px;
+      }
+      
+      .participant-table th,
+      .participant-table td {
+        padding: 10px 12px;
+        font-size: 13px;
       }
     }
   `;
