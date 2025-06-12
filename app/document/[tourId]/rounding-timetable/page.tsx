@@ -11,6 +11,7 @@ const RoundingTimetableDoc = () => {
   const [notices, setNotices] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [footer, setFooter] = useState<string>("");
+  const [tourProduct, setTourProduct] = useState<any>(null);
 
   // 날짜 포맷
   const formatDate = (dateString: string) => {
@@ -37,7 +38,17 @@ const RoundingTimetableDoc = () => {
 
   useEffect(() => {
     // 투어 정보
-    supabase.from("singsing_tours").select("*").eq("id", tourId).single().then(({ data }) => setTour(data));
+    supabase.from("singsing_tours").select("*").eq("id", tourId).single().then(({ data }) => {
+      setTour(data);
+      // 투어 상품 정보 가져오기
+      if (data?.tour_product_id) {
+        supabase.from("tour_products")
+          .select("*")
+          .eq("id", data.tour_product_id)
+          .single()
+          .then(({ data: productData }) => setTourProduct(productData));
+      }
+    });
     // 티오프 시간표
     supabase.from("singsing_tee_times").select("*").eq("tour_id", tourId).then(({ data }) => setTeeTimes(data || []));
     // 주의사항
@@ -160,6 +171,26 @@ const RoundingTimetableDoc = () => {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+        
+        {/* 라운딩 규정 */}
+        {tourProduct?.usage_round && (
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r">
+            <h3 className="text-sm font-bold text-blue-800 mb-2">라운딩 규정</h3>
+            <div className="text-sm text-blue-700 whitespace-pre-line">
+              {tourProduct.usage_round}
+            </div>
+          </div>
+        )}
+        
+        {/* 락카 이용 */}
+        {tourProduct?.usage_locker && (
+          <div className="bg-purple-50 border-l-4 border-purple-500 p-4 mb-6 rounded-r">
+            <h3 className="text-sm font-bold text-purple-800 mb-2">락카 이용</h3>
+            <div className="text-sm text-purple-700 whitespace-pre-line">
+              {tourProduct.usage_locker}
+            </div>
           </div>
         )}
         {/* 푸터 */}

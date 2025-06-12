@@ -74,7 +74,8 @@ export function useDocumentHTML({
           html = generateTeeTimeHTML(
             teeTimeData,
             activeTab === 'staff_timetable',
-            tourData
+            tourData,
+            productData
           );
           break;
 

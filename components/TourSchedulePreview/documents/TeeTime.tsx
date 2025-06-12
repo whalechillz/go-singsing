@@ -6,7 +6,8 @@ import { generateCommonHeader, getCommonHeaderStyles, generateCommonFooter, getC
 export function generateTeeTimeHTML(
   teeTimes: any[],
   isStaff: boolean,
-  tourData: TourData
+  tourData: TourData,
+  productData?: any
 ): string {
   const teeTimesByDate = teeTimes.reduce((acc: Record<string, any[]>, teeTime: any) => {
     const date = teeTime.date || teeTime.play_date;
@@ -212,8 +213,44 @@ export function generateTeeTimeHTML(
           </div>
         ` : ''}
         
+        ${productData?.usage_round ? `
+          <div class="usage-section usage-round">
+            <div class="usage-title">라운딩 규정</div>
+            <div class="usage-content">
+              ${productData.usage_round.replace(/\n/g, '<br>')}
+            </div>
+          </div>
+        ` : ''}
+        
+        ${productData?.usage_locker ? `
+          <div class="usage-section usage-locker">
+            <div class="usage-title">락카 이용</div>
+            <div class="usage-content">
+              ${productData.usage_locker.replace(/\n/g, '<br>')}
+            </div>
+          </div>
+        ` : ''}
+        
         ${generateCommonFooter(tourData, false, 'tee_time')}
       ` : `
+        ${productData?.usage_round ? `
+          <div class="usage-section usage-round">
+            <div class="usage-title">라운딩 규정</div>
+            <div class="usage-content">
+              ${productData.usage_round.replace(/\n/g, '<br>')}
+            </div>
+          </div>
+        ` : ''}
+        
+        ${productData?.usage_locker ? `
+          <div class="usage-section usage-locker">
+            <div class="usage-title">락카 이용</div>
+            <div class="usage-content">
+              ${productData.usage_locker.replace(/\n/g, '<br>')}
+            </div>
+          </div>
+        ` : ''}
+        
         ${generateCommonFooter(tourData, true, 'tee_time')}
       `}
     </div>
@@ -395,6 +432,44 @@ function getTeeTimeStyles(): string {
       margin-bottom: 5px;
     }
     
+    .usage-section {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 4px solid;
+    }
+    
+    .usage-round {
+      background: #e8f4fd;
+      border-left-color: #2196f3;
+    }
+    
+    .usage-locker {
+      background: #f3e5f5;
+      border-left-color: #9c27b0;
+    }
+    
+    .usage-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .usage-round .usage-title {
+      color: #1976d2;
+    }
+    
+    .usage-locker .usage-title {
+      color: #7b1fa2;
+    }
+    
+    .usage-content {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #555;
+      white-space: pre-line;
+    }
+    
     /* footer 스타일은 공통 스타일에서 처리 */
     
     @media print {
@@ -420,6 +495,16 @@ function getTeeTimeStyles(): string {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+      
+      .usage-section {
+        background: #e8f4fd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .usage-locker {
+        background: #f3e5f5 !important;
+      }
     }
     
     @media screen {
@@ -434,7 +519,7 @@ function getTeeTimeStyles(): string {
         margin: 0 20px 20px 20px;
       }
       
-      .contact-section, .info-section {
+      .contact-section, .info-section, .usage-section {
         margin: 30px 20px;
       }
     }
@@ -632,6 +717,44 @@ function getStaffTeeTimeStyles(): string {
       color: #95a5a6;
     }
     
+    .usage-section {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 4px solid;
+    }
+    
+    .usage-round {
+      background: #e8f4fd;
+      border-left-color: #2196f3;
+    }
+    
+    .usage-locker {
+      background: #f3e5f5;
+      border-left-color: #9c27b0;
+    }
+    
+    .usage-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .usage-round .usage-title {
+      color: #1976d2;
+    }
+    
+    .usage-locker .usage-title {
+      color: #7b1fa2;
+    }
+    
+    .usage-content {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #555;
+      white-space: pre-line;
+    }
+    
     /* footer와 contact 스타일은 공통 스타일에서 처리 */
     
     @media print {
@@ -664,6 +787,16 @@ function getStaffTeeTimeStyles(): string {
       .course-header-valley { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; }
       .course-header-ocean { background: linear-gradient(135deg, #3d84a8 0%, #48b1bf 100%) !important; }
       .course-header-default { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+      
+      .usage-section {
+        background: #e8f4fd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .usage-locker {
+        background: #f3e5f5 !important;
+      }
     }
     
     @media screen {
@@ -687,6 +820,10 @@ function getStaffTeeTimeStyles(): string {
       }
       
       /* footer와 contact 스타일은 공통 스타일에서 처리 */
+      
+      .usage-section {
+        margin: 30px 20px;
+      }
     }
   `;
 }
