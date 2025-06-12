@@ -45,6 +45,12 @@ export interface TourData {
       show_driver_phone?: boolean;
       show_guide_phone?: boolean;
     };
+    room_assignment_staff?: {
+      show_company_phone?: boolean;
+      show_driver_phone?: boolean;
+      show_guide_phone?: boolean;
+      show_manager_phone?: boolean;
+    };
     tee_time?: {
       show_company_phone?: boolean;
       show_golf_phone?: boolean;

@@ -68,6 +68,12 @@ type TourForm = {
       show_driver_phone: boolean;
       show_guide_phone: boolean;
     };
+    room_assignment_staff: {
+      show_company_phone: boolean;
+      show_driver_phone: boolean;
+      show_guide_phone: boolean;
+      show_manager_phone: boolean;
+    };
     tee_time: {
       show_company_phone: boolean;
       show_golf_phone: boolean;
@@ -139,6 +145,12 @@ const TourEditPage: React.FC = () => {
         show_company_phone: true,
         show_driver_phone: true,
         show_guide_phone: false
+      },
+      room_assignment_staff: {
+        show_company_phone: true,
+        show_driver_phone: true,
+        show_guide_phone: true,
+        show_manager_phone: true
       },
       tee_time: {
         show_company_phone: true,
@@ -229,6 +241,12 @@ const TourEditPage: React.FC = () => {
               show_company_phone: true,
               show_driver_phone: true,
               show_guide_phone: false
+            },
+            room_assignment_staff: {
+              show_company_phone: true,
+              show_driver_phone: true,
+              show_guide_phone: true,
+              show_manager_phone: true
             },
             tee_time: {
               show_company_phone: true,
@@ -944,9 +962,9 @@ const TourEditPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* 객실 배정표 */}
+              {/* 객실 배정표 (고객용) */}
               <div className="border rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm">객실 배정표</h4>
+                <h4 className="font-medium text-sm">객실 배정표 (고객용)</h4>
                 <div className="grid grid-cols-2 gap-2 pl-4">
                   <label className="flex items-center gap-2 text-sm">
                     <input
@@ -977,6 +995,53 @@ const TourEditPage: React.FC = () => {
                       className="w-4 h-4"
                     />
                     <span>가이드 전화번호</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* 객실 배정표 (스탭용) */}
+              <div className="border rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm">객실 배정표 (스탭용)</h4>
+                <div className="grid grid-cols-2 gap-2 pl-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.room_assignment_staff.show_company_phone"
+                      checked={form.phone_display_settings.room_assignment_staff.show_company_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>회사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.room_assignment_staff.show_driver_phone"
+                      checked={form.phone_display_settings.room_assignment_staff.show_driver_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>기사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.room_assignment_staff.show_guide_phone"
+                      checked={form.phone_display_settings.room_assignment_staff.show_guide_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>가이드 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.room_assignment_staff.show_manager_phone"
+                      checked={form.phone_display_settings.room_assignment_staff.show_manager_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>매니저 전화번호</span>
                   </label>
                 </div>
               </div>

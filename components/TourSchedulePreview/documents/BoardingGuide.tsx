@@ -123,7 +123,7 @@ export function generateBoardingGuideHTML(
           if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
         }
         
-        if (isStaff && phoneSettings?.show_manager_phone && tourData.staff) {
+        if (isStaff && phoneSettings && 'show_manager_phone' in phoneSettings && phoneSettings.show_manager_phone && tourData.staff) {
           const manager = tourData.staff.find(s => s.role === '매니저');
           if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
         }
@@ -248,7 +248,7 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
             if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
           }
           
-          if (phoneSettings?.show_manager_phone && tourData.staff) {
+          if (phoneSettings && 'show_manager_phone' in phoneSettings && phoneSettings.show_manager_phone && tourData.staff) {
             const manager = tourData.staff.find(s => s.role === '매니저');
             if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
           }

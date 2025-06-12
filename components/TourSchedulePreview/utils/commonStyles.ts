@@ -151,12 +151,12 @@ export function generateCommonFooter(tourData: any, isStaff: boolean = false, do
       if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
     }
     
-    if (phoneSettings.show_manager_phone && tourData.staff) {
+    if ('show_manager_phone' in phoneSettings && phoneSettings.show_manager_phone && tourData.staff) {
       const manager = tourData.staff.find((s: any) => s.role === '매니저');
       if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
     }
     
-    if (phoneSettings.show_golf_phone && tourData.golf_reservation_phone) {
+    if ('show_golf_phone' in phoneSettings && phoneSettings.show_golf_phone && tourData.golf_reservation_phone) {
       phones.push(`골프장 ${tourData.golf_reservation_phone}`);
     }
   } else {
