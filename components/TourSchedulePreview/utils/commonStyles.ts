@@ -211,6 +211,8 @@ export function generateCommonFooter(tourData: any, isStaff: boolean = false, do
 
 // 공통 푸터 스타일
 export function getCommonFooterStyles(isStaff: boolean = false): string {
+  const colors = isStaff ? commonHeaderStyles.staff : commonHeaderStyles.customer;
+  
   return `
     /* 통일된 커스텀 푸터 스타일 */
     .custom-footer {
