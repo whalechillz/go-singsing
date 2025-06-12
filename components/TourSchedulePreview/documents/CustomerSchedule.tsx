@@ -75,89 +75,77 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour || productData.usage_locker) ? `
       <div class="section detailed-usage-section">
         <div class="section-title">상세 이용 안내</div>
-        <div class="usage-accordion" id="usageAccordion">
+        <div class="usage-details-container">
           ${productData.usage_round ? `
-            <div class="accordion-item">
-              <button class="accordion-header active" onclick="toggleAccordion(this)">
-                <span>라운딩 규정</span>
-                <span class="accordion-icon">▼</span>
-              </button>
-              <div class="accordion-content active">
-                <div class="accordion-body">
-                  ${formatUsageContent(productData.usage_round)}
-                </div>
+            <details class="usage-details" open>
+              <summary class="usage-summary">
+                <span class="summary-text">라운딩 규정</span>
+                <span class="summary-icon"></span>
+              </summary>
+              <div class="usage-content">
+                ${formatUsageContent(productData.usage_round)}
               </div>
-            </div>
+            </details>
           ` : ''}
           
           ${productData.usage_hotel ? `
-            <div class="accordion-item">
-              <button class="accordion-header" onclick="toggleAccordion(this)">
-                <span>숙소 이용</span>
-                <span class="accordion-icon">▶</span>
-              </button>
-              <div class="accordion-content">
-                <div class="accordion-body">
-                  ${formatUsageContent(productData.usage_hotel)}
-                </div>
+            <details class="usage-details">
+              <summary class="usage-summary">
+                <span class="summary-text">숙소 이용</span>
+                <span class="summary-icon"></span>
+              </summary>
+              <div class="usage-content">
+                ${formatUsageContent(productData.usage_hotel)}
               </div>
-            </div>
+            </details>
           ` : ''}
           
           ${productData.usage_meal ? `
-            <div class="accordion-item">
-              <button class="accordion-header" onclick="toggleAccordion(this)">
-                <span>식사 안내</span>
-                <span class="accordion-icon">▶</span>
-              </button>
-              <div class="accordion-content">
-                <div class="accordion-body">
-                  ${formatUsageContent(productData.usage_meal)}
-                </div>
+            <details class="usage-details">
+              <summary class="usage-summary">
+                <span class="summary-text">식사 안내</span>
+                <span class="summary-icon"></span>
+              </summary>
+              <div class="usage-content">
+                ${formatUsageContent(productData.usage_meal)}
               </div>
-            </div>
+            </details>
           ` : ''}
           
           ${productData.usage_locker ? `
-            <div class="accordion-item">
-              <button class="accordion-header" onclick="toggleAccordion(this)">
-                <span>락카 이용</span>
-                <span class="accordion-icon">▶</span>
-              </button>
-              <div class="accordion-content">
-                <div class="accordion-body">
-                  ${formatUsageContent(productData.usage_locker)}
-                </div>
+            <details class="usage-details">
+              <summary class="usage-summary">
+                <span class="summary-text">락카 이용</span>
+                <span class="summary-icon"></span>
+              </summary>
+              <div class="usage-content">
+                ${formatUsageContent(productData.usage_locker)}
               </div>
-            </div>
+            </details>
           ` : ''}
           
           ${productData.usage_bus ? `
-            <div class="accordion-item">
-              <button class="accordion-header" onclick="toggleAccordion(this)">
-                <span>버스 이용</span>
-                <span class="accordion-icon">▶</span>
-              </button>
-              <div class="accordion-content">
-                <div class="accordion-body">
-                  ${formatUsageContent(productData.usage_bus)}
-                </div>
+            <details class="usage-details">
+              <summary class="usage-summary">
+                <span class="summary-text">버스 이용</span>
+                <span class="summary-icon"></span>
+              </summary>
+              <div class="usage-content">
+                ${formatUsageContent(productData.usage_bus)}
               </div>
-            </div>
+            </details>
           ` : ''}
           
           ${productData.usage_tour ? `
-            <div class="accordion-item">
-              <button class="accordion-header" onclick="toggleAccordion(this)">
-                <span>관광지 투어</span>
-                <span class="accordion-icon">▶</span>
-              </button>
-              <div class="accordion-content">
-                <div class="accordion-body">
-                  ${formatUsageContent(productData.usage_tour)}
-                </div>
+            <details class="usage-details">
+              <summary class="usage-summary">
+                <span class="summary-text">관광지 투어</span>
+                <span class="summary-icon"></span>
+              </summary>
+              <div class="usage-content">
+                ${formatUsageContent(productData.usage_tour)}
               </div>
-            </div>
+            </details>
           ` : ''}
         </div>
       </div>
@@ -197,34 +185,6 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
 </head>
 <body>
   ${content}
-  <script>
-    function toggleAccordion(button) {
-      const accordionItem = button.parentElement;
-      const accordionContent = accordionItem.querySelector('.accordion-content');
-      const accordionIcon = button.querySelector('.accordion-icon');
-      const isActive = button.classList.contains('active');
-      
-      // 모든 아코디언 닫기 (선택사항: 한 번에 하나만 열리도록 하려면 이 부분 주석 해제)
-      // document.querySelectorAll('.accordion-header').forEach(header => {
-      //   header.classList.remove('active');
-      //   header.querySelector('.accordion-icon').textContent = '▶';
-      // });
-      // document.querySelectorAll('.accordion-content').forEach(content => {
-      //   content.classList.remove('active');
-      // });
-      
-      // 현재 아코디언 토글
-      if (!isActive) {
-        button.classList.add('active');
-        accordionContent.classList.add('active');
-        accordionIcon.textContent = '▼';
-      } else {
-        button.classList.remove('active');
-        accordionContent.classList.remove('active');
-        accordionIcon.textContent = '▶';
-      }
-    }
-  </script>
 </body>
 </html>`;
   
@@ -511,69 +471,67 @@ function getScheduleStyles(isStaff: boolean = false): string {
       font-weight: bold;
     }
     
-    /* 상세 이용 안내 아코디언 스타일 */
+    /* 상세 이용 안내 details/summary 스타일 */
     .detailed-usage-section {
       margin-top: 40px;
       padding-top: 30px;
       border-top: 2px solid #ddd;
     }
     
-    .usage-accordion {
+    .usage-details-container {
       margin-top: 20px;
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       overflow: hidden;
     }
     
-    .accordion-item {
+    .usage-details {
       border-bottom: 1px solid #e0e0e0;
     }
     
-    .accordion-item:last-child {
+    .usage-details:last-child {
       border-bottom: none;
     }
     
-    .accordion-header {
-      width: 100%;
+    .usage-summary {
       padding: 16px 20px;
       background: #f8f9fa;
-      border: none;
       cursor: pointer;
       font-size: 15px;
       font-weight: 600;
       color: #333;
-      text-align: left;
       display: flex;
       justify-content: space-between;
       align-items: center;
       transition: all 0.2s ease;
+      list-style: none;
     }
     
-    .accordion-header:hover {
+    .usage-summary:hover {
       background: #e7f3ff;
     }
     
-    .accordion-header.active {
+    .usage-details[open] > .usage-summary {
       background: #2c5282;
       color: white;
     }
     
-    .accordion-icon {
+    .usage-summary::-webkit-details-marker {
+      display: none;
+    }
+    
+    .summary-icon::after {
+      content: '▶';
       font-size: 12px;
       transition: transform 0.2s ease;
+      display: inline-block;
     }
     
-    .accordion-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
+    .usage-details[open] .summary-icon::after {
+      content: '▼';
     }
     
-    .accordion-content.active {
-      max-height: 2000px;
-    }
-    
-    .accordion-body {
+    .usage-content {
       padding: 20px;
       background: white;
       font-size: 14px;
@@ -622,16 +580,16 @@ function getScheduleStyles(isStaff: boolean = false): string {
         font-size: 16px;
       }
       
-      .accordion-header {
+      .usage-summary {
         font-weight: 700;
         background: #f0f4f8;
       }
       
-      .accordion-header.active {
+      .usage-details[open] > .usage-summary {
         background: #4a6fa5;
       }
       
-      .accordion-body {
+      .usage-content {
         background: linear-gradient(to bottom, #f8fbff 0%, #ffffff 100%);
         box-shadow: inset 0 2px 4px rgba(74, 144, 226, 0.1);
       }
@@ -653,21 +611,20 @@ function getScheduleStyles(isStaff: boolean = false): string {
       .timeline-text { font-size: 14px; }
       .usage-content { font-size: 14px; }
       
-      /* 인쇄 시 모든 아코디언 내용 표시 */
-      .accordion-header {
+      /* 인쇄 시 모든 details 열림 */
+      .usage-details {
+        page-break-inside: avoid;
+      }
+      .usage-details:not([open]) > .usage-content {
+        display: block !important;
+      }
+      .usage-summary {
         background: #f0f0f0 !important;
         color: #2c5282 !important;
         page-break-after: avoid;
       }
-      .accordion-icon { display: none; }
-      .accordion-content {
-        max-height: none !important;
-        overflow: visible !important;
-      }
-      .accordion-body {
-        page-break-inside: avoid;
-      }
-      .accordion-item {
+      .summary-icon { display: none; }
+      .usage-details[open] {
         margin-bottom: 20px;
       }
     }
