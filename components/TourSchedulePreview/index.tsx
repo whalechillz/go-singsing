@@ -3,11 +3,27 @@ import { useSearchParams } from 'next/navigation';
 import { Download, Share2, Printer } from 'lucide-react';
 import { useTourData } from './hooks/useTourData';
 import { useDocumentHTML } from './hooks/useDocumentHTML';
-import { DOCUMENT_TYPES, DocumentType } from './types';
+import { DocumentType } from './types';
 
 interface TourSchedulePreviewProps {
   tourId: string;
 }
+
+// 고객용과 스탭용 문서 분리
+const CUSTOMER_DOCUMENTS = [
+  { id: 'customer_schedule', label: '일정표', icon: '📋' },
+  { id: 'customer_boarding', label: '탑승안내', icon: '🚌' },
+  { id: 'room_assignment', label: '객실배정', icon: '🏨' },
+  { id: 'customer_timetable', label: '티타임표', icon: '⛳' },
+  { id: 'simplified', label: '간편일정', icon: '📄' }
+] as const;
+
+const STAFF_DOCUMENTS = [
+  { id: 'staff_schedule', label: '일정표', icon: '📋' },
+  { id: 'staff_boarding', label: '탑승안내', icon: '👥' },
+  { id: 'room_assignment_staff', label: '객실배정', icon: '🏨' },
+  { id: 'staff_timetable', label: '티타임표', icon: '⛳' }
+] as const;
 
 export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps) {
   const [activeTab, setActiveTab] = useState<DocumentType>('customer_schedule');
@@ -35,7 +51,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   // URL 파라미터로 뷰 자동 선택
   useEffect(() => {
     const view = searchParams.get('view');
-    if (view && DOCUMENT_TYPES.some(doc => doc.id === view)) {
+    const allDocuments = [...CUSTOMER_DOCUMENTS, ...STAFF_DOCUMENTS];
+    if (view && allDocuments.some(doc => doc.id === view)) {
       setActiveTab(view as DocumentType);
     }
   }, [searchParams]);
@@ -108,22 +125,49 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   return (
     <div className="max-w-7xl mx-auto p-4">
-      {/* 문서 선택 탭 */}
-      <div className="mb-6 flex gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        {DOCUMENT_TYPES.map((doc) => (
-          <button
-            key={doc.id}
-            onClick={() => setActiveTab(doc.id)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
-              activeTab === doc.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-          >
-            <span className="mr-2">{doc.icon}</span>
-            {doc.label}
-          </button>
-        ))}
+      {/* 문서 선택 탭 - 고객용과 스탭용 분리 */}
+      <div className="mb-6 space-y-3">
+        {/* 고객용 문서 */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">고객용 문서</h3>
+          <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            {CUSTOMER_DOCUMENTS.map((doc) => (
+              <button
+                key={doc.id}
+                onClick={() => setActiveTab(doc.id as DocumentType)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
+                  activeTab === doc.id
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+                }`}
+              >
+                <span className="mr-2">{doc.icon}</span>
+                {doc.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* 스탭용 문서 */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">스탭용 문서</h3>
+          <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            {STAFF_DOCUMENTS.map((doc) => (
+              <button
+                key={doc.id}
+                onClick={() => setActiveTab(doc.id as DocumentType)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
+                  activeTab === doc.id
+                    ? 'bg-gray-700 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                }`}
+              >
+                <span className="mr-2">{doc.icon}</span>
+                {doc.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* 액션 버튼 */}
