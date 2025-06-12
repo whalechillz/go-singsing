@@ -105,6 +105,8 @@ export default function CustomerTourPortal({
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [themeButtonColor, setThemeButtonColor] = useState(0);
+  const [showThemeChangeAlert, setShowThemeChangeAlert] = useState(false);
+  const [changedThemeName, setChangedThemeName] = useState('');
 
   useEffect(() => {
     // 로컬 스토리지에서 테마 불러오기
@@ -152,28 +154,29 @@ export default function CustomerTourPortal({
         e.preventDefault();
         setIsPulling(true);
         setPullDistance(Math.min(distance, 150));
-        
-        // 당긴 거리에 따라 테마 버튼 색상 변경
-        const colorIndex = Math.floor((distance / 30) % 5);
-        setThemeButtonColor(colorIndex);
       }
     };
     
     const handleTouchEnd = () => {
       if (isPulling && pullDistance > 80) {
-        // 테마 버튼 반짝임 효과
-        const colors = ['purple', 'blue', 'green', 'red', 'dark'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        // 테마 자체를 순환하면서 변경
+        const themeKeys = Object.keys(themes);
+        const currentIndex = themeKeys.indexOf(currentTheme);
+        const nextIndex = (currentIndex + 1) % themeKeys.length;
+        const nextTheme = themeKeys[nextIndex];
         
-        // 테마 버튼에 반짝임 효과 주기
+        // 테마 버튼에 짧은 무지개 효과
+        setThemeButtonColor(-1);
+        
+        // 테마 변경
         setTimeout(() => {
-          setThemeButtonColor(-1); // 특별한 반짝임 상태
-        }, 100);
+          changeTheme(nextTheme, true); // showAlert = true
+          setThemeButtonColor(0);
+        }, 300);
       }
       
       setIsPulling(false);
       setPullDistance(0);
-      setThemeButtonColor(0);
     };
     
     window.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -185,12 +188,20 @@ export default function CustomerTourPortal({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isPulling, pullDistance]);
+  }, [isPulling, pullDistance, currentTheme]);
 
-  const changeTheme = (theme: string) => {
+  const changeTheme = (theme: string, showAlert: boolean = false) => {
     setCurrentTheme(theme);
     localStorage.setItem('tourPortalTheme', theme);
     setShowThemeMenu(false);
+    
+    if (showAlert) {
+      setChangedThemeName(themes[theme as keyof typeof themes].name);
+      setShowThemeChangeAlert(true);
+      setTimeout(() => {
+        setShowThemeChangeAlert(false);
+      }, 2000);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -281,7 +292,22 @@ export default function CustomerTourPortal({
         }
         .rainbow-animation {
           background-size: 200% 200%;
-          animation: rainbow 3s ease infinite;
+          animation: rainbow 0.5s ease infinite;
+        }
+        
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateY(-20px) translateX(-50%); }
+          20% { opacity: 1; transform: translateY(0) translateX(-50%); }
+          80% { opacity: 1; transform: translateY(0) translateX(-50%); }
+          100% { opacity: 0; transform: translateY(-20px) translateX(-50%); }
+        }
+        .animate-fadeInOut {
+          animation: fadeInOut 2s ease-out;
+        }
+        
+        /* 테마 변경 시 부드러운 전환 */
+        * {
+          transition: background-color 0.5s ease, color 0.5s ease;
         }
       `}</style>
       <div className="min-h-screen bg-gray-50" style={{ 
@@ -290,6 +316,18 @@ export default function CustomerTourPortal({
         '--accent-color': theme.accent,
         '--light-color': theme.light
       } as React.CSSProperties}>
+      {/* 테마 변경 알림 */}
+      {showThemeChangeAlert && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-fadeInOut">
+          <div className="bg-white rounded-full px-6 py-3 shadow-2xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 animate-spin" />
+            <span className="font-medium text-gray-800">
+              🌈 <span className="font-bold">{changedThemeName}</span> 테마로 변경되었어요!
+            </span>
+          </div>
+        </div>
+      )}
+      
       {/* Pull-to-refresh indicator */}
       {isPulling && (
         <div 
@@ -307,7 +345,13 @@ export default function CustomerTourPortal({
               }}
             />
             <p className="text-xs mt-2 text-gray-600">
-              {pullDistance > 80 ? '🌈 놓으면 테마 버튼이 반짝여요!' : '아래로 당겨보세요...'}
+              {pullDistance > 80 ? (
+                <>
+                  🌈 놓으면 <span className="font-bold">{themes[Object.keys(themes)[(Object.keys(themes).indexOf(currentTheme) + 1) % Object.keys(themes).length] as keyof typeof themes].name}</span>로 변경!
+                </>
+              ) : (
+                '아래로 당겨서 테마를 바꿔보세요...'
+              )}
             </p>
           </div>
         </div>
@@ -326,19 +370,16 @@ export default function CustomerTourPortal({
             <div className="relative">
               <button
                 onClick={() => setShowThemeMenu(!showThemeMenu)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all transform ${
-                  themeButtonColor === -1 
-                    ? 'animate-pulse bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 text-white scale-110 shadow-2xl' 
-                    : 'bg-white/20 backdrop-blur-sm hover:bg-white/30'
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all transform bg-white/20 backdrop-blur-sm hover:bg-white/30 ${
+                  themeButtonColor === -1 ? 'scale-110 shadow-2xl' : ''
                 }`}
-                style={{
-                  background: themeButtonColor > 0 && themeButtonColor !== -1
-                    ? `linear-gradient(135deg, ${Object.values(themes)[themeButtonColor].primary} 0%, ${Object.values(themes)[themeButtonColor].secondary} 100%)`
-                    : undefined
-                }}
               >
                 <Palette className="w-4 h-4" />
-                <span className="text-sm">테마</span>
+                <span className={`text-sm ${
+                  themeButtonColor === -1 
+                    ? 'font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 bg-clip-text text-transparent rainbow-animation' 
+                    : ''
+                }`}>테마</span>
               </button>
               
               {showThemeMenu && (
@@ -346,7 +387,7 @@ export default function CustomerTourPortal({
                   {Object.entries(themes).map(([key, themeData]) => (
                     <button
                       key={key}
-                      onClick={() => changeTheme(key)}
+                      onClick={() => changeTheme(key, false)}
                       className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
                       <div 
