@@ -124,8 +124,15 @@ export default function SpotManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAttraction, setEditingAttraction] = useState<TouristAttraction | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingAdditionalImage, setUploadingAdditionalImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [galleryModal, setGalleryModal] = useState<{ isOpen: boolean; images: string[]; currentIndex: number }>({
+    isOpen: false,
+    images: [],
+    currentIndex: 0
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const additionalImageInputRef = useRef<HTMLInputElement>(null);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -162,6 +169,24 @@ export default function SpotManagementPage() {
   useEffect(() => {
     fetchAttractions();
   }, [selectedCategory, searchTerm]);
+
+  // 갤러리 모달 키보드 네비게이션
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (galleryModal.isOpen) {
+        if (e.key === 'ArrowLeft' && galleryModal.currentIndex > 0) {
+          setGalleryModal(prev => ({ ...prev, currentIndex: prev.currentIndex - 1 }));
+        } else if (e.key === 'ArrowRight' && galleryModal.currentIndex < galleryModal.images.length - 1) {
+          setGalleryModal(prev => ({ ...prev, currentIndex: prev.currentIndex + 1 }));
+        } else if (e.key === 'Escape') {
+          setGalleryModal({ isOpen: false, images: [], currentIndex: 0 });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [galleryModal]);
 
   const fetchAttractions = async () => {
     try {
@@ -403,9 +428,79 @@ export default function SpotManagementPage() {
     }));
   };
 
-  const getCategoryIcon = (category: Category) => {
+  const handleAdditionalImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 전체 이미지 갯수 확인 (대표 이미지 + 추가 이미지)
+    const currentImageCount = formData.image_urls.filter(url => url.trim()).length + (formData.main_image_url ? 1 : 0);
+    if (currentImageCount >= 10) {
+      alert('최대 10장까지만 업로드할 수 있습니다.');
+      return;
+    }
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      alert(validation.error);
+      return;
+    }
+
+    setUploadingAdditionalImage(true);
+    try {
+      const { url, error } = await uploadImage(file, 'tourist-attractions');
+      if (error) {
+        alert(`이미지 업로드에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+      } else if (url) {
+        // 빈 문자열이 있으면 그 자리에 넣고, 없으면 새로 추가
+        const emptyIndex = formData.image_urls.findIndex(img => !img.trim());
+        if (emptyIndex !== -1) {
+          updateArrayField('image_urls', emptyIndex, url);
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            image_urls: [...prev.image_urls, url]
+          }));
+        }
+      }
+    } catch (error: any) {
+      alert(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+    } finally {
+      setUploadingAdditionalImage(false);
+      if (additionalImageInputRef.current) {
+        additionalImageInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeAdditionalImage = async (index: number) => {
+    const imageUrl = formData.image_urls[index];
+    if (imageUrl && imageUrl.includes('supabase')) {
+      await deleteImage(imageUrl);
+    }
+    removeArrayField('image_urls', index);
+  };
+
+  const getCategoryIcon = (category: Category, className: string = "w-4 h-4") => {
     const Icon = categoryConfig[category]?.icon || MoreHorizontal;
-    return <Icon className="w-4 h-4" />;
+    return <Icon className={className} />;
+  };
+
+  const openGallery = (attraction: TouristAttraction) => {
+    const allImages: string[] = [];
+    if (attraction.main_image_url) {
+      allImages.push(attraction.main_image_url);
+    }
+    if (attraction.image_urls) {
+      allImages.push(...attraction.image_urls.filter(url => url && url.trim()));
+    }
+    
+    if (allImages.length > 0) {
+      setGalleryModal({
+        isOpen: true,
+        images: allImages,
+        currentIndex: 0
+      });
+    }
   };
 
   return (
@@ -506,12 +601,23 @@ export default function SpotManagementPage() {
                       alt={attraction.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
-                    {attraction.image_urls && attraction.image_urls.length > 0 && attraction.image_urls[0] && (
-                      <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                        <ImageIcon className="w-3 h-3" />
-                        {attraction.image_urls.filter(url => url).length + 1}
-                      </div>
-                    )}
+                    {/* 이미지 개수 표시 */}
+                    {(() => {
+                      const additionalImages = attraction.image_urls?.filter(url => url && url.trim()).length || 0;
+                      const totalImages = additionalImages + 1; // 대표 이미지 포함
+                      return totalImages > 1 ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openGallery(attraction);
+                          }}
+                          className="absolute bottom-2 left-2 bg-black/60 hover:bg-black/80 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 transition-colors"
+                        >
+                          <ImageIcon className="w-3 h-3" />
+                          {totalImages}
+                        </button>
+                      ) : null;
+                    })()}
                     <div className="absolute top-2 right-2 flex gap-1">
                       <button
                         className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-gray-600 hover:text-gray-900 hover:bg-white transition-all"
@@ -529,7 +635,22 @@ export default function SpotManagementPage() {
                   </div>
                 ) : (
                   <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                    {getCategoryIcon(attraction.category)}
+                    <div className="text-gray-400">
+                      {getCategoryIcon(attraction.category, "w-16 h-16")}
+                    </div>
+                    {/* 추가 이미지만 있는 경우 */}
+                    {attraction.image_urls && attraction.image_urls.filter(url => url && url.trim()).length > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openGallery(attraction);
+                        }}
+                        className="absolute bottom-2 left-2 bg-black/60 hover:bg-black/80 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 transition-colors"
+                      >
+                        <ImageIcon className="w-3 h-3" />
+                        {attraction.image_urls.filter(url => url && url.trim()).length}
+                      </button>
+                    )}
                     <div className="absolute top-2 right-2 flex gap-1">
                       <button
                         className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-gray-600 hover:text-gray-900 hover:bg-white transition-all"
@@ -870,12 +991,68 @@ export default function SpotManagementPage() {
                       ) : (
                         <>
                           <Upload className="w-4 h-4" />
-                          이미지 업로드
+                          대표 이미지 업로드
                         </>
                       )}
                     </label>
                   </div>
                 </div>
+              </div>
+
+              {/* 추가 이미지 */}
+              <div>
+                <label className="block text-sm font-medium mb-1">추가 이미지</label>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  {formData.image_urls.map((imageUrl, index) => (
+                    imageUrl && imageUrl.trim() && (
+                      <div key={index} className="relative h-32 bg-gray-100 rounded-lg overflow-hidden">
+                        <img 
+                          src={imageUrl} 
+                          alt={`추가 이미지 ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeAdditionalImage(index)}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        >
+                          <XIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )
+                  ))}
+                  
+                  {/* 이미지 업로드 버튼 */}
+                  {(formData.image_urls.filter(url => url.trim()).length + (formData.main_image_url ? 1 : 0)) < 10 && (
+                    <div className="h-32">
+                      <input
+                        ref={additionalImageInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={handleAdditionalImageSelect}
+                        className="hidden"
+                        id="additional-image-upload"
+                      />
+                      <label
+                        htmlFor="additional-image-upload"
+                        className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer flex flex-col items-center justify-center gap-2 text-gray-600 hover:text-gray-700"
+                      >
+                        {uploadingAdditionalImage ? (
+                          <>
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                            <span className="text-xs">업로드 중...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-6 h-6" />
+                            <span className="text-xs">이미지 추가</span>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-500">최대 10장까지 업로드 가능합니다. 대표 이미지와 함께 총 {formData.image_urls.filter(url => url.trim()).length + (formData.main_image_url ? 1 : 0)}장의 이미지가 등록되어 있습니다.</p>
               </div>
 
               {/* 특징 */}
@@ -982,6 +1159,79 @@ export default function SpotManagementPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 이미지 갤러리 모달 */}
+      {galleryModal.isOpen && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-4xl h-full flex flex-col">
+            {/* 헤더 */}
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-white text-lg">
+                {galleryModal.currentIndex + 1} / {galleryModal.images.length}
+              </span>
+              <button
+                onClick={() => setGalleryModal({ isOpen: false, images: [], currentIndex: 0 })}
+                className="text-white p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <XIcon className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* 이미지 */}
+            <div className="flex-1 flex items-center justify-center relative">
+              <img
+                src={galleryModal.images[galleryModal.currentIndex]}
+                alt={`이미지 ${galleryModal.currentIndex + 1}`}
+                className="max-w-full max-h-full object-contain"
+              />
+              
+              {/* 이전/다음 버튼 */}
+              {galleryModal.currentIndex > 0 && (
+                <button
+                  onClick={() => setGalleryModal(prev => ({ ...prev, currentIndex: prev.currentIndex - 1 }))}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-2 bg-black/50 hover:bg-black/70 rounded-full transition-all"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              
+              {galleryModal.currentIndex < galleryModal.images.length - 1 && (
+                <button
+                  onClick={() => setGalleryModal(prev => ({ ...prev, currentIndex: prev.currentIndex + 1 }))}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-2 bg-black/50 hover:bg-black/70 rounded-full transition-all"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            
+            {/* 썸네일 */}
+            <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+              {galleryModal.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setGalleryModal(prev => ({ ...prev, currentIndex: index }))}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    index === galleryModal.currentIndex
+                      ? 'border-white opacity-100'
+                      : 'border-transparent opacity-60 hover:opacity-80'
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`썸네일 ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
