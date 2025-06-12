@@ -1,4 +1,4 @@
-import { TourData } from '../types';
+import { TourData, ProductData } from '../types';
 import { htmlWrapper, getCommonStyles } from '../utils/generators';
 import { formatTime, formatDate, getArrivalTime } from '../utils/formatters';
 import { generateCommonHeader, getCommonHeaderStyles } from '../utils/commonStyles';
@@ -7,10 +7,11 @@ export function generateBoardingGuideHTML(
   tourData: TourData,
   journeyItems: any[], // tour_journey_items with spot relations
   isStaff: boolean,
-  participants?: any[]
+  participants?: any[],
+  productData?: ProductData | null
 ): string {
   if (isStaff && participants) {
-    return generateStaffBoardingHTML(tourData, journeyItems, participants);
+    return generateStaffBoardingHTML(tourData, journeyItems, participants, productData);
   }
   
   // journeyItems에서 탑승지만 추출 (첫날만)
@@ -72,11 +73,11 @@ export function generateBoardingGuideHTML(
       </div>
       
       <!-- 탑승 주의사항 -->
-      ${tourData.bus_info ? `
+      ${productData?.usage_bus ? `
         <div class="common-info">
           <h3 class="section-title">탑승 주의사항</h3>
           <ul class="notice-list">
-            ${tourData.bus_info.split('\n').map((notice: string) => 
+            ${productData.usage_bus.split('\n').map((notice: string) => 
               notice.trim() ? `<li class="notice-item">${notice.replace(/^[•·\-\*]\s*/, '')}</li>` : ''
             ).join('')}
           </ul>
@@ -108,7 +109,7 @@ export function generateBoardingGuideHTML(
   return htmlWrapper(`${tourData.title} - 탑승 안내`, content);
 }
 
-function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], participants: any[]): string {
+function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], participants: any[], productData?: ProductData | null): string {
   // journeyItems에서 탑승지만 추출 (첫날만)
   const boardingItems = journeyItems.filter(item => 
     item.spot && item.spot.category === 'boarding' && item.day_number === 1
