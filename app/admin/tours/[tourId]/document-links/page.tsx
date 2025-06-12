@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, QrCode, Info } from 'lucide-react';
+import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, QrCode, Info, MessageCircle, Mail, Smartphone } from 'lucide-react';
 
 interface DocumentLink {
   id: string;
@@ -48,6 +48,8 @@ export default function DocumentLinksPage() {
   const [targetAudience, setTargetAudience] = useState<'customer' | 'staff' | 'golf'>('customer');
   const [showOnlyDriver, setShowOnlyDriver] = useState(false);
   const [specialNotice, setSpecialNotice] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharingLink, setSharingLink] = useState<DocumentLink | null>(null);
   
   // 새 문서 링크 폼 상태
   const [newDocumentType, setNewDocumentType] = useState('customer_all');
@@ -296,6 +298,130 @@ export default function DocumentLinksPage() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     alert('링크가 복사되었습니다.');
+  };
+  
+  const shareViaKakao = (link: DocumentLink) => {
+    const url = getDocumentUrl(link);
+    const documentType = documentTypeOptions.find(opt => opt.value === link.document_type);
+    const title = `${tour?.title} - ${documentType?.label || '문서'}`;
+    const text = `[싱싱골프투어]\n${title}\n\n투어 문서를 확인하세요!\n${url}`;
+    
+    // 카카오 SDK가 로드되었는지 확인
+    if (typeof window !== 'undefined' && window.Kakao?.Share) {
+      try {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: title,
+            description: '싱싱골프투어 문서를 확인하세요',
+            imageUrl: 'https://go.singsinggolf.kr/logo.png',
+            link: {
+              mobileWebUrl: url,
+              webUrl: url,
+            },
+          },
+          buttons: [
+            {
+              title: '문서 보기',
+              link: {
+                mobileWebUrl: url,
+                webUrl: url,
+              },
+            },
+          ],
+        });
+        return;
+      } catch (error) {
+        console.error('Kakao SDK error:', error);
+      }
+    }
+    
+    // SDK가 없는 경우 폴백: 복사 후 카카오톡 앱 열기
+    navigator.clipboard.writeText(text);
+    
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      // 카카오톡 앱 열기 시도
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        // iOS는 카카오톡 URL 스킴을 통해 앱 열기
+        window.location.href = 'kakaotalk://msg/text/' + encodeURIComponent(text);
+      } else {
+        // Android는 intent 사용
+        window.location.href = 'intent://send?text=' + encodeURIComponent(text) + '#Intent;scheme=kakao;package=com.kakao.talk;end';
+      }
+      
+      setTimeout(() => {
+        alert('링크가 복사되었습니다.\n\n카카오톡이 열리지 않으면 카카오톡 앱에서 붙여넣기 해주세요.');
+      }, 1000);
+    } else {
+      alert('링크가 복사되었습니다.\n카카오톡에서 붙여넣기 해주세요.');
+    }
+  };
+  
+  const shareViaSMS = (link: DocumentLink) => {
+    const url = getDocumentUrl(link);
+    const documentType = documentTypeOptions.find(opt => opt.value === link.document_type);
+    const title = `${tour?.title} - ${documentType?.label || '문서'}`;
+    const message = `${title}\n${url}`;
+    
+    // iOS와 Android 구분
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    if (isIOS) {
+      // iOS는 &body= 사용
+      window.location.href = `sms:&body=${encodeURIComponent(message)}`;
+    } else if (isAndroid) {
+      // Android는 ?body= 사용
+      window.location.href = `sms:?body=${encodeURIComponent(message)}`;
+    } else {
+      // 데스크톱인 경우 복사
+      navigator.clipboard.writeText(message);
+      alert('링크가 복사되었습니다.');
+    }
+  };
+  
+  const shareViaEmail = (link: DocumentLink) => {
+    const url = getDocumentUrl(link);
+    const documentType = documentTypeOptions.find(opt => opt.value === link.document_type);
+    const subject = `${tour?.title} - ${documentType?.label || '문서'}`;
+    const body = `안녕하세요,\n\n${tour?.title} 투어 문서를 공유합니다.\n\n${url}\n\n감사합니다.\n싱싱골프투어`;
+    
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+  
+  const shareNative = async (link: DocumentLink) => {
+    const url = getDocumentUrl(link);
+    const documentType = documentTypeOptions.find(opt => opt.value === link.document_type);
+    const title = `${tour?.title} - ${documentType?.label || '문서'}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: '싱싱골프투어 문서를 확인하세요',
+          url: url
+        });
+      } catch (err) {
+        console.log('공유 취소 또는 오류:', err);
+      }
+    } else {
+      // Web Share API를 지원하지 않는 경우 공유 모달 표시
+      setSharingLink(link);
+      setShowShareModal(true);
+    }
+  };
+  
+  const handleShare = (link: DocumentLink) => {
+    // 모바일이면 네이티브 공유, 데스크톱이면 모달
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      shareNative(link);
+    } else {
+      setSharingLink(link);
+      setShowShareModal(true);
+    }
   };
   
   const handleEditClick = (link: DocumentLink) => {
@@ -613,6 +739,13 @@ export default function DocumentLinksPage() {
                         title="새 탭에서 열기"
                       >
                         <ExternalLink className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleShare(link)}
+                        className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
+                        title="공유하기"
+                      >
+                        <Share2 className="w-4 h-4" />
                       </button>
                     </div>
                     
@@ -1252,6 +1385,80 @@ export default function DocumentLinksPage() {
               >
                 통합 표지 수정
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 공유 모달 */}
+      {showShareModal && sharingLink && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">문서 공유하기</h2>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              어떤 방법으로 공유하시겠습니까?
+            </p>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  shareViaKakao(sharingLink);
+                  setShowShareModal(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-yellow-400 hover:bg-yellow-500 rounded-lg transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span className="font-medium">카카오톡으로 공유</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  shareViaSMS(sharingLink);
+                  setShowShareModal(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-green-500 text-white hover:bg-green-600 rounded-lg transition-colors"
+              >
+                <Smartphone className="w-5 h-5" />
+                <span className="font-medium">문자로 공유</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  shareViaEmail(sharingLink);
+                  setShowShareModal(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors"
+              >
+                <Mail className="w-5 h-5" />
+                <span className="font-medium">이메일로 공유</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  copyToClipboard(getDocumentUrl(sharingLink));
+                  setShowShareModal(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+              >
+                <Copy className="w-5 h-5" />
+                <span className="font-medium">링크 복사</span>
+              </button>
+            </div>
+            
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">공유할 링크:</p>
+              <p className="text-xs text-gray-500 break-all">
+                {getDocumentUrl(sharingLink)}
+              </p>
             </div>
           </div>
         </div>

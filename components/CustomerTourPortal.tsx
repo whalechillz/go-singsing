@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Users, Hotel, Clock, Bus, MapPin, Calendar, Phone, Menu, X, Palette, ChevronRight, Copy, ExternalLink, CheckCircle2, AlertCircle, UserPlus, Info } from 'lucide-react';
+import { FileText, Users, Hotel, Clock, Bus, MapPin, Calendar, Phone, Menu, X, Palette, ChevronRight, Copy, ExternalLink, CheckCircle2, AlertCircle, UserPlus, Info, Share2 } from 'lucide-react';
 
 interface TourData {
   id: string;
@@ -101,6 +101,7 @@ export default function CustomerTourPortal({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [daysInfo, setDaysInfo] = useState<{ type: 'before' | 'during' | 'after' | 'expired'; days: number } | null>(null);
+  const [showMobileShare, setShowMobileShare] = useState(false);
 
   useEffect(() => {
     // 로컬 스토리지에서 테마 불러오기
@@ -156,6 +157,27 @@ export default function CustomerTourPortal({
     setCopiedLink(linkId);
     setTimeout(() => setCopiedLink(null), 2000);
   };
+  
+  const sharePortal = async () => {
+    const url = window.location.href;
+    const title = `싱싱골프투어 - ${tourData.title}`;
+    const text = `[싱싱골프투어]\n${tourData.title}\n\n투어 문서를 확인하세요!`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: text,
+          url: url
+        });
+      } catch (err) {
+        console.log('공유 취소 또는 오류:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('링크가 복사되었습니다.');
+    }
+  };
 
   const theme = themes[currentTheme as keyof typeof themes];
 
@@ -208,36 +230,48 @@ export default function CustomerTourPortal({
           background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)` 
         }}
       >
-        {/* 테마 선택기 */}
-        {portalSettings.enableThemeSelector !== false && (
-          <div className="absolute top-5 right-5">
-            <button
-              onClick={() => setShowThemeMenu(!showThemeMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-all"
-            >
-              <Palette className="w-4 h-4" />
-              <span className="text-sm">테마</span>
-            </button>
-            
-            {showThemeMenu && (
-              <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-50">
-                {Object.entries(themes).map(([key, themeData]) => (
-                  <button
-                    key={key}
-                    onClick={() => changeTheme(key)}
-                    className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
-                  >
-                    <div 
-                      className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
-                      style={{ backgroundColor: themeData.primary }}
-                    />
-                    <span className="text-gray-700 text-sm">{themeData.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {/* 상단 버튼들 */}
+        <div className="absolute top-5 right-5 flex gap-2">
+          {/* 공유 버튼 */}
+          <button
+            onClick={sharePortal}
+            className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-all"
+          >
+            <Share2 className="w-4 h-4" />
+            <span className="text-sm">공유</span>
+          </button>
+          
+          {/* 테마 선택기 */}
+          {portalSettings.enableThemeSelector !== false && (
+            <div className="relative">
+              <button
+                onClick={() => setShowThemeMenu(!showThemeMenu)}
+                className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-all"
+              >
+                <Palette className="w-4 h-4" />
+                <span className="text-sm">테마</span>
+              </button>
+              
+              {showThemeMenu && (
+                <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-50">
+                  {Object.entries(themes).map(([key, themeData]) => (
+                    <button
+                      key={key}
+                      onClick={() => changeTheme(key)}
+                      className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <div 
+                        className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
+                        style={{ backgroundColor: themeData.primary }}
+                      />
+                      <span className="text-gray-700 text-sm">{themeData.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         
         <div className="max-w-md mx-auto">
           <h1 className="text-3xl font-bold mb-4 drop-shadow-md">싱싱골프투어</h1>
