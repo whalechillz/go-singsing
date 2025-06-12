@@ -160,6 +160,37 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
 </head>
 <body>
   ${content}
+  <script>
+    (function() {
+      function handleTabClick(e) {
+        const tab = e.target.closest('.usage-tab');
+        if (!tab) return;
+        
+        const targetTab = tab.getAttribute('data-tab');
+        if (!targetTab) return;
+        
+        const tabs = document.querySelectorAll('.usage-tab');
+        const contents = document.querySelectorAll('.usage-content');
+        
+        tabs.forEach(t => t.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        const targetContent = document.querySelector('.usage-content[data-content="' + targetTab + '"]');
+        if (targetContent) {
+          targetContent.classList.add('active');
+        }
+      }
+      
+      // 페이지 로드 시 이벤트 리스너 추가
+      document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.usage-tab');
+        tabs.forEach(tab => {
+          tab.addEventListener('click', handleTabClick);
+        });
+      });
+    })();
+  </script>
 </body>
 </html>`;
   

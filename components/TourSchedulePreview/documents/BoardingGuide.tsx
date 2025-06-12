@@ -77,9 +77,18 @@ export function generateBoardingGuideHTML(
         <div class="common-info">
           <h3 class="section-title">탑승 주의사항</h3>
           <ul class="notice-list">
-            ${productData.usage_bus.split('\n').map((notice: string) => 
-              notice.trim() ? `<li class="notice-item">${notice.replace(/^[•·\-\*]\s*/, '')}</li>` : ''
-            ).join('')}
+            ${productData.usage_bus.split('\n')
+              .filter((notice: string) => {
+                // 당구장 관련 내용 필터링
+                const lowerNotice = notice.toLowerCase();
+                return notice.trim() && 
+                       !lowerNotice.includes('당구') && 
+                       !lowerNotice.includes('큐대') &&
+                       !lowerNotice.includes('포켓볼');
+              })
+              .map((notice: string) => 
+                `<li class="notice-item">${notice.replace(/^[•·\-\*]\s*/, '')}</li>`
+              ).join('')}
           </ul>
           
           ${tourData.staff && tourData.staff.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `

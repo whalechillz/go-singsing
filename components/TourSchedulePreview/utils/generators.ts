@@ -1,5 +1,5 @@
 // HTML 템플릿 생성 헬퍼 함수들
-export const htmlWrapper = (title: string, content: string): string => `<!DOCTYPE html>
+export const htmlWrapper = (title: string, content: string, includeTabScript: boolean = false): string => `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -9,6 +9,7 @@ export const htmlWrapper = (title: string, content: string): string => `<!DOCTYP
 </head>
 <body>
   ${content}
+  ${includeTabScript ? getTabScript() : ''}
 </body>
 </html>`;
 
@@ -126,4 +127,39 @@ export const createFooter = (message: string = '♡ 즐거운 하루 되시길 �
     <p>${message}</p>
     <p>싱싱골프투어 ☎ ${phone}</p>
   </div>
+`;
+
+// 탭 기능을 위한 스크립트
+export const getTabScript = (): string => `
+<script>
+  (function() {
+    function handleTabClick(e) {
+      const tab = e.target.closest('.usage-tab');
+      if (!tab) return;
+      
+      const targetTab = tab.getAttribute('data-tab');
+      if (!targetTab) return;
+      
+      const tabs = document.querySelectorAll('.usage-tab');
+      const contents = document.querySelectorAll('.usage-content');
+      
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      
+      tab.classList.add('active');
+      const targetContent = document.querySelector('.usage-content[data-content="' + targetTab + '"]');
+      if (targetContent) {
+        targetContent.classList.add('active');
+      }
+    }
+    
+    // 페이지 로드 시 이벤트 리스너 추가
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabs = document.querySelectorAll('.usage-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', handleTabClick);
+      });
+    });
+  })();
+</script>
 `;
