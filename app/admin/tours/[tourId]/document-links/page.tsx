@@ -37,6 +37,8 @@ export default function DocumentLinksPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<DocumentLink | null>(null);
+  const [isEditPortalModalOpen, setIsEditPortalModalOpen] = useState(false);
+  const [editingPortalLink, setEditingPortalLink] = useState<DocumentLink | null>(null);
   const [isPortalModalOpen, setIsPortalModalOpen] = useState(false);
   const [portalTheme, setPortalTheme] = useState('blue');
   const [showContactInfo, setShowContactInfo] = useState(true);
@@ -54,6 +56,16 @@ export default function DocumentLinksPage() {
   // 수정 폼 상태
   const [editDocumentType, setEditDocumentType] = useState('');
   const [editExpirationDays, setEditExpirationDays] = useState('');
+  
+  // 포털 수정 상태
+  const [editPortalTheme, setEditPortalTheme] = useState('blue');
+  const [editShowContactInfo, setEditShowContactInfo] = useState(true);
+  const [editEnableThemeSelector, setEditEnableThemeSelector] = useState(true);
+  const [editManagerPhone, setEditManagerPhone] = useState('');
+  const [editDriverPhone, setEditDriverPhone] = useState('');
+  const [editTargetAudience, setEditTargetAudience] = useState<'customer' | 'staff' | 'golf'>('customer');
+  const [editShowOnlyDriver, setEditShowOnlyDriver] = useState(false);
+  const [editSpecialNotice, setEditSpecialNotice] = useState('');
   
   // 테마 정의
   const themes = {
@@ -287,21 +299,49 @@ export default function DocumentLinksPage() {
   };
   
   const handleEditClick = (link: DocumentLink) => {
-    setEditingLink(link);
-    setEditDocumentType(link.document_type);
-    
-    // 만료일 계산
-    if (link.expires_at) {
-      const expiresDate = new Date(link.expires_at);
-      const today = new Date();
-      const diffTime = expiresDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setEditExpirationDays(diffDays > 0 ? diffDays.toString() : '');
+    if (link.document_type === 'portal') {
+      // 포털 수정
+      setEditingPortalLink(link);
+      const settings = link.settings || {};
+      setEditPortalTheme(settings.theme || 'blue');
+      setEditShowContactInfo(settings.showContact !== false);
+      setEditEnableThemeSelector(settings.enableThemeSelector !== false);
+      setEditTargetAudience(settings.targetAudience || 'customer');
+      setEditSpecialNotice(settings.specialNotice || '');
+      
+      // 연락처 설정
+      if (settings.contactNumbers) {
+        setEditManagerPhone(settings.contactNumbers.manager || '');
+        setEditDriverPhone(settings.contactNumbers.driver || '');
+        setEditShowOnlyDriver(!settings.contactNumbers.manager && !!settings.contactNumbers.driver);
+      } else {
+        // 기존 연락처 다시 불러오기
+        fetchTourContacts().then(() => {
+          setEditManagerPhone(managerPhone);
+          setEditDriverPhone(driverPhone);
+        });
+        setEditShowOnlyDriver(false);
+      }
+      
+      setIsEditPortalModalOpen(true);
     } else {
-      setEditExpirationDays('');
+      // 일반 문서 수정
+      setEditingLink(link);
+      setEditDocumentType(link.document_type);
+      
+      // 만료일 계산
+      if (link.expires_at) {
+        const expiresDate = new Date(link.expires_at);
+        const today = new Date();
+        const diffTime = expiresDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setEditExpirationDays(diffDays > 0 ? diffDays.toString() : '');
+      } else {
+        setEditExpirationDays('');
+      }
+      
+      setIsEditModalOpen(true);
     }
-    
-    setIsEditModalOpen(true);
   };
   
   const handleUpdateLink = async () => {
@@ -375,7 +415,47 @@ export default function DocumentLinksPage() {
       alert('통합 표지 생성 중 오류가 발생했습니다.');
     }
   };
+  
+  const handleUpdatePortal = async () => {
+    if (!editingPortalLink) return;
+    
+    try {
+      const portalSettings = {
+        theme: editPortalTheme,
+        showContact: editShowContactInfo,
+        enableThemeSelector: editEnableThemeSelector,
+        contactNumbers: {
+          manager: editShowOnlyDriver ? '' : editManagerPhone,
+          driver: editDriverPhone
+        },
+        targetAudience: editTargetAudience,
+        specialNotice: editSpecialNotice
+      };
 
+      const { error } = await supabase
+        .from('public_document_links')
+        .update({
+          settings: portalSettings
+        })
+        .eq('id', editingPortalLink.id);
+
+      if (error) throw error;
+
+      setDocumentLinks(documentLinks.map(link => 
+        link.id === editingPortalLink.id 
+          ? { ...link, settings: portalSettings }
+          : link
+      ));
+      
+      setIsEditPortalModalOpen(false);
+      setEditingPortalLink(null);
+      alert('통합 표지가 수정되었습니다.');
+    } catch (error) {
+      console.error('Error updating portal:', error);
+      alert('통합 표지 수정 중 오류가 발생했습니다.');
+    }
+  };
+  
   const getDocumentUrl = (link: DocumentLink) => {
     // document_type에 따라 다른 경로 사용
     let prefix = 's';
@@ -947,6 +1027,230 @@ export default function DocumentLinksPage() {
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all"
               >
                 통합 표지 생성
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 통합 표지 수정 모달 */}
+      {isEditPortalModalOpen && editingPortalLink && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">🎨 통합 표지 수정</h2>
+              <button
+                onClick={() => setIsEditPortalModalOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* 대상 선택 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  🎯 대상 선택
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setEditTargetAudience('customer')}
+                    className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                      editTargetAudience === 'customer'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">고객용</div>
+                    <div className="text-xs text-gray-600 mt-1">고객님에게 보여줄 문서만</div>
+                  </button>
+                  <button
+                    onClick={() => setEditTargetAudience('staff')}
+                    className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                      editTargetAudience === 'staff'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">스탭용</div>
+                    <div className="text-xs text-gray-600 mt-1">스탭 전용 문서만</div>
+                  </button>
+                  <button
+                    onClick={() => setEditTargetAudience('golf')}
+                    className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                      editTargetAudience === 'golf'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">골프장용</div>
+                    <div className="text-xs text-gray-600 mt-1">티타임표만</div>
+                  </button>
+                </div>
+              </div>
+              
+              {/* 테마 선택 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  🎨 테마 색상
+                </label>
+                <div className="flex gap-3">
+                  {[
+                    { value: 'blue', label: '클래식 블루', color: 'bg-blue-600' },
+                    { value: 'purple', label: '엘레강트 퍼플', color: 'bg-purple-600' },
+                    { value: 'green', label: '내추럴 그린', color: 'bg-green-600' },
+                    { value: 'red', label: '다이나믹 레드', color: 'bg-red-600' },
+                    { value: 'dark', label: '다크 모드', color: 'bg-gray-800' }
+                  ].map((theme) => (
+                    <button
+                      key={theme.value}
+                      onClick={() => setEditPortalTheme(theme.value)}
+                      className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                        editPortalTheme === theme.value
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <div className={`w-6 h-6 rounded-full ${theme.color}`} />
+                        <span className="text-sm font-medium">{theme.label}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* 옵션 설정 */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium text-gray-700">⚙️ 표시 옵션</h3>
+                
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={editShowContactInfo}
+                    onChange={(e) => {
+                      setEditShowContactInfo(e.target.checked);
+                      if (!e.target.checked) {
+                        setEditShowOnlyDriver(false);
+                      }
+                    }}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">
+                    비상연락처 섹션 표시
+                  </span>
+                </label>
+                
+                {editShowContactInfo && (
+                  <label className="flex items-center gap-3 ml-7">
+                    <input
+                      type="checkbox"
+                      checked={editShowOnlyDriver}
+                      onChange={(e) => setEditShowOnlyDriver(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-sm text-gray-600">
+                      기사님 연락처만 표시
+                    </span>
+                  </label>
+                )}
+                
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={editEnableThemeSelector}
+                    onChange={(e) => setEditEnableThemeSelector(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">
+                    고객이 테마를 변경할 수 있도록 허용
+                  </span>
+                </label>
+              </div>
+              
+              {/* 연락처 입력 */}
+              {editShowContactInfo && (
+                <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-700">📞 비상연락처 정보</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {!editShowOnlyDriver && (
+                      <div>
+                        <label htmlFor="edit-manager-phone" className="block text-sm text-gray-600 mb-1">
+                          담당 매니저 연락처
+                        </label>
+                        <input
+                          id="edit-manager-phone"
+                          type="tel"
+                          value={editManagerPhone}
+                          onChange={(e) => setEditManagerPhone(e.target.value)}
+                          placeholder="연락처 입력"
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className={editShowOnlyDriver ? 'col-span-2' : ''}>
+                      <label htmlFor="edit-driver-phone" className="block text-sm text-gray-600 mb-1">
+                        기사님 연락처
+                      </label>
+                      <input
+                        id="edit-driver-phone"
+                        type="tel"
+                        value={editDriverPhone}
+                        onChange={(e) => setEditDriverPhone(e.target.value)}
+                        placeholder="연락처 입력"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* 특별공지사항 입력 */}
+              <div className="space-y-2">
+                <label htmlFor="edit-special-notice" className="block text-sm font-medium text-gray-700">
+                  📢 특별공지사항 (선택)
+                </label>
+                <textarea
+                  id="edit-special-notice"
+                  value={editSpecialNotice}
+                  onChange={(e) => setEditSpecialNotice(e.target.value)}
+                  placeholder="투어 관련 특별한 안내사항이 있다면 입력하세요"
+                  rows={3}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500">
+                  예: 호텔 체크인 시간 변경, 골프장 드레스 코드, 특별 준비물 등
+                </p>
+              </div>
+              
+              {/* 미리보기 */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">✨ 수정될 통합 표지 미리보기</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>• <strong>대상:</strong> {editTargetAudience === 'customer' ? '고객용' : editTargetAudience === 'staff' ? '스탭용' : '골프장용'} 문서만 표시</p>
+                  <p>• <strong>테마:</strong> {themes[editPortalTheme as keyof typeof themes].name}</p>
+                  <p>• <strong>연락처:</strong> {editShowContactInfo ? (editShowOnlyDriver ? '기사님만' : '매니저 + 기사님') : '표시 안 함'}</p>
+                  {editSpecialNotice && <p>• <strong>특별공지:</strong> {editSpecialNotice}</p>}
+                  <p>• <strong>테마 변경:</strong> {editEnableThemeSelector ? '고객이 변경 가능' : '고정'}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setIsEditPortalModalOpen(false)}
+                className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleUpdatePortal}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all"
+              >
+                통합 표지 수정
               </button>
             </div>
           </div>
