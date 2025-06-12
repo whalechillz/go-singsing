@@ -132,7 +132,11 @@ export function generateBoardingGuideHTML(
           if (driver?.phone) contactInfo.push({ label: '기사', phone: driver.phone });
         }
         
-        return `
+        return !isStaff ? `
+          <div class="custom-footer">
+            <div class="custom-footer-message">♡ 안전한 탑승과 즐거운 여행 되세요 ♡</div>
+          </div>
+        ` : `
           <div class="footer">
             <p>♡ 안전한 탑승과 즐거운 여행 되세요 ♡</p>
             ${contactInfo.length > 0 ? `
@@ -490,6 +494,25 @@ function getBoardingGuideStyles(): string {
       color: #e53e3e;
     }
     
+    /* 고객용 커스텀 푸터 스타일 */
+    .custom-footer {
+      margin-top: 40px;
+      padding: 30px;
+      background: #4a69bd;
+      background: linear-gradient(135deg, #4a69bd 0%, #5f7cdb 100%);
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(74, 105, 189, 0.2);
+    }
+    
+    .custom-footer-message {
+      font-size: 20px;
+      color: white;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
     /* 푸터 스타일 */
     .footer {
       text-align: center;
@@ -541,6 +564,19 @@ function getBoardingGuideStyles(): string {
       font-weight: 500;
     }
     
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      .custom-footer {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 12px;
+      }
+      
+      .custom-footer-message {
+        font-size: 16px;
+      }
+    }
+    
     /* 넓은 화면에서 2개씩 표시 */
     @media (min-width: 768px) {
       .boarding-cards {
@@ -578,6 +614,13 @@ function getBoardingGuideStyles(): string {
         color: white !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+      }
+      
+      .custom-footer {
+        background: #4a69bd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        page-break-inside: avoid;
       }
       
       .footer {

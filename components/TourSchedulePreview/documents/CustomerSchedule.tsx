@@ -192,7 +192,11 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
         // 문서별 푸터 메시지
         const footerMessage = '♡ 즐거운 골프 여행이 되시길 바랍니다 ♡';
         
-        return contactInfo.length > 0 || footerMessage ? `
+        return !isStaff ? `
+          <div class="custom-footer">
+            <div class="custom-footer-message">${footerMessage}</div>
+          </div>
+        ` : contactInfo.length > 0 || footerMessage ? `
           <div class="footer">
             ${footerMessage ? `<p>${footerMessage}</p>` : ''}
             ${contactInfo.length > 0 ? `
@@ -340,6 +344,25 @@ function getScheduleStyles(isStaff: boolean = false): string {
       background: #e7f3ff;
       margin-bottom: 15px;
       border-left: 4px solid #2c5282;
+    }
+    
+    /* 고객용 커스텀 푸터 스타일 */
+    .custom-footer {
+      margin-top: 40px;
+      padding: 30px;
+      background: #4a69bd;
+      background: linear-gradient(135deg, #4a69bd 0%, #5f7cdb 100%);
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(74, 105, 189, 0.2);
+    }
+    
+    .custom-footer-message {
+      font-size: 20px;
+      color: white;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     .footer {
@@ -671,6 +694,19 @@ function getScheduleStyles(isStaff: boolean = false): string {
       }
     ` : ''}
     
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      .custom-footer {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 12px;
+      }
+      
+      .custom-footer-message {
+        font-size: 16px;
+      }
+    }
+    
     /* 인쇄용 스타일 */
     @media print {
       body { 
@@ -719,6 +755,12 @@ function getScheduleStyles(isStaff: boolean = false): string {
       }
       
       /* 푸터 인쇄 스타일 */
+      .custom-footer {
+        background: #4a69bd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        page-break-inside: avoid;
+      }
       .footer {
         background: #f8f9fa !important;
         -webkit-print-color-adjust: exact;
