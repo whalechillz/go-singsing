@@ -107,31 +107,42 @@ export function generateBoardingGuideHTML(
         const phoneSettings = isStaff ? 
           tourData.phone_display_settings?.staff_boarding : 
           tourData.phone_display_settings?.customer_boarding;
-        const phones = [];
+        const contactInfo = [];
         
+        // 예약/일반 문의: 회사 대표번호
         if (phoneSettings?.show_company_phone && tourData.company_phone) {
-          phones.push(`☎ ${tourData.company_phone}`);
+          contactInfo.push({ label: '예약/일반 문의', phone: tourData.company_phone });
         }
         
-        if (phoneSettings?.show_driver_phone && tourData.staff) {
-          const driver = tourData.staff.find(s => s.role === '기사');
-          if (driver?.phone) phones.push(`기사 ${driver.phone}`);
-        }
-        
+        // 현장 문의: 가이드 전화번호
         if (phoneSettings?.show_guide_phone && tourData.staff) {
           const guide = tourData.staff.find(s => s.role === '가이드');
-          if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
+          if (guide?.phone) contactInfo.push({ label: '현장 문의', phone: guide.phone });
         }
         
+        // 긴급 연락처: 매니저 업무폰 (스탭용만)
         if (isStaff && phoneSettings && 'show_manager_phone' in phoneSettings && phoneSettings.show_manager_phone && tourData.staff) {
           const manager = tourData.staff.find(s => s.role === '매니저');
-          if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
+          if (manager?.phone) contactInfo.push({ label: '긴급 연락처', phone: manager.phone });
+        }
+        
+        // 기사 전화번호 (기존 유지)
+        if (phoneSettings?.show_driver_phone && tourData.staff) {
+          const driver = tourData.staff.find(s => s.role === '기사');
+          if (driver?.phone) contactInfo.push({ label: '기사', phone: driver.phone });
         }
         
         return `
           <div class="footer">
             <p>즐거운 골프 여행 되시길 바랍니다</p>
-            ${phones.length > 0 ? `<p>싱싱골프투어 ${phones.join(' | ')}</p>` : ''}
+            ${contactInfo.length > 0 ? `
+              <div class="contact-info">
+                <p class="contact-info-title">연락처</p>
+                <div class="contact-items">
+                  ${contactInfo.map(item => `<span class="contact-item"><span class="contact-label">${item.label}:</span> <span class="contact-phone">${item.phone}</span></span>`).join(' | ')}
+                </div>
+              </div>
+            ` : ''}
           </div>
         `;
       })()}
@@ -232,28 +243,39 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
         <p>즐거운 골프 여행 되시길 바랍니다</p>
         ${(() => {
           const phoneSettings = tourData.phone_display_settings?.staff_boarding;
-          const phones = [];
+          const contactInfo = [];
           
+          // 예약/일반 문의: 회사 대표번호
           if (phoneSettings?.show_company_phone && tourData.company_phone) {
-            phones.push(`☎ ${tourData.company_phone}`);
+            contactInfo.push({ label: '예약/일반 문의', phone: tourData.company_phone });
           }
           
-          if (phoneSettings?.show_driver_phone && tourData.staff) {
-            const driver = tourData.staff.find(s => s.role === '기사');
-            if (driver?.phone) phones.push(`기사 ${driver.phone}`);
-          }
-          
+          // 현장 문의: 가이드 전화번호
           if (phoneSettings?.show_guide_phone && tourData.staff) {
             const guide = tourData.staff.find(s => s.role === '가이드');
-            if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
+            if (guide?.phone) contactInfo.push({ label: '현장 문의', phone: guide.phone });
           }
           
+          // 긴급 연락처: 매니저 업무폰
           if (phoneSettings && 'show_manager_phone' in phoneSettings && phoneSettings.show_manager_phone && tourData.staff) {
             const manager = tourData.staff.find(s => s.role === '매니저');
-            if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
+            if (manager?.phone) contactInfo.push({ label: '긴급 연락처', phone: manager.phone });
           }
           
-          return phones.length > 0 ? `<p>싱싱골프투어 ${phones.join(' | ')}</p>` : '';
+          // 기사 전화번호 (기존 유지)
+          if (phoneSettings?.show_driver_phone && tourData.staff) {
+            const driver = tourData.staff.find(s => s.role === '기사');
+            if (driver?.phone) contactInfo.push({ label: '기사', phone: driver.phone });
+          }
+          
+          return contactInfo.length > 0 ? `
+            <div class="contact-info">
+              <p class="contact-info-title">연락처</p>
+              <div class="contact-items">
+                ${contactInfo.map(item => `<span class="contact-item"><span class="contact-label">${item.label}:</span> <span class="contact-phone">${item.phone}</span></span>`).join(' | ')}
+              </div>
+            </div>
+          ` : '';
         })()}
       </div>
     </div>
@@ -484,6 +506,34 @@ function getBoardingGuideStyles(): string {
       font-size: 14px;
     }
     
+    /* 연락처 스타일 */
+    .contact-info {
+      margin-top: 10px;
+    }
+    
+    .contact-info-title {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+    
+    .contact-items {
+      font-size: 13px;
+    }
+    
+    .contact-item {
+      white-space: nowrap;
+    }
+    
+    .contact-label {
+      font-weight: 600;
+      opacity: 0.9;
+    }
+    
+    .contact-phone {
+      font-weight: 500;
+    }
+    
     /* 넓은 화면에서 2개씩 표시 */
     @media (min-width: 768px) {
       .boarding-cards {
@@ -627,6 +677,35 @@ function getStaffBoardingStyles(): string {
     .footer p {
       margin: 5px 0;
       font-size: 14px;
+    }
+    
+    /* 연락처 스타일 */
+    .contact-info {
+      margin-top: 10px;
+    }
+    
+    .contact-info-title {
+      font-weight: bold;
+      font-size: 15px;
+      color: #2c5282;
+      margin-bottom: 5px;
+    }
+    
+    .contact-items {
+      font-size: 13px;
+    }
+    
+    .contact-item {
+      white-space: nowrap;
+    }
+    
+    .contact-label {
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .contact-phone {
+      color: #2c5282;
     }
     
     /* 인쇄용 스타일 */

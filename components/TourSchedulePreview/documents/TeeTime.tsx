@@ -182,25 +182,6 @@ export function generateTeeTimeHTML(
       }).join('')}
       
       ${!isStaff ? `
-        ${tourData.show_company_phones && (tourData.company_phone || tourData.company_mobile) ? `
-          <div class="contact-section">
-            <div class="contact-title">문의처</div>
-            <div class="contact-grid">
-              ${tourData.company_phone ? `
-                <div class="contact-card">
-                  <div class="contact-name">싱싱골프투어</div>
-                  <a href="tel:${tourData.company_phone}" class="contact-phone">${tourData.company_phone}</a>
-                </div>
-              ` : ''}
-              ${tourData.company_mobile ? `
-                <div class="contact-card">
-                  <div class="contact-name">담당자</div>
-                  <a href="tel:${tourData.company_mobile}" class="contact-phone">${tourData.company_mobile}</a>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        ` : ''}
         
         ${tourData.other_notices ? `
           <div class="info-section">

@@ -133,48 +133,65 @@ export function generateCommonFooter(tourData: any, isStaff: boolean = false, do
   const phoneSettings = documentType && tourData.phone_display_settings ? 
     tourData.phone_display_settings[documentType] : null;
   
-  // 전화번호 수집
-  const phones: string[] = [];
+  // 연락처 정보 수집
+  const contactInfo: { label: string; phone: string }[] = [];
   
   if (phoneSettings) {
+    // 예약/일반 문의: 회사 대표번호
     if (phoneSettings.show_company_phone && tourData.company_phone) {
-      phones.push(`☎ ${tourData.company_phone}`);
+      contactInfo.push({ label: '예약/일반 문의', phone: tourData.company_phone });
     }
     
-    if (phoneSettings.show_driver_phone && tourData.staff) {
-      const driver = tourData.staff.find((s: any) => s.role === '기사');
-      if (driver?.phone) phones.push(`기사 ${driver.phone}`);
-    }
-    
+    // 현장 문의: 가이드 전화번호
     if (phoneSettings.show_guide_phone && tourData.staff) {
       const guide = tourData.staff.find((s: any) => s.role === '가이드');
-      if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
+      if (guide?.phone) contactInfo.push({ label: '현장 문의', phone: guide.phone });
     }
     
+    // 긴급 연락처: 매니저 업무폰 (스탭용만)
     if ('show_manager_phone' in phoneSettings && phoneSettings.show_manager_phone && tourData.staff) {
       const manager = tourData.staff.find((s: any) => s.role === '매니저');
-      if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
+      if (manager?.phone) contactInfo.push({ label: '긴급 연락처', phone: manager.phone });
     }
     
+    // 기사 전화번호 (기존 유지)
+    if (phoneSettings.show_driver_phone && tourData.staff) {
+      const driver = tourData.staff.find((s: any) => s.role === '기사');
+      if (driver?.phone) contactInfo.push({ label: '기사', phone: driver.phone });
+    }
+    
+    // 골프장 전화번호 (기존 유지)
     if ('show_golf_phone' in phoneSettings && phoneSettings.show_golf_phone && tourData.golf_reservation_phone) {
-      phones.push(`골프장 ${tourData.golf_reservation_phone}`);
+      contactInfo.push({ label: '골프장', phone: tourData.golf_reservation_phone });
     }
   } else {
     // 설정이 없으면 기본값 사용 (이전 버전 호환)
     if (tourData.show_company_phones && tourData.company_phone) {
-      phones.push(`☎ ${tourData.company_phone}`);
+      contactInfo.push({ label: '예약/일반 문의', phone: tourData.company_phone });
     }
     
     if (isStaff && tourData.staff) {
       const driver = tourData.staff.find((s: any) => s.role === '기사');
-      if (driver?.phone) phones.push(`기사 ${driver.phone}`);
+      if (driver?.phone) contactInfo.push({ label: '기사', phone: driver.phone });
     }
   }
   
   return `
     <div class="footer-common">
       ${tourData.footer_message ? `<div class="footer-message">${tourData.footer_message}</div>` : ''}
-      ${phones.length > 0 ? `<div class="footer-brand">싱싱골프투어 ${phones.join(' | ')}</div>` : `<div class="footer-brand">싱싱골프투어</div>`}
+      ${contactInfo.length > 0 ? `
+        <div class="contact-info">
+          <p class="contact-title">연락처</p>
+          <div class="contact-items">
+            ${contactInfo.map(item => `
+              <div class="contact-item">
+                <span class="contact-label">${item.label}:</span>
+                <span class="contact-phone">${item.phone}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : `<div class="footer-brand">싱싱골프투어</div>`}
     </div>
   `;
 }
@@ -191,33 +208,40 @@ export function getCommonFooterStyles(isStaff: boolean = false): string {
       text-align: center;
     }
     
-    .contact-section {
-      margin-bottom: 15px;
+    /* 연락처 정보 스타일 */
+    .contact-info {
+      margin-top: 15px;
     }
     
-    .contact-grid-simple {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
+    .contact-title {
+      font-weight: bold;
+      font-size: 16px;
+      color: ${colors.primaryColor};
       margin-bottom: 10px;
     }
     
-    .contact-item-simple {
+    .contact-items {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    
+    .contact-item {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
     }
     
     .contact-label {
-      font-size: 13px;
-      color: #666;
+      font-weight: 600;
+      color: #555;
+      font-size: 14px;
     }
     
-    .contact-value {
-      font-size: 14px;
+    .contact-phone {
       color: ${colors.primaryColor};
-      text-decoration: none;
-      font-weight: 500;
+      font-size: 14px;
     }
     
     .contact-info-staff {
