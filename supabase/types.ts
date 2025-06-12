@@ -657,6 +657,7 @@ export interface Database {
           show_golf_phones: boolean | null
           other_notices: string | null
           document_settings: any | null
+          phone_display_settings: any | null
         }
         Insert: {
           id?: string
@@ -679,6 +680,7 @@ export interface Database {
           show_golf_phones?: boolean | null
           other_notices?: string | null
           document_settings?: any | null
+          phone_display_settings?: any | null
         }
         Update: {
           id?: string
@@ -701,6 +703,7 @@ export interface Database {
           show_golf_phones?: boolean | null
           other_notices?: string | null
           document_settings?: any | null
+          phone_display_settings?: any | null
         }
       }
       tour_products: {
