@@ -217,12 +217,24 @@ export default function CustomerTourPortal({
   const additionalLinks = filteredLinks.filter(link => !essentialDocs.includes(link.document_type));
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{ 
-      '--primary-color': theme.primary,
-      '--secondary-color': theme.secondary,
-      '--accent-color': theme.accent,
-      '--light-color': theme.light
-    } as React.CSSProperties}>
+    <>
+      <style jsx>{`
+        @keyframes rainbow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .rainbow-animation {
+          background-size: 200% 200%;
+          animation: rainbow 3s ease infinite;
+        }
+      `}</style>
+      <div className="min-h-screen bg-gray-50" style={{ 
+        '--primary-color': theme.primary,
+        '--secondary-color': theme.secondary,
+        '--accent-color': theme.accent,
+        '--light-color': theme.light
+      } as React.CSSProperties}>
       {/* 헤더 */}
       <header 
         className="relative text-white text-center py-12 px-6 rounded-b-3xl shadow-lg"
@@ -235,10 +247,16 @@ export default function CustomerTourPortal({
           {/* 공유 버튼 */}
           <button
             onClick={sharePortal}
-            className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-all"
+            className="relative flex items-center gap-2 px-4 py-2 rounded-full transition-all transform hover:scale-110 group overflow-hidden shadow-lg hover:shadow-xl"
+            title="친구에게 공유하기 💝"
           >
-            <Share2 className="w-4 h-4" />
-            <span className="text-sm">공유</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 opacity-80 group-hover:opacity-100 transition-opacity rainbow-animation" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-80 transition-opacity blur-sm rainbow-animation" />
+            <Share2 className="relative w-4 h-4 text-white z-10" />
+            <span className="relative text-sm text-white font-medium z-10">🎈 공유</span>
+            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap shadow-lg">
+              친구에게 공유 💝
+            </span>
           </button>
           
           {/* 테마 선택기 */}
@@ -523,5 +541,6 @@ export default function CustomerTourPortal({
         </footer>
       </main>
     </div>
+    </>
   );
 }
