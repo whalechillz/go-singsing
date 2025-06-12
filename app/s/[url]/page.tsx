@@ -2,6 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 import QuoteView from '@/components/QuoteView';
 import PublicDocumentView from '@/components/PublicDocumentView';
 
+// 캐시 무효화 - 항상 최신 데이터 가져오기
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+
 // 서버 사이드용 Supabase 클라이언트
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';

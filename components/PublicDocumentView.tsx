@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Printer } from 'lucide-react';
+import { Printer, RotateCw } from 'lucide-react';
 import { useTourData } from '@/components/TourSchedulePreview/hooks/useTourData';
 import { useDocumentHTML } from '@/components/TourSchedulePreview/hooks/useDocumentHTML';
 import { DocumentType } from '@/components/TourSchedulePreview/types';
@@ -104,6 +104,11 @@ export default function PublicDocumentView({ linkData }: PublicDocumentViewProps
     window.print();
   };
 
+  const handleRefresh = () => {
+    // 페이지 새로고침
+    window.location.reload();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -153,13 +158,22 @@ export default function PublicDocumentView({ linkData }: PublicDocumentViewProps
                 {isGolfOnly && <span className="ml-2 text-blue-600">(골프장 전용)</span>}
               </p>
             </div>
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Printer className="w-4 h-4" />
-              인쇄
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRefresh}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                title="새로고침"
+              >
+                <RotateCw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Printer className="w-4 h-4" />
+                인쇄
+              </button>
+            </div>
           </div>
         </div>
       </div>
