@@ -102,6 +102,9 @@ export default function CustomerTourPortal({
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [daysInfo, setDaysInfo] = useState<{ type: 'before' | 'during' | 'after' | 'expired'; days: number } | null>(null);
   const [showMobileShare, setShowMobileShare] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [themeButtonColor, setThemeButtonColor] = useState(0);
 
   useEffect(() => {
     // 로컬 스토리지에서 테마 불러오기
@@ -131,6 +134,58 @@ export default function CustomerTourPortal({
       setDaysInfo({ type: 'expired', days: endDiff });
     }
   }, [tourData]);
+  
+  // Pull-to-refresh 관련 이벤트
+  useEffect(() => {
+    let startY = 0;
+    let currentY = 0;
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      currentY = e.touches[0].clientY;
+      const distance = currentY - startY;
+      
+      if (distance > 0 && window.scrollY === 0) {
+        e.preventDefault();
+        setIsPulling(true);
+        setPullDistance(Math.min(distance, 150));
+        
+        // 당긴 거리에 따라 테마 버튼 색상 변경
+        const colorIndex = Math.floor((distance / 30) % 5);
+        setThemeButtonColor(colorIndex);
+      }
+    };
+    
+    const handleTouchEnd = () => {
+      if (isPulling && pullDistance > 80) {
+        // 테마 버튼 반짝임 효과
+        const colors = ['purple', 'blue', 'green', 'red', 'dark'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        // 테마 버튼에 반짝임 효과 주기
+        setTimeout(() => {
+          setThemeButtonColor(-1); // 특별한 반짝임 상태
+        }, 100);
+      }
+      
+      setIsPulling(false);
+      setPullDistance(0);
+      setThemeButtonColor(0);
+    };
+    
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+    
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isPulling, pullDistance]);
 
   const changeTheme = (theme: string) => {
     setCurrentTheme(theme);
@@ -235,6 +290,28 @@ export default function CustomerTourPortal({
         '--accent-color': theme.accent,
         '--light-color': theme.light
       } as React.CSSProperties}>
+      {/* Pull-to-refresh indicator */}
+      {isPulling && (
+        <div 
+          className="fixed top-0 left-0 right-0 flex items-center justify-center transition-all z-40"
+          style={{ 
+            height: `${pullDistance}px`,
+            background: `linear-gradient(180deg, rgba(255,255,255,0.9) 0%, transparent 100%)`
+          }}
+        >
+          <div className="text-center">
+            <div 
+              className="inline-block w-12 h-12 rounded-full animate-spin"
+              style={{
+                background: `conic-gradient(from 0deg, ${theme.primary}, ${theme.secondary}, ${theme.accent}, ${theme.primary})`
+              }}
+            />
+            <p className="text-xs mt-2 text-gray-600">
+              {pullDistance > 80 ? '🌈 놓으면 테마 버튼이 반짝여요!' : '아래로 당겨보세요...'}
+            </p>
+          </div>
+        </div>
+      )}
       {/* 헤더 */}
       <header 
         className="relative text-white text-center py-12 px-6 rounded-b-3xl shadow-lg"
@@ -243,35 +320,29 @@ export default function CustomerTourPortal({
         }}
       >
         {/* 상단 버튼들 */}
-        <div className="absolute top-5 right-5 flex gap-2">
-          {/* 공유 버튼 */}
-          <button
-            onClick={sharePortal}
-            className="relative flex items-center gap-2 px-4 py-2 rounded-full transition-all transform hover:scale-110 group overflow-hidden shadow-lg hover:shadow-xl"
-            title="친구에게 공유하기 💝"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 opacity-80 group-hover:opacity-100 transition-opacity rainbow-animation" />
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-80 transition-opacity blur-sm rainbow-animation" />
-            <Share2 className="relative w-4 h-4 text-white z-10" />
-            <span className="relative text-sm text-white font-medium z-10">🎈 공유</span>
-            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap shadow-lg">
-              친구에게 공유 💝
-            </span>
-          </button>
-          
-          {/* 테마 선택기 */}
+        <div className="absolute top-5 left-5 right-5 flex justify-between">
+          {/* 테마 선택기 (왼쪽) */}
           {portalSettings.enableThemeSelector !== false && (
             <div className="relative">
               <button
                 onClick={() => setShowThemeMenu(!showThemeMenu)}
-                className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-all"
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all transform ${
+                  themeButtonColor === -1 
+                    ? 'animate-pulse bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 text-white scale-110 shadow-2xl' 
+                    : 'bg-white/20 backdrop-blur-sm hover:bg-white/30'
+                }`}
+                style={{
+                  background: themeButtonColor > 0 && themeButtonColor !== -1
+                    ? `linear-gradient(135deg, ${Object.values(themes)[themeButtonColor].primary} 0%, ${Object.values(themes)[themeButtonColor].secondary} 100%)`
+                    : undefined
+                }}
               >
                 <Palette className="w-4 h-4" />
                 <span className="text-sm">테마</span>
               </button>
               
               {showThemeMenu && (
-                <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-50">
+                <div className="absolute left-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-50">
                   {Object.entries(themes).map(([key, themeData]) => (
                     <button
                       key={key}
@@ -289,6 +360,21 @@ export default function CustomerTourPortal({
               )}
             </div>
           )}
+          
+          {/* 공유 버튼 (오른쪽) */}
+          <button
+            onClick={sharePortal}
+            className="relative flex items-center gap-2 px-4 py-2 rounded-full transition-all transform hover:scale-110 group overflow-hidden shadow-lg hover:shadow-xl ml-auto"
+            title="친구에게 공유하기 💝"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 opacity-80 group-hover:opacity-100 transition-opacity rainbow-animation" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-80 transition-opacity blur-sm rainbow-animation" />
+            <Share2 className="relative w-4 h-4 text-white z-10" />
+            <span className="relative text-sm text-white font-medium z-10">🎈 공유</span>
+            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap shadow-lg">
+              친구에게 공유 💝
+            </span>
+          </button>
         </div>
         
         <div className="max-w-md mx-auto">

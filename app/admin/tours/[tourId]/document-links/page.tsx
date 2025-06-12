@@ -816,15 +816,10 @@ export default function DocumentLinksPage() {
                       </button>
                       <button
                         onClick={() => handleShare(link)}
-                        className="relative p-2 rounded-md transition-all transform hover:scale-110 group overflow-hidden"
-                        title="친구에게 공유하기 💝"
+                        className="p-2 border rounded-md hover:bg-gray-50 transition-colors"
+                        title="공유하기"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 opacity-80 group-hover:opacity-100 transition-opacity rainbow-animation" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-80 transition-opacity blur-sm rainbow-animation" />
-                        <Share2 className="relative w-4 h-4 text-white z-10" />
-                        <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap shadow-lg">
-                          친구에게 공유 💝
-                        </span>
+                        <Share2 className="w-4 h-4" />
                       </button>
                     </div>
                     
