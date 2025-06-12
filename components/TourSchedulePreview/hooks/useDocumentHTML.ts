@@ -63,7 +63,8 @@ export function useDocumentHTML({
             roomData.rooms,
             roomData.staff,
             activeTab === 'room_assignment_staff',
-            tourData
+            tourData,
+            productData
           );
           break;
 

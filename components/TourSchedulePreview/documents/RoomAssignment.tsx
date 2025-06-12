@@ -1,4 +1,4 @@
-import { TourData } from '../types';
+import { TourData, ProductData } from '../types';
 import { htmlWrapper } from '../utils/generators';
 import { generateCommonHeader, getCommonHeaderStyles, generateCommonFooter, getCommonFooterStyles } from '../utils/commonStyles';
 
@@ -7,7 +7,8 @@ export function generateRoomAssignmentHTML(
   rooms: any[],
   tourStaff: any,
   isStaff: boolean,
-  tourData: TourData
+  tourData: TourData,
+  productData: ProductData | null
 ): string {
   // 참가자를 room_id로 그룹화
   const participantsByRoom = assignments.reduce((acc, participant) => {
@@ -99,71 +100,29 @@ export function generateRoomAssignmentHTML(
           <p style="color: #e74c3c; font-weight: bold;">※ 콤프룸은 붉은색으로 표시되어 있습니다.</p>
           <p>※ 이 문서는 스탭용으로 고객에게 제공하지 마세요.</p>
         </div>
-      ` : `
-        <div class="accommodation-info">
-          <h3>숙소 이용 안내</h3>
-          <div class="info-grid">
-            <div class="info-item">
-              <strong>체크인</strong>
-              <span>15:00 이후</span>
-            </div>
-            <div class="info-item">
-              <strong>체크아웃</strong>
-              <span>11:00 이전</span>
-            </div>
-            <div class="info-item">
-              <strong>프런트 데스크</strong>
-              <span>24시간 운영</span>
-            </div>
-            <div class="info-item">
-              <strong>Wi-Fi</strong>
-              <span>전 객실 무료 제공</span>
+      ` : productData && (productData.usage_hotel || productData.usage_meal) ? `
+        ${productData.usage_hotel ? `
+          <div class="accommodation-info">
+            <h3>숙소 이용 안내</h3>
+            <div class="notice-section">
+              ${productData.usage_hotel.split('\n').map(line => 
+                line.trim() ? `<p>${line.trim()}</p>` : ''
+              ).join('')}
             </div>
           </div>
-          <div class="notice-section">
-            <p>• 객실 내 금연입니다. 흡연은 지정된 흡연 구역에서만 가능합니다.</p>
-            <p>• 미니바 이용 시 별도 요금이 청구됩니다.</p>
-            <p>• 귀중품은 객실 내 금고를 이용해 주시기 바랍니다.</p>
-            <p>• 분실물 발생 시 프런트에 문의해 주세요.</p>
-          </div>
-        </div>
+        ` : ''}
         
-        <div class="meal-info">
-          <h3>식사 안내</h3>
-          <div class="meal-grid">
-            <div class="meal-item">
-              <strong>조식</strong>
-              <div class="meal-details">
-                <span>시간: 06:30 ~ 09:30</span>
-                <span>장소: 2층 레스토랑</span>
-                <span>형태: 뷔페</span>
-              </div>
-            </div>
-            <div class="meal-item">
-              <strong>중식</strong>
-              <div class="meal-details">
-                <span>시간: 12:00 ~ 14:00</span>
-                <span>장소: 골프장 클럽하우스</span>
-                <span>형태: 단품 메뉴</span>
-              </div>
-            </div>
-            <div class="meal-item">
-              <strong>석식</strong>
-              <div class="meal-details">
-                <span>시간: 18:00 ~ 21:00</span>
-                <span>장소: 2층 레스토랑</span>
-                <span>형태: 코스 요리</span>
-              </div>
+        ${productData.usage_meal ? `
+          <div class="meal-info">
+            <h3>식사 안내</h3>
+            <div class="notice-section">
+              ${productData.usage_meal.split('\n').map(line => 
+                line.trim() ? `<p>${line.trim()}</p>` : ''
+              ).join('')}
             </div>
           </div>
-          <div class="notice-section">
-            <p>• 조식은 투숙객에 한해 무료로 제공됩니다.</p>
-            <p>• 중식 및 석식은 별도 요금이 발생합니다.</p>
-            <p>• 룸서비스는 24시간 이용 가능합니다. (별도 요금)</p>
-            <p>• 알레르기가 있으신 경우 미리 말씀해 주세요.</p>
-          </div>
-        </div>
-      `}
+        ` : ''}
+      ` : ''}
       
       ${generateCommonFooter(tourData, isStaff, isStaff ? 'room_assignment_staff' : 'room_assignment')}
     </div>
@@ -345,66 +304,8 @@ function getRoomAssignmentStyles(): string {
       padding-bottom: 5px;
     }
     
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      font-size: 11px;
-    }
-    
-    .info-item strong {
-      color: #495057;
-      font-weight: bold;
-    }
-    
-    .info-item span {
-      color: #6c757d;
-    }
-    
-    .meal-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    
-    .meal-item {
-      border: 1px solid #e9ecef;
-      border-radius: 4px;
-      padding: 8px;
-      background: white;
-    }
-    
-    .meal-item strong {
-      display: block;
-      font-size: 12px;
-      color: #2c5282;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    
-    .meal-details {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    
-    .meal-details span {
-      font-size: 10px;
-      color: #6c757d;
-    }
-    
     .notice-section {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #e9ecef;
+      margin-top: 0;
     }
     
     .notice-section p {
@@ -460,12 +361,6 @@ function getRoomAssignmentStyles(): string {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
-      
-      .meal-item {
-        background: white !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
     }
     
     @media screen {
@@ -486,10 +381,6 @@ function getRoomAssignmentStyles(): string {
       .accommodation-info,
       .meal-info {
         margin: 15px 20px;
-      }
-      
-      .meal-grid {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       }
     }
   `;

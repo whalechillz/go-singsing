@@ -45,6 +45,7 @@ export default function DocumentLinksPage() {
   const [driverPhone, setDriverPhone] = useState('');
   const [targetAudience, setTargetAudience] = useState<'customer' | 'staff' | 'golf'>('customer');
   const [showOnlyDriver, setShowOnlyDriver] = useState(false);
+  const [specialNotice, setSpecialNotice] = useState('');
   
   // 새 문서 링크 폼 상태
   const [newDocumentType, setNewDocumentType] = useState('customer_all');
@@ -118,29 +119,53 @@ export default function DocumentLinksPage() {
   
   const fetchTourContacts = async () => {
     try {
-      // 투어 정보에서 기본 연락처 가져오기
-      const { data: tourData, error: tourError } = await supabase
-        .from('singsing_tours')
+      // 투어 스탭 정보에서 매니저와 기사 연락처 가져오기
+      const { data: staffData, error: staffError } = await supabase
+        .from('singsing_tour_staff')
         .select('*')
-        .eq('id', tourId)
-        .single();
+        .eq('tour_id', tourId)
+        .order('order');
         
-      if (!tourError && tourData) {
-        // 투어 정보에 연락처가 있다면 설정
-        if (tourData.manager_phone) {
-          setManagerPhone(tourData.manager_phone);
+      if (!staffError && staffData) {
+        // 매니저 찾기 (role이 '매니저' 또는 'manager'인 첫 번째 스탭)
+        const manager = staffData.find(staff => 
+          staff.role === '매니저' || 
+          staff.role === 'manager' ||
+          staff.role === '가이드' ||
+          staff.role === 'guide'
+        );
+        
+        // 기사 찾기 (role이 '기사' 또는 'driver'인 첫 번째 스탭)
+        const driver = staffData.find(staff => 
+          staff.role === '기사' || 
+          staff.role === 'driver'
+        );
+        
+        if (manager && manager.phone) {
+          setManagerPhone(manager.phone);
         }
-        if (tourData.driver_phone) {
-          setDriverPhone(tourData.driver_phone);
+        
+        if (driver && driver.phone) {
+          setDriverPhone(driver.phone);
         }
       }
       
-      // 아직 설정된 연락처가 없다면 기본값 사용
-      if (!managerPhone) {
-        setManagerPhone('010-1234-5678');
-      }
-      if (!driverPhone) {
-        setDriverPhone('010-9876-5432');
+      // 투어 정보에서도 확인 (폴백)
+      if (!managerPhone || !driverPhone) {
+        const { data: tourData, error: tourError } = await supabase
+          .from('singsing_tours')
+          .select('*')
+          .eq('id', tourId)
+          .single();
+          
+        if (!tourError && tourData) {
+          if (!managerPhone && tourData.manager_phone) {
+            setManagerPhone(tourData.manager_phone);
+          }
+          if (!driverPhone && tourData.driver_phone) {
+            setDriverPhone(tourData.driver_phone);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching tour contacts:', error);
@@ -322,7 +347,8 @@ export default function DocumentLinksPage() {
           manager: showOnlyDriver ? '' : managerPhone,
           driver: driverPhone
         },
-        targetAudience: targetAudience
+        targetAudience: targetAudience,
+        specialNotice: specialNotice
       };
 
       const { data, error } = await supabase
@@ -846,9 +872,9 @@ export default function DocumentLinksPage() {
                           placeholder="자동 불러오기 또는 직접 입력"
                           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        <p className="text-xs text-gray-500 mt-1">
-                          {managerPhone ? '투어 스탭에서 자동 불러옴' : '등록된 매니저 없음'}
-                        </p>
+                        {managerPhone && (
+                          <p className="text-xs text-gray-500 mt-1">투어 스탭에서 자동 불러옴</p>
+                        )}
                       </div>
                     )}
                     
@@ -864,13 +890,31 @@ export default function DocumentLinksPage() {
                         placeholder="자동 불러오기 또는 직접 입력"
                         className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {driverPhone ? '투어 스탭에서 자동 불러옴' : '등록된 기사 없음'}
-                      </p>
+                      {driverPhone && (
+                        <p className="text-xs text-gray-500 mt-1">투어 스탭에서 자동 불러옴</p>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
+              
+              {/* 특별공지사항 입력 */}
+              <div className="space-y-2">
+                <label htmlFor="special-notice" className="block text-sm font-medium text-gray-700">
+                  📢 특별공지사항 (선택)
+                </label>
+                <textarea
+                  id="special-notice"
+                  value={specialNotice}
+                  onChange={(e) => setSpecialNotice(e.target.value)}
+                  placeholder="투어 관련 특별한 안내사항이 있다면 입력하세요"
+                  rows={3}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500">
+                  예: 호텔 체크인 시간 변경, 골프장 드레스 코드, 특별 준비물 등
+                </p>
+              </div>
               
               {/* 미리보기 */}
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
@@ -882,6 +926,7 @@ export default function DocumentLinksPage() {
                   {targetAudience === 'golf' && <p className="ml-4 text-xs">표시 문서: 티타임표만</p>}
                   <p>• <strong>테마:</strong> {themes[portalTheme as keyof typeof themes].name}</p>
                   <p>• <strong>연락처:</strong> {showContactInfo ? (showOnlyDriver ? '기사님만' : '매니저 + 기사님') : '표시 안 함'}</p>
+                  {specialNotice && <p>• <strong>특별공지:</strong> {specialNotice}</p>}
                   <p>• <strong>테마 변경:</strong> {enableThemeSelector ? '고객이 변경 가능' : '고정'}</p>
                   <p className="text-xs text-gray-500 mt-2">
                     💡 60대 고객님도 쉽게 사용할 수 있도록 크고 명확한 디자인

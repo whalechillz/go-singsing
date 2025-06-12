@@ -29,6 +29,7 @@ interface PortalSettings {
     driver?: string;
   };
   targetAudience?: 'customer' | 'staff' | 'golf';
+  specialNotice?: string;
 }
 
 interface CustomerTourPortalProps {
@@ -387,6 +388,21 @@ export default function CustomerTourPortal({
           </section>
         )}
 
+        {/* 특별공지사항 섹션 */}
+        {portalSettings.specialNotice && (
+          <section className="mb-8">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
+              <div className="flex items-start gap-3">
+                <Info className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-800 mb-2">📢 특별공지사항</h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">{portalSettings.specialNotice}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* 비상 연락처 섹션 */}
         {portalSettings.showContact !== false && (
           <section className="mb-8">
@@ -397,25 +413,29 @@ export default function CustomerTourPortal({
               }}
             >
               <h3 className="text-lg font-medium mb-4 opacity-90">🚨 비상 연락처</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-                  <div className="text-sm opacity-90 mb-1">담당 매니저</div>
-                  <a 
-                    href={`tel:${portalSettings.contactNumbers?.manager || '010-1234-5678'}`}
-                    className="text-lg font-semibold"
-                  >
-                    {portalSettings.contactNumbers?.manager || '010-1234-5678'}
-                  </a>
-                </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-                  <div className="text-sm opacity-90 mb-1">기사님</div>
-                  <a 
-                    href={`tel:${portalSettings.contactNumbers?.driver || '010-5254-9876'}`}
-                    className="text-lg font-semibold"
-                  >
-                    {portalSettings.contactNumbers?.driver || '010-5254-9876'}
-                  </a>
-                </div>
+              <div className={`grid ${portalSettings.contactNumbers?.manager ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                {portalSettings.contactNumbers?.manager && (
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                    <div className="text-sm opacity-90 mb-1">담당 매니저</div>
+                    <a 
+                      href={`tel:${portalSettings.contactNumbers.manager}`}
+                      className="text-lg font-semibold"
+                    >
+                      {portalSettings.contactNumbers.manager}
+                    </a>
+                  </div>
+                )}
+                {portalSettings.contactNumbers?.driver && (
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                    <div className="text-sm opacity-90 mb-1">기사님</div>
+                    <a 
+                      href={`tel:${portalSettings.contactNumbers.driver}`}
+                      className="text-lg font-semibold"
+                    >
+                      {portalSettings.contactNumbers.driver}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </section>
