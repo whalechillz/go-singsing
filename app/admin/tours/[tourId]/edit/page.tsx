@@ -43,6 +43,39 @@ type TourForm = {
     tee_time: boolean;
     simplified: boolean;
   };
+  
+  // 문서별 전화번호 표시 설정
+  phone_display_settings: {
+    customer_schedule: {
+      show_company_phone: boolean;
+      show_driver_phone: boolean;
+      show_guide_phone: boolean;
+      show_golf_phone: boolean;
+    };
+    customer_boarding: {
+      show_company_phone: boolean;
+      show_driver_phone: boolean;
+      show_guide_phone: boolean;
+    };
+    staff_boarding: {
+      show_company_phone: boolean;
+      show_driver_phone: boolean;
+      show_guide_phone: boolean;
+      show_manager_phone: boolean;
+    };
+    room_assignment: {
+      show_company_phone: boolean;
+      show_driver_phone: boolean;
+      show_guide_phone: boolean;
+    };
+    tee_time: {
+      show_company_phone: boolean;
+      show_golf_phone: boolean;
+    };
+    simplified: {
+      show_company_phone: boolean;
+    };
+  };
 };
 
 type Params = { tourId?: string };
@@ -81,6 +114,39 @@ const TourEditPage: React.FC = () => {
       room_assignment: true,
       tee_time: true,
       simplified: true
+    },
+    
+    // 문서별 전화번호 표시 설정 (기본값)
+    phone_display_settings: {
+      customer_schedule: {
+        show_company_phone: true,
+        show_driver_phone: false,
+        show_guide_phone: false,
+        show_golf_phone: false
+      },
+      customer_boarding: {
+        show_company_phone: true,
+        show_driver_phone: true,
+        show_guide_phone: false
+      },
+      staff_boarding: {
+        show_company_phone: true,
+        show_driver_phone: true,
+        show_guide_phone: true,
+        show_manager_phone: true
+      },
+      room_assignment: {
+        show_company_phone: true,
+        show_driver_phone: true,
+        show_guide_phone: false
+      },
+      tee_time: {
+        show_company_phone: true,
+        show_golf_phone: true
+      },
+      simplified: {
+        show_company_phone: true
+      }
     }
   });
   
@@ -138,6 +204,39 @@ const TourEditPage: React.FC = () => {
             room_assignment: true,
             tee_time: true,
             simplified: true
+          },
+          
+          // 문서별 전화번호 표시 설정
+          phone_display_settings: tourData.phone_display_settings || {
+            customer_schedule: {
+              show_company_phone: true,
+              show_driver_phone: false,
+              show_guide_phone: false,
+              show_golf_phone: false
+            },
+            customer_boarding: {
+              show_company_phone: true,
+              show_driver_phone: true,
+              show_guide_phone: false
+            },
+            staff_boarding: {
+              show_company_phone: true,
+              show_driver_phone: true,
+              show_guide_phone: true,
+              show_manager_phone: true
+            },
+            room_assignment: {
+              show_company_phone: true,
+              show_driver_phone: true,
+              show_guide_phone: false
+            },
+            tee_time: {
+              show_company_phone: true,
+              show_golf_phone: true
+            },
+            simplified: {
+              show_company_phone: true
+            }
           }
         });
       }
@@ -183,6 +282,20 @@ const TourEditPage: React.FC = () => {
           document_settings: {
             ...form.document_settings,
             [docType]: checked
+          }
+        });
+      } else if (name.startsWith("phone_display_settings.")) {
+        const parts = name.split(".");
+        const docType = parts[1];
+        const phoneType = parts[2];
+        setForm({
+          ...form,
+          phone_display_settings: {
+            ...form.phone_display_settings,
+            [docType]: {
+              ...form.phone_display_settings[docType as keyof typeof form.phone_display_settings],
+              [phoneType]: checked
+            }
           }
         });
       } else {
@@ -248,6 +361,7 @@ const TourEditPage: React.FC = () => {
         golf_reservation_mobile: form.golf_reservation_mobile,
         other_notices: form.other_notices,
         document_settings: form.document_settings,
+        phone_display_settings: form.phone_display_settings, // 추가
         updated_at: new Date().toISOString(),
       };
       
@@ -692,6 +806,226 @@ const TourEditPage: React.FC = () => {
               />
             </label>
 
+            {/* 문서별 전화번호 표시 설정 */}
+            <div className="space-y-3 border-t pt-6">
+              <h3 className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                문서별 전화번호 표시 설정
+              </h3>
+              
+              {/* 고객용 일정표 */}
+              <div className="border rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm">고객용 일정표</h4>
+                <div className="grid grid-cols-2 gap-2 pl-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.customer_schedule.show_company_phone"
+                      checked={form.phone_display_settings.customer_schedule.show_company_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>회사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.customer_schedule.show_driver_phone"
+                      checked={form.phone_display_settings.customer_schedule.show_driver_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>기사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.customer_schedule.show_guide_phone"
+                      checked={form.phone_display_settings.customer_schedule.show_guide_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>가이드 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.customer_schedule.show_golf_phone"
+                      checked={form.phone_display_settings.customer_schedule.show_golf_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>골프장 전화번호</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* 고객용 탑승안내 */}
+              <div className="border rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm">고객용 탑승안내</h4>
+                <div className="grid grid-cols-2 gap-2 pl-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.customer_boarding.show_company_phone"
+                      checked={form.phone_display_settings.customer_boarding.show_company_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>회사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.customer_boarding.show_driver_phone"
+                      checked={form.phone_display_settings.customer_boarding.show_driver_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>기사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.customer_boarding.show_guide_phone"
+                      checked={form.phone_display_settings.customer_boarding.show_guide_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>가이드 전화번호</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* 스탭용 탑승안내 */}
+              <div className="border rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm">스탭용 탑승안내</h4>
+                <div className="grid grid-cols-2 gap-2 pl-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.staff_boarding.show_company_phone"
+                      checked={form.phone_display_settings.staff_boarding.show_company_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>회사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.staff_boarding.show_driver_phone"
+                      checked={form.phone_display_settings.staff_boarding.show_driver_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>기사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.staff_boarding.show_guide_phone"
+                      checked={form.phone_display_settings.staff_boarding.show_guide_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>가이드 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.staff_boarding.show_manager_phone"
+                      checked={form.phone_display_settings.staff_boarding.show_manager_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>매니저 전화번호</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* 객실 배정표 */}
+              <div className="border rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm">객실 배정표</h4>
+                <div className="grid grid-cols-2 gap-2 pl-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.room_assignment.show_company_phone"
+                      checked={form.phone_display_settings.room_assignment.show_company_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>회사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.room_assignment.show_driver_phone"
+                      checked={form.phone_display_settings.room_assignment.show_driver_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>기사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.room_assignment.show_guide_phone"
+                      checked={form.phone_display_settings.room_assignment.show_guide_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>가이드 전화번호</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* 티타임표 */}
+              <div className="border rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm">티타임표</h4>
+                <div className="grid grid-cols-2 gap-2 pl-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.tee_time.show_company_phone"
+                      checked={form.phone_display_settings.tee_time.show_company_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>회사 전화번호</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.tee_time.show_golf_phone"
+                      checked={form.phone_display_settings.tee_time.show_golf_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>골프장 전화번호</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* 간편 일정표 */}
+              <div className="border rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm">간편 일정표</h4>
+                <div className="grid grid-cols-2 gap-2 pl-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="phone_display_settings.simplified.show_company_phone"
+                      checked={form.phone_display_settings.simplified.show_company_phone}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span>회사 전화번호</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
             {/* 문서별 공지사항 관리 - 제거됨 */}
             <div className="border-t pt-6">
               <p className="text-gray-600">문서별 공지사항은 투어 관리 &gt; 일정 관리에서 설정할 수 있습니다.</p>

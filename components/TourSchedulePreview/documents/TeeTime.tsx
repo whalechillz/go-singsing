@@ -212,9 +212,9 @@ export function generateTeeTimeHTML(
           </div>
         ` : ''}
         
-        ${generateCommonFooter(tourData, false)}
+        ${generateCommonFooter(tourData, false, 'tee_time')}
       ` : `
-        ${generateCommonFooter(tourData, true)}
+        ${generateCommonFooter(tourData, true, 'tee_time')}
       `}
     </div>
     

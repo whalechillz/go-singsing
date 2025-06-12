@@ -128,26 +128,26 @@ export default function DocumentPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+      <div className="max-w-full lg:max-w-4xl mx-auto p-2 sm:p-4 lg:p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 sm:mb-6">
           <div>
             <div className="flex items-center mb-1">
               {documentType ? (
               <>
                 {React.createElement(documentType.icon, { className: "w-6 h-6 text-blue-600 mr-2" })}
-                <h1 className="text-2xl font-bold text-gray-800">{documentType.name}</h1>
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">{documentType.name}</h1>
               </>
               ) : (
-                <h1 className="text-2xl font-bold text-gray-800">{params.type ? params.type.toString().replace(/-/g, ' ') : '문서 유형'}</h1>
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">{params.type ? params.type.toString().replace(/-/g, ' ') : '문서 유형'}</h1>
               )}
             </div>
             {tour && (
-              <p className="text-gray-600 text-sm">{tour.title} / {tour.start_date} ~ {tour.end_date}{tour.golf_course ? ` / ${tour.golf_course}` : ''}</p>
+              <p className="text-gray-600 text-xs sm:text-sm">{tour.title} / {tour.start_date} ~ {tour.end_date}{tour.golf_course ? ` / ${tour.golf_course}` : ''}</p>
             )}
           </div>
           <button
             type="button"
-            className="flex items-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="flex items-center px-2 py-1.5 sm:px-3 sm:py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
             aria-label="문서 프린트"
             tabIndex={0}
             onClick={() => window.print()}
@@ -157,7 +157,7 @@ export default function DocumentPage() {
             <span className="hidden sm:inline">프린트</span>
           </button>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 lg:p-6">
           <div className="prose max-w-none">
             {params.type === 'tour-schedule' ? (
               <TourSchedulePreview tourId={params.tourId as string} />

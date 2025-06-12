@@ -103,10 +103,38 @@ export function generateBoardingGuideHTML(
       ` : ''}
       
       <!-- 푸터 -->
-      <div class="footer">
-        <p>즐거운 골프 여행 되시길 바랍니다</p>
-        <p>싱싱골프투어 | 031-215-3990</p>
-      </div>
+      ${(() => {
+        const phoneSettings = isStaff ? 
+          tourData.phone_display_settings?.staff_boarding : 
+          tourData.phone_display_settings?.customer_boarding;
+        const phones = [];
+        
+        if (phoneSettings?.show_company_phone && tourData.company_phone) {
+          phones.push(`☎ ${tourData.company_phone}`);
+        }
+        
+        if (phoneSettings?.show_driver_phone && tourData.staff) {
+          const driver = tourData.staff.find(s => s.role === '기사');
+          if (driver?.phone) phones.push(`기사 ${driver.phone}`);
+        }
+        
+        if (phoneSettings?.show_guide_phone && tourData.staff) {
+          const guide = tourData.staff.find(s => s.role === '가이드');
+          if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
+        }
+        
+        if (isStaff && phoneSettings?.show_manager_phone && tourData.staff) {
+          const manager = tourData.staff.find(s => s.role === '매니저');
+          if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
+        }
+        
+        return `
+          <div class="footer">
+            <p>즐거운 골프 여행 되시길 바랍니다</p>
+            ${phones.length > 0 ? `<p>싱싱골프투어 ${phones.join(' | ')}</p>` : ''}
+          </div>
+        `;
+      })()}
     </div>
     
     <style>
@@ -202,7 +230,31 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
       
       <div class="footer">
         <p>즐거운 골프 여행 되시길 바랍니다</p>
-        <p>싱싱골프투어 | 031-215-3990</p>
+        ${(() => {
+          const phoneSettings = tourData.phone_display_settings?.staff_boarding;
+          const phones = [];
+          
+          if (phoneSettings?.show_company_phone && tourData.company_phone) {
+            phones.push(`☎ ${tourData.company_phone}`);
+          }
+          
+          if (phoneSettings?.show_driver_phone && tourData.staff) {
+            const driver = tourData.staff.find(s => s.role === '기사');
+            if (driver?.phone) phones.push(`기사 ${driver.phone}`);
+          }
+          
+          if (phoneSettings?.show_guide_phone && tourData.staff) {
+            const guide = tourData.staff.find(s => s.role === '가이드');
+            if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
+          }
+          
+          if (phoneSettings?.show_manager_phone && tourData.staff) {
+            const manager = tourData.staff.find(s => s.role === '매니저');
+            if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
+          }
+          
+          return phones.length > 0 ? `<p>싱싱골프투어 ${phones.join(' | ')}</p>` : '';
+        })()}
       </div>
     </div>
     

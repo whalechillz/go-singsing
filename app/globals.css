@@ -286,3 +286,119 @@ html {
 .scroll-mt-24 {
   scroll-margin-top: 6rem;
 }
+
+/* Mobile-optimized document view */
+@media (max-width: 640px) {
+  /* Reduce container padding on mobile */
+  .min-h-screen > div {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  
+  /* Make tables full width on mobile */
+  .prose table {
+    width: 100%;
+    font-size: 0.75rem;
+  }
+  
+  .prose th,
+  .prose td {
+    padding: 0.375rem 0.5rem;
+  }
+  
+  /* Reduce heading sizes on mobile */
+  .prose h1 {
+    font-size: 1.25rem;
+  }
+  
+  .prose h2 {
+    font-size: 1.125rem;
+  }
+  
+  .prose h3 {
+    font-size: 1rem;
+  }
+  
+  /* Compact room assignment styles */
+  .bg-blue-50.rounded-lg.p-4,
+  .bg-green-50.rounded-lg.p-4,
+  .bg-yellow-50.rounded-lg.p-4,
+  .bg-purple-50.rounded-lg.p-4 {
+    padding: 0.75rem;
+  }
+  
+  /* Smaller text in statistics */
+  .bg-blue-50 .text-2xl,
+  .bg-green-50 .text-2xl,
+  .bg-yellow-50 .text-2xl,
+  .bg-purple-50 .text-2xl {
+    font-size: 1.5rem;
+  }
+  
+  /* Compact room cards */
+  .border.rounded-lg.p-4.bg-gray-50 {
+    padding: 0.75rem;
+  }
+  
+  /* Reduce select box size */
+  select {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  /* Compact button sizes */
+  button {
+    font-size: 0.875rem;
+  }
+  
+  /* Table wrapper for horizontal scroll */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+  }
+  
+  /* Prevent table from breaking layout */
+  table {
+    min-width: 100%;
+    table-layout: auto;
+  }
+  
+  /* Compact table cells on mobile */
+  td, th {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    padding: 0.375rem 0.5rem;
+  }
+  
+  /* Allow text wrapping in specific columns */
+  td:first-child,
+  td:nth-child(2) {
+    white-space: normal;
+    min-width: 80px;
+  }
+  
+  /* Reduce icon sizes */
+  .w-6.h-6 {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  .w-5.h-5 {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .prose table {
+    font-size: 0.875rem;
+  }
+  
+  .prose th,
+  .prose td {
+    padding: 0.5rem 0.75rem;
+  }
+}

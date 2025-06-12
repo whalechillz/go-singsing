@@ -128,54 +128,55 @@ export function getCommonHeaderStyles(isStaff: boolean = false): string {
 }
 
 // 공통 푸터 HTML
-export function generateCommonFooter(tourData: any, isStaff: boolean = false): string {
-  if (isStaff) {
-    return `
-      <div class="footer-common">
-        ${tourData.staff && tourData.staff.filter((staff: any) => staff.role.includes('기사')).length > 0 ? `
-          <div class="contact-info-staff">
-            <div class="contact-title-staff">비상 연락처</div>
-            <div class="contact-grid-staff">
-              ${tourData.staff.filter((staff: any) => staff.role.includes('기사')).map((staff: any) => `
-                <div class="contact-item-staff">
-                  <span class="contact-name-staff">${staff.name} ${staff.role}</span>
-                  ${staff.phone ? `<span class="contact-phone-staff">${staff.phone}</span>` : ''}
-                </div>
-              `).join(' | ')}
-            </div>
-          </div>
-        ` : ''}
-        <div class="footer-message">${tourData.footer_message || '즐거운 골프 여행 되시길 바랍니다'}</div>
-        <div class="footer-brand">싱싱골프투어</div>
-      </div>
-    `;
+export function generateCommonFooter(tourData: any, isStaff: boolean = false, documentType?: string): string {
+  // 문서에 따른 전화번호 표시 설정 가져오기
+  const phoneSettings = documentType && tourData.phone_display_settings ? 
+    tourData.phone_display_settings[documentType] : null;
+  
+  // 전화번호 수집
+  const phones: string[] = [];
+  
+  if (phoneSettings) {
+    if (phoneSettings.show_company_phone && tourData.company_phone) {
+      phones.push(`☎ ${tourData.company_phone}`);
+    }
+    
+    if (phoneSettings.show_driver_phone && tourData.staff) {
+      const driver = tourData.staff.find((s: any) => s.role === '기사');
+      if (driver?.phone) phones.push(`기사 ${driver.phone}`);
+    }
+    
+    if (phoneSettings.show_guide_phone && tourData.staff) {
+      const guide = tourData.staff.find((s: any) => s.role === '가이드');
+      if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
+    }
+    
+    if (phoneSettings.show_manager_phone && tourData.staff) {
+      const manager = tourData.staff.find((s: any) => s.role === '매니저');
+      if (manager?.phone) phones.push(`매니저 ${manager.phone}`);
+    }
+    
+    if (phoneSettings.show_golf_phone && tourData.golf_reservation_phone) {
+      phones.push(`골프장 ${tourData.golf_reservation_phone}`);
+    }
   } else {
-    return `
-      <div class="footer-common">
-        ${tourData.show_company_phones && (tourData.company_phone || tourData.company_mobile) ? `
-          <div class="contact-section">
-            <div class="contact-grid-simple">
-              ${tourData.company_phone ? `
-                <div class="contact-item-simple">
-                  <span class="contact-label">대표전화</span>
-                  <a href="tel:${tourData.company_phone}" class="contact-value">${tourData.company_phone}</a>
-                </div>
-              ` : ''}
-              ${tourData.company_mobile ? `
-                <div class="contact-item-simple">
-                  <span class="contact-label">담당자</span>
-                  <a href="tel:${tourData.company_mobile}" class="contact-value">${tourData.company_mobile}</a>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        ` : ''}
-        
-        <div class="footer-message">${tourData.footer_message || '즐거운 골프 여행 되시길 바랍니다'}</div>
-        <div class="footer-brand">싱싱골프투어</div>
-      </div>
-    `;
+    // 설정이 없으면 기본값 사용 (이전 버전 호환)
+    if (tourData.show_company_phones && tourData.company_phone) {
+      phones.push(`☎ ${tourData.company_phone}`);
+    }
+    
+    if (isStaff && tourData.staff) {
+      const driver = tourData.staff.find((s: any) => s.role === '기사');
+      if (driver?.phone) phones.push(`기사 ${driver.phone}`);
+    }
   }
+  
+  return `
+    <div class="footer-common">
+      ${tourData.footer_message ? `<div class="footer-message">${tourData.footer_message}</div>` : ''}
+      ${phones.length > 0 ? `<div class="footer-brand">싱싱골프투어 ${phones.join(' | ')}</div>` : `<div class="footer-brand">싱싱골프투어</div>`}
+    </div>
+  `;
 }
 
 // 공통 푸터 스타일

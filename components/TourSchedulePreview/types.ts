@@ -20,6 +20,39 @@ export interface TourData {
   schedules?: Schedule[];
   staff?: Staff[];
   singsing_tour_staff?: Staff[];
+  
+  // 문서별 전화번호 표시 설정
+  phone_display_settings?: {
+    customer_schedule?: {
+      show_company_phone?: boolean;
+      show_driver_phone?: boolean;
+      show_guide_phone?: boolean;
+      show_golf_phone?: boolean;
+    };
+    customer_boarding?: {
+      show_company_phone?: boolean;
+      show_driver_phone?: boolean;
+      show_guide_phone?: boolean;
+    };
+    staff_boarding?: {
+      show_company_phone?: boolean;
+      show_driver_phone?: boolean;
+      show_guide_phone?: boolean;
+      show_manager_phone?: boolean;
+    };
+    room_assignment?: {
+      show_company_phone?: boolean;
+      show_driver_phone?: boolean;
+      show_guide_phone?: boolean;
+    };
+    tee_time?: {
+      show_company_phone?: boolean;
+      show_golf_phone?: boolean;
+    };
+    simplified?: {
+      show_company_phone?: boolean;
+    };
+  };
 }
 
 export interface Schedule {

@@ -86,9 +86,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
+    <div className="max-w-full lg:max-w-7xl mx-auto p-2 sm:p-4">
       {/* 문서 선택 탭 - 고객용과 스탭용 분리 */}
-      <div className="mb-6 space-y-3">
+      <div className="mb-3 sm:mb-6 space-y-2 sm:space-y-3">
         {/* 고객용 문서 */}
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">고객용 문서</h3>
@@ -97,7 +97,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <button
                 key={doc.id}
                 onClick={() => setActiveTab(doc.id as DocumentType)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-colors flex-shrink-0 text-sm sm:text-base ${
                   activeTab === doc.id
                     ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
@@ -133,10 +133,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
 
       {/* 액션 버튼 */}
-      <div className="mb-4 flex gap-2">
+      <div className="mb-3 sm:mb-4 flex gap-2">
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg"
+          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm sm:text-base"
         >
           <Printer className="w-4 h-4" />
           인쇄
@@ -158,7 +158,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       </div>
 
       {/* 문서 미리보기 */}
-      <div className="bg-white rounded-lg shadow-lg p-8">
+      <div className="bg-white rounded-lg shadow-lg p-3 sm:p-6 lg:p-8">
         <div dangerouslySetInnerHTML={{ __html: documentHTML }} />
       </div>
     </div>

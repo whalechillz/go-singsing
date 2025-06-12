@@ -157,18 +157,35 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       </div>
       ` : ''}
       
-      ${(tourData.footer_message || tourData.company_phone || tourData.company_mobile) ? `
-      <div class="footer">
-        ${tourData.footer_message ? `<p>${tourData.footer_message}</p>` : ''}
-        ${(tourData.company_phone || tourData.company_mobile) ? `
-          <p>
-            싱싱골프투어 
-            ${tourData.company_phone ? `☎ ${tourData.company_phone}` : ''}
-            ${tourData.company_mobile ? `📱 ${tourData.company_mobile}` : ''}
-          </p>
-        ` : ''}
-      </div>
-      ` : ''}
+      ${(() => {
+        const phoneSettings = tourData.phone_display_settings?.customer_schedule;
+        const phones = [];
+        
+        if (phoneSettings?.show_company_phone && tourData.company_phone) {
+          phones.push(`☎ ${tourData.company_phone}`);
+        }
+        
+        if (phoneSettings?.show_driver_phone && tourData.staff) {
+          const driver = tourData.staff.find(s => s.role === '기사');
+          if (driver?.phone) phones.push(`기사 ${driver.phone}`);
+        }
+        
+        if (phoneSettings?.show_guide_phone && tourData.staff) {
+          const guide = tourData.staff.find(s => s.role === '가이드');
+          if (guide?.phone) phones.push(`가이드 ${guide.phone}`);
+        }
+        
+        if (phoneSettings?.show_golf_phone && tourData.golf_reservation_phone) {
+          phones.push(`골프장 ${tourData.golf_reservation_phone}`);
+        }
+        
+        return phones.length > 0 || tourData.footer_message ? `
+          <div class="footer">
+            ${tourData.footer_message ? `<p>${tourData.footer_message}</p>` : ''}
+            ${phones.length > 0 ? `<p>싱싱골프투어 ${phones.join(' | ')}</p>` : ''}
+          </div>
+        ` : '';
+      })()}
     </div>
   `;
   

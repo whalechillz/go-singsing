@@ -204,7 +204,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     <div className="mb-8">
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">객실별 참가자 그룹핑</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900">객실별 참가자 그룹핑</h2>
         <div className="flex gap-2">
           <button
             onClick={async () => {
@@ -226,25 +226,25 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
       ) : (
         <>
           {/* 통계 정보 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="text-sm text-blue-600 font-medium">참가자 현황</div>
-              <div className="text-2xl font-bold text-blue-900">{assignedParticipants}/{totalParticipants}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+            <div className="bg-blue-50 rounded-lg p-2 sm:p-4">
+              <div className="text-xs sm:text-sm text-blue-600 font-medium">참가자 현황</div>
+              <div className="text-lg sm:text-2xl font-bold text-blue-900">{assignedParticipants}/{totalParticipants}</div>
               <div className="text-xs text-blue-600">배정완료 / 총인원</div>
             </div>
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="text-sm text-green-600 font-medium">객실 현황</div>
-              <div className="text-2xl font-bold text-green-900">{occupiedSpaces}/{totalCapacity}</div>
+            <div className="bg-green-50 rounded-lg p-2 sm:p-4">
+              <div className="text-xs sm:text-sm text-green-600 font-medium">객실 현황</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-900">{occupiedSpaces}/{totalCapacity}</div>
               <div className="text-xs text-green-600">사용중 / 총정원</div>
             </div>
-            <div className="bg-yellow-50 rounded-lg p-4">
-              <div className="text-sm text-yellow-600 font-medium">빈 객실</div>
-              <div className="text-2xl font-bold text-yellow-900">{emptyRooms}/{usableRooms}</div>
+            <div className="bg-yellow-50 rounded-lg p-2 sm:p-4">
+              <div className="text-xs sm:text-sm text-yellow-600 font-medium">빈 객실</div>
+              <div className="text-lg sm:text-2xl font-bold text-yellow-900">{emptyRooms}/{usableRooms}</div>
               <div className="text-xs text-yellow-600">빈 방 / 사용가능 객실</div>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="text-sm text-purple-600 font-medium">콤프룸</div>
-              <div className="text-2xl font-bold text-purple-900">{compRooms.length}개</div>
+            <div className="bg-purple-50 rounded-lg p-2 sm:p-4">
+              <div className="text-xs sm:text-sm text-purple-600 font-medium">콤프룸</div>
+              <div className="text-lg sm:text-2xl font-bold text-purple-900">{compRooms.length}개</div>
               <div className="text-xs text-purple-600">가이드/기사 객실</div>
             </div>
           </div>
@@ -264,7 +264,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           {rooms.map(room => {
             const assigned = participants.filter(p => p.room_id === room.id);
             return (
-              <div key={room.id} className="border rounded-lg p-4 bg-gray-50">
+              <div key={room.id} className="border rounded-lg p-2 sm:p-4 bg-gray-50">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-bold text-blue-800 text-base">{room.room_number}호</span>
                   <div className="flex items-center gap-4">
@@ -316,7 +316,7 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
           })}
 
           {/* 미배정 참가자 */}
-          <div className="bg-gray-50 rounded-lg shadow p-4">
+          <div className="bg-gray-50 rounded-lg shadow p-2 sm:p-4">
             <div className="font-bold text-gray-700 mb-2">미배정</div>
             <input
               type="text"

@@ -101,7 +101,7 @@ export function generateRoomAssignmentHTML(
         </div>
       ` : ''}
       
-      ${generateCommonFooter(tourData, isStaff)}
+      ${generateCommonFooter(tourData, isStaff, isStaff ? 'room_assignment_staff' : 'room_assignment')}
     </div>
     
     <style>
