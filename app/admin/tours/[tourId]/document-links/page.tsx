@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, QrCode, Info, MessageCircle, Mail, Smartphone } from 'lucide-react';
+import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, QrCode, Info, MessageCircle, Mail, Smartphone, Search, Filter, LayoutGrid, List, Clock, Eye } from 'lucide-react';
 
 interface DocumentLink {
   id: string;
@@ -50,6 +50,13 @@ export default function DocumentLinksPage() {
   const [specialNotice, setSpecialNotice] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharingLink, setSharingLink] = useState<DocumentLink | null>(null);
+  
+  // UI/UX 개선을 위한 상태
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [sortBy, setSortBy] = useState<'created' | 'views' | 'type'>('created');
+  const [showOnlyActive, setShowOnlyActive] = useState(true);
   
   // 새 문서 링크 폼 상태
   const [newDocumentType, setNewDocumentType] = useState('customer_all');
@@ -109,20 +116,29 @@ export default function DocumentLinksPage() {
   };
 
   const documentTypeOptions = [
-    { value: 'portal', label: '통합 표지 (포털)', icon: '🎯' },
-    { value: 'customer_all', label: '고객용 통합 문서 (추천)', icon: '📚' },
-    { value: 'staff_all', label: '스탭용 통합 문서 (추천)', icon: '📋' },
-    { value: 'golf_timetable', label: '골프장 전용 티타임표', icon: '⛳' },
+    { value: 'portal', label: '통합 표지 (포털)', icon: '🎯', category: 'special' },
+    { value: 'customer_all', label: '고객용 통합 문서 (추천)', icon: '📚', category: 'customer' },
+    { value: 'staff_all', label: '스탭용 통합 문서 (추천)', icon: '📋', category: 'staff' },
+    { value: 'golf_timetable', label: '골프장 전용 티타임표', icon: '⛳', category: 'golf' },
     // 기존 개별 문서 타입들 (호환성 유지)
-    { value: 'customer_schedule', label: '고객용 일정표 (개별)', icon: '📅' },
-    { value: 'staff_schedule', label: '스탭용 일정표 (개별)', icon: '📅' },
-    { value: 'customer_boarding', label: '고객용 탑승안내 (개별)', icon: '🚌' },
-    { value: 'staff_boarding', label: '스탭용 탑승안내 (개별)', icon: '🚌' },
-    { value: 'room_assignment', label: '고객용 객실배정 (개별)', icon: '🏨' },
-    { value: 'room_assignment_staff', label: '스탭용 객실배정 (개별)', icon: '🏨' },
-    { value: 'customer_timetable', label: '고객용 티타임표 (개별)', icon: '⏰' },
-    { value: 'staff_timetable', label: '스탭용 티타임표 (개별)', icon: '⏰' },
-    { value: 'simplified', label: '간편일정', icon: '📄' },
+    { value: 'customer_schedule', label: '고객용 일정표 (개별)', icon: '📅', category: 'customer' },
+    { value: 'staff_schedule', label: '스탭용 일정표 (개별)', icon: '📅', category: 'staff' },
+    { value: 'customer_boarding', label: '고객용 탑승안내 (개별)', icon: '🚌', category: 'customer' },
+    { value: 'staff_boarding', label: '스탭용 탑승안내 (개별)', icon: '🚌', category: 'staff' },
+    { value: 'room_assignment', label: '고객용 객실배정 (개별)', icon: '🏨', category: 'customer' },
+    { value: 'room_assignment_staff', label: '스탭용 객실배정 (개별)', icon: '🏨', category: 'staff' },
+    { value: 'customer_timetable', label: '고객용 티타임표 (개별)', icon: '⏰', category: 'customer' },
+    { value: 'staff_timetable', label: '스탭용 티타임표 (개별)', icon: '⏰', category: 'staff' },
+    { value: 'simplified', label: '간편일정', icon: '📄', category: 'customer' },
+  ];
+  
+  // 필터 카테고리 정의
+  const filterCategories = [
+    { value: 'all', label: '전체' },
+    { value: 'special', label: '특별' },
+    { value: 'customer', label: '고객용' },
+    { value: 'staff', label: '스탭용' },
+    { value: 'golf', label: '골프장' },
   ];
 
   useEffect(() => {
@@ -627,6 +643,51 @@ export default function DocumentLinksPage() {
     else if (link.document_type === 'portal') prefix = 'portal';
     return `${window.location.origin}/${prefix}/${link.public_url}`;
   };
+  
+  // 필터링된 문서 링크 가져오기
+  const getFilteredLinks = () => {
+    let filtered = [...documentLinks];
+    
+    // 활성 상태 필터
+    if (showOnlyActive) {
+      filtered = filtered.filter(link => link.is_active);
+    }
+    
+    // 검색어 필터
+    if (searchQuery) {
+      filtered = filtered.filter(link => {
+        const docType = documentTypeOptions.find(opt => opt.value === link.document_type);
+        const label = docType?.label || link.document_type;
+        return label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               link.public_url.toLowerCase().includes(searchQuery.toLowerCase());
+      });
+    }
+    
+    // 카테고리 필터
+    if (filterType !== 'all') {
+      filtered = filtered.filter(link => {
+        const docType = documentTypeOptions.find(opt => opt.value === link.document_type);
+        return docType?.category === filterType;
+      });
+    }
+    
+    // 정렬
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'views':
+          return (b.view_count || 0) - (a.view_count || 0);
+        case 'type':
+          return a.document_type.localeCompare(b.document_type);
+        case 'created':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    
+    return filtered;
+  };
+  
+  const filteredLinks = getFilteredLinks();
 
   if (loading) {
     return (
@@ -653,27 +714,128 @@ export default function DocumentLinksPage() {
         </p>
       </div>
 
-      <div className="mb-6 flex gap-3 flex-wrap">
-        <button
-          onClick={async () => {
-            // 통합 표지 생성 모달을 열기 전에 연락처 다시 불러오기
-            const contacts = await fetchTourContacts();
-            setManagerPhone(contacts.managerPhone);
-            setDriverPhone(contacts.driverPhone);
-            setIsPortalModalOpen(true);
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <Palette className="w-4 h-4" />
-          통합 표지 만들기
-        </button>
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          새 문서 링크 생성
-        </button>
+      {/* 상단 컨트롤 영역 */}
+      <div className="mb-6 space-y-4">
+        {/* 버튼 그룹 */}
+        <div className="flex gap-3 flex-wrap">
+          <button
+            onClick={async () => {
+              // 통합 표지 생성 모달을 열기 전에 연락처 다시 불러오기
+              const contacts = await fetchTourContacts();
+              setManagerPhone(contacts.managerPhone);
+              setDriverPhone(contacts.driverPhone);
+              setIsPortalModalOpen(true);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <Palette className="w-4 h-4" />
+            통합 표지 만들기
+          </button>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            새 문서 링크 생성
+          </button>
+        </div>
+        
+        {/* 검색 및 필터 영역 */}
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* 검색바 */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="문서 이름 또는 URL로 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          {/* 필터 및 컨트롤 */}
+          <div className="flex gap-2">
+            {/* 카테고리 필터 */}
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {filterCategories.map(cat => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+            
+            {/* 정렬 */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'created' | 'views' | 'type')}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="created">최신순</option>
+              <option value="views">조회순</option>
+              <option value="type">유형순</option>
+            </select>
+            
+            {/* 활성 상태 토글 */}
+            <button
+              onClick={() => setShowOnlyActive(!showOnlyActive)}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                showOnlyActive
+                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Eye className="w-4 h-4" />
+              {showOnlyActive ? '활성만' : '전체'}
+            </button>
+            
+            {/* 뷰 모드 전환 */}
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-2 transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-2 transition-colors border-l border-gray-300 ${
+                  viewMode === 'list'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* 현재 필터 상태 */}
+        {(searchQuery || filterType !== 'all' || !showOnlyActive) && (
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span>필터링 결과:</span>
+            <span className="font-medium">{filteredLinks.length}개</span>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setFilterType('all');
+                setShowOnlyActive(true);
+              }}
+              className="ml-2 text-blue-600 hover:text-blue-700"
+            >
+              초기화
+            </button>
+          </div>
+        )}
       </div>
 
       {documentLinks.length === 0 ? (
@@ -694,7 +856,7 @@ export default function DocumentLinksPage() {
                       <div className="flex items-center gap-3 mb-1">
                         <FileText className="w-5 h-5 text-blue-600" />
                         <h3 className="text-lg font-semibold">
-                          {documentType?.icon} {documentType?.label || link.document_type}
+                          {documentType?.label || link.document_type}
                         </h3>
                         {link.document_type === 'portal' && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -829,11 +991,22 @@ export default function DocumentLinksPage() {
                   onChange={(e) => setNewDocumentType(e.target.value)}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {documentTypeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.icon} {option.label}
-                    </option>
-                  ))}
+                  {/* 중요 문서 */}
+                  <optgroup label="───── 추천 문서 ─────">
+                    {documentTypeOptions.filter(opt => ['portal', 'customer_all', 'staff_all', 'golf_timetable'].includes(opt.value)).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.icon} {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {/* 개별 문서 */}
+                  <optgroup label="───── 개별 문서 ─────">
+                    {documentTypeOptions.filter(opt => !['portal', 'customer_all', 'staff_all', 'golf_timetable'].includes(opt.value)).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
               
@@ -898,11 +1071,22 @@ export default function DocumentLinksPage() {
                   onChange={(e) => setEditDocumentType(e.target.value)}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {documentTypeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.icon} {option.label}
-                    </option>
-                  ))}
+                  {/* 중요 문서 */}
+                  <optgroup label="───── 추천 문서 ─────">
+                    {documentTypeOptions.filter(opt => ['portal', 'customer_all', 'staff_all', 'golf_timetable'].includes(opt.value)).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.icon} {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {/* 개별 문서 */}
+                  <optgroup label="───── 개별 문서 ─────">
+                    {documentTypeOptions.filter(opt => !['portal', 'customer_all', 'staff_all', 'golf_timetable'].includes(opt.value)).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
               
