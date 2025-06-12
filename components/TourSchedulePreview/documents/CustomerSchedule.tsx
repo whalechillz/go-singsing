@@ -75,53 +75,90 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
       ${productData && (productData.usage_round || productData.usage_hotel || productData.usage_meal || productData.usage_bus || productData.usage_tour || productData.usage_locker) ? `
       <div class="section detailed-usage-section">
         <div class="section-title">상세 이용 안내</div>
-        <div class="usage-container" id="usageContainer">
-          <div class="usage-tabs">
-            ${productData.usage_round ? '<button class="usage-tab active" data-tab="round">라운딩 규정</button>' : ''}
-            ${productData.usage_hotel ? '<button class="usage-tab" data-tab="hotel">숙소 이용</button>' : ''}
-            ${productData.usage_meal ? '<button class="usage-tab" data-tab="meal">식사 안내</button>' : ''}
-            ${productData.usage_locker ? '<button class="usage-tab" data-tab="locker">락카 이용</button>' : ''}
-            ${productData.usage_bus ? '<button class="usage-tab" data-tab="bus">버스 이용</button>' : ''}
-            ${productData.usage_tour ? '<button class="usage-tab" data-tab="tour">관광지 투어</button>' : ''}
-          </div>
+        <div class="usage-accordion" id="usageAccordion">
+          ${productData.usage_round ? `
+            <div class="accordion-item">
+              <button class="accordion-header active" onclick="toggleAccordion(this)">
+                <span>라운딩 규정</span>
+                <span class="accordion-icon">▼</span>
+              </button>
+              <div class="accordion-content active">
+                <div class="accordion-body">
+                  ${formatUsageContent(productData.usage_round)}
+                </div>
+              </div>
+            </div>
+          ` : ''}
           
-          <div class="usage-content-wrapper">
-            ${productData.usage_round ? `
-              <div class="usage-content active" data-content="round" data-title="라운딩 규정">
-                ${formatUsageContent(productData.usage_round)}
+          ${productData.usage_hotel ? `
+            <div class="accordion-item">
+              <button class="accordion-header" onclick="toggleAccordion(this)">
+                <span>숙소 이용</span>
+                <span class="accordion-icon">▶</span>
+              </button>
+              <div class="accordion-content">
+                <div class="accordion-body">
+                  ${formatUsageContent(productData.usage_hotel)}
+                </div>
               </div>
-            ` : ''}
-            
-            ${productData.usage_hotel ? `
-              <div class="usage-content" data-content="hotel" data-title="숙소 이용">
-                ${formatUsageContent(productData.usage_hotel)}
+            </div>
+          ` : ''}
+          
+          ${productData.usage_meal ? `
+            <div class="accordion-item">
+              <button class="accordion-header" onclick="toggleAccordion(this)">
+                <span>식사 안내</span>
+                <span class="accordion-icon">▶</span>
+              </button>
+              <div class="accordion-content">
+                <div class="accordion-body">
+                  ${formatUsageContent(productData.usage_meal)}
+                </div>
               </div>
-            ` : ''}
-            
-            ${productData.usage_meal ? `
-              <div class="usage-content" data-content="meal" data-title="식사 안내">
-                ${formatUsageContent(productData.usage_meal)}
+            </div>
+          ` : ''}
+          
+          ${productData.usage_locker ? `
+            <div class="accordion-item">
+              <button class="accordion-header" onclick="toggleAccordion(this)">
+                <span>락카 이용</span>
+                <span class="accordion-icon">▶</span>
+              </button>
+              <div class="accordion-content">
+                <div class="accordion-body">
+                  ${formatUsageContent(productData.usage_locker)}
+                </div>
               </div>
-            ` : ''}
-            
-            ${productData.usage_locker ? `
-              <div class="usage-content" data-content="locker" data-title="락카 이용">
-                ${formatUsageContent(productData.usage_locker)}
+            </div>
+          ` : ''}
+          
+          ${productData.usage_bus ? `
+            <div class="accordion-item">
+              <button class="accordion-header" onclick="toggleAccordion(this)">
+                <span>버스 이용</span>
+                <span class="accordion-icon">▶</span>
+              </button>
+              <div class="accordion-content">
+                <div class="accordion-body">
+                  ${formatUsageContent(productData.usage_bus)}
+                </div>
               </div>
-            ` : ''}
-            
-            ${productData.usage_bus ? `
-              <div class="usage-content" data-content="bus" data-title="버스 이용">
-                ${formatUsageContent(productData.usage_bus)}
+            </div>
+          ` : ''}
+          
+          ${productData.usage_tour ? `
+            <div class="accordion-item">
+              <button class="accordion-header" onclick="toggleAccordion(this)">
+                <span>관광지 투어</span>
+                <span class="accordion-icon">▶</span>
+              </button>
+              <div class="accordion-content">
+                <div class="accordion-body">
+                  ${formatUsageContent(productData.usage_tour)}
+                </div>
               </div>
-            ` : ''}
-            
-            ${productData.usage_tour ? `
-              <div class="usage-content" data-content="tour" data-title="관광지 투어">
-                ${formatUsageContent(productData.usage_tour)}
-              </div>
-            ` : ''}
-          </div>
+            </div>
+          ` : ''}
         </div>
       </div>
       ` : ''}
@@ -161,35 +198,32 @@ export function generateCustomerScheduleHTML(tourData: TourData, productData: Pr
 <body>
   ${content}
   <script>
-    (function() {
-      function handleTabClick(e) {
-        const tab = e.target.closest('.usage-tab');
-        if (!tab) return;
-        
-        const targetTab = tab.getAttribute('data-tab');
-        if (!targetTab) return;
-        
-        const tabs = document.querySelectorAll('.usage-tab');
-        const contents = document.querySelectorAll('.usage-content');
-        
-        tabs.forEach(t => t.classList.remove('active'));
-        contents.forEach(c => c.classList.remove('active'));
-        
-        tab.classList.add('active');
-        const targetContent = document.querySelector('.usage-content[data-content="' + targetTab + '"]');
-        if (targetContent) {
-          targetContent.classList.add('active');
-        }
-      }
+    function toggleAccordion(button) {
+      const accordionItem = button.parentElement;
+      const accordionContent = accordionItem.querySelector('.accordion-content');
+      const accordionIcon = button.querySelector('.accordion-icon');
+      const isActive = button.classList.contains('active');
       
-      // 페이지 로드 시 이벤트 리스너 추가
-      document.addEventListener('DOMContentLoaded', function() {
-        const tabs = document.querySelectorAll('.usage-tab');
-        tabs.forEach(tab => {
-          tab.addEventListener('click', handleTabClick);
-        });
-      });
-    })();
+      // 모든 아코디언 닫기 (선택사항: 한 번에 하나만 열리도록 하려면 이 부분 주석 해제)
+      // document.querySelectorAll('.accordion-header').forEach(header => {
+      //   header.classList.remove('active');
+      //   header.querySelector('.accordion-icon').textContent = '▶';
+      // });
+      // document.querySelectorAll('.accordion-content').forEach(content => {
+      //   content.classList.remove('active');
+      // });
+      
+      // 현재 아코디언 토글
+      if (!isActive) {
+        button.classList.add('active');
+        accordionContent.classList.add('active');
+        accordionIcon.textContent = '▼';
+      } else {
+        button.classList.remove('active');
+        accordionContent.classList.remove('active');
+        accordionIcon.textContent = '▶';
+      }
+    }
   </script>
 </body>
 </html>`;
@@ -477,64 +511,74 @@ function getScheduleStyles(isStaff: boolean = false): string {
       font-weight: bold;
     }
     
-    /* 상세 이용 안내 탭 스타일 */
+    /* 상세 이용 안내 아코디언 스타일 */
     .detailed-usage-section {
       margin-top: 40px;
       padding-top: 30px;
       border-top: 2px solid #ddd;
     }
     
-    .usage-container {
+    .usage-accordion {
       margin-top: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
     }
     
-    .usage-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0;
-      border-bottom: 1px solid #ddd;
+    .accordion-item {
+      border-bottom: 1px solid #e0e0e0;
     }
     
-    .usage-tab {
-      padding: 12px 24px;
-      background: none;
+    .accordion-item:last-child {
+      border-bottom: none;
+    }
+    
+    .accordion-header {
+      width: 100%;
+      padding: 16px 20px;
+      background: #f8f9fa;
       border: none;
-      border-bottom: 3px solid transparent;
-      font-size: 14px;
-      font-weight: 500;
-      color: #666;
       cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-    
-    .usage-tab:hover {
-      color: #2c5282;
-      background: #f8f9fa;
-    }
-    
-    .usage-tab.active {
-      color: #2c5282;
+      font-size: 15px;
       font-weight: 600;
-      border-bottom-color: #2c5282;
-      background: none;
+      color: #333;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
     }
     
-    .usage-content-wrapper {
+    .accordion-header:hover {
+      background: #e7f3ff;
+    }
+    
+    .accordion-header.active {
+      background: #2c5282;
+      color: white;
+    }
+    
+    .accordion-icon {
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+    
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    .accordion-content.active {
+      max-height: 2000px;
+    }
+    
+    .accordion-body {
       padding: 20px;
-      background: #f8f9fa;
-      border-radius: 0 0 5px 5px;
-    }
-    
-    .usage-content {
-      display: none;
+      background: white;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.8;
       color: #4a5568;
-    }
-    
-    .usage-content.active {
-      display: block;
     }
     
     .usage-list-item {
@@ -578,13 +622,18 @@ function getScheduleStyles(isStaff: boolean = false): string {
         font-size: 16px;
       }
       
-      .usage-tab {
-        font-weight: 600;
+      .accordion-header {
+        font-weight: 700;
+        background: #f0f4f8;
       }
       
-      .usage-content-wrapper {
+      .accordion-header.active {
+        background: #4a6fa5;
+      }
+      
+      .accordion-body {
         background: linear-gradient(to bottom, #f8fbff 0%, #ffffff 100%);
-        box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+        box-shadow: inset 0 2px 4px rgba(74, 144, 226, 0.1);
       }
     ` : ''}
     
@@ -604,25 +653,22 @@ function getScheduleStyles(isStaff: boolean = false): string {
       .timeline-text { font-size: 14px; }
       .usage-content { font-size: 14px; }
       
-      /* 인쇄 시 모든 탭 내용 표시 */
-      .usage-container { display: block !important; }
-      .usage-tabs { display: none; }
-      .usage-content {
-        display: block !important;
+      /* 인쇄 시 모든 아코디언 내용 표시 */
+      .accordion-header {
+        background: #f0f0f0 !important;
+        color: #2c5282 !important;
+        page-break-after: avoid;
+      }
+      .accordion-icon { display: none; }
+      .accordion-content {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      .accordion-body {
         page-break-inside: avoid;
+      }
+      .accordion-item {
         margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #ddd;
-      }
-      .usage-content:last-child {
-        border-bottom: none;
-      }
-      .usage-content::before {
-        content: attr(data-title);
-        display: block;
-        font-weight: bold;
-        color: #2c5282;
-        margin-bottom: 10px;
       }
     }
   `;
