@@ -859,9 +859,20 @@ export default function DocumentLinksPage() {
                           {documentType?.label || link.document_type}
                         </h3>
                         {link.document_type === 'portal' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            특별
-                          </span>
+                          <>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              특별
+                            </span>
+                            {link.settings?.targetAudience && link.settings.targetAudience !== 'customer' && (
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                link.settings.targetAudience === 'staff' 
+                                  ? 'bg-purple-100 text-purple-800' 
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {link.settings.targetAudience === 'staff' ? '💼 스탭용' : '⛳ 골프장용'}
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                       {link.document_type === 'customer_all' && (
@@ -881,7 +892,15 @@ export default function DocumentLinksPage() {
                       )}
                       {link.document_type === 'portal' && (
                         <p className="text-xs text-blue-600 ml-8">
-                          고객님을 위한 시각적인 통합 안내 페이지
+                          {(() => {
+                            const audience = link.settings?.targetAudience || 'customer';
+                            const audienceMap: Record<string, string> = {
+                              customer: '👥 고객님을 위한',
+                              staff: '💼 스탭을 위한',
+                              golf: '⛳ 골프장을 위한'
+                            };
+                            return `${audienceMap[audience]} 시각적인 통합 안내 페이지`;
+                          })()}
                         </p>
                       )}
                     </div>
