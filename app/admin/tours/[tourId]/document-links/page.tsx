@@ -462,18 +462,30 @@ export default function DocumentLinksPage() {
       setEditTargetAudience(settings.targetAudience || 'customer');
       setEditSpecialNotice(settings.specialNotice || '');
       
-      // 연락처 설정
+      // 항상 DB에서 최신 연락처 정보 불러오기
+      const contacts = await fetchTourContacts();
+      
+      // 연락처 설정 - DB 값을 우선으로, 없으면 기존 settings 값 사용
       if (settings.contactNumbers) {
-        setEditManagerPhone(settings.contactNumbers.manager || '');
-        setEditDriverPhone(settings.contactNumbers.driver || '');
+        // DB에서 값이 있으면 DB 값 사용, 없으면 기존 settings 값 사용
+        setEditManagerPhone(contacts.managerPhone || settings.contactNumbers.manager || '');
+        setEditDriverPhone(contacts.driverPhone || settings.contactNumbers.driver || '');
+        
+        // showOnlyDriver는 settings 값 유지 (사용자가 설정한 값)
         setEditShowOnlyDriver(!settings.contactNumbers.manager && !!settings.contactNumbers.driver);
       } else {
-        // 기존 연락처가 없으면 DB에서 다시 불러오기
-        const contacts = await fetchTourContacts();
+        // settings가 없으면 DB 값만 사용
         setEditManagerPhone(contacts.managerPhone);
         setEditDriverPhone(contacts.driverPhone);
         setEditShowOnlyDriver(false);
       }
+      
+      console.log('Edit portal - loaded contacts:', {
+        managerPhone: contacts.managerPhone,
+        driverPhone: contacts.driverPhone,
+        editManagerPhone: editManagerPhone,
+        editDriverPhone: editDriverPhone
+      });
       
       setIsEditPortalModalOpen(true);
     } else {
