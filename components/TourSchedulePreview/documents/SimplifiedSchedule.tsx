@@ -1,5 +1,6 @@
 import { TourData, ProductData } from '../types';
 import { formatDate } from '../utils/formatters';
+import { generateCommonHeader, getCommonHeaderStyles, generateCommonFooter, getCommonFooterStyles } from '../utils/commonStyles';
 
 export function generateSimplifiedHTML(tourData: TourData | null, productData: ProductData | null): string {
   if (!tourData) return '<div>데이터를 불러올 수 없습니다.</div>';
@@ -22,24 +23,11 @@ export function generateSimplifiedHTML(tourData: TourData | null, productData: P
     .container {
       max-width: 600px;
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 20px;
     }
     
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-    
-    .header h1 {
-      font-size: 24px;
-      color: #2c5282;
-      margin-bottom: 10px;
-    }
-    
-    .header p {
-      font-size: 16px;
-      color: #666;
-    }
+    ${getCommonHeaderStyles(false)}
+    ${getCommonFooterStyles(false)}
     
     .quick-info {
       display: grid;
@@ -129,10 +117,7 @@ export function generateSimplifiedHTML(tourData: TourData | null, productData: P
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>${tourData.title}</h1>
-      <p>${formatDate(tourData.start_date, false)} ~ ${formatDate(tourData.end_date, false)}</p>
-    </div>
+    ${generateCommonHeader(tourData, '간편 일정표', false)}
     
     <div class="quick-info">
       <div class="info-item">
@@ -159,9 +144,7 @@ export function generateSimplifiedHTML(tourData: TourData | null, productData: P
       `).join('') || '<div>일정 정보가 없습니다.</div>'}
     </div>
     
-    <div class="footer">
-      <p>싱싱골프투어 ☎ 031-215-3990</p>
-    </div>
+    ${generateCommonFooter(tourData, false)}
   </div>
 </body>
 </html>`;

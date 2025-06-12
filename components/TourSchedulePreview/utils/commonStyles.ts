@@ -19,16 +19,21 @@ export function generateCommonHeader(tourData: any, documentTitle: string, isSta
   const colors = isStaff ? commonHeaderStyles.staff : commonHeaderStyles.customer;
   
   return `
-    <div class="header-common" style="background-color: ${colors.headerBg};">
-      <div class="header-brand">싱싱골프투어</div>
-      <div class="header-tour-title">${tourData.title}</div>
-      <div class="header-document-type">${documentTitle}</div>
-      <div class="header-date">
+    <div class="route-header-box" style="background-color: ${colors.headerBg};">
+      <div class="route-header-title">싱싱골프투어</div>
+      <div class="route-header-subtitle">${tourData.title}</div>
+      <div class="route-header-date">
         ${tourData.start_date && tourData.end_date ? 
-          `${new Date(tourData.start_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })} ~ 
-           ${new Date(tourData.end_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}` : ''}
+          `${new Date(tourData.start_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} ~ 
+           ${new Date(tourData.end_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
       </div>
     </div>
+    
+    ${documentTitle ? `
+      <div class="document-title-section">
+        <div class="document-title">${documentTitle}</div>
+      </div>
+    ` : ''}
   `;
 }
 
@@ -37,73 +42,80 @@ export function getCommonHeaderStyles(isStaff: boolean = false): string {
   const colors = isStaff ? commonHeaderStyles.staff : commonHeaderStyles.customer;
   
   return `
-    .header-common {
-      background-color: ${colors.headerBg};
-      color: white;
-      padding: 20px;
+    .route-header-box {
       text-align: center;
-      margin-bottom: 20px;
+      padding: 30px;
+      background: ${colors.headerBg};
+      color: white;
+      margin-bottom: 30px;
+      border-radius: 10px;
     }
     
-    .header-brand {
-      font-size: 16px;
+    .route-header-title {
+      font-size: 24px;
       font-weight: bold;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    
+    .route-header-subtitle {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    
+    .route-header-date {
+      font-size: 16px;
       opacity: 0.9;
     }
     
-    .header-tour-title {
+    .document-title-section {
+      background: #f8f9fa;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    
+    .document-title {
       font-size: 18px;
       font-weight: bold;
-      margin-bottom: 6px;
-    }
-    
-    .header-document-type {
-      font-size: 14px;
-      margin-bottom: 4px;
-      opacity: 0.8;
-    }
-    
-    .header-date {
-      font-size: 13px;
-      opacity: 0.8;
+      color: ${colors.primaryColor};
     }
     
     /* 모바일 최적화 */
     @media (max-width: 768px) {
-      .header-common {
-        padding: 15px;
-        margin-bottom: 15px;
+      .route-header-box {
+        padding: 20px;
+        margin-bottom: 20px;
       }
       
-      .header-brand {
-        font-size: 14px;
-        margin-bottom: 6px;
+      .route-header-title {
+        font-size: 20px;
+        margin-bottom: 8px;
       }
       
-      .header-tour-title {
+      .route-header-subtitle {
         font-size: 16px;
         margin-bottom: 4px;
       }
       
-      .header-document-type {
-        font-size: 13px;
-        margin-bottom: 3px;
+      .route-header-date {
+        font-size: 14px;
       }
       
-      .header-date {
-        font-size: 12px;
+      .document-title {
+        font-size: 16px;
       }
     }
     
     /* 인쇄용 스타일 */
     @media print {
-      .header-common {
-        background-color: ${colors.headerBg} !important;
+      .route-header-box {
+        background: ${colors.headerBg} !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-        padding: 15px;
+        padding: 20px;
         margin: -10mm -10mm 20px -10mm;
+        border-radius: 0;
       }
     }
   `;
