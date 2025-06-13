@@ -133,7 +133,7 @@ export function generateSimplifiedHTML(tourData: TourData | null, productData: P
           <div class="day-subtitle">${schedule.title}</div>
           <div class="main-events">
             ${schedule.schedule_items?.map((item: any) => `
-              <div class="event">${item.time ? item.time + ' ' : ''}${item.content}</div>
+              <div class="event">${item.time ? item.time.substring(0, 5) + ' ' : ''}${item.content}</div>
             `).join('') || '<div class="event">일정 정보가 없습니다.</div>'}
           </div>
         </div>

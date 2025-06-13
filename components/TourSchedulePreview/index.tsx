@@ -118,7 +118,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <button
                 key={doc.id}
                 onClick={() => setActiveTab(doc.id as DocumentType)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-colors flex-shrink-0 text-sm sm:text-base ${
                   activeTab === doc.id
                     ? 'bg-gray-700 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'

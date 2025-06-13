@@ -191,7 +191,7 @@ export default function PublicDocumentPage() {
               <button
                 key={doc.id}
                 onClick={() => setActiveTab(doc.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex-shrink-0 min-w-[120px] ${
                   activeTab === doc.id
                     ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
