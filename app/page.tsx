@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock } from "lucide-react";
+import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
+import { useRouter } from "next/navigation";
 
 // Tour 타입 정의
 interface Tour {
@@ -20,6 +22,7 @@ interface Tour {
 }
 
 const GolfTourPortal = () => {
+  const router = useRouter();
   const [tours, setTours] = useState<Tour[]>([]);
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -29,6 +32,7 @@ const GolfTourPortal = () => {
   const [isStaffView, setIsStaffView] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   // Supabase에서 투어 목록 fetch
   useEffect(() => {
@@ -45,6 +49,18 @@ const GolfTourPortal = () => {
       }
     };
     fetchTours();
+  }, []);
+
+  // 사용자 정보 가져오기
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userData = await getCurrentUser();
+      setUser(userData);
+      if (userData && (userData.role === 'staff' || userData.role === 'manager' || userData.role === 'admin')) {
+        setIsStaffView(true);
+      }
+    };
+    fetchUser();
   }, []);
 
   const handleCardClick = (tour: Tour) => {
@@ -70,6 +86,28 @@ const GolfTourPortal = () => {
       }
     } else {
       setIsPasswordCorrect(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    const result = await signOut();
+    if (result.success) {
+      setUser(null);
+      setIsStaffView(false);
+      router.push('/');
+    }
+  };
+
+  const getRoleName = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return '관리자';
+      case 'manager':
+        return '매니저';
+      case 'staff':
+        return '스탭';
+      default:
+        return '고객';
     }
   };
 
@@ -117,15 +155,40 @@ const GolfTourPortal = () => {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">싱싱골프투어</h1>
             <div className="flex items-center space-x-4">
-              {isStaffView && (
-                <span className="bg-yellow-500 text-white text-sm px-3 py-1 rounded-full">스탭 모드</span>
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    <div className="text-sm">
+                      <p className="font-medium">{user.name || user.email}</p>
+                      <p className="text-blue-200 text-xs">{getRoleName(user.role)}</p>
+                    </div>
+                  </div>
+                  {(user.role === 'admin' || user.role === 'manager') && (
+                    <a
+                      href="/admin"
+                      className="text-sm bg-white text-blue-800 px-4 py-1.5 rounded hover:bg-blue-100 transition-colors"
+                    >
+                      관리자 페이지
+                    </a>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="text-sm bg-red-600 text-white px-4 py-1.5 rounded hover:bg-red-700 transition-colors flex items-center gap-1"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <a
+                  href="/login"
+                  className="text-sm bg-white text-blue-800 px-4 py-1.5 rounded hover:bg-blue-100 transition-colors flex items-center gap-1"
+                >
+                  <LogIn className="h-4 w-4" />
+                  직원 로그인
+                </a>
               )}
-              <button
-                className="text-sm bg-white text-blue-800 px-4 py-1 rounded hover:bg-blue-100"
-                onClick={() => setIsStaffView(!isStaffView)}
-              >
-                {isStaffView ? "고객 모드로 전환" : "스탭 모드로 전환"}
-              </button>
             </div>
           </div>
         </div>
