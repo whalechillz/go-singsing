@@ -218,26 +218,28 @@ INSERT INTO auth.users (
               type="text"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-lg"
               placeholder="새 비밀번호"
             />
             <p className="text-xs text-gray-500 mt-1">
               * 사용자에게 이 비밀번호를 안전하게 전달해주세요.
             </p>
           </div>
-          <button
-            onClick={generatePassword}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            자동 생성
-          </button>
-          <button
-            onClick={generateSQLQuery}
-            disabled={!searchResult || !newPassword}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-          >
-            SQL 생성
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={generatePassword}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors h-[42px]"
+            >
+              자동 생성
+            </button>
+            <button
+              onClick={generateSQLQuery}
+              disabled={!searchResult || !newPassword}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors h-[42px]"
+            >
+              SQL 생성
+            </button>
+          </div>
         </div>
       </div>
 

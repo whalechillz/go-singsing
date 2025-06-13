@@ -77,6 +77,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/staff')) return 'tour-staff'; // 기존 URL 호환성
     if (pathname.startsWith('/admin/users')) return 'users';
     if (pathname.startsWith('/admin/roles')) return 'roles';
+    if (pathname.startsWith('/admin/password-reset')) return 'password-reset';
     if (pathname.startsWith('/admin/customers')) return 'customers';
     if (pathname.startsWith('/admin/messages')) return 'messages';
     if (pathname.startsWith('/admin/campaigns')) return 'campaigns';

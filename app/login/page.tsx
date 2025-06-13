@@ -179,24 +179,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* 테스트 계정 안내 (개발 중에만 표시) */}
-        <div className="mt-4 bg-yellow-50 rounded-lg shadow p-6 border border-yellow-200">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">테스트 계정</h3>
-          <div className="space-y-2 text-xs font-mono">
-            <div className="flex justify-between">
-              <span className="text-gray-600">관리자:</span>
-              <span className="text-gray-800">admin@singsinggolf.kr / admin123!</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">매니저:</span>
-              <span className="text-gray-800">manager@singsinggolf.kr / manager123!</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">스탭:</span>
-              <span className="text-gray-800">staff@singsinggolf.kr / staff123!</span>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );

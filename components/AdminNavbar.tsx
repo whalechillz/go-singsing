@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/admin/tours", label: "투어 스케쥴 관리" },
   { href: "/admin/documents", label: "문서 관리" },
   { href: "/admin/quotes", label: "견적서 관리" },
+  { href: "/admin/password-reset", label: "비밀번호 초기화" },
 ];
 
 export default function AdminNavbar() {
@@ -111,7 +112,7 @@ export default function AdminNavbar() {
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50">
                   <div className="px-4 py-2 border-b">
                     <p className="text-sm font-medium text-gray-900">{user.email}</p>
                     <p className="text-xs text-gray-500">{getRoleName(user.role)}</p>
@@ -120,8 +121,8 @@ export default function AdminNavbar() {
                     href="/admin/profile"
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                   >
-                    <User className="h-4 w-4" />
-                    내 정보 / 비밀번호 변경
+                    <User className="h-4 w-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap">내 정보 / 비밀번호 변경</span>
                   </a>
                   <button
                     onClick={handleLogout}
@@ -177,8 +178,8 @@ export default function AdminNavbar() {
                     className="block px-4 py-2 rounded font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <User className="h-4 w-4" />
-                    내 정보 / 비밀번호 변경
+                    <User className="h-4 w-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap">내 정보 / 비밀번호 변경</span>
                   </a>
                   <button
                     onClick={handleLogout}

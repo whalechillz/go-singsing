@@ -47,6 +47,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     if (pathname.startsWith('/admin/staff')) return '투어 운영진'; // 기존 URL 호환성
     if (pathname.startsWith('/admin/users')) return '사용자 관리';
     if (pathname.startsWith('/admin/roles')) return '권한 관리';
+    if (pathname.startsWith('/admin/password-reset')) return '비밀번호 초기화';
     if (pathname.startsWith('/admin/customers')) return '고객 데이터베이스';
     if (pathname.startsWith('/admin/messages')) return '메시지 발송';
     if (pathname.startsWith('/admin/campaigns')) return '마케팅 캠페인';
