@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { 
   Send, MessageSquare, Clock, CheckCircle, XCircle, 
   AlertTriangle, Filter, Search, Plus, Edit2, Trash2,
-  Phone, User, Calendar, FileText, Eye
+  Phone, User, Calendar, FileText, Eye, X
 } from "lucide-react";
 
 type Customer = {
@@ -71,6 +71,18 @@ export default function MessageManagementPage() {
     is_active: true
   });
 
+  // 미리보기 모달
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewContent, setPreviewContent] = useState("");
+  const [previewTitle, setPreviewTitle] = useState("");
+  const [previewPhone, setPreviewPhone] = useState("");
+
+  // 발송 이력 필터
+  const [filterDateRange, setFilterDateRange] = useState<"today" | "week" | "month" | "all">("week");
+  const [filterMessageType, setFilterMessageType] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [searchPhone, setSearchPhone] = useState("");
+
   // 데이터 불러오기
   const fetchData = async () => {
     setLoading(true);
@@ -89,8 +101,22 @@ export default function MessageManagementPage() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      // 발송 이력
-      const { data: logData } = await supabase
+      setCustomers(customerData || []);
+      setTemplates(templateData || []);
+      
+      // 발송 이력은 별도로 불러오기
+      fetchMessageLogs();
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 발송 이력 불러오기
+  const fetchMessageLogs = async () => {
+    try {
+      let query = supabase
         .from("message_logs")
         .select(`
           *,
@@ -100,22 +126,56 @@ export default function MessageManagementPage() {
             phone
           )
         `)
-        .order("created_at", { ascending: false })
-        .limit(100);
+        .order("created_at", { ascending: false });
 
-      setCustomers(customerData || []);
-      setTemplates(templateData || []);
-      setMessageLogs(logData || []);
+      // 날짜 필터
+      const now = new Date();
+      if (filterDateRange === "today") {
+        const today = new Date(now.setHours(0, 0, 0, 0));
+        query = query.gte("created_at", today.toISOString());
+      } else if (filterDateRange === "week") {
+        const weekAgo = new Date(now.setDate(now.getDate() - 7));
+        query = query.gte("created_at", weekAgo.toISOString());
+      } else if (filterDateRange === "month") {
+        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+        query = query.gte("created_at", monthAgo.toISOString());
+      }
+
+      // 메시지 타입 필터
+      if (filterMessageType) {
+        query = query.eq("message_type", filterMessageType);
+      }
+
+      // 상태 필터
+      if (filterStatus) {
+        query = query.eq("status", filterStatus);
+      }
+
+      const { data: logData } = await query.limit(100);
+
+      // 전화번호 검색 필터
+      let filteredLogs = logData || [];
+      if (searchPhone) {
+        filteredLogs = filteredLogs.filter(log => 
+          log.phone_number.includes(searchPhone.replace(/-/g, ""))
+        );
+      }
+
+      setMessageLogs(filteredLogs);
     } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching message logs:", error);
     }
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "history") {
+      fetchMessageLogs();
+    }
+  }, [filterDateRange, filterMessageType, filterStatus, searchPhone, activeTab]);
 
   // 템플릿 선택 시 내용 자동 입력
   useEffect(() => {
@@ -128,6 +188,26 @@ export default function MessageManagementPage() {
       }
     }
   }, [selectedTemplate, templates]);
+
+  // 미리보기 표시
+  const showPreview = () => {
+    if (!messageContent.trim()) {
+      alert("메시지 내용을 입력하세요.");
+      return;
+    }
+
+    // 샘플 변수 치환
+    let preview = messageContent;
+    preview = preview.replace(/#{이름}/g, "홍길동");
+    preview = preview.replace(/#{투어명}/g, "제주도 3일 골프투어");
+    preview = preview.replace(/#{출발일}/g, "2024년 3월 15일");
+    preview = preview.replace(/#{결제금액}/g, "1,500,000원");
+
+    setPreviewContent(preview);
+    setPreviewTitle(messageTitle);
+    setPreviewPhone(directPhone || "010-1234-5678");
+    setShowPreviewModal(true);
+  };
 
   // 메시지 발송
   const sendMessage = async () => {
@@ -179,22 +259,7 @@ export default function MessageManagementPage() {
 
       const result = await response.json();
 
-      // 발송 이력 저장
-      for (const recipient of recipients) {
-        await supabase.from("message_logs").insert({
-          customer_id: recipient.customer_id,
-          message_type: messageType,
-          template_id: selectedTemplate || null,
-          phone_number: recipient.phone,
-          title: messageTitle,
-          content: messageContent,
-          status: "sent",
-          sent_at: new Date().toISOString(),
-          cost: result.cost || 0
-        });
-      }
-
-      alert(`${recipients.length}명에게 메시지가 발송되었습니다.`);
+      alert(`${result.sent}명 발송 성공, ${result.failed}명 발송 실패`);
       
       // 폼 초기화
       setSelectedCustomers([]);
@@ -299,6 +364,15 @@ export default function MessageManagementPage() {
       case "kakao_alimtalk": return "카카오 알림톡";
       default: return type;
     }
+  };
+
+  // 바이트 계산 함수
+  const getByteLength = (str: string) => {
+    let bytes = 0;
+    for (let i = 0; i < str.length; i++) {
+      bytes += str.charCodeAt(i) > 127 ? 2 : 1;
+    }
+    return bytes;
   };
 
   return (
@@ -421,10 +495,19 @@ export default function MessageManagementPage() {
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="메시지 내용을 입력하세요"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {messageContent.length}바이트 / 
-                      {messageType === "sms" ? " 90" : messageType === "lms" ? " 2000" : " 2000"}바이트
-                    </p>
+                    <div className="flex justify-between items-center mt-1">
+                      <p className="text-xs text-gray-500">
+                        {getByteLength(messageContent)}바이트 / 
+                        {messageType === "sms" ? " 90" : messageType === "lms" ? " 2000" : " 2000"}바이트
+                      </p>
+                      <button
+                        onClick={showPreview}
+                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" />
+                        미리보기
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -604,77 +687,130 @@ export default function MessageManagementPage() {
 
           {/* 발송 이력 탭 */}
           {activeTab === "history" && (
-            <div className="bg-white rounded-lg shadow">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        발송일시
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        수신자
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        유형
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        내용
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        상태
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        비용
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {messageLogs.map(log => (
-                      <tr key={log.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {new Date(log.created_at).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm">
-                            <div className="font-medium text-gray-900">
-                              {log.customer?.name || "직접입력"}
-                            </div>
-                            <div className="text-gray-500">{log.phone_number}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            log.message_type === "kakao_alimtalk" 
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}>
-                            {getMessageTypeLabel(log.message_type)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900 max-w-xs truncate">
-                            {log.title && <div className="font-medium">{log.title}</div>}
-                            <div className="text-gray-600">{log.content}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(log.status)}
-                            <span className="text-sm text-gray-600">
-                              {log.status === "sent" ? "발송완료" :
-                               log.status === "delivered" ? "수신확인" :
-                               log.status === "failed" ? "발송실패" : "대기중"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {log.cost ? `${log.cost}원` : "-"}
-                        </td>
+            <div>
+              {/* 필터 */}
+              <div className="bg-white rounded-lg shadow p-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <select
+                    value={filterDateRange}
+                    onChange={(e) => setFilterDateRange(e.target.value as any)}
+                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="today">오늘</option>
+                    <option value="week">최근 1주일</option>
+                    <option value="month">최근 1개월</option>
+                    <option value="all">전체</option>
+                  </select>
+
+                  <select
+                    value={filterMessageType}
+                    onChange={(e) => setFilterMessageType(e.target.value)}
+                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">전체 유형</option>
+                    <option value="sms">SMS</option>
+                    <option value="lms">LMS</option>
+                    <option value="mms">MMS</option>
+                    <option value="kakao_alimtalk">카카오 알림톡</option>
+                  </select>
+
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">전체 상태</option>
+                    <option value="sent">발송완료</option>
+                    <option value="delivered">수신확인</option>
+                    <option value="failed">발송실패</option>
+                  </select>
+
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="전화번호 검색"
+                      value={searchPhone}
+                      onChange={(e) => setSearchPhone(e.target.value)}
+                      className="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 이력 테이블 */}
+              <div className="bg-white rounded-lg shadow">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          발송일시
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          수신자
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          유형
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          내용
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          상태
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          비용
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {messageLogs.map(log => (
+                        <tr key={log.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(log.created_at).toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm">
+                              <div className="font-medium text-gray-900">
+                                {log.customer?.name || "직접입력"}
+                              </div>
+                              <div className="text-gray-500">{log.phone_number}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              log.message_type === "kakao_alimtalk" 
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}>
+                              {getMessageTypeLabel(log.message_type)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 max-w-xs">
+                              {log.title && <div className="font-medium">{log.title}</div>}
+                              <div className="text-gray-600 truncate">{log.content}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(log.status)}
+                              <span className="text-sm text-gray-600">
+                                {log.status === "sent" ? "발송완료" :
+                                 log.status === "delivered" ? "수신확인" :
+                                 log.status === "failed" ? "발송실패" : "대기중"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {log.cost ? `${log.cost}원` : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -797,6 +933,54 @@ export default function MessageManagementPage() {
                 {editingTemplate ? "수정" : "추가"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 미리보기 모달 */}
+      {showPreviewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">메시지 미리보기</h3>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* 폰 모양 프레임 */}
+            <div className="border-4 border-gray-800 rounded-[2rem] p-4 bg-gray-100">
+              <div className="bg-white rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-gray-500">발신번호</span>
+                  <span className="text-xs text-gray-700">{process.env.NEXT_PUBLIC_ALIGO_SENDER || "031-215-3990"}</span>
+                </div>
+                
+                {previewTitle && (
+                  <h4 className="font-medium text-sm mb-2">{previewTitle}</h4>
+                )}
+                
+                <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                  {previewContent}
+                </div>
+                
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-xs text-gray-500">
+                    {getByteLength(previewContent)}바이트
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {getMessageTypeLabel(messageType)}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-500 text-center mt-3">
+              실제 표시는 수신자 기기에 따라 다를 수 있습니다.
+            </p>
           </div>
         </div>
       )}

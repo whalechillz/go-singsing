@@ -43,6 +43,8 @@ export default function CustomerManagementPage() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadMessage, setUploadMessage] = useState("");
   
   // 통계
   const [stats, setStats] = useState({
@@ -247,6 +249,47 @@ export default function CustomerManagementPage() {
     });
   };
 
+  // 엑셀 파일 업로드 처리
+  const handleFileUpload = async (file: File) => {
+    try {
+      setUploadProgress(0);
+      setUploadMessage("파일 업로드 중...");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/customers/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error("업로드 실패");
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setUploadMessage(result.message);
+        setUploadProgress(100);
+        
+        // 2초 후 모달 닫고 목록 새로고침
+        setTimeout(() => {
+          setShowImportModal(false);
+          setUploadProgress(0);
+          setUploadMessage("");
+          fetchCustomers();
+        }, 2000);
+      } else {
+        throw new Error(result.error || "업로드 실패");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadMessage("업로드 중 오류가 발생했습니다.");
+      setUploadProgress(0);
+    }
+  };
+
   // 일괄 상태 변경
   const handleBulkStatusChange = async (status: string) => {
     if (selectedCustomers.length === 0) {
@@ -322,7 +365,7 @@ export default function CustomerManagementPage() {
 
       {/* 필터 및 검색 */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -362,6 +405,20 @@ export default function CustomerManagementPage() {
           >
             <Upload className="w-5 h-5" />
             엑셀 업로드
+          </button>
+
+          <button
+            onClick={async () => {
+              const params = new URLSearchParams();
+              if (filterStatus) params.append("status", filterStatus);
+              if (filterType) params.append("customer_type", filterType);
+              
+              window.location.href = `/api/customers/export?${params.toString()}`;
+            }}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <Download className="w-5 h-5" />
+            내보내기
           </button>
 
           <button
@@ -760,8 +817,16 @@ export default function CustomerManagementPage() {
               </p>
               <p className="text-xs text-gray-500">
                 필수 컬럼: 이름, 전화번호<br />
-                선택 컬럼: 이메일, 생년월일, 성별, 메모
+                선택 컬럼: 이메일, 생년월일, 성별, 메모, 마케팅동의, 카카오친구
               </p>
+              <div className="mt-3">
+                <a
+                  href="/api/customers/template"
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  템플릿 다운로드
+                </a>
+              </div>
             </div>
 
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
@@ -773,32 +838,48 @@ export default function CustomerManagementPage() {
                 type="file"
                 accept=".xlsx,.xls,.csv"
                 className="hidden"
+                id="excel-upload"
                 onChange={(e) => {
-                  // TODO: 파일 업로드 처리
-                  console.log("File selected:", e.target.files?.[0]);
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleFileUpload(file);
+                  }
                 }}
               />
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <label
+                htmlFor="excel-upload" 
+                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+              >
                 파일 선택
-              </button>
+              </label>
             </div>
+
+            {/* 업로드 진행 상황 */}
+            {uploadProgress > 0 && (
+              <div className="mt-4">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-600 mt-2 text-center">
+                  {uploadMessage}
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 mt-6">
               <button
-                onClick={() => setShowImportModal(false)}
+                onClick={() => {
+                  setShowImportModal(false);
+                  setUploadProgress(0);
+                  setUploadMessage("");
+                }}
                 className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={uploadProgress > 0 && uploadProgress < 100}
               >
                 취소
-              </button>
-              <button
-                onClick={() => {
-                  // TODO: 업로드 처리
-                  alert("엑셀 업로드 기능은 준비 중입니다.");
-                  setShowImportModal(false);
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                업로드
               </button>
             </div>
           </div>
