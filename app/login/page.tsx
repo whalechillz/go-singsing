@@ -17,6 +17,9 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    console.log('로그인 시도:', email);
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+
     try {
       // Supabase 인증
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -24,8 +27,11 @@ export default function LoginPage() {
         password,
       });
 
+      console.log('로그인 응답:', { data, authError });
+
       if (authError) {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+        console.error('로그인 에러:', authError);
+        setError(`로그인 실패: ${authError.message}`);
         setLoading(false);
         return;
       }
