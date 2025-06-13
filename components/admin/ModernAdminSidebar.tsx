@@ -258,11 +258,14 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
                 <>
                   <button
                     className={cn(
-                      "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors",
+                      "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors touch-none",
                       isParentActive(item) ? "bg-blue-900" : "",
                       isCollapsed ? "justify-center" : ""
                     )}
-                    onClick={() => handleNavClick(item)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavClick(item);
+                    }}
                     title={isCollapsed ? item.label : undefined}
                   >
                     <span className="text-blue-200">{item.icon}</span>
@@ -284,10 +287,14 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
                         <li key={sub.id}>
                           <button
                             className={cn(
-                              "w-full flex items-center py-2 px-4 hover:bg-blue-700 text-sm",
+                              "w-full flex items-center py-3 px-4 hover:bg-blue-700 text-sm touch-none",
                               activeNav === sub.id ? "bg-blue-900" : ""
                             )}
-                            onClick={() => handleNavClick(sub)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleNavClick(sub);
+                            }}
                           >
                             <span>{sub.label}</span>
                           </button>
@@ -299,11 +306,14 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
               ) : (
                 <button
                   className={cn(
-                    "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors",
+                    "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors touch-none",
                     activeNav === item.id ? "bg-blue-900" : "",
                     isCollapsed ? "justify-center" : ""
                   )}
-                  onClick={() => handleNavClick(item)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(item);
+                  }}
                   title={isCollapsed ? item.label : undefined}
                 >
                   <span className="text-blue-200">{item.icon}</span>

@@ -10,8 +10,23 @@ interface ModernAdminLayoutProps {
 }
 
 export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 모바일에서는 기본적으로 닫힘
   const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // 모바일 감지
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setIsSidebarOpen(true);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // 경로에 따른 페이지 제목 매핑
   const getPageTitle = () => {
@@ -47,20 +62,40 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 relative">
+      {/* 모바일 오버레이 */}
+      {isMobile && isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
-      <ModernAdminSidebar 
-        isCollapsed={!isSidebarOpen} 
-        onCollapse={(collapsed) => setIsSidebarOpen(!collapsed)}
-      />
+      <div className={`${
+        isMobile 
+          ? `fixed left-0 top-0 h-full z-50 transform transition-transform duration-300 ${
+              isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`
+          : ''
+      }`}>
+        <ModernAdminSidebar 
+          isCollapsed={!isSidebarOpen && !isMobile} 
+          onCollapse={(collapsed) => setIsSidebarOpen(!collapsed)}
+        />
+      </div>
       
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <ModernAdminHeader activeNav={getPageTitle()} />
+        {/* Header - 모바일에서 햄버거 메뉴 추가 */}
+        <ModernAdminHeader 
+          activeNav={getPageTitle()} 
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          showMenuButton={isMobile}
+        />
         
         {/* Main content area */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-3 md:p-6">
           {children}
         </main>
       </div>

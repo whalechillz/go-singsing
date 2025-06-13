@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { Bell, X, User, LogOut } from 'lucide-react';
+import { Bell, X, User, LogOut, Menu } from 'lucide-react';
 import { getCurrentUser, signOut, UserProfile } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
@@ -15,9 +15,15 @@ interface Notification {
 
 interface ModernAdminHeaderProps {
   activeNav?: string;
+  onMenuClick?: () => void;
+  showMenuButton?: boolean;
 }
 
-export default function ModernAdminHeader({ activeNav = '대시보드' }: ModernAdminHeaderProps) {
+export default function ModernAdminHeader({ 
+  activeNav = '대시보드',
+  onMenuClick,
+  showMenuButton = false 
+}: ModernAdminHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -86,9 +92,20 @@ export default function ModernAdminHeader({ activeNav = '대시보드' }: Modern
   
   return (
     <header className="bg-white border-b p-4 flex items-center justify-between shadow-sm">
-      <h1 className="text-xl font-semibold text-gray-800">
-        {activeNav}
-      </h1>
+      <div className="flex items-center gap-3">
+        {showMenuButton && (
+          <button
+            onClick={onMenuClick}
+            className="p-2 rounded-md hover:bg-gray-100 focus:outline-none transition-colors md:hidden"
+            aria-label="메뉴 열기"
+          >
+            <Menu className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
+        <h1 className="text-xl font-semibold text-gray-800">
+          {activeNav}
+        </h1>
+      </div>
       
       <div className="flex items-center space-x-4">
         {/* Notifications */}
