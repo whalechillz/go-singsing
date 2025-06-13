@@ -28,10 +28,11 @@ const TourListPage: React.FC = () => {
     setError("");
     
     try {
-      // 투어 기본 정보 가져오기
+      // 투어 기본 정보 가져오기 (견적서는 제외)
       const { data: toursData, error: toursError } = await supabase
         .from("singsing_tours")
         .select("*")
+        .is('quote_data', null)  // quote_data가 null인 것만 (정식 투어)
         .order("start_date", { ascending: false });
       
       if (toursError) throw toursError;

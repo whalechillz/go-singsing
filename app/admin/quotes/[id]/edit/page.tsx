@@ -370,6 +370,40 @@ export default function EditQuotePage() {
     alert(isPublicLink ? '고객용 공개 링크가 복사되었습니다.' : '내부용 링크가 복사되었습니다.');
   };
 
+  const handleConvertToTour = async () => {
+    if (!confirm('견적서를 정식 투어로 전환하시겠습니까?\n\n전환 후에는 투어 스케줄 관리에서 확인할 수 있습니다.')) {
+      return;
+    }
+
+    try {
+      // quote_data를 null로 설정하여 정식 투어로 전환
+      const { error } = await supabase
+        .from("singsing_tours")
+        .update({
+          quote_data: null,
+          quote_expires_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', quoteId);
+
+      if (error) throw error;
+
+      // 공개 링크가 있다면 비활성화
+      if (documentLink) {
+        await supabase
+          .from("public_document_links")
+          .update({ is_active: false })
+          .eq("id", documentLink.id);
+      }
+
+      alert('정식 투어로 전환되었습니다.');
+      router.push('/admin/tours');
+    } catch (error) {
+      console.error("Error converting to tour:", error);
+      alert('투어 전환 중 오류가 발생했습니다.');
+    }
+  };
+
   const duration = calculateDays();
 
   if (loading) {
@@ -794,21 +828,32 @@ export default function EditQuotePage() {
               </div>
 
               {/* 액션 버튼 */}
-              <div className="flex justify-end gap-3">
-                <Link
-                  href="/admin/quotes"
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  취소
-                </Link>
+              <div className="flex justify-between items-center">
                 <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  type="button"
+                  onClick={handleConvertToTour}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                 >
-                  <Save className="w-4 h-4" />
-                  {saving ? "저장 중..." : "저장"}
+                  <CheckCircle className="w-4 h-4" />
+                  정식 투어로 전환
                 </button>
+                
+                <div className="flex gap-3">
+                  <Link
+                    href="/admin/quotes"
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    취소
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    {saving ? "저장 중..." : "저장"}
+                  </button>
+                </div>
               </div>
             </div>
           </form>
