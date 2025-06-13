@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, QrCode, Info, MessageCircle, Mail, Smartphone, Search, Filter, LayoutGrid, List, Clock, Eye } from 'lucide-react';
+import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, Info, MessageCircle, Mail, Smartphone, Search, Eye } from 'lucide-react';
 
 interface DocumentLink {
   id: string;
@@ -52,7 +52,6 @@ export default function DocumentLinksPage() {
   const [sharingLink, setSharingLink] = useState<DocumentLink | null>(null);
   
   // UI/UX 개선을 위한 상태
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [sortBy, setSortBy] = useState<'created' | 'views' | 'type'>('created');
@@ -116,26 +115,25 @@ export default function DocumentLinksPage() {
   };
 
   const documentTypeOptions = [
-    { value: 'portal', label: '통합 표지 (포털)', icon: '🎯', category: 'special' },
-    { value: 'customer_all', label: '고객용 통합 문서 (추천)', icon: '📚', category: 'customer' },
-    { value: 'staff_all', label: '스탭용 통합 문서 (추천)', icon: '📋', category: 'staff' },
-    { value: 'golf_timetable', label: '골프장 전용 티타임표', icon: '⛳', category: 'golf' },
+    { value: 'portal', label: '통합 표지', category: 'special' },
+    { value: 'customer_all', label: '고객용 통합', category: 'customer' },
+    { value: 'staff_all', label: '스탭용 통합', category: 'staff' },
+    { value: 'golf_timetable', label: '골프장 티타임표', category: 'golf' },
     // 기존 개별 문서 타입들 (호환성 유지)
-    { value: 'customer_schedule', label: '고객용 일정표 (개별)', icon: '📅', category: 'customer' },
-    { value: 'staff_schedule', label: '스탭용 일정표 (개별)', icon: '📅', category: 'staff' },
-    { value: 'customer_boarding', label: '고객용 탑승안내 (개별)', icon: '🚌', category: 'customer' },
-    { value: 'staff_boarding', label: '스탭용 탑승안내 (개별)', icon: '🚌', category: 'staff' },
-    { value: 'room_assignment', label: '고객용 객실배정 (개별)', icon: '🏨', category: 'customer' },
-    { value: 'room_assignment_staff', label: '스탭용 객실배정 (개별)', icon: '🏨', category: 'staff' },
-    { value: 'customer_timetable', label: '고객용 티타임표 (개별)', icon: '⏰', category: 'customer' },
-    { value: 'staff_timetable', label: '스탭용 티타임표 (개별)', icon: '⏰', category: 'staff' },
-    { value: 'simplified', label: '간편일정', icon: '📄', category: 'customer' },
+    { value: 'customer_schedule', label: '고객용 일정표', category: 'customer' },
+    { value: 'staff_schedule', label: '스탭용 일정표', category: 'staff' },
+    { value: 'customer_boarding', label: '고객용 탑승안내', category: 'customer' },
+    { value: 'staff_boarding', label: '스탭용 탑승안내', category: 'staff' },
+    { value: 'room_assignment', label: '고객용 객실배정', category: 'customer' },
+    { value: 'room_assignment_staff', label: '스탭용 객실배정', category: 'staff' },
+    { value: 'customer_timetable', label: '고객용 티타임표', category: 'customer' },
+    { value: 'staff_timetable', label: '스탭용 티타임표', category: 'staff' },
+    { value: 'simplified', label: '간편일정', category: 'customer' },
   ];
   
   // 필터 카테고리 정의
   const filterCategories = [
     { value: 'all', label: '전체' },
-    { value: 'special', label: '특별' },
     { value: 'customer', label: '고객용' },
     { value: 'staff', label: '스탭용' },
     { value: 'golf', label: '골프장' },
@@ -792,30 +790,7 @@ export default function DocumentLinksPage() {
               <Eye className="w-4 h-4" />
               {showOnlyActive ? '활성만' : '전체'}
             </button>
-            
-            {/* 뷰 모드 전환 */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-2 transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-2 transition-colors border-l border-gray-300 ${
-                  viewMode === 'list'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+
           </div>
         </div>
         
@@ -858,36 +833,31 @@ export default function DocumentLinksPage() {
                         <h3 className="text-lg font-semibold">
                           {documentType?.label || link.document_type}
                         </h3>
-                        {link.document_type === 'portal' && (
-                          <>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              특별
-                            </span>
-                            {link.settings?.targetAudience && link.settings.targetAudience !== 'customer' && (
+                        {link.document_type === 'portal' && link.settings?.targetAudience && (
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                                 link.settings.targetAudience === 'staff' 
                                   ? 'bg-purple-100 text-purple-800' 
-                                  : 'bg-green-100 text-green-800'
+                                  : link.settings.targetAudience === 'golf'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-blue-100 text-blue-800'
                               }`}>
-                                {link.settings.targetAudience === 'staff' ? '💼 스탭용' : '⛳ 골프장용'}
+                                {link.settings.targetAudience === 'staff' ? '스탭용' : link.settings.targetAudience === 'golf' ? '골프장용' : '고객용'}
                               </span>
-                            )}
-                          </>
                         )}
                       </div>
                       {link.document_type === 'customer_all' && (
                         <p className="text-xs text-gray-500 ml-8">
-                          탭으로 문서 전환 가능 (일정표, 탑승안내, 객실배정, 티타임표, 간편일정)
+                          탭으로 문서 전환 가능
                         </p>
                       )}
                       {link.document_type === 'staff_all' && (
                         <p className="text-xs text-gray-500 ml-8">
-                          탭으로 문서 전환 가능 (일정표, 탑승안내, 객실배정, 티타임표)
+                          탭으로 문서 전환 가능
                         </p>
                       )}
                       {link.document_type === 'golf_timetable' && (
                         <p className="text-xs text-orange-600 ml-8">
-                          티타임표만 표시 - 골프장 공유용
+                          골프장 공유용
                         </p>
                       )}
                       {link.document_type === 'portal' && (
@@ -895,11 +865,11 @@ export default function DocumentLinksPage() {
                           {(() => {
                             const audience = link.settings?.targetAudience || 'customer';
                             const audienceMap: Record<string, string> = {
-                              customer: '👥 고객님을 위한',
-                              staff: '💼 스탭을 위한',
-                              golf: '⛳ 골프장을 위한'
+                              customer: '고객 전용 페이지',
+                              staff: '스탭 전용 페이지',
+                              golf: '골프장 전용 페이지'
                             };
-                            return `${audienceMap[audience]} 시각적인 통합 안내 페이지`;
+                            return audienceMap[audience];
                           })()}
                         </p>
                       )}
@@ -1011,15 +981,15 @@ export default function DocumentLinksPage() {
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {/* 중요 문서 */}
-                  <optgroup label="───── 추천 문서 ─────">
+                  <optgroup label="추천">
                     {documentTypeOptions.filter(opt => ['portal', 'customer_all', 'staff_all', 'golf_timetable'].includes(opt.value)).map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.icon} {option.label}
+                        {option.label}
                       </option>
                     ))}
                   </optgroup>
                   {/* 개별 문서 */}
-                  <optgroup label="───── 개별 문서 ─────">
+                  <optgroup label="개별 문서">
                     {documentTypeOptions.filter(opt => !['portal', 'customer_all', 'staff_all', 'golf_timetable'].includes(opt.value)).map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
@@ -1091,15 +1061,15 @@ export default function DocumentLinksPage() {
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {/* 중요 문서 */}
-                  <optgroup label="───── 추천 문서 ─────">
+                  <optgroup label="추천">
                     {documentTypeOptions.filter(opt => ['portal', 'customer_all', 'staff_all', 'golf_timetable'].includes(opt.value)).map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.icon} {option.label}
+                        {option.label}
                       </option>
                     ))}
                   </optgroup>
                   {/* 개별 문서 */}
-                  <optgroup label="───── 개별 문서 ─────">
+                  <optgroup label="개별 문서">
                     {documentTypeOptions.filter(opt => !['portal', 'customer_all', 'staff_all', 'golf_timetable'].includes(opt.value)).map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
