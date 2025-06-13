@@ -2,7 +2,7 @@
 -- 먼저 남대문이 이미 존재하는지 확인하고 업데이트, 없으면 추가
 
 -- 남대문이 이미 존재하는지 확인
-DO $
+DO $$
 BEGIN
   -- 남대문이 존재하는지 확인
   IF EXISTS (SELECT 1 FROM tourist_attractions WHERE name = '남대문') THEN
@@ -45,7 +45,7 @@ BEGIN
     
     RAISE NOTICE '남대문 데이터가 추가되었습니다.';
   END IF;
-END $;
+END $$;
 
 -- 남대문이 없는 경우를 대비한 직접 업데이트
 UPDATE tourist_attractions 

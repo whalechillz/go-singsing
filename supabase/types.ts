@@ -988,10 +988,10 @@ export interface Database {
           name: string
           phone: string
           role: string | null
-          order: number
-          user_id: string | null
           display_order: number
+          user_id: string | null
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -999,10 +999,10 @@ export interface Database {
           name: string
           phone: string
           role?: string | null
-          order?: number
-          user_id?: string | null
           display_order?: number
+          user_id?: string | null
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -1010,9 +1010,177 @@ export interface Database {
           name?: string
           phone?: string
           role?: string | null
-          order?: number
-          user_id?: string | null
           display_order?: number
+          user_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      message_logs: {
+        Row: {
+          id: string
+          customer_id: string | null
+          message_type: string
+          template_id: string | null
+          phone_number: string
+          title: string | null
+          content: string | null
+          image_url: string | null
+          buttons: any | null
+          status: string
+          sent_at: string | null
+          delivered_at: string | null
+          read_at: string | null
+          solapi_message_id: string | null
+          solapi_group_id: string | null
+          solapi_result: any | null
+          cost: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          customer_id?: string | null
+          message_type: string
+          template_id?: string | null
+          phone_number: string
+          title?: string | null
+          content?: string | null
+          image_url?: string | null
+          buttons?: any | null
+          status?: string
+          sent_at?: string | null
+          delivered_at?: string | null
+          read_at?: string | null
+          solapi_message_id?: string | null
+          solapi_group_id?: string | null
+          solapi_result?: any | null
+          cost?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          customer_id?: string | null
+          message_type?: string
+          template_id?: string | null
+          phone_number?: string
+          title?: string | null
+          content?: string | null
+          image_url?: string | null
+          buttons?: any | null
+          status?: string
+          sent_at?: string | null
+          delivered_at?: string | null
+          read_at?: string | null
+          solapi_message_id?: string | null
+          solapi_group_id?: string | null
+          solapi_result?: any | null
+          cost?: number | null
+          created_at?: string
+        }
+      }
+      message_templates: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          kakao_template_code: string | null
+          kakao_template_name: string | null
+          title: string | null
+          content: string | null
+          variables: any | null
+          buttons: any | null
+          use_case: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          kakao_template_code?: string | null
+          kakao_template_name?: string | null
+          title?: string | null
+          content?: string | null
+          variables?: any | null
+          buttons?: any | null
+          use_case?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          kakao_template_code?: string | null
+          kakao_template_name?: string | null
+          title?: string | null
+          content?: string | null
+          variables?: any | null
+          buttons?: any | null
+          use_case?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      marketing_campaigns: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          target_query: string | null
+          target_count: number | null
+          template_id: string | null
+          scheduled_at: string | null
+          started_at: string | null
+          completed_at: string | null
+          total_sent: number
+          total_delivered: number
+          total_read: number
+          total_clicked: number
+          total_cost: number
+          status: string
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          target_query?: string | null
+          target_count?: number | null
+          template_id?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          completed_at?: string | null
+          total_sent?: number
+          total_delivered?: number
+          total_read?: number
+          total_clicked?: number
+          total_cost?: number
+          status?: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          target_query?: string | null
+          target_count?: number | null
+          template_id?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          completed_at?: string | null
+          total_sent?: number
+          total_delivered?: number
+          total_read?: number
+          total_clicked?: number
+          total_cost?: number
+          status?: string
+          created_by?: string | null
           created_at?: string
         }
       }
@@ -1048,10 +1216,10 @@ export interface Database {
           name: string
           phone: string
           role: string | null
-          order: number
-          user_id: string | null
           display_order: number
+          user_id: string | null
           created_at: string
+          updated_at: string
           tour_title: string | null
           start_date: string | null
           end_date: string | null

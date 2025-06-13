@@ -10,7 +10,7 @@ type Staff = {
   name: string;
   phone: string;
   role: string;
-  order: number;
+  display_order: number;
   user_id?: string;
   created_at: string;
   tour?: {
@@ -50,7 +50,7 @@ export default function StaffManagementPage() {
     name: "",
     phone: "",
     role: "기사",
-    order: 1
+    display_order: 1
   });
 
   // 데이터 불러오기
@@ -113,22 +113,11 @@ export default function StaffManagementPage() {
             name: formData.name,
             phone: formData.phone,
             role: formData.role,
-            order: formData.order
+            display_order: formData.display_order
           })
           .eq("id", editingStaff.id);
 
         if (error) throw error;
-        
-        // singsing_tours 테이블도 업데이트 (기사인 경우)
-        if (formData.role === "기사") {
-          await supabase
-            .from("singsing_tours")
-            .update({
-              driver_name: formData.name,
-              driver_phone: formData.phone
-            })
-            .eq("id", formData.tour_id);
-        }
       } else {
         // 추가
         const { error } = await supabase
@@ -138,21 +127,10 @@ export default function StaffManagementPage() {
             name: formData.name,
             phone: formData.phone,
             role: formData.role,
-            order: formData.order
+            display_order: formData.display_order
           });
 
         if (error) throw error;
-        
-        // singsing_tours 테이블도 업데이트 (기사인 경우)
-        if (formData.role === "기사") {
-          await supabase
-            .from("singsing_tours")
-            .update({
-              driver_name: formData.name,
-              driver_phone: formData.phone
-            })
-            .eq("id", formData.tour_id);
-        }
       }
 
       alert("저장되었습니다.");
@@ -192,7 +170,7 @@ export default function StaffManagementPage() {
       name: "",
       phone: "",
       role: "기사",
-      order: 1
+      display_order: 1
     });
     setEditingStaff(null);
   };
@@ -205,7 +183,7 @@ export default function StaffManagementPage() {
       name: staff.name,
       phone: staff.phone,
       role: staff.role || "기사",
-      order: staff.order || 1
+      display_order: staff.display_order || 1
     });
     setShowModal(true);
   };
@@ -431,8 +409,8 @@ export default function StaffManagementPage() {
                 </label>
                 <input
                   type="number"
-                  value={formData.order}
-                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 1 })}
+                  value={formData.display_order}
+                  onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 1 })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
                 />

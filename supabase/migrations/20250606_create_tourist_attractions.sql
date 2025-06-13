@@ -43,10 +43,11 @@ CREATE INDEX idx_tourist_attractions_active ON tourist_attractions(is_active);
 CREATE INDEX idx_tour_schedule_tourist_options_tour ON tour_schedule_tourist_options(tour_id);
 
 -- 샘플 데이터 (선택사항)
-INSERT INTO tourist_attractions (name, category, address, description, features, recommended_duration, tags, region) VALUES
-('송광사', 'tourist_spot', '전남 순천시 송광면 송광사안길 100', '한국 불교의 삼보사찰 중 승보사찰', ARRAY['천년 고찰', '템플스테이 체험 가능', '아름다운 계곡'], 90, ARRAY['사찰', '문화재', '포토존'], '전남 순천'),
-('보성 녹차밭', 'tourist_spot', '전남 보성군 보성읍 녹차로 763', '대한민국 대표 녹차 재배지', ARRAY['드넓은 녹차밭 전망', '녹차 아이스크림', '포토존'], 120, ARRAY['자연', '포토존', '체험'], '전남 보성'),
-('순천만 습지', 'tourist_spot', '전남 순천시 순천만길 513-25', '세계 5대 연안습지', ARRAY['갈대밭 산책로', '순천만 전망대', '철새 관찰'], 90, ARRAY['자연', '생태', '포토존'], '전남 순천')
+INSERT INTO tourist_attractions (name, category, address, description, features, main_image_url, recommended_duration, tags, region) VALUES
+('송광사', 'tourist_spot', '전남 순천시 송광면 송광사안길 100', '한국 불교의 삼보사찰 중 승보사찰', ARRAY['천년 고찰', '템플스테이 체험 가능', '아름다운 계곡'], NULL, 90, ARRAY['사찰', '문화재', '포토존'], '전남 순천'),
+('보성 녹차밭', 'tourist_spot', '전남 보성군 보성읍 녹차로 763', '대한민국 대표 녹차 재배지', ARRAY['드넓은 녹차밭 전망', '녹차 아이스크림', '포토존'], NULL, 120, ARRAY['자연', '포토존', '체험'], '전남 보성'),
+('순천만 습지', 'tourist_spot', '전남 순천시 순천만길 513-25', '세계 5대 연안습지', ARRAY['갈대밭 산책로', '순천만 전망대', '철새 관찰'], NULL, 90, ARRAY['자연', '생태', '포토존'], '전남 순천'),
+('남대문', 'tourist_spot', '서울특별시 중구 세종대로 40', '대한민국 국보 제1호, 서울의 대표적인 문화재', ARRAY['국보 제1호', '조선시대 건축물', '서울의 랜드마크'], 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Namdaemun.jpg/1200px-Namdaemun.jpg', 60, ARRAY['문화재', '역사', '랜드마크', '포토존'], '서울')
 ON CONFLICT DO NOTHING;
 
 -- 코멘트 추가
