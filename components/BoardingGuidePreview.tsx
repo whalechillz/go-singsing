@@ -84,6 +84,7 @@ const BoardingGuidePreview: React.FC<Props> = ({ tourId }) => {
                 <div className="font-semibold mb-2">탑승자 명단 ({group.participants.length}명)</div>
                 <ul className="list-disc pl-5 text-base">
                   {group.participants.map((p) => (
+                    
                     <li key={p.id} className="mb-1">
                       <span className="font-medium">{p.name}</span>
                       {p.team_name && <span className="ml-2 text-gray-500">({p.team_name})</span>}

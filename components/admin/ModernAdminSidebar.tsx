@@ -201,7 +201,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
   return (
     <aside 
       className={cn(
-        "bg-blue-800 text-white transition-all duration-300 flex flex-col",
+        "bg-blue-800 text-white transition-all duration-300 flex flex-col h-full overflow-hidden",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
@@ -220,7 +220,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       </div>
       
       {/* Navigation */}
-      <nav className="flex-1 mt-6">
+      <nav className="flex-1 mt-6 overflow-y-auto overflow-x-hidden">
         <ul>
           {navItems.map(item => (
             <li key={item.id}>
@@ -293,7 +293,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       </nav>
       
       {/* Sidebar footer */}
-      <div className="p-4 border-t border-blue-700">
+      <div className="p-4 border-t border-blue-700 flex-shrink-0">
         <button className={cn(
           "flex items-center text-blue-200 hover:text-white",
           isCollapsed ? "justify-center" : ""
