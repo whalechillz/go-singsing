@@ -190,8 +190,17 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
 
   const handleNavClick = (item: NavItem | NavSubItem, parentId?: string) => {
     if ('subMenu' in item && item.subMenu) {
-      // 서브메뉴가 있는 경우 토글
-      setOpenSubMenus(prev => ({ ...prev, [item.id]: !prev[item.id] }));
+      if (isCollapsed) {
+        // 접힌 상태에서는 첫 번째 서브메뉴로 바로 이동
+        const firstSubMenu = item.subMenu[0];
+        if (firstSubMenu && firstSubMenu.href) {
+          setActiveNav(firstSubMenu.id);
+          router.push(firstSubMenu.href);
+        }
+      } else {
+        // 펼쳐진 상태에서는 서브메뉴 토글
+        setOpenSubMenus(prev => ({ ...prev, [item.id]: !prev[item.id] }));
+      }
     } else if (item.href) {
       // href가 있는 경우 네비게이션
       setActiveNav(item.id);
@@ -231,8 +240,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
   return (
     <aside 
       className={cn(
-        "bg-blue-800 text-white transition-all duration-300 flex flex-col h-full overflow-hidden",
-        isCollapsed ? "w-20" : "w-64"
+        "bg-blue-800 text-white transition-all duration-300 flex flex-col h-full",
+        isCollapsed ? "w-20 overflow-visible" : "w-64 overflow-hidden"
       )}
     >
       {/* Sidebar header */}
@@ -258,7 +267,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
                 <>
                   <button
                     className={cn(
-                      "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors touch-none",
+                      "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors touch-none relative group",
                       isParentActive(item) ? "bg-blue-900" : "",
                       isCollapsed ? "justify-center" : ""
                     )}
@@ -268,7 +277,20 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
                     }}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <span className="text-blue-200">{item.icon}</span>
+                    <span className={cn(
+                      "text-blue-200",
+                      isParentActive(item) ? "text-white" : ""
+                    )}>{item.icon}</span>
+                    {/* 접힌 상태에서 활성화 표시 */}
+                    {isCollapsed && isParentActive(item) && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r" />
+                    )}
+                    {/* 접힌 상태에서 툴팁 */}
+                    {isCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        {item.label}
+                      </div>
+                    )}
                     {!isCollapsed && (
                       <>
                         <span className="ml-4">{item.label}</span>
@@ -306,7 +328,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
               ) : (
                 <button
                   className={cn(
-                    "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors touch-none",
+                    "w-full flex items-center py-3 px-4 hover:bg-blue-700 transition-colors touch-none relative group",
                     activeNav === item.id ? "bg-blue-900" : "",
                     isCollapsed ? "justify-center" : ""
                   )}
@@ -316,7 +338,20 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
                   }}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <span className="text-blue-200">{item.icon}</span>
+                  <span className={cn(
+                    "text-blue-200",
+                    activeNav === item.id ? "text-white" : ""
+                  )}>{item.icon}</span>
+                  {/* 접힌 상태에서 활성화 표시 */}
+                  {isCollapsed && activeNav === item.id && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r" />
+                  )}
+                  {/* 접힌 상태에서 툴팁 */}
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      {item.label}
+                    </div>
+                  )}
                   {!isCollapsed && (
                     <>
                       <span className="ml-4">{item.label}</span>
@@ -337,12 +372,19 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         <button 
           onClick={handleLogout}
           className={cn(
-            "flex items-center text-blue-200 hover:text-white w-full",
+            "flex items-center text-blue-200 hover:text-white w-full relative group p-2 rounded-md hover:bg-blue-700 transition-colors",
             isCollapsed ? "justify-center" : ""
           )}
+          title={isCollapsed ? '로그아웃' : undefined}
         >
           <LogOut className="w-5 h-5" />
           {!isCollapsed && <span className="ml-4">로그아웃</span>}
+          {/* 접힌 상태에서 툴팁 */}
+          {isCollapsed && (
+            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              로그아웃
+            </div>
+          )}
         </button>
       </div>
     </aside>
