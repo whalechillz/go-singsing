@@ -116,6 +116,13 @@ export default function AdminNavbar() {
                     <p className="text-sm font-medium text-gray-900">{user.email}</p>
                     <p className="text-xs text-gray-500">{getRoleName(user.role)}</p>
                   </div>
+                  <a
+                    href="/admin/profile"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    내 정보 / 비밀번호 변경
+                  </a>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -165,6 +172,14 @@ export default function AdminNavbar() {
                       <p className="text-xs text-gray-500">{getRoleName(user.role)}</p>
                     </div>
                   )}
+                  <a
+                    href="/admin/profile"
+                    className="block px-4 py-2 rounded font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    내 정보 / 비밀번호 변경
+                  </a>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 rounded font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-2"
