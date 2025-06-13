@@ -254,7 +254,6 @@ export default function CampaignManagementPage() {
             phone: c.phone,
             customer_id: c.id
           })),
-          title: campaign.message_template?.title,
           content: campaign.message_template?.content,
           template_id: campaign.message_template_id,
           variables: [] // 캠페인별 추가 변수
