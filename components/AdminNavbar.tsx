@@ -29,9 +29,25 @@ export default function AdminNavbar() {
   }, []);
 
   const handleLogout = async () => {
-    const result = await signOut();
-    if (result.success) {
-      router.push("/login");
+    try {
+      console.log('로그아웃 시도 중...');
+      const result = await signOut();
+      console.log('로그아웃 결과:', result);
+      
+      if (result.success) {
+        // 로컬 스토리지 및 세션 스토리지 클리어
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // 강제 리다이렉트
+        window.location.href = '/login';
+      } else {
+        console.error('로그아웃 실패:', result.error);
+        alert('로그아웃에 실패했습니다. 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+      alert('로그아웃 중 오류가 발생했습니다.');
     }
   };
 

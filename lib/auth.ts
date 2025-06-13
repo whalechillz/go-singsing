@@ -61,8 +61,30 @@ export async function getCurrentUser() {
 // 로그아웃
 export async function signOut() {
   try {
+    console.log('signOut 함수 호출됨');
+    
+    // 현재 세션 확인
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('현재 세션:', session);
+    
+    // 로그아웃 실행
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    
+    if (error) {
+      console.error('Supabase signOut 에러:', error);
+      throw error;
+    }
+    
+    console.log('로그아웃 성공');
+    
+    // 추가적인 클린업
+    if (typeof window !== 'undefined') {
+      // 모든 쿠키 삭제
+      document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+      });
+    }
+    
     return { success: true };
   } catch (error) {
     console.error('Error signing out:', error);
