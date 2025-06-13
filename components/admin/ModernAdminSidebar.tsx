@@ -147,6 +147,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'tour-staff', label: '기사/가이드 관리', href: '/admin/tour-staff' },
         { id: 'users', label: '시스템 계정', href: '/admin/users' },
         { id: 'roles', label: '권한 설정', href: '/admin/roles' },
+        { id: 'password-reset', label: '비밀번호 초기화', href: '/admin/password-reset' },
       ]
     },
     // 문서 관리 기능은 더 이상 사용하지 않음 (투어 스케줄 관리 > 문서 미리보기로 대체)

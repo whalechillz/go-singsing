@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Plus, Edit2, Trash2, Search, Mail, Phone, Shield, UserX, UserCheck } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Mail, Phone, Shield, UserX, UserCheck, Key } from "lucide-react";
 
 type User = {
   id: string;
@@ -37,6 +37,15 @@ export default function UserManagementPage() {
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showEmailSearchModal, setShowEmailSearchModal] = useState(false);
+  const [emailSearchResult, setEmailSearchResult] = useState<User | null>(null);
+  const [emailSearchData, setEmailSearchData] = useState({
+    name: "",
+    phone: ""
+  });
   
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -220,6 +229,91 @@ export default function UserManagementPage() {
     setShowModal(true);
   };
 
+  // 비밀번호 초기화
+  const handlePasswordReset = async () => {
+    if (!resetPasswordUser || !newPassword) return;
+    
+    try {
+      // 사용자가 Supabase Auth에 등록되어 있는지 확인
+      if (resetPasswordUser.email) {
+        // 이메일이 있는 경우 - Auth 사용자일 가능성이 높음
+        // Supabase Auth에서 비밀번호 변경 시도
+        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+        
+        if (!listError && users) {
+          const authUser = users.find(u => u.email === resetPasswordUser.email);
+          if (authUser) {
+            // Auth 사용자 발견 - 비밀번호 업데이트
+            const { error: updateError } = await supabase.auth.admin.updateUserById(
+              authUser.id,
+              { password: newPassword }
+            );
+            
+            if (!updateError) {
+              alert(`${resetPasswordUser.name}님의 비밀번호가 초기화되었습니다.\n\n새 비밀번호: ${newPassword}\n\n사용자에게 이 비밀번호를 알려주세요.`);
+              setShowPasswordResetModal(false);
+              setResetPasswordUser(null);
+              setNewPassword("");
+              return;
+            }
+          }
+        }
+        
+        // Auth에 없거나 업데이트 실패 시 SQL로 처리
+        // SQL Editor에서 직접 실행해야 함
+        alert(`Supabase Auth에 해당 사용자가 없거나 오류가 발생했습니다.\n\nSQL Editor에서 다음 쿼리를 실행해주세요:\n\nUPDATE auth.users\nSET encrypted_password = crypt('${newPassword}', gen_salt('bf'))\nWHERE email = '${resetPasswordUser.email}';`);
+      } else {
+        // 이메일이 없는 경우 - 로컬 users 테이블만 사용
+        alert(`이메일이 등록되지 않은 사용자입니다.\n\n비밀번호 초기화를 위해서는 사용자에게 이메일을 등록하도록 요청하세요.`);
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      // 대체 방법 제공
+      alert(`비밀번호 초기화 중 오류가 발생했습니다.\n\nSupabase SQL Editor에서 직접 실행하세요:\n\nUPDATE auth.users\nSET encrypted_password = crypt('${newPassword}', gen_salt('bf'))\nWHERE email = '${resetPasswordUser.email || resetPasswordUser.phone + '@temp.com'}';`);
+    }
+  };
+
+  // 이메일 찾기
+  const handleEmailSearch = async () => {
+    if (!emailSearchData.name || !emailSearchData.phone) {
+      alert('이름과 전화번호를 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('name', emailSearchData.name)
+        .eq('phone', emailSearchData.phone)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          alert('해당하는 사용자를 찾을 수 없습니다.');
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      setEmailSearchResult(data);
+    } catch (error) {
+      console.error('Error searching email:', error);
+      alert('이메일 찾기 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 비밀번호 생성
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewPassword(password);
+  };
+
   // 필터링된 사용자 목록
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -276,7 +370,18 @@ export default function UserManagementPage() {
             <option value="inactive">비활성</option>
           </select>
 
-          <div className="md:col-span-2 text-right">
+          <div className="md:col-span-2 flex justify-end gap-2">
+            <button
+              onClick={() => {
+                setEmailSearchData({ name: "", phone: "" });
+                setEmailSearchResult(null);
+                setShowEmailSearchModal(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <Search className="w-5 h-5" />
+              이메일 찾기
+            </button>
             <button
               onClick={() => {
                 resetForm();
@@ -384,12 +489,25 @@ export default function UserManagementPage() {
                     <button
                       onClick={() => handleEdit(user)}
                       className="text-blue-600 hover:text-blue-900 mr-3"
+                      title="수정"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
+                      onClick={() => {
+                        setResetPasswordUser(user);
+                        generatePassword();
+                        setShowPasswordResetModal(true);
+                      }}
+                      className="text-yellow-600 hover:text-yellow-900 mr-3"
+                      title="비밀번호 초기화"
+                    >
+                      <Key className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => handleDelete(user.id)}
                       className="text-red-600 hover:text-red-900"
+                      title="삭제"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -398,6 +516,136 @@ export default function UserManagementPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* 비밀번호 초기화 모달 */}
+      {showPasswordResetModal && resetPasswordUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">비밀번호 초기화</h2>
+            
+            <div className="mb-4">
+              <p className="text-gray-700 mb-2">
+                <strong>{resetPasswordUser.name}</strong>님의 비밀번호를 초기화합니다.
+              </p>
+              <p className="text-sm text-gray-600">
+                이메일: {resetPasswordUser.email || '등록된 이메일 없음'}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  새 비밀번호
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="새 비밀번호"
+                  />
+                  <button
+                    onClick={generatePassword}
+                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    자동생성
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  * 사용자에게 이 비밀번호를 알려주세요.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => {
+                  setShowPasswordResetModal(false);
+                  setResetPasswordUser(null);
+                  setNewPassword("");
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handlePasswordReset}
+                disabled={!newPassword}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                비밀번호 초기화
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 이메일 찾기 모달 */}
+      {showEmailSearchModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">이메일 찾기</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  이름
+                </label>
+                <input
+                  type="text"
+                  value={emailSearchData.name}
+                  onChange={(e) => setEmailSearchData({ ...emailSearchData, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="사용자 이름"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  전화번호
+                </label>
+                <input
+                  type="tel"
+                  value={emailSearchData.phone}
+                  onChange={(e) => setEmailSearchData({ ...emailSearchData, phone: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="010-0000-0000"
+                />
+              </div>
+
+              {emailSearchResult && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <p className="font-medium text-blue-900 mb-2">찾은 사용자 정보:</p>
+                  <p className="text-sm"><strong>이름:</strong> {emailSearchResult.name}</p>
+                  <p className="text-sm"><strong>이메일:</strong> {emailSearchResult.email || '등록된 이메일 없음'}</p>
+                  <p className="text-sm"><strong>전화번호:</strong> {emailSearchResult.phone}</p>
+                  <p className="text-sm"><strong>역할:</strong> {emailSearchResult.role}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => {
+                  setShowEmailSearchModal(false);
+                  setEmailSearchData({ name: "", phone: "" });
+                  setEmailSearchResult(null);
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                닫기
+              </button>
+              <button
+                onClick={handleEmailSearch}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                찾기
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
