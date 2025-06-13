@@ -629,31 +629,88 @@ export default function CustomerTourPortal({
               <h3 className="text-lg font-semibold mb-4" style={{ color: theme.primary }}>
                 🔗 문서 링크 공유
               </h3>
-              <div className="space-y-3">
-                {filteredLinks.slice(0, 3).map((link) => {
-                  const info = documentTypeInfo[link.document_type];
-                  return (
-                    <div key={link.id} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={getDocumentUrl(link)}
-                        readOnly
-                        className="flex-1 px-3 py-2 bg-gray-50 rounded-lg text-sm"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(getDocumentUrl(link), link.id)}
-                        className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                        title="링크 복사"
-                      >
-                        {copiedLink === link.id ? (
-                          <span className="text-green-500 text-sm">✓</span>
-                        ) : (
-                          <Copy className="w-4 h-4 text-gray-600" />
-                        )}
-                      </button>
+              
+              {/* 고객 공유용 문서 */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">고객님께 공유 가능한 문서</h4>
+                <div className="space-y-2">
+                  {documentLinks.filter(link => 
+                    ['customer_all', 'customer_schedule', 'customer_boarding', 
+                     'room_assignment', 'customer_timetable', 'simplified'].includes(link.document_type)
+                  ).map((link) => {
+                    const info = documentTypeInfo[link.document_type];
+                    return (
+                      <div key={link.id} className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 min-w-[100px]">
+                          {info?.label || link.document_type}
+                        </span>
+                        <input
+                          type="text"
+                          value={getDocumentUrl(link)}
+                          readOnly
+                          className="flex-1 px-3 py-2 bg-blue-50 rounded-lg text-sm"
+                        />
+                        <button
+                          onClick={() => copyToClipboard(getDocumentUrl(link), link.id)}
+                          className="p-2 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
+                          title="링크 복사"
+                        >
+                          {copiedLink === link.id ? (
+                            <span className="text-green-500 text-sm">✓</span>
+                          ) : (
+                            <Copy className="w-4 h-4 text-blue-600" />
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* 스탭 전용 문서 - 경고 표시 */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-red-800 mb-1">스탭 전용 문서 (공유 주의)</h4>
+                    <p className="text-xs text-red-700 mb-3">
+                      아래 문서는 스탭 전용 정보가 포함되어 있습니다. 고객님께는 공유하지 마세요.
+                    </p>
+                    <div className="space-y-2">
+                      {filteredLinks.map((link) => {
+                        const info = documentTypeInfo[link.document_type];
+                        return (
+                          <div key={link.id} className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 min-w-[100px]">
+                              {info?.label || link.document_type}
+                            </span>
+                            <input
+                              type="text"
+                              value={getDocumentUrl(link)}
+                              readOnly
+                              className="flex-1 px-3 py-2 bg-gray-50 rounded-lg text-sm opacity-75"
+                            />
+                            <button
+                              onClick={() => {
+                                if (confirm('이 문서는 스탭 전용입니다. 정말로 링크를 복사하시겠습니까?')) {
+                                  copyToClipboard(getDocumentUrl(link), link.id);
+                                }
+                              }}
+                              className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                              title="링크 복사 (주의)"
+                            >
+                              {copiedLink === link.id ? (
+                                <span className="text-green-500 text-sm">✓</span>
+                              ) : (
+                                <Copy className="w-4 h-4 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                </div>
               </div>
             </div>
           </section>
