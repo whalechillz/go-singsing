@@ -763,7 +763,7 @@ export default function MessageManagementPage() {
                   placeholder="메시지 내용을 입력하세요. 변수는 #{변수명} 형식으로 입력하세요."
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  사용 가능한 변수: #{이름}, #{투어명}, #{출발일}, #{결제금액}
+                  사용 가능한 변수: {"#{이름}, #{투어명}, #{출발일}, #{결제금액}"}
                 </p>
               </div>
 
