@@ -21,7 +21,15 @@ export function SyncUsersButton() {
       const { data: deleted, error: error3 } = await supabase.rpc('sync_deleted_users');
       
       if (error1 || error2 || error3) {
-        throw new Error('동기화 중 오류 발생');
+        console.error('Sync errors:', { error1, error2, error3 });
+        
+        // 상세한 에러 메시지
+        let errorMsg = '동기화 중 오류가 발생했습니다:\n';
+        if (error1) errorMsg += `\n- Public to Auth: ${error1.message}`;
+        if (error2) errorMsg += `\n- Auth to Public: ${error2.message}`;
+        if (error3) errorMsg += `\n- Delete sync: ${error3.message}`;
+        
+        throw new Error(errorMsg);
       }
       
       setResult({
