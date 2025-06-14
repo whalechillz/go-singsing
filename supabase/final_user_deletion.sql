@@ -1,6 +1,6 @@
 -- 사용자 완전 삭제 스크립트 (profiles 테이블 제외)
 BEGIN;
-
+SELECT delete_user_safely('singsingtour@naver.com');
 -- 1. auth 관련 테이블들 정리
 DELETE FROM auth.sessions 
 WHERE user_id IN (
