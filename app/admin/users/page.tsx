@@ -110,6 +110,24 @@ export default function UserManagementPage() {
 
   // 사용자 저장
   const handleSave = async () => {
+    // 필수 필드 검증
+    if (!formData.name || !formData.phone) {
+      alert('이름과 전화번호는 필수입니다.');
+      return;
+    }
+    
+    // 새 사용자인 경우 비밀번호 필수
+    if (!editingUser && (!formData.password || formData.password.length < 6)) {
+      alert('새 사용자는 6자 이상의 비밀번호가 필수입니다.');
+      return;
+    }
+    
+    // 이메일 형식 검증
+    if (formData.email && !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      alert('올바른 이메일 형식이 아닙니다.');
+      return;
+    }
+    
     try {
       if (editingUser) {
         // 수정
@@ -129,7 +147,26 @@ export default function UserManagementPage() {
 
         if (error) throw error;
       } else {
-        // 추가
+        // 추가 - 이메일이 있는 경우 auth.users에도 추가
+        if (formData.email) {
+          // 1. auth.users에 먼저 추가
+          const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
+            user_email: formData.email,
+            user_password: formData.password,
+            user_metadata: {
+              name: formData.name,
+              role: formData.role,
+              phone: formData.phone
+            }
+          });
+
+          if (authError) {
+            console.error('Auth user creation error:', authError);
+            throw new Error('사용자 인증 계정 생성 실패');
+          }
+        }
+
+        // 2. public.users에 추가
         const insertData: any = {
           name: formData.name,
           phone: formData.phone,
@@ -138,12 +175,6 @@ export default function UserManagementPage() {
           role_id: formData.role_id || null,
           is_active: formData.is_active
         };
-
-        // 비밀번호가 있으면 해시 처리 (실제로는 서버사이드에서 처리해야 함)
-        if (formData.password) {
-          // TODO: 비밀번호 해시 처리
-          insertData.password_hash = formData.password; // 임시
-        }
 
         const { error } = await supabase
           .from("users")
@@ -713,16 +744,36 @@ export default function UserManagementPage() {
               {!editingUser && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    비밀번호 {!editingUser && <span className="text-red-500">*</span>}
+                    비밀번호 <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={editingUser ? "변경시에만 입력" : "비밀번호 입력"}
-                    required={!editingUser}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="비밀번호 입력 (최소 6자)"
+                      required
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#';
+                        let password = '';
+                        for (let i = 0; i < 8; i++) {
+                          password += chars.charAt(Math.floor(Math.random() * chars.length));
+                        }
+                        setFormData({ ...formData, password });
+                      }}
+                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      자동생성
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    * 최소 6자 이상 입력하세요. 사용자에게 이 비밀번호를 알려주세요.
+                  </p>
                 </div>
               )}
 
@@ -752,7 +803,8 @@ export default function UserManagementPage() {
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={!editingUser && !formData.password}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {editingUser ? "수정" : "추가"}
               </button>
