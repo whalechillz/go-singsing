@@ -124,11 +124,15 @@ export default function RoleManagementPage() {
         // 각 역할별 사용자 수 계산
         const { data: userCounts } = await supabase
           .from("users")
-          .select("role_id")
-          .not("role_id", "is", null);
+          .select("role")
+          .not("role", "is", null);
 
         const countMap = userCounts?.reduce((acc, user) => {
-          acc[user.role_id] = (acc[user.role_id] || 0) + 1;
+          // role 문자열로 역할 찾기
+          const matchedRole = roleData?.find(r => r.name === user.role);
+          if (matchedRole) {
+            acc[matchedRole.id] = (acc[matchedRole.id] || 0) + 1;
+          }
           return acc;
         }, {} as Record<string, number>) || {};
 
