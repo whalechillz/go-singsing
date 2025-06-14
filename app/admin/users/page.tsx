@@ -221,7 +221,11 @@ export default function UserManagementPage() {
     } catch (error: any) {
       console.error("Error saving user:", error);
       if (error.code === '23505') {
-        alert("이미 등록된 전화번호 또는 이메일입니다.");
+        if (error.message.includes('email')) {
+          alert("이미 등록된 이메일입니다.");
+        } else {
+          alert("저장 중 오류가 발생했습니다.");
+        }
       } else {
         alert("저장 중 오류가 발생했습니다.");
       }
@@ -743,7 +747,7 @@ export default function UserManagementPage() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="010-0000-0000 (선택사항)"
+                  placeholder="010-0000-0000 (선택사항, 공유 가능)"
                 />
               </div>
 
