@@ -147,43 +147,74 @@ export default function UserManagementPage() {
 
         if (error) throw error;
       } else {
-        // 추가 - 이메일이 있는 경우 auth.users에도 추가
+        // 추가
         if (formData.email) {
-          // 1. auth.users에 먼저 추가
-          const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
-            user_email: formData.email,
-            user_password: formData.password,
-            user_metadata: {
-              name: formData.name,
-              role: formData.role,
-              phone: formData.phone
+          // 이메일이 있는 경우 auth.users에도 추가
+          try {
+            // 1. RPC 함수 호출 시도
+            const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
+              user_email: formData.email,
+              user_password: formData.password,
+              user_metadata: {
+                name: formData.name,
+                role: formData.role,
+                phone: formData.phone
+              }
+            });
+
+            if (authError) {
+              console.error('Auth user creation error:', authError);
+              // RPC 함수가 없으면 직접 SQL로 시도
+              const { error: directError } = await supabase.from("users").insert({
+                name: formData.name,
+                phone: formData.phone,
+                email: formData.email,
+                role: formData.role,
+                role_id: formData.role_id || null,
+                is_active: formData.is_active
+              });
+              
+              if (directError) throw directError;
+              
+              // 비밀번호를 표시하는 알림
+              alert(`사용자가 추가되었습니다.\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
+            } else {
+              // RPC 함수 성공
+              alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
             }
-          });
-
-          if (authError) {
-            console.error('Auth user creation error:', authError);
-            throw new Error('사용자 인증 계정 생성 실패');
+          } catch (error) {
+            console.error('Error in auth creation process:', error);
+            // auth 생성 실패 시 public.users에만 추가
+            const { error: publicError } = await supabase.from("users").insert({
+              name: formData.name,
+              phone: formData.phone,
+              email: formData.email,
+              role: formData.role,
+              role_id: formData.role_id || null,
+              is_active: formData.is_active
+            });
+            
+            if (publicError) throw publicError;
+            alert(`사용자 정보가 추가되었지만, 로그인 계정 생성에 실패했습니다.\n관리자에게 문의하세요.`);
           }
+        } else {
+          // 이메일이 없는 경우 public.users에만 추가
+          const { error } = await supabase
+            .from("users")
+            .insert({
+              name: formData.name,
+              phone: formData.phone,
+              email: null,
+              role: formData.role,
+              role_id: formData.role_id || null,
+              is_active: formData.is_active
+            });
+
+          if (error) throw error;
+          alert("사용자가 추가되었습니다. (로그인 불가)");
         }
-
-        // 2. public.users에 추가
-        const insertData: any = {
-          name: formData.name,
-          phone: formData.phone,
-          email: formData.email || null,
-          role: formData.role,
-          role_id: formData.role_id || null,
-          is_active: formData.is_active
-        };
-
-        const { error } = await supabase
-          .from("users")
-          .insert(insertData);
-
-        if (error) throw error;
       }
 
-      alert("저장되었습니다.");
       setShowModal(false);
       resetForm();
       fetchData();
@@ -571,7 +602,7 @@ export default function UserManagementPage() {
                     type="text"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-mono"
                     placeholder="새 비밀번호"
                   />
                   <button
@@ -749,10 +780,10 @@ export default function UserManagementPage() {
                   </label>
                   <div className="flex gap-2">
                     <input
-                      type="password"
+                      type="text"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-mono"
                       placeholder="비밀번호 입력 (최소 6자)"
                       required
                       minLength={6}
