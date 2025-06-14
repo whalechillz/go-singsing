@@ -53,7 +53,7 @@ export default function UserManagementPage() {
     name: "",
     phone: "",
     email: "",
-    role: "staff",
+    role: "employee",
     role_id: "",
     password: "",
     is_active: true
@@ -269,7 +269,7 @@ export default function UserManagementPage() {
       name: "",
       phone: "",
       email: "",
-      role: "staff",
+      role: roles.length > 0 ? roles[0].name : "employee",
       role_id: "",
       password: "",
       is_active: true
@@ -411,10 +411,11 @@ export default function UserManagementPage() {
           className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
           <option value="">전체 역할</option>
-          <option value="admin">관리자</option>
-          <option value="manager">매니저</option>
-          <option value="operator">운영직원</option>
-          <option value="employee">일반직원</option>
+          {roles.map(role => (
+            <option key={role.id} value={role.name}>
+              {role.description || role.name}
+            </option>
+          ))}
           </select>
 
           <select
@@ -509,11 +510,7 @@ export default function UserManagementPage() {
                         user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
                         user.role === 'driver' ? 'bg-green-100 text-green-800' :
                         'bg-gray-100 text-gray-800'}`}>
-                      {user.role === 'admin' ? '관리자' : 
-                       user.role === 'manager' ? '매니저' :
-                       user.role === 'operator' ? '운영직원' : 
-                       user.role === 'employee' ? '일반직원' : 
-                       user.role === 'staff' ? '운영직원' : user.role}
+                      {roles.find(r => r.name === user.role)?.description || user.role}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -766,10 +763,11 @@ export default function UserManagementPage() {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
-                  <option value="employee">일반직원</option>
-                  <option value="operator">운영직원</option>
-                  <option value="manager">매니저</option>
-                  <option value="admin">관리자</option>
+                  {roles.map(role => (
+                    <option key={role.id} value={role.name}>
+                      {role.description || role.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
