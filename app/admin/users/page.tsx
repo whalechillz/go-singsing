@@ -235,42 +235,31 @@ export default function UserManagementPage() {
     if (!resetPasswordUser || !newPassword) return;
     
     try {
-      // 사용자가 Supabase Auth에 등록되어 있는지 확인
       if (resetPasswordUser.email) {
-        // 이메일이 있는 경우 - Auth 사용자일 가능성이 높음
-        // Supabase Auth에서 비밀번호 변경 시도
-        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+        // RPC 함수로 안전하게 비밀번호 초기화
+        const { data, error } = await supabase.rpc('reset_user_password', {
+          user_email: resetPasswordUser.email,
+          new_password: newPassword
+        });
         
-        if (!listError && users) {
-          const authUser = users.find(u => u.email === resetPasswordUser.email);
-          if (authUser) {
-            // Auth 사용자 발견 - 비밀번호 업데이트
-            const { error: updateError } = await supabase.auth.admin.updateUserById(
-              authUser.id,
-              { password: newPassword }
-            );
-            
-            if (!updateError) {
-              alert(`${resetPasswordUser.name}님의 비밀번호가 초기화되었습니다.\n\n새 비밀번호: ${newPassword}\n\n사용자에게 이 비밀번호를 알려주세요.`);
-              setShowPasswordResetModal(false);
-              setResetPasswordUser(null);
-              setNewPassword("");
-              return;
-            }
-          }
+        if (error) {
+          throw error;
         }
         
-        // Auth에 없거나 업데이트 실패 시 SQL로 처리
-        // SQL Editor에서 직접 실행해야 함
-        alert(`Supabase Auth에 해당 사용자가 없거나 오류가 발생했습니다.\n\nSQL Editor에서 다음 쿼리를 실행해주세요:\n\nUPDATE auth.users\nSET encrypted_password = crypt('${newPassword}', gen_salt('bf'))\nWHERE email = '${resetPasswordUser.email}';`);
+        if (data) {
+          alert(`${resetPasswordUser.name}님의 비밀번호가 초기화되었습니다.\n\n새 비밀번호: ${newPassword}\n\n사용자에게 이 비밀번호를 알려주세요.`);
+          setShowPasswordResetModal(false);
+          setResetPasswordUser(null);
+          setNewPassword("");
+        } else {
+          alert('해당 사용자를 찾을 수 없습니다.');
+        }
       } else {
-        // 이메일이 없는 경우 - 로컬 users 테이블만 사용
-        alert(`이메일이 등록되지 않은 사용자입니다.\n\n비밀번호 초기화를 위해서는 사용자에게 이메일을 등록하도록 요청하세요.`);
+        alert('이메일이 등록되지 않은 사용자입니다.\n\n비밀번호 초기화를 위해서는 사용자에게 이메일을 등록하도록 요청하세요.');
       }
     } catch (error) {
       console.error('Error resetting password:', error);
-      // 대체 방법 제공
-      alert(`비밀번호 초기화 중 오류가 발생했습니다.\n\nSupabase SQL Editor에서 직접 실행하세요:\n\nUPDATE auth.users\nSET encrypted_password = crypt('${newPassword}', gen_salt('bf'))\nWHERE email = '${resetPasswordUser.email || resetPasswordUser.phone + '@temp.com'}';`);
+      alert('비밀번호 초기화 중 오류가 발생했습니다.');
     }
   };
 
