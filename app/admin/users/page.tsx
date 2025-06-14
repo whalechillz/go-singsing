@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, Edit2, Trash2, Search, Mail, Phone, Shield, UserX, UserCheck, Key } from "lucide-react";
+import { SyncUsersButton } from "./sync-button";
 
 type User = {
   id: string;
@@ -330,8 +331,13 @@ export default function UserManagementPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">사용자 관리</h1>
-        <p className="text-gray-600 mt-1">시스템 사용자 계정을 관리합니다.</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">사용자 관리</h1>
+            <p className="text-gray-600 mt-1">시스템 사용자 계정을 관리합니다.</p>
+          </div>
+          <SyncUsersButton />
+        </div>
       </div>
 
       {/* 필터 및 검색 */}
