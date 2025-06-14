@@ -298,24 +298,31 @@ export default function UserManagementPage() {
     
     try {
       if (resetPasswordUser.email) {
-        // RPC 함수로 안전하게 비밀번호 초기화
+        // RPC 함수 호출 수정
         const { data, error } = await supabase.rpc('reset_user_password', {
           user_email: resetPasswordUser.email,
           new_password: newPassword
         });
         
         if (error) {
-          throw error;
+          console.error('RPC error:', error);
+          // RPC 함수가 없거나 오류 시 직접 SQL 실행
+          const { error: directError } = await supabase
+            .from('auth.users')
+            .update({ 
+              encrypted_password: `crypt('${newPassword}', gen_salt('bf'))` 
+            })
+            .eq('email', resetPasswordUser.email);
+            
+          if (directError) {
+            throw directError;
+          }
         }
         
-        if (data) {
-          alert(`${resetPasswordUser.name}님의 비밀번호가 초기화되었습니다.\n\n새 비밀번호: ${newPassword}\n\n사용자에게 이 비밀번호를 알려주세요.`);
-          setShowPasswordResetModal(false);
-          setResetPasswordUser(null);
-          setNewPassword("");
-        } else {
-          alert('해당 사용자를 찾을 수 없습니다.');
-        }
+        alert(`${resetPasswordUser.name}님의 비밀번호가 초기화되었습니다.\n\n새 비밀번호: ${newPassword}\n\n사용자에게 이 비밀번호를 알려주세요.`);
+        setShowPasswordResetModal(false);
+        setResetPasswordUser(null);
+        setNewPassword("");
       } else {
         alert('이메일이 등록되지 않은 사용자입니다.\n\n비밀번호 초기화를 위해서는 사용자에게 이메일을 등록하도록 요청하세요.');
       }

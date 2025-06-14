@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User } from "lucide-react";
+import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
@@ -39,9 +39,19 @@ const GolfTourPortal = () => {
     const fetchTours = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase.from("singsing_tours").select("*").order("start_date", { ascending: false });
+        const { data, error } = await supabase.from("singsing_tours").select("*").order("start_date", { ascending: true });
         if (error) throw error;
-        setTours((data ?? []) as Tour[]);
+        
+        // 오늘 날짜 이후의 투어만 필터링
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const futureTours = (data ?? []).filter((tour: Tour) => {
+          const tourDate = new Date(tour.start_date);
+          return tourDate >= today;
+        });
+        
+        setTours(futureTours as Tour[]);
         setIsLoading(false);
       } catch (err) {
         setError("투어 정보를 불러오는 중 오류가 발생했습니다.");
@@ -111,36 +121,69 @@ const GolfTourPortal = () => {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const dayOfWeek = days[date.getDay()];
+    return `${month}월 ${day}일(${dayOfWeek})`;
+  };
+
   const renderTourCard = (tour: Tour) => {
     const isSelected = selectedTour && selectedTour.id === tour.id;
+    const remainingSeats = (tour.max_participants || 0) - 0; // TODO: current_participants 추가 필요
+    const isAlmostFull = remainingSeats > 0 && remainingSeats <= 3;
+    const isFull = remainingSeats <= 0;
+    
     return (
       <div
         key={tour.id}
-        className={`border rounded-lg shadow-md p-4 cursor-pointer transition-all mb-4 hover:shadow-lg hover:border-blue-200 ${isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"}`}
+        className={`border rounded-lg shadow-md p-5 cursor-pointer transition-all hover:shadow-lg ${isSelected ? "border-purple-500 bg-purple-50" : "border-gray-200"}`}
         onClick={() => handleCardClick(tour)}
       >
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start mb-3">
           <div>
-            <h3 className="text-lg font-bold text-blue-800">{tour.title}</h3>
+            <h3 className="text-lg font-bold text-gray-900">📅 {formatDate(tour.start_date)} 출발</h3>
+            <h4 className="text-purple-700 font-medium mt-1">{tour.title}</h4>
+            <div className="flex items-center text-gray-600 mt-2">
+              <MapPin className="w-4 h-4 mr-1" />
+              <span className="text-sm">{tour.golf_course}</span>
+            </div>
             <div className="flex items-center text-gray-600 mt-1">
               <Calendar className="w-4 h-4 mr-1" />
               <span className="text-sm">{tour.start_date} ~ {tour.end_date}</span>
             </div>
-            <div className="flex items-center text-gray-600 mt-1">
-              <Globe className="w-4 h-4 mr-1" />
-              <span className="text-sm">{tour.golf_course}</span>
-            </div>
           </div>
-          <div className="bg-blue-100 px-3 py-1 rounded-full text-blue-800 font-semibold">
-            {tour.max_participants || 0}명
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            isFull ? 'bg-gray-100 text-gray-600' :
+            isAlmostFull ? 'bg-orange-100 text-orange-700' :
+            'bg-green-100 text-green-700'
+          }`}>
+            {isFull ? '마감' : `잔여 ${remainingSeats}석`}
           </div>
         </div>
         <div className="mt-3 pt-3 border-t border-gray-200">
-          <div className="flex justify-between">
-            <span className="text-gray-700 font-medium">{tour.price?.toLocaleString()}원</span>
-            <span className={tour.max_participants && tour.max_participants <= 0 ? "text-red-600 font-semibold" : "text-green-600"}>
-              모집중
-            </span>
+          <div className="flex justify-between items-center">
+            <div>
+              <span className="text-2xl font-bold text-gray-900">{tour.price?.toLocaleString()}원</span>
+              <span className="text-sm text-gray-500 ml-1">/ 1인</span>
+            </div>
+            <a
+              href="tel:010-3332-9020"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                isFull 
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                  : 'bg-purple-700 text-white hover:bg-purple-800'
+              }`}
+              onClick={(e) => {
+                if (isFull) e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <Phone className="w-4 h-4" />
+              전화 예약
+            </a>
           </div>
         </div>
       </div>
@@ -150,10 +193,13 @@ const GolfTourPortal = () => {
   return (
     <div className="min-h-screen bg-gray-100 pb-10">
       {/* Header */}
-      <div className="bg-blue-800 text-white p-4 shadow-md">
+      <div className="bg-purple-700 text-white p-4 shadow-md">
         <div className="container mx-auto max-w-6xl px-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">싱싱골프투어</h1>
+            <div>
+              <h1 className="text-2xl font-bold">싱싱골프투어</h1>
+              <p className="text-sm text-purple-200">리무진 버스로 떠나는 편안한 골프여행</p>
+            </div>
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
@@ -181,13 +227,22 @@ const GolfTourPortal = () => {
                   </button>
                 </>
               ) : (
-                <a
-                  href="/login"
-                  className="text-sm bg-white text-blue-800 px-4 py-1.5 rounded hover:bg-blue-100 transition-colors flex items-center gap-1"
-                >
-                  <LogIn className="h-4 w-4" />
-                  직원 로그인
-                </a>
+                <>
+                  <a
+                    href="tel:010-3332-9020"
+                    className="text-sm bg-white text-purple-700 px-4 py-2 rounded hover:bg-purple-50 transition-colors flex items-center gap-1"
+                  >
+                    <Phone className="h-4 w-4" />
+                    <span className="font-medium">010-3332-9020</span>
+                  </a>
+                  <a
+                    href="/login"
+                    className="text-sm bg-purple-600 px-4 py-1.5 rounded hover:bg-purple-800 transition-colors flex items-center gap-1"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    로그인
+                  </a>
+                </>
               )}
             </div>
           </div>
@@ -195,6 +250,25 @@ const GolfTourPortal = () => {
       </div>
       {/* Main content */}
       <div className="container mx-auto max-w-6xl px-4 mt-8">
+        {/* 비로그인 사용자 안내 */}
+        {!user && (
+          <div className="bg-purple-50 rounded-lg p-6 mb-6 text-center">
+            <h3 className="text-lg font-bold text-purple-900 mb-2">
+              🌸 회원님만의 특별한 혜택
+            </h3>
+            <p className="text-purple-700 mb-4">
+              지난 투어 사진과 추억을 보관하고, 특별 할인 혜택을 받아보세요.
+            </p>
+            <a
+              href="/login"
+              className="inline-flex items-center gap-2 bg-purple-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-800 transition"
+            >
+              로그인하기
+              <ChevronRight className="w-4 h-4" />
+            </a>
+          </div>
+        )}
+        
         {/* 최근 긴급 메모 위젯 - 스탭 모드에서만 표시 */}
         {isStaffView && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg shadow-sm">
@@ -222,10 +296,17 @@ const GolfTourPortal = () => {
             {/* Tour list */}
             <div>
               <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-                <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">투어 목록</h2>
-                <div className="space-y-3">
-                  {tours.map(tour => renderTourCard(tour))}
-                </div>
+                <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">예약 가능한 투어</h2>
+                {tours.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">현재 예약 가능한 투어가 없습니다.</p>
+                    <p className="text-sm text-gray-500 mt-2">새로운 투어 일정이 공 업데이트됩니다.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {tours.map(tour => renderTourCard(tour))}
+                  </div>
+                )}
               </div>
             </div>
             {/* Selected tour details */}
