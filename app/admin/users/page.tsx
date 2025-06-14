@@ -111,8 +111,8 @@ export default function UserManagementPage() {
   // 사용자 저장
   const handleSave = async () => {
     // 필수 필드 검증
-    if (!formData.name || !formData.phone) {
-      alert('이름과 전화번호는 필수입니다.');
+    if (!formData.name) {
+      alert('이름은 필수입니다.');
       return;
     }
     
@@ -133,7 +133,7 @@ export default function UserManagementPage() {
         // 수정
         const updateData: any = {
           name: formData.name,
-          phone: formData.phone,
+          phone: formData.phone || null,
           email: formData.email || null,
           role: formData.role,
           role_id: formData.role_id || null,
@@ -167,7 +167,7 @@ export default function UserManagementPage() {
               // RPC 함수가 없으면 직접 SQL로 시도
               const { error: directError } = await supabase.from("users").insert({
                 name: formData.name,
-                phone: formData.phone,
+                phone: formData.phone || null,
                 email: formData.email,
                 role: formData.role,
                 role_id: formData.role_id || null,
@@ -187,7 +187,7 @@ export default function UserManagementPage() {
             // auth 생성 실패 시 public.users에만 추가
             const { error: publicError } = await supabase.from("users").insert({
               name: formData.name,
-              phone: formData.phone,
+              phone: formData.phone || null,
               email: formData.email,
               role: formData.role,
               role_id: formData.role_id || null,
@@ -203,7 +203,7 @@ export default function UserManagementPage() {
             .from("users")
             .insert({
               name: formData.name,
-              phone: formData.phone,
+              phone: formData.phone || null,
               email: null,
               role: formData.role,
               role_id: formData.role_id || null,
@@ -327,29 +327,37 @@ export default function UserManagementPage() {
 
   // 이메일 찾기
   const handleEmailSearch = async () => {
-    if (!emailSearchData.name || !emailSearchData.phone) {
-      alert('이름과 전화번호를 모두 입력해주세요.');
+    if (!emailSearchData.name) {
+      alert('이름을 입력해주세요.');
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('users')
         .select('*')
-        .eq('name', emailSearchData.name)
-        .eq('phone', emailSearchData.phone)
-        .single();
+        .eq('name', emailSearchData.name);
+      
+      if (emailSearchData.phone) {
+        query = query.eq('phone', emailSearchData.phone);
+      }
+      
+      const { data, error } = await query;
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          alert('해당하는 사용자를 찾을 수 없습니다.');
-        } else {
-          throw error;
-        }
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        alert('해당하는 사용자를 찾을 수 없습니다.');
         return;
       }
+      
+      if (data.length > 1) {
+        alert(`${data.length}명의 사용자가 찾아졌습니다. 전화번호를 입력하면 더 정확한 검색이 가능합니다.`);
+      }
 
-      setEmailSearchResult(data);
+      setEmailSearchResult(data[0]);
     } catch (error) {
       console.error('Error searching email:', error);
       alert('이메일 찾기 중 오류가 발생했습니다.');
@@ -369,7 +377,7 @@ export default function UserManagementPage() {
   // 필터링된 사용자 목록
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phone.includes(searchTerm) ||
+                         (user.phone && user.phone.includes(searchTerm)) ||
                          (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesRole = !filterRole || user.role === filterRole;
     const matchesStatus = filterStatus === "all" || 
@@ -501,7 +509,7 @@ export default function UserManagementPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900">
                       <Phone className="w-4 h-4 mr-1 text-gray-400" />
-                      {user.phone}
+                      {user.phone || '-'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -660,14 +668,14 @@ export default function UserManagementPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  전화번호
+                  전화번호 (선택사항)
                 </label>
                 <input
                   type="tel"
                   value={emailSearchData.phone}
                   onChange={(e) => setEmailSearchData({ ...emailSearchData, phone: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="010-0000-0000"
+                  placeholder="010-0000-0000 (더 정확한 검색을 위해)"
                 />
               </div>
 
@@ -676,7 +684,7 @@ export default function UserManagementPage() {
                   <p className="font-medium text-blue-900 mb-2">찾은 사용자 정보:</p>
                   <p className="text-sm"><strong>이름:</strong> {emailSearchResult.name}</p>
                   <p className="text-sm"><strong>이메일:</strong> {emailSearchResult.email || '등록된 이메일 없음'}</p>
-                  <p className="text-sm"><strong>전화번호:</strong> {emailSearchResult.phone}</p>
+                  <p className="text-sm"><strong>전화번호:</strong> {emailSearchResult.phone || '등록된 전화번호 없음'}</p>
                   <p className="text-sm"><strong>역할:</strong> {emailSearchResult.role}</p>
                 </div>
               )}
@@ -728,15 +736,14 @@ export default function UserManagementPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  전화번호 <span className="text-red-500">*</span>
+                  전화번호
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="010-0000-0000"
-                  required
+                  placeholder="010-0000-0000 (선택사항)"
                 />
               </div>
 
