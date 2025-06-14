@@ -481,7 +481,8 @@ export default function UserManagementPage() {
                       {user.role === 'admin' ? '관리자' : 
                        user.role === 'manager' ? '매니저' :
                        user.role === 'operator' ? '운영직원' : 
-                       user.role === 'employee' ? '일반직원' : user.role}
+                       user.role === 'employee' ? '일반직원' : 
+                       user.role === 'staff' ? '운영직원' : user.role}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
