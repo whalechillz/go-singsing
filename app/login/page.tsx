@@ -62,13 +62,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-xl p-8">
           {/* 헤더 */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-              <Users className="w-8 h-8 text-blue-600" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
+              <Users className="w-8 h-8 text-purple-600" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900">싱싱골프투어</h2>
             <p className="mt-2 text-sm text-gray-600">직원 로그인</p>
@@ -100,7 +100,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                   placeholder="your@email.com"
                 />
               </div>
@@ -122,7 +122,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -132,7 +132,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -153,29 +153,10 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               계정 문제가 있으신가요?{" "}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a href="tel:031-215-3990" className="font-medium text-purple-600 hover:text-purple-500">
                 관리자에게 문의
               </a>
             </p>
-          </div>
-        </div>
-
-        {/* 역할 안내 */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">접근 권한 안내</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 w-20 font-medium text-gray-700">관리자</div>
-              <div className="text-gray-600">모든 기능 접근 가능</div>
-            </div>
-            <div className="flex items-start">
-              <div className="flex-shrink-0 w-20 font-medium text-gray-700">매니저</div>
-              <div className="text-gray-600">투어 관리, 고객 관리 가능</div>
-            </div>
-            <div className="flex items-start">
-              <div className="flex-shrink-0 w-20 font-medium text-gray-700">스탭</div>
-              <div className="text-gray-600">투어 정보 조회 및 기본 업무</div>
-            </div>
           </div>
         </div>
 
