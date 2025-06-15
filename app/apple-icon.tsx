@@ -79,19 +79,18 @@ export default function Icon() {
               left: 50,
             }}
           />
-          {/* 중앙 로고 - Black Han Sans 스타일 */}
+          {/* 중앙 로고 - 나눔고딕 스타일 */}
           <div
             style={{
-              fontSize: 56,
-              fontWeight: '900',
+              fontSize: 44,
+              fontWeight: '800',
               color: '#003366',
-              fontFamily: '"Arial Black", sans-serif',
-              letterSpacing: '-3px',
-              transform: 'scale(1.1, 1)',
+              fontFamily: '"Nanum Gothic", sans-serif',
+              letterSpacing: '-4px',
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.1)',
             }}
           >
-            싱
+            싱싱
           </div>
         </div>
       </div>

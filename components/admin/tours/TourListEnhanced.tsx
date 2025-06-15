@@ -83,8 +83,13 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     if (tour.status) return tour.status;
     
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
+    
     const startDate = new Date(tour.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    
     const endDate = new Date(tour.end_date);
+    endDate.setHours(23, 59, 59, 999); // 종료일의 마지막 시간
     
     if (today < startDate) return 'upcoming';
     if (today > endDate) return 'completed';
@@ -198,6 +203,12 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
   // 정렬 (마감 상태 고려)
   const sortedTours = [...filteredTours].sort((a, b) => {
+    // 완료된 투어는 하단으로
+    const aStatus = getTourStatus(a);
+    const bStatus = getTourStatus(b);
+    if (aStatus === 'completed' && bStatus !== 'completed') return 1;
+    if (aStatus !== 'completed' && bStatus === 'completed') return -1;
+    
     // 마감된 투어는 하단으로
     if (a.is_closed && !b.is_closed) return 1;
     if (!a.is_closed && b.is_closed) return -1;

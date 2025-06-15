@@ -87,6 +87,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     if (pathname.startsWith('/admin/design-templates')) return 'design-templates';
     if (pathname.startsWith('/admin/font-styles')) return 'font-styles';
+    if (pathname.startsWith('/favicon-showcase')) return 'favicon-showcase';
     if (pathname.startsWith('/admin/schedule-templates')) return 'schedule-templates';
     if (pathname.startsWith('/admin/statistics')) return 'statistics';
     if (pathname.startsWith('/admin/settings')) return 'settings';
@@ -170,6 +171,12 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       label: '폰트 스타일', 
       icon: <Type className="w-5 h-5" />,
       href: '/admin/font-styles'
+    },
+    { 
+      id: 'favicon-showcase', 
+      label: '파비콘 디자인', 
+      icon: <Package className="w-5 h-5" />,
+      href: '/favicon/showcase'
     },
     { 
       id: 'schedule-templates', 

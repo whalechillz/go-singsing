@@ -74,19 +74,18 @@ export async function GET() {
               left: 160,
             }}
           />
-          {/* 중앙 로고 - Black Han Sans 스타일 */}
+          {/* 중앙 로고 - 나눔고딕 스타일 */}
           <div
             style={{
-              fontSize: 200,
-              fontWeight: '900',
+              fontSize: 150,
+              fontWeight: '800',
               color: '#003366',
-              fontFamily: '"Arial Black", sans-serif',
-              letterSpacing: '-8px',
-              transform: 'scale(1.1, 1)',
+              fontFamily: '"Nanum Gothic", sans-serif',
+              letterSpacing: '-12px',
               textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
             }}
           >
-            싱
+            싱싱
           </div>
         </div>
       </div>

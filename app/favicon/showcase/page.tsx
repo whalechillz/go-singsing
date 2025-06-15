@@ -20,7 +20,7 @@ export default function FaviconShowcase() {
             <h2 className="text-xl font-semibold mb-4">메인 아이콘 (512x512)</h2>
             <div className="flex items-center justify-center bg-gray-50 p-8 rounded">
               <img 
-                src="/favicon-preview" 
+                src="/favicon/preview" 
                 alt="싱싱골프투어 파비콘 큰 버전"
                 width={512}
                 height={512}
@@ -50,7 +50,7 @@ export default function FaviconShowcase() {
                             color: '#003366',
                           }}
                         >
-                          싱
+                          싱싱
                         </span>
                       </div>
                     </div>
@@ -217,8 +217,8 @@ font-family: 'Black Han Sans', sans-serif;`}
           <div className="bg-gray-100 rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-3">👨‍💻 개발자 노트</h3>
             <p className="text-sm text-gray-700 mb-3">
-              이 페이지는 <code className="bg-gray-200 px-2 py-1 rounded">/app/(dev)/favicon-showcase</code>에 위치합니다.
-              (dev) 폴더는 URL에 노출되지 않는 개발용 그룹입니다.
+              이 페이지는 <code className="bg-gray-200 px-2 py-1 rounded">/app/favicon/showcase</code>에 위치합니다.
+              관리자 사이드바에서 '파비콘 디자인' 메뉴를 통해 접근할 수 있습니다.
             </p>
             <ul className="space-y-1 text-sm text-gray-600">
               <li>• 파비콘 수정: <code className="bg-gray-200 px-1">/app/icon.tsx</code></li>
