@@ -20,10 +20,17 @@ export function SyncUsersButton() {
       const { data: authAdded, error: error2 } = await supabase.rpc('sync_auth_to_public');
       const { data: deleted, error: error3 } = await supabase.rpc('sync_deleted_users');
       
-      // 오류가 있어도 실제 작업은 되므로 오류 무시
-      if (error1) console.log('Public to Auth sync info:', error1);
-      if (error2) console.log('Auth to Public sync info:', error2);
-      if (error3) console.log('Delete sync info:', error3);
+      if (error1 || error2 || error3) {
+        console.error('Sync errors:', { error1, error2, error3 });
+        
+        // 상세한 에러 메시지
+        let errorMsg = '동기화 중 오류가 발생했습니다:\n';
+        if (error1) errorMsg += `\n- Public to Auth: ${error1.message}`;
+        if (error2) errorMsg += `\n- Auth to Public: ${error2.message}`;
+        if (error3) errorMsg += `\n- Delete sync: ${error3.message}`;
+        
+        throw new Error(errorMsg);
+      }
       
       setResult({
         added: (publicAdded || 0) + (authAdded || 0),
@@ -40,7 +47,7 @@ export function SyncUsersButton() {
       
     } catch (error) {
       console.error('동기화 오류:', error);
-      // 오류 메시지 표시하지 않음 (실제로는 작동하므로)
+      alert('동기화 중 오류가 발생했습니다.');
     } finally {
       setSyncing(false);
     }
