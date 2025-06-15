@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
@@ -153,13 +153,13 @@ const GolfTourPortal = () => {
     return (
       <div
         key={tour.id}
-        className={`border rounded-lg shadow-md p-5 cursor-pointer transition-all hover:shadow-lg ${isSelected ? "border-purple-500 bg-purple-50" : "border-gray-200"}`}
+        className={`border-2 rounded-lg shadow-md p-5 cursor-pointer transition-all hover:shadow-lg ${isSelected ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50" : "border-gray-200 bg-white"}`}
         onClick={() => handleCardClick(tour)}
       >
         <div className="flex justify-between items-start mb-3">
           <div>
             <h3 className="text-lg font-bold text-gray-900">📅 {formatDate(tour.start_date)} 출발</h3>
-            <h4 className="text-purple-700 font-medium mt-1">{tour.title}</h4>
+            <h4 className="text-blue-700 font-medium mt-1">{tour.title}</h4>
             <div className="flex items-center text-gray-600 mt-2">
               <MapPin className="w-4 h-4 mr-1" />
               <span className="text-sm">{tour.golf_course}</span>
@@ -188,7 +188,7 @@ const GolfTourPortal = () => {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition ${
                 isFull 
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                  : 'bg-purple-700 text-white hover:bg-purple-800'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
               }`}
               onClick={(e) => {
                 if (isFull) e.preventDefault();
@@ -207,12 +207,12 @@ const GolfTourPortal = () => {
   return (
     <div className="min-h-screen bg-gray-100 pb-10">
       {/* Header */}
-      <div className="bg-purple-700 text-white p-4 shadow-md">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 shadow-md">
         <div className="container mx-auto max-w-6xl px-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold">싱싱골프투어</h1>
-              <p className="text-sm text-purple-200">리무진 버스로 떠나는 편안한 골프여행</p>
+              <p className="text-sm text-blue-100">리무진 버스로 떠나는 편안한 골프여행</p>
             </div>
             <div className="flex items-center space-x-4">
               {user ? (
@@ -244,14 +244,14 @@ const GolfTourPortal = () => {
                 <>
                   <a
                     href="tel:031-215-3990"
-                    className="text-sm bg-white text-purple-700 px-4 py-2 rounded hover:bg-purple-50 transition-colors flex items-center gap-1"
+                    className="text-sm bg-white text-blue-700 px-4 py-2 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
                   >
                     <Phone className="h-4 w-4" />
                     <span className="font-medium">031-215-3990</span>
                   </a>
                   <a
                     href="/login"
-                    className="text-sm bg-purple-600 px-4 py-1.5 rounded hover:bg-purple-800 transition-colors flex items-center gap-1"
+                    className="text-sm bg-blue-500 px-4 py-1.5 rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
                   >
                     <LogIn className="h-4 w-4" />
                     로그인
@@ -266,16 +266,16 @@ const GolfTourPortal = () => {
       <div className="container mx-auto max-w-6xl px-4 mt-8">
         {/* 비로그인 사용자 안내 */}
         {!user && (
-          <div className="bg-purple-50 rounded-lg p-6 mb-6 text-center">
-            <h3 className="text-lg font-bold text-purple-900 mb-2">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6 text-center border-2 border-blue-200">
+            <h3 className="text-lg font-bold text-blue-900 mb-2">
               🌸 회원님만의 특별한 혜택
             </h3>
-            <p className="text-purple-700 mb-4">
+            <p className="text-blue-700 mb-4">
               지난 투어 사진과 추억을 보관하고, 특별 할인 혜택을 받아보세요.
             </p>
             <a
               href="/login"
-              className="inline-flex items-center gap-2 bg-purple-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-800 transition"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
             >
               로그인하기
               <ChevronRight className="w-4 h-4" />
@@ -318,22 +318,18 @@ const GolfTourPortal = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {tours.map(tour => renderTourCard(tour))}
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Selected tour details */}
-            <div>
-              {selectedTour ? (
-                <div className="bg-white rounded-lg shadow-md p-6">
+                    {tours.map(tour => (
+                      <Fragment key={tour.id}>
+                        {renderTourCard(tour)}
+                        {/* 선택된 투어 상세 정보 - 투어 카드 바로 아래에 표시 */}
+                        {selectedTour && selectedTour.id === tour.id && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mt-2 border-2 border-blue-200">
                   <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6 gap-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-blue-800">{selectedTour.title}</h2>
-                      <p className="text-gray-600">{selectedTour.start_date} ~ {selectedTour.end_date}</p>
+                      <p className="text-gray-600 text-sm">{selectedTour.start_date} ~ {selectedTour.end_date}</p>
                     </div>
-                    <div className="bg-blue-100 px-4 py-2 rounded-lg">
-                      <p className="text-lg font-bold text-blue-800">{selectedTour.price?.toLocaleString()}원</p>
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg">
+                      <p className="text-lg font-bold">{selectedTour.price?.toLocaleString()}원</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -376,10 +372,10 @@ const GolfTourPortal = () => {
                         <TourScheduleDisplay tour={selectedTour} isPreview={true} />
                         
                         {/* 로그인 유도 */}
-                        <div className="mt-4 p-4 bg-purple-50 rounded-lg">
+                        <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                           {!user ? (
                             <>
-                              <p className="text-sm text-purple-700 mb-2">
+                              <p className="text-sm text-blue-700 mb-2">
                                 더 많은 여행 서류를 보시려면 로그인해주세요.
                               </p>
                               <p className="text-xs text-gray-600 mb-3">
@@ -387,7 +383,7 @@ const GolfTourPortal = () => {
                               </p>
                               <a
                                 href="/login"
-                                className="inline-flex items-center gap-1 text-purple-700 font-medium text-sm hover:text-purple-800"
+                                className="inline-flex items-center gap-1 text-blue-700 font-medium text-sm hover:text-blue-800"
                               >
                                 <LogIn className="w-4 h-4" />
                                 로그인하기
@@ -395,7 +391,7 @@ const GolfTourPortal = () => {
                             </>
                           ) : (
                             <>
-                              <p className="text-sm text-purple-700 mb-2">
+                              <p className="text-sm text-blue-700 mb-2">
                                 이 투어의 참가자만 모든 서류를 볼 수 있습니다.
                               </p>
                               <p className="text-xs text-gray-600">
@@ -462,13 +458,12 @@ const GolfTourPortal = () => {
                     )}
                   </div>
                 </div>
-              ) : (
-                <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-medium text-gray-600 mb-2">투어를 선택해주세요</h3>
-                  <p className="text-gray-500">위 목록에서 투어를 선택하면 상세 정보를 확인할 수 있습니다.</p>
-                </div>
-              )}
+                        )}
+                      </Fragment>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -524,7 +519,7 @@ const GolfTourPortal = () => {
         <p>싱싱골프투어 | 031-215-3990</p>
         {!user && tours.length > 0 && (
           <div className="mt-4 mb-8">
-            <p className="text-purple-700 font-medium">
+            <p className="text-blue-700 font-medium">
               더 많은 투어는 로그인하시면 보실 수 있습니다.
             </p>
           </div>

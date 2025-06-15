@@ -690,7 +690,7 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
                   </div>
                   <div>
                     <p className="font-medium">031-215-3990</p>
-                    <p className="text-xs text-gray-500">평일 09:00 - 18:00</p>
+                    <p className="text-xs text-gray-500">평일 09:00 - 18:00 (토/일 휴무)</p>
                   </div>
                 </a>
                 <a href="mailto:singsinggolf@naver.com" className="flex items-center gap-3 text-gray-700 hover:text-blue-600 transition-colors">
@@ -746,7 +746,7 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
               <h4 className="font-bold text-lg mb-4">운영시간</h4>
               <p className="text-gray-400 text-sm">
                 평일: 09:00 - 18:00<br />
-                토요일: 09:00 - 13:00<br />
+                토요일: 휴무<br />
                 일요일/공휴일: 휴무
               </p>
             </div>

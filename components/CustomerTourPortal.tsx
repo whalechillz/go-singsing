@@ -40,11 +40,11 @@ interface CustomerTourPortalProps {
 
 const themes = {
   blue: {
-    name: '클래식 블루',
-    primary: '#2c5282',
-    secondary: '#3182ce',
-    accent: '#4299e1',
-    light: '#e7f3ff'
+    name: '싱싱골프 블루',
+    primary: '#2563EB',
+    secondary: '#4F46E5',
+    accent: '#6366F1',
+    light: '#EFF6FF'
   },
   purple: {
     name: '엘레강트 퍼플',

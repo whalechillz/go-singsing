@@ -96,16 +96,16 @@ const CustomerPortal = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="bg-purple-700 text-white">
+      <header className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold">싱싱골프투어</h1>
-              <p className="text-sm text-purple-200">{user?.name || user?.email}님 환영합니다</p>
+              <p className="text-sm text-blue-100">{user?.name || user?.email}님 환영합니다</p>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 bg-purple-600 px-4 py-2 rounded hover:bg-purple-800 transition"
+              className="flex items-center gap-2 bg-blue-500 px-4 py-2 rounded hover:bg-blue-700 transition"
             >
               <LogOut className="w-4 w-4" />
               로그아웃
@@ -120,15 +120,15 @@ const CustomerPortal = () => {
           <h2 className="text-xl font-bold mb-4">🏆 나의 골프 기록</h2>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-700">{stats.totalTours}</div>
+              <div className="text-3xl font-bold text-blue-600">{stats.totalTours}</div>
               <div className="text-sm text-gray-600">총 투어 횟수</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-700">{stats.totalGolfCourses}</div>
+              <div className="text-3xl font-bold text-blue-600">{stats.totalGolfCourses}</div>
               <div className="text-sm text-gray-600">방문 골프장</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-700">{stats.totalFriends}</div>
+              <div className="text-3xl font-bold text-blue-600">{stats.totalFriends}</div>
               <div className="text-sm text-gray-600">함께한 친구</div>
             </div>
           </div>
@@ -146,7 +146,7 @@ const CustomerPortal = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">📸 나의 골프 추억</h2>
-            <button className="text-purple-700 text-sm font-medium">
+            <button className="text-blue-600 text-sm font-medium">
               전체보기 →
             </button>
           </div>
@@ -169,7 +169,7 @@ const CustomerPortal = () => {
                       </p>
                       <p className="text-sm text-gray-600">⛳ {tour.golf_course}</p>
                     </div>
-                    <button className="text-purple-700">
+                    <button className="text-blue-600">
                       <ChevronRight className="w-5 h-5" />
                     </button>
                   </div>
@@ -202,7 +202,7 @@ const CustomerPortal = () => {
         <div className="fixed bottom-6 right-6">
           <a
             href="/"
-            className="flex items-center gap-2 bg-purple-700 text-white px-6 py-3 rounded-full shadow-lg hover:bg-purple-800 transition"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
           >
             <Plus className="w-5 h-5" />
             새 투어 예약
