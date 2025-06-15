@@ -181,35 +181,31 @@ export default function UserManagementPage() {
 
             console.log('RPC Response:', { authData, authError });
 
-            // RPC 함수가 없거나 실패한 경우에도 public.users에 추가 시도
-            if (authError || !authData?.success) {
-              console.log('RPC failed or returned error, but will try to add to public.users anyway');
+            if (authError) {
+              console.error('RPC error:', authError);
+              // 오류가 나도 계속 진행
             }
 
-            // public.users에 추가 (RPC 성공/실패와 관계없이)
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert({
-                name: formData.name,
-                phone: removePhoneHyphens(formData.phone) || null,
-                email: formData.email,
-                role: formData.role,
-                role_id: formData.role_id || null,
-                is_active: formData.is_active
-              });
+            if (!authData?.success) {
+              // public.users에만 추가 시도
+              const { error: insertError } = await supabase
+                .from('users')
+                .insert({
+                  name: formData.name,
+                  phone: removePhoneHyphens(formData.phone) || null,
+                  email: formData.email,
+                  role: formData.role,
+                  role_id: formData.role_id || null,
+                  is_active: formData.is_active
+                });
 
-            if (insertError) {
-              console.error('Insert error:', insertError);
-              if (insertError.message?.includes('duplicate')) {
-                // 중복 오류가 나도 실제로는 등록되었을 수 있음
+              if (insertError && insertError.message?.includes('duplicate')) {
+                // 이미 존재하는 경우
                 alert('사용자가 이미 존재합니다.');
                 setShowModal(false);
                 resetForm();
                 fetchData();
                 return;
-              } else {
-                // 다른 오류여도 일단 진행
-                console.log('Insert error occurred but continuing:', insertError);
               }
             }
 
