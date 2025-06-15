@@ -565,6 +565,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 return (
                   <tr key={tour.id} className={`hover:bg-gray-50 ${
                     tour.is_closed ? 'bg-red-50 opacity-75' : 
+                    status === 'completed' ? 'bg-gray-100 opacity-60' :
                     isAvailable ? 'bg-green-50' : ''
                   }`}>
                     <td className="px-6 py-6 whitespace-nowrap">
@@ -642,7 +643,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                           </span>
                         )}
                         {getStatusBadge(status)}
-                        {!tour.is_closed && status === 'upcoming' && (
+                        {!tour.is_closed && (status === 'upcoming' || status === 'ongoing') && (
                           <button
                             onClick={() => onToggleClosed(tour)}
                             className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
