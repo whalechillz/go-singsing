@@ -37,7 +37,7 @@ const TourListPage: React.FC = () => {
         .from("singsing_tours")
         .select("*")
         .is('quote_data', null)  // quote_data가 null인 것만 (정식 투어)
-        .order("start_date", { ascending: false });
+        .order("start_date", { ascending: true }); // 출발일 기준 오름차순 (가까운 날짜부터)
       
       if (toursError) throw toursError;
       

@@ -203,11 +203,26 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
   // 정렬 (마감 상태 고려)
   const sortedTours = [...filteredTours].sort((a, b) => {
-    // 완료된 투어는 하단으로
     const aStatus = getTourStatus(a);
     const bStatus = getTourStatus(b);
-    if (aStatus === 'completed' && bStatus !== 'completed') return 1;
-    if (aStatus !== 'completed' && bStatus === 'completed') return -1;
+    
+    // 상태별 우선순위: 진행중 > 예정 > 완료
+    const statusPriority: Record<string, number> = {
+      'ongoing': 1,
+      'upcoming': 2,
+      'completed': 3,
+      'cancelled': 4
+    };
+    
+    const aPriority = statusPriority[aStatus] || 99;
+    const bPriority = statusPriority[bStatus] || 99;
+    
+    // 다른 상태 그룹이면 상태 우선순위로 정렬
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+    
+    // 같은 상태 그룹 내에서의 정렬
     
     // 마감된 투어는 하단으로
     if (a.is_closed && !b.is_closed) return 1;
@@ -215,8 +230,6 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     
     // 예약 가능한 투어 우선 표시
     if (prioritizeAvailable) {
-      const aStatus = getTourStatus(a);
-      const bStatus = getTourStatus(b);
       const aFull = (a.current_participants || 0) >= (a.max_participants || 0);
       const bFull = (b.current_participants || 0) >= (b.max_participants || 0);
       const aAvailable = (aStatus === 'upcoming' || aStatus === 'ongoing') && !aFull && !a.is_closed;
@@ -226,6 +239,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
       if (!aAvailable && bAvailable) return 1;
     }
     
+    // 정렬 방식에 따른 정렬
     switch (sortBy) {
       case 'name':
         return a.title.localeCompare(b.title);
@@ -233,6 +247,11 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
         return (b.current_participants || 0) - (a.current_participants || 0);
       case 'date':
       default:
+        // 진행중/예정은 오름차순 (가까운 날짜부터)
+        // 완료는 내림차순 (최근 완료부터)
+        if (aStatus === 'completed' && bStatus === 'completed') {
+          return new Date(b.end_date).getTime() - new Date(a.end_date).getTime();
+        }
         return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
     }
   });
@@ -253,7 +272,17 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    const now = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    // 같은 연도면 연도 생략
+    if (year === now.getFullYear()) {
+      return `${month}/${day}`;
+    }
+    // 다른 연도면 연도 표시
+    return `${year}.${month}/${day}`;
   };
 
   return (
@@ -576,7 +605,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 return (
                   <tr key={tour.id} className={`hover:bg-gray-50 ${
                     tour.is_closed ? 'bg-red-50 opacity-75' : 
-                    status === 'completed' ? 'bg-gray-100 opacity-60' :
+                    status === 'completed' ? 'bg-gray-50' :
+                    status === 'ongoing' ? 'bg-blue-50' :
                     isAvailable ? 'bg-green-50' : ''
                   }`}>
                     <td className="px-6 py-6 whitespace-nowrap">
