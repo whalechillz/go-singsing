@@ -642,7 +642,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                           </span>
                         )}
                         {getStatusBadge(status)}
-                        {!tour.is_closed && status === 'upcoming' && activeTab === 'active' && (
+                        {!tour.is_closed && status === 'upcoming' && (
                           <button
                             onClick={() => onToggleClosed(tour)}
                             className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
@@ -651,7 +651,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                             마감하기
                           </button>
                         )}
-                        {tour.is_closed && activeTab === 'active' && (
+                        {tour.is_closed && status !== 'completed' && (
                           <button
                             onClick={() => onToggleClosed(tour)}
                             className="text-xs text-green-600 hover:text-green-800 font-medium px-2 py-1 rounded-md hover:bg-green-50 transition-colors"

@@ -3,8 +3,24 @@ import type { Metadata } from "next";
 import KakaoInit from "@/components/KakaoInit";
 
 export const metadata: Metadata = {
-  title: "싱싱골프투어",
-  description: "싱싱골프투어 관리 시스템",
+  title: "싱싱골프투어 - Premium Golf Tour",
+  description: "고품격 골프 여행의 시작, 싱싱골프투어가 함께합니다",
+  icons: {
+    icon: [
+      { url: "/singsing_logo.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [
+      { url: "/singsing_logo.svg" },
+    ],
+  },
+  openGraph: {
+    title: "싱싱골프투어 - Premium Golf Tour",
+    description: "고품격 골프 여행의 시작, 싱싱골프투어가 함께합니다",
+    siteName: "싱싱골프투어",
+    locale: "ko_KR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

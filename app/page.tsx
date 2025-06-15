@@ -7,6 +7,7 @@ import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
 import { useRouter } from "next/navigation";
 import TourScheduleDisplay from "@/components/tour/TourScheduleDisplay";
+import Image from "next/image";
 
 // Tour 타입 정의
 interface Tour {
@@ -226,7 +227,16 @@ const GolfTourPortal = () => {
         <div className="container mx-auto max-w-6xl px-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold">싱싱골프투어</h1>
+              <div className="relative h-10 w-auto mb-1">
+                <Image
+                  src="/singsing_logo.svg"
+                  alt="싱싱골프투어 로고"
+                  width={200}
+                  height={40}
+                  className="h-10 w-auto object-contain filter brightness-0 invert"
+                  priority
+                />
+              </div>
               <p className="text-sm text-blue-100">리무진 버스로 떠나는 편안한 골프여행</p>
             </div>
             <div className="flex items-center space-x-4">

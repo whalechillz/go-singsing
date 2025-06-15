@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/auth';
+import Image from 'next/image';
 import { 
   Home, 
   Briefcase, 
@@ -249,10 +250,22 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       {/* Sidebar header */}
       <div className="p-4 flex items-center justify-between">
         {!isCollapsed && (
-          <div className="font-bold text-xl">싱싱골프투어</div>
+          <div className="relative h-8 w-auto">
+            <Image
+              src="/singsing_logo.svg"
+              alt="싱싱골프투어 로고"
+              width={150}
+              height={32}
+              className="h-8 w-auto object-contain filter brightness-0 invert"
+              priority
+            />
+          </div>
         )}
         <button 
-          className="p-2 rounded-md hover:bg-blue-700 focus:outline-none transition-colors"
+          className={cn(
+            "p-2 rounded-md hover:bg-blue-700 focus:outline-none transition-colors",
+            isCollapsed ? "mx-auto" : ""
+          )}
           onClick={() => onCollapse(!isCollapsed)}
           aria-label={isCollapsed ? '사이드바 펼치기' : '사이드바 접기'}
         >

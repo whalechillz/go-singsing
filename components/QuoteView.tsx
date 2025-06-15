@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import Image from 'next/image';
 import { 
   Calendar,
   Users,
@@ -198,13 +199,19 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
       <div className="bg-white shadow-sm sticky top-0 z-50 backdrop-blur-lg bg-white/90">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Bus className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="relative h-8 w-auto">
+                <Image
+                  src="/singsing_logo.svg"
+                  alt="싱싱골프투어 로고"
+                  width={150}
+                  height={32}
+                  className="h-8 w-auto object-contain"
+                  priority
+                />
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">싱싱골프투어</h1>
-                <p className="text-xs text-gray-500">Premium Golf Tour</p>
+              <div className="text-xs text-gray-500 border-l border-gray-300 pl-2 ml-1">
+                Premium Golf Tour
               </div>
             </div>
             <div className="flex gap-2">

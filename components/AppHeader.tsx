@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export type NavItem = {
   label: string;
@@ -20,8 +21,17 @@ const AppHeader: React.FC<AppHeaderProps> = ({ navItems, modeSwitch, rightConten
     <header className="w-full bg-blue-800 text-white shadow-sm sticky top-0 z-50">
       <nav className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
         {/* 브랜드명/로고 */}
-        <Link href="/" className="text-xl font-bold tracking-tight flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-white" aria-label="홈으로 이동">
-          <span>싱싱골프투어</span>
+        <Link href="/" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-white" aria-label="홈으로 이동">
+          <div className="relative h-8 w-auto">
+            <Image
+              src="/singsing_logo.svg"
+              alt="싱싱골프투어 로고"
+              width={150}
+              height={32}
+              className="h-8 w-auto object-contain filter brightness-0 invert"
+              priority
+            />
+          </div>
         </Link>
         {/* 네비게이션 */}
         <ul className="hidden md:flex gap-2 ml-8">
