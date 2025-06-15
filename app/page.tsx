@@ -25,6 +25,10 @@ interface Tour {
   closed_reason?: string;
   closed_at?: string;
   tour_product_id?: string;
+  // 뱃지 관련 필드 추가
+  is_special_price?: boolean;
+  special_badge_text?: string;
+  badge_priority?: number;
 }
 
 const GolfTourPortal = () => {
@@ -188,6 +192,82 @@ const GolfTourPortal = () => {
     return `${month}월 ${day}일(${dayOfWeek})`;
   };
 
+  // 투어 뱃지 계산 함수
+  const getTourBadges = (tour: Tour, allTours: Tour[]) => {
+    const badges = [];
+    const remaining = (tour.max_participants || 0) - (tour.current_participants || 0);
+    
+    // 1. 마감임박 (잔여석 3석 이하)
+    if (remaining > 0 && remaining <= 3) {
+      badges.push({ 
+        type: 'urgent', 
+        text: '마감임박', 
+        icon: '⏰',
+        priority: 3 
+      });
+    }
+    
+    // 2. 최저가 (같은 골프장 투어 중)
+    const sameCourse = allTours.filter(t => 
+      t.golf_course === tour.golf_course && 
+      t.id !== tour.id &&
+      !t.is_closed &&
+      Math.abs(new Date(t.start_date).getTime() - new Date(tour.start_date).getTime()) <= 30 * 24 * 60 * 60 * 1000 // 30일 이내
+    );
+    
+    if (sameCourse.length > 0) {
+      const isCheapest = sameCourse.every(t => (tour.price || 0) <= (t.price || 0));
+      if (isCheapest) {
+        badges.push({ 
+          type: 'cheapest', 
+          text: '최저가', 
+          icon: '💰',
+          priority: 2 
+        });
+      }
+    }
+    
+    // 3. 인기 (참가율 70% 이상)
+    const participationRate = ((tour.current_participants || 0) / (tour.max_participants || 1)) * 100;
+    if (participationRate >= 70 && participationRate < 100) {
+      badges.push({ 
+        type: 'popular', 
+        text: '인기', 
+        icon: '🔥',
+        priority: 1 
+      });
+    }
+    
+    // 4. 수동 설정 뱃지 (DB에서 가져온 값)
+    if (tour.is_special_price && tour.special_badge_text) {
+      badges.push({
+        type: 'special',
+        text: tour.special_badge_text,
+        icon: '⭐',
+        priority: tour.badge_priority || 0
+      });
+    }
+    
+    // 우선순위 정렬, 최대 2개만 표시
+    return badges.sort((a, b) => b.priority - a.priority).slice(0, 2);
+  };
+
+  // 뱃지 스타일 함수
+  const getBadgeStyle = (type: string) => {
+    switch (type) {
+      case 'urgent':
+        return 'bg-red-100 text-red-700 border-red-600';
+      case 'cheapest':
+        return 'bg-green-100 text-green-700 border-green-600';
+      case 'popular':
+        return 'bg-orange-100 text-orange-700 border-orange-600';
+      case 'special':
+        return 'bg-purple-100 text-purple-700 border-purple-600';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-600';
+    }
+  };
+
   const getTourStatus = (tour: Tour) => {
     if (tour.is_closed) return 'closed';
     const remainingSeats = (tour.max_participants || 0) - (tour.current_participants || 0);
@@ -212,7 +292,23 @@ const GolfTourPortal = () => {
         <div className="flex justify-between items-start mb-3">
           <div>
             <h3 className="text-lg font-bold text-gray-900">📅 {formatDate(tour.start_date)} 출발</h3>
-            <h4 className="text-blue-700 font-medium mt-1">{tour.title}</h4>
+            <div className="mt-1">
+              <h4 className="text-blue-700 font-medium inline">{tour.title}</h4>
+              {/* 뱃지 표시 */}
+              {getTourBadges(tour, tours).length > 0 && (
+                <div className="inline-flex gap-1 ml-2">
+                  {getTourBadges(tour, tours).map((badge, index) => (
+                    <span
+                      key={index}
+                      className={`px-2 py-0.5 text-xs font-bold rounded-full inline-flex items-center gap-1 border ${getBadgeStyle(badge.type)}`}
+                    >
+                      <span className="text-xs">{badge.icon}</span>
+                      <span>{badge.text}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="flex items-center text-gray-600 mt-2">
               <MapPin className="w-4 h-4 mr-1" />
               <span className="text-sm">{tour.golf_course}</span>
