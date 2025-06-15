@@ -164,6 +164,8 @@ export default function UserManagementPage() {
               return;
             }
 
+            console.log('Creating user with email:', formData.email);
+
             // RPC 함수로 사용자 생성
             const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
               input_email: formData.email,
@@ -177,14 +179,55 @@ export default function UserManagementPage() {
               }
             });
 
-            // 에러가 있고, 이미 존재하는 사용자가 아닌 경우에만 에러 처리
-            if (authError && !authError.message?.includes('already exists')) {
-              console.error('RPC error:', authError);
-              // 에러를 무시하고 계속 진행
+            console.log('RPC Response:', { authData, authError });
+
+            // RPC 응답 확인
+            if (authError) {
+              console.error('RPC Error:', authError);
+              
+              // RPC 함수가 없는 경우 직접 public.users에만 추가
+              if (authError.message?.includes('function') || authError.message?.includes('does not exist')) {
+                console.log('RPC function not found, creating user directly in public.users');
+                
+                const { error: insertError } = await supabase
+                  .from('users')
+                  .insert({
+                    name: formData.name,
+                    phone: removePhoneHyphens(formData.phone) || null,
+                    email: formData.email,
+                    role: formData.role,
+                    role_id: formData.role_id || null,
+                    is_active: formData.is_active
+                  });
+
+                if (insertError) {
+                  console.error('Insert error:', insertError);
+                  alert('사용자 추가 중 오류가 발생했습니다.');
+                  return;
+                }
+
+                alert(`사용자가 추가되었습니다!\n\n이메일: ${formData.email}\n\n※ auth.users에는 등록되지 않아 로그인은 불가능합니다.\n관리자에게 문의하세요.`);
+                setShowModal(false);
+                resetForm();
+                fetchData();
+                return;
+              }
             }
 
-            // 잠시 대기 후 사용자가 생성되었는지 확인
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // RPC 성공 응답 처리
+            if (authData && (authData.success === true || authData.user_id)) {
+              alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
+              setShowModal(false);
+              resetForm();
+              fetchData();
+              return;
+            }
+
+            // RPC 응답이 명확하지 않은 경우, 실제 생성 확인
+            console.log('Checking if user was created...');
+            
+            // 잠시 대기
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             const { data: newUser } = await supabase
               .from('users')
@@ -192,11 +235,32 @@ export default function UserManagementPage() {
               .eq('email', formData.email)
               .maybeSingle();
 
+            console.log('User check result:', newUser);
+
             if (newUser) {
               alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
             } else {
-              alert('사용자 추가 중 오류가 발생했습니다. 다시 시도해주세요.');
-              return;
+              // 사용자가 생성되지 않은 경우, public.users에만 추가
+              console.log('User not found in public.users, creating directly...');
+              
+              const { error: insertError } = await supabase
+                .from('users')
+                .insert({
+                  name: formData.name,
+                  phone: removePhoneHyphens(formData.phone) || null,
+                  email: formData.email,
+                  role: formData.role,
+                  role_id: formData.role_id || null,
+                  is_active: formData.is_active
+                });
+
+              if (insertError) {
+                console.error('Direct insert error:', insertError);
+                alert('사용자 추가 중 오류가 발생했습니다.');
+                return;
+              }
+
+              alert(`사용자가 추가되었습니다!\n\n이메일: ${formData.email}\n\n※ auth.users에는 등록되지 않아 로그인은 불가능합니다.\n관리자에게 문의하세요.`);
             }
             
           } catch (error: any) {
