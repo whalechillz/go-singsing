@@ -84,53 +84,32 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
 
       const newTourId = newTour.id;
 
-      // 2. 일정 정보 복사 (선택한 경우)
+      // 2. 일정 정보 복사 (선택한 경우) - tour_journey_items만 복사
       if (copySchedules) {
-        // 일별 일정 복사
-        const { data: schedules } = await supabase
-          .from('singsing_schedules')
+        // 여정 아이템 복사 (tourist_attractions 연결 유지)
+        const { data: journeyItems } = await supabase
+          .from('tour_journey_items')
           .select('*')
-          .eq('tour_id', tour.id);
+          .eq('tour_id', tour.id)
+          .order('day_number', { ascending: true })
+          .order('order_index', { ascending: true });
 
-        if (schedules && schedules.length > 0) {
-          // 날짜 차이 계산
-          const originalStartDate = new Date(tour.start_date);
-          const newStartDateObj = new Date(newStartDate);
-          const dateDiff = Math.floor((newStartDateObj.getTime() - originalStartDate.getTime()) / (1000 * 60 * 60 * 24));
-
-          const newSchedules = schedules.map(schedule => {
-            const { id, tour_id, created_at, ...rest } = schedule;
-            
-            // 일정 날짜 조정
-            let adjustedDate = rest.date;
-            if (rest.date) {
-              const scheduleDate = new Date(rest.date);
-              scheduleDate.setDate(scheduleDate.getDate() + dateDiff);
-              adjustedDate = scheduleDate.toISOString().split('T')[0];
-            }
-            
-            let adjustedScheduleDate = rest.schedule_date;
-            if (rest.schedule_date) {
-              const scheduleDate = new Date(rest.schedule_date);
-              scheduleDate.setDate(scheduleDate.getDate() + dateDiff);
-              adjustedScheduleDate = scheduleDate.toISOString().split('T')[0];
-            }
-
+        if (journeyItems && journeyItems.length > 0) {
+          const newJourneyItems = journeyItems.map(item => {
+            const { id, tour_id, created_at, updated_at, ...rest } = item;
             return {
               ...rest,
-              tour_id: newTourId,
-              date: adjustedDate,
-              schedule_date: adjustedScheduleDate
+              tour_id: newTourId
             };
           });
 
           await supabase
-            .from('singsing_schedules')
-            .insert(newSchedules);
+            .from('tour_journey_items')
+            .insert(newJourneyItems);
         }
       }
 
-      // 3. 여정 및 이동 정보 복사 (선택한 경우)
+      // 3. 탑승 정보 복사 (선택한 경우)
       if (copyJourneyInfo) {
         // 탑승 시간 정보 복사
         const { data: boardingTimes } = await supabase
@@ -150,26 +129,6 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
           await supabase
             .from('singsing_tour_boarding_times')
             .insert(newBoardingTimes);
-        }
-
-        // 여정 정보 복사
-        const { data: journeyItems } = await supabase
-          .from('tour_journey_items')
-          .select('*')
-          .eq('tour_id', tour.id);
-
-        if (journeyItems && journeyItems.length > 0) {
-          const newJourneyItems = journeyItems.map(item => {
-            const { id, tour_id, created_at, updated_at, ...rest } = item;
-            return {
-              ...rest,
-              tour_id: newTourId
-            };
-          });
-
-          await supabase
-            .from('tour_journey_items')
-            .insert(newJourneyItems);
         }
       }
 
@@ -269,10 +228,10 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
               <div className="ml-3 flex-1">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-900">일별 스케줄</span>
+                  <span className="text-sm font-medium text-gray-900">여정 정보</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  각 날짜별 세부 일정, 식사 정보
+                  각 날짜별 방문 장소, 일정, 식사 정보
                 </p>
               </div>
             </label>
@@ -287,10 +246,10 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
               <div className="ml-3 flex-1">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-900">탑승 및 여정 정보</span>
+                  <span className="text-sm font-medium text-gray-900">탑승 정보</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  탑승 장소, 시간, 이동 경로 등
+                  탑승 장소, 시간 정보
                 </p>
               </div>
             </label>
