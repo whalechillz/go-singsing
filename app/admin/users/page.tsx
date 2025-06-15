@@ -130,7 +130,7 @@ export default function UserManagementPage() {
     
     try {
       if (editingUser) {
-        // 수정
+        // 수정 모드
         const updateData: any = {
           name: formData.name,
           phone: removePhoneHyphens(formData.phone) || null,
@@ -146,17 +146,34 @@ export default function UserManagementPage() {
           .eq("id", editingUser.id);
 
         if (error) throw error;
-
-        // 이메일이 변경되었다면 auth.users도 업데이트 필요
-        if (editingUser.email !== formData.email && formData.email) {
-          alert(`이메일 변경은 보안상 SQL Editor에서 직접 수행해야 합니다.\n\n1. 기존 계정 삭제:\nDELETE FROM auth.users WHERE email = '${editingUser.email}';\n\n2. 새 계정 생성:\nINSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, aud, role, created_at, updated_at)\nVALUES (gen_random_uuid(), '${formData.email}', crypt('90001004', gen_salt('bf')), NOW(), '{"name": "${formData.name}", "role": "${formData.role}"}'::jsonb, 'authenticated', 'authenticated', NOW(), NOW());`);
-        }
+        alert("사용자 정보가 수정되었습니다.");
+        
       } else {
-        // 추가
+        // 추가 모드
         if (formData.email) {
-          // 이메일이 있는 경우 auth.users에도 추가
           try {
-            // 1. 먼저 public.users에 추가
+            // 1. RPC 함수 사용하여 auth.users에 추가
+            const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
+              input_email: formData.email,
+              input_password: formData.password || '90001004',
+              input_user_meta: {
+                name: formData.name,
+                role: formData.role,
+                phone: removePhoneHyphens(formData.phone)
+              }
+            });
+
+            if (authError || !authData?.success) {
+              console.error('Auth creation error:', authError || authData?.error);
+              // 이메일이 이미 존재하는 경우
+              if (authData?.error?.includes('already exists')) {
+                alert('이미 등록된 이메일입니다.');
+                return;
+              }
+              throw new Error(authData?.error || 'Auth 사용자 생성 실패');
+            }
+
+            // 2. public.users에 추가
             const { error: publicError } = await supabase.from("users").insert({
               name: formData.name,
               phone: removePhoneHyphens(formData.phone) || null,
@@ -166,32 +183,24 @@ export default function UserManagementPage() {
               is_active: formData.is_active
             });
             
-            if (publicError) throw publicError;
-
-            // 2. auth.users에 추가 (직접 SQL 실행)
-            const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
-              user_email: formData.email,
-              user_password: formData.password || '90001004', // 기본 비밀번호
-              user_metadata: {
-                name: formData.name,
-                role: formData.role,
-                phone: removePhoneHyphens(formData.phone)
-              }
-            });
-
-            if (authError) {
-              console.error('Auth creation failed:', authError);
-              // RPC 실패 시 수동으로 SQL 실행 안내
-              alert(`사용자가 추가되었지만 로그인 설정이 필요합니다.\n\nSQL Editor에서 다음을 실행하세요:\n\nINSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, aud, role, created_at, updated_at)\nVALUES (gen_random_uuid(), '${formData.email}', crypt('${formData.password || '90001004'}', gen_salt('bf')), NOW(), '{"name": "${formData.name}", "role": "${formData.role}"}'::jsonb, 'authenticated', 'authenticated', NOW(), NOW());`);
-            } else {
-              // 성공
-              alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
+            if (publicError) {
+              console.error('Public user creation error:', publicError);
+              throw publicError;
             }
-          } catch (error) {
-            console.error('Error in user creation:', error);
-            alert('사용자 추가 중 오류가 발생했습니다.');
-            throw error;
+
+            alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
+            
+          } catch (error: any) {
+            console.error('User creation error:', error);
+            // RPC 함수가 없는 경우 안내
+            if (error.message?.includes('function') || error.message?.includes('does not exist')) {
+              alert('RPC 함수가 설정되지 않았습니다.\n\nSupabase SQL Editor에서 제공된 SQL을 실행한 후 다시 시도하세요.');
+            } else {
+              alert('사용자 추가 중 오류가 발생했습니다.');
+            }
+            return;
           }
+          
         } else {
           // 이메일이 없는 경우 public.users에만 추가
           const { error } = await supabase
@@ -206,13 +215,14 @@ export default function UserManagementPage() {
             });
 
           if (error) throw error;
-          alert("사용자가 추가되었습니다. (로그인 불가)");
+          alert("사용자가 추가되었습니다. (로그인 불가 - 이메일 없음)");
         }
       }
 
       setShowModal(false);
       resetForm();
       fetchData();
+      
     } catch (error: any) {
       console.error("Error saving user:", error);
       if (error.code === '23505') {
