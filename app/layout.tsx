@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     url: "https://go.singsinggolf.kr",
     images: [
       {
-        url: "/singsing_logo_192x192.png",
+        url: "/favicon/singsing_logo_192x192.png",
         width: 192,
         height: 192,
         alt: "싱싱골프투어 로고 - 국내 골프여행 전문",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "싱싱골프투어 | 2박3일 골프패키지 리무진버스 단체투어",
     description: "국내 골프여행 전문 🚌 리무진버스 이동 ⛳ 2박3일 골프패키지 📞 031-215-3990",
-    images: ["/singsing_logo_192x192.png"],
+    images: ["/favicon/singsing_logo_192x192.png"],
   },
   alternates: {
     canonical: "https://go.singsinggolf.kr",
