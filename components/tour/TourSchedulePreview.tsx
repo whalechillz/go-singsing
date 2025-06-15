@@ -36,7 +36,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     try {
       // 투어 정보 가져오기
       const { data: tour, error: tourError } = await supabase
-        .from('tours')
+        .from('singsing_tours')
         .select('*')
         .eq('id', tourId)
         .single();
@@ -95,7 +95,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 rounded-t-2xl">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">[{tourData.location}] {tourData.name}</h1>
+            <h1 className="text-3xl font-bold mb-2">[{tourData.golf_course}] {tourData.title}</h1>
             <p className="text-xl opacity-90">{nights}박 {days}일의 특별한 여행</p>
           </div>
           <div className="text-right">
@@ -113,7 +113,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div className="text-center">
             <MapPin className="w-6 h-6 mx-auto mb-2" />
             <p className="text-sm opacity-80">여행지</p>
-            <p className="font-semibold">{tourData.location}</p>
+            <p className="font-semibold">{tourData.golf_course}</p>
           </div>
           <div className="text-center">
             <Users className="w-6 h-6 mx-auto mb-2" />
@@ -294,11 +294,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-2xl font-bold mb-2">견적 요약</h3>
-              <p className="opacity-90">1인 요금: {tourData.price_per_person?.toLocaleString() || '750,000'}원</p>
+              <p className="opacity-90">1인 요금: {tourData.price?.toLocaleString() || '750,000'}원</p>
             </div>
             <div className="text-right">
               <p className="text-sm opacity-80 mb-1">총 예상 금액 (4명 기준)</p>
-              <p className="text-3xl font-bold">{((tourData.price_per_person || 750000) * 4).toLocaleString()}원</p>
+              <p className="text-3xl font-bold">{((tourData.price || 750000) * 4).toLocaleString()}원</p>
             </div>
           </div>
         </div>
