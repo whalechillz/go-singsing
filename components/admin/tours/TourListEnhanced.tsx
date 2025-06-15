@@ -53,6 +53,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'participants'>('date');
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
+  const [quickFilter, setQuickFilter] = useState<'none' | 'today' | 'week' | 'almostFull'>('none');
+  const [prioritizeAvailable, setPrioritizeAvailable] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -128,12 +130,36 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   // 필터링된 투어 목록
   const filteredTours = tours.filter(tour => {
     const status = getTourStatus(tour);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(tour.start_date);
+    startDate.setHours(0, 0, 0, 0);
     
     // 검색어 필터
     if (searchTerm && !tour.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
         !tour.driver_name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !tour.golf_course?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
+    }
+    
+    // 빠른 필터
+    if (quickFilter !== 'none') {
+      const isFull = (tour.current_participants || 0) >= (tour.max_participants || 0);
+      const occupancyRate = getOccupancyRate(tour);
+      
+      switch (quickFilter) {
+        case 'today':
+          if (startDate.getTime() !== today.getTime()) return false;
+          break;
+        case 'week':
+          const weekFromNow = new Date(today);
+          weekFromNow.setDate(weekFromNow.getDate() + 7);
+          if (startDate < today || startDate > weekFromNow) return false;
+          break;
+        case 'almostFull':
+          if (isFull || occupancyRate < 80) return false;
+          break;
+      }
     }
     
     // 예약 가능한 투어만 표시
@@ -150,8 +176,6 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     
     // 날짜 필터
     if (dateFilter !== 'all') {
-      const startDate = new Date(tour.start_date);
-      const today = new Date();
       if (dateFilter === 'upcoming' && startDate <= today) return false;
       if (dateFilter === 'past' && startDate > today) return false;
     }
@@ -161,6 +185,19 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
   // 정렬
   const sortedTours = [...filteredTours].sort((a, b) => {
+    // 예약 가능한 투어 우선 표시
+    if (prioritizeAvailable) {
+      const aStatus = getTourStatus(a);
+      const bStatus = getTourStatus(b);
+      const aFull = (a.current_participants || 0) >= (a.max_participants || 0);
+      const bFull = (b.current_participants || 0) >= (b.max_participants || 0);
+      const aAvailable = (aStatus === 'upcoming' || aStatus === 'ongoing') && !aFull;
+      const bAvailable = (bStatus === 'upcoming' || bStatus === 'ongoing') && !bFull;
+      
+      if (aAvailable && !bAvailable) return -1;
+      if (!aAvailable && bAvailable) return 1;
+    }
+    
     switch (sortBy) {
       case 'name':
         return a.title.localeCompare(b.title);
@@ -178,7 +215,12 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     upcoming: tours.filter(t => getTourStatus(t) === 'upcoming').length,
     ongoing: tours.filter(t => getTourStatus(t) === 'ongoing').length,
     completed: tours.filter(t => getTourStatus(t) === 'completed').length,
-    totalRevenue: tours.reduce((sum, t) => sum + (t.price * (t.current_participants || 0)), 0)
+    totalRevenue: tours.reduce((sum, t) => sum + (t.price * (t.current_participants || 0)), 0),
+    available: tours.filter(t => {
+      const status = getTourStatus(t);
+      const isFull = (t.current_participants || 0) >= (t.max_participants || 0);
+      return (status === 'upcoming' || status === 'ongoing') && !isFull;
+    }).length
   };
 
   const formatDate = (dateStr: string) => {
@@ -255,6 +297,52 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
       {/* 필터 및 검색 */}
       <div className="bg-white rounded-lg p-4 space-y-4">
+        {/* 빠른 필터 버튼 */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setQuickFilter(quickFilter === 'today' ? 'none' : 'today')}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+              quickFilter === 'today' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            오늘 출발
+          </button>
+          <button
+            onClick={() => setQuickFilter(quickFilter === 'week' ? 'none' : 'week')}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+              quickFilter === 'week' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            이번 주 출발
+          </button>
+          <button
+            onClick={() => setQuickFilter(quickFilter === 'almostFull' ? 'none' : 'almostFull')}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+              quickFilter === 'almostFull' 
+                ? 'bg-orange-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            마감 임박
+          </button>
+          <div className="flex-1" />
+          <label className="flex items-center cursor-pointer px-4 py-2 rounded-lg bg-purple-50 hover:bg-purple-100">
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={prioritizeAvailable}
+              onChange={(e) => setPrioritizeAvailable(e.target.checked)}
+            />
+            <span className="text-sm font-medium text-purple-700">
+              {prioritizeAvailable ? '✓ ' : ''}예약 가능 투어 상단 표시
+            </span>
+          </label>
+        </div>
+        
         <div className="flex flex-col md:flex-row gap-4">
           {/* 검색 */}
           <div className="flex-1">
@@ -280,7 +368,10 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 onChange={(e) => setShowOnlyAvailable(e.target.checked)}
               />
               <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              <span className="ml-3 text-sm font-medium text-gray-700">예약 가능한 투어만</span>
+              <span className="ml-3 text-sm font-medium text-gray-700">
+                예약 가능한 투어만
+                {showOnlyAvailable && ` (${stats.available}개)`}
+              </span>
             </label>
           </div>
           
@@ -379,24 +470,31 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
               {sortedTours.map((tour) => {
                 const status = getTourStatus(tour);
                 const occupancyRate = getOccupancyRate(tour);
+                const isFull = (tour.current_participants || 0) >= (tour.max_participants || 0);
+                const isAvailable = (status === 'upcoming' || status === 'ongoing') && !isFull;
                 
                 return (
-                  <tr key={tour.id} className="hover:bg-gray-50">
+                  <tr key={tour.id} className={`hover:bg-gray-50 ${isAvailable ? 'bg-green-50' : ''}`}>
                     <td className="px-6 py-6 whitespace-nowrap">
-                      <div>
-                        <Link 
-                          href={`/admin/tours/${tour.id}`}
-                          className="text-sm font-medium text-gray-900 hover:text-blue-600"
-                        >
-                          {tour.title}
-                        </Link>
-                        <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
-                          {tour.golf_course && (
-                            <>
-                              <MapPin className="w-3 h-3" />
-                              {tour.golf_course}
-                            </>
-                          )}
+                      <div className="flex items-center gap-2">
+                        {isAvailable && (
+                          <div className="w-2 h-2 bg-green-500 rounded-full" title="예약 가능" />
+                        )}
+                        <div>
+                          <Link 
+                            href={`/admin/tours/${tour.id}`}
+                            className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                          >
+                            {tour.title}
+                          </Link>
+                          <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                            {tour.golf_course && (
+                              <>
+                                <MapPin className="w-3 h-3" />
+                                {tour.golf_course}
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
