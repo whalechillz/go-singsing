@@ -7,7 +7,7 @@ export default function DevLayout({
     <>
       <head>
         <link
-          href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@900&family=Do+Hyeon&family=Jua&family=Nanum+Gothic:wght@800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Black+Han+Sans&family=Gothic+A1:wght@900&family=Do+Hyeon&family=Jua&display=swap"
           rel="stylesheet"
         />
       </head>

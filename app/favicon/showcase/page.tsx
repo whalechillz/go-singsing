@@ -28,7 +28,8 @@ export default function FaviconShowcase() {
               />
             </div>
             <p className="mt-4 text-gray-600">
-              골프공 디자인에 '싱' 글자가 들어간 메인 아이콘입니다.
+              골프공 디자인에 '싱싱' 글자가 들어간 메인 아이콘입니다.
+              나눔고딕 800 (특굵) 폰트를 사용하여 깨끗하고 공식적인 느낌을 줍니다.
             </p>
           </div>
 
@@ -62,7 +63,7 @@ export default function FaviconShowcase() {
             </div>
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>추천:</strong> Black Han Sans - 매우 굵고 임팩트 있어 작은 크기에서도 가독성이 우수합니다.
+                <strong>적용됨:</strong> Nanum Gothic - 깨끗하고 가독성이 좋아 공식적인 느낌을 주며 브랜드 아이덴티티에 적합합니다.
               </p>
             </div>
           </div>
@@ -207,8 +208,8 @@ font-family: 'Black Han Sans', sans-serif;`}
               <li>• <strong>배경색</strong>: #003366 (싱싱골프투어 브랜드 컬러)</li>
               <li>• <strong>메인 요소</strong>: 흰색 골프공</li>
               <li>• <strong>딤플 패턴</strong>: 회색(#e0e0e0)으로 골프공의 입체감 표현</li>
-              <li>• <strong>텍스트</strong>: '싱' 한글 (큰 버전에만 포함)</li>
-              <li>• <strong>폰트</strong>: Black Han Sans 추천 (굵고 임팩트 있음)</li>
+              <li>• <strong>텍스트</strong>: '싱싱' 한글 (큰 버전에만 포함)</li>
+              <li>• <strong>폰트</strong>: Nanum Gothic 800 (나눔고딕 특굵)</li>
               <li>• <strong>형태</strong>: 둥근 모서리의 정사각형</li>
             </ul>
           </div>
@@ -224,7 +225,7 @@ font-family: 'Black Han Sans', sans-serif;`}
               <li>• 파비콘 수정: <code className="bg-gray-200 px-1">/app/icon.tsx</code></li>
               <li>• Apple 아이콘 수정: <code className="bg-gray-200 px-1">/app/apple-icon.tsx</code></li>
               <li>• 정적 파일: <code className="bg-gray-200 px-1">/public/favicon/</code></li>
-              <li>• 폰트 스타일 테스트: <code className="bg-gray-200 px-1">/app/apple-icon-blackhan.tsx</code></li>
+              <li>• 파비콘 미리보기: <code className="bg-gray-200 px-1">/app/favicon/preview/route.tsx</code></li>
             </ul>
           </div>
         </div>

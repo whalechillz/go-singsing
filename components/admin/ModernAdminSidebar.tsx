@@ -87,7 +87,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     if (pathname.startsWith('/admin/design-templates')) return 'design-templates';
     if (pathname.startsWith('/admin/font-styles')) return 'font-styles';
-    if (pathname.startsWith('/favicon-showcase')) return 'favicon-showcase';
+    if (pathname.startsWith('/favicon/showcase')) return 'favicon-showcase';
     if (pathname.startsWith('/admin/schedule-templates')) return 'schedule-templates';
     if (pathname.startsWith('/admin/statistics')) return 'statistics';
     if (pathname.startsWith('/admin/settings')) return 'settings';
