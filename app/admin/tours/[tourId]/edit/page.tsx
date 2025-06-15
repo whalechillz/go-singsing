@@ -19,6 +19,9 @@ type TourForm = {
   tour_product_id: string;
   price: string;
   max_participants: string;
+  current_participants?: string;
+  is_closed?: boolean;
+  closed_reason?: string;
   
   // 일정 관련 필드
   departure_location: string;
@@ -205,6 +208,9 @@ const TourEditPage: React.FC = () => {
           tour_product_id: tourData.tour_product_id || "",
           price: tourData.price?.toString() || "",
           max_participants: tourData.max_participants?.toString() || "",
+          current_participants: tourData.current_participants?.toString() || "0",
+          is_closed: tourData.is_closed || false,
+          closed_reason: tourData.closed_reason || "",
           
           // 일정 관련 필드
           departure_location: tourData.departure_location || "",
@@ -386,6 +392,9 @@ const TourEditPage: React.FC = () => {
         tour_product_id: form.tour_product_id || null,
         price: form.price ? Number(form.price) : null,
         max_participants: form.max_participants ? Number(form.max_participants) : null,
+        is_closed: form.is_closed || false,
+        closed_reason: form.is_closed ? form.closed_reason : null,
+        closed_at: form.is_closed ? new Date().toISOString() : null,
         
         // 일정 관련 필드
         departure_location: form.departure_location,
@@ -585,6 +594,42 @@ const TourEditPage: React.FC = () => {
                 <span className="font-medium">최대 인원</span>
                 <input name="max_participants" type="number" className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" value={form.max_participants} onChange={handleChange} required />
               </label>
+            </div>
+            
+            {/* 마감 설정 */}
+            <div className="border border-yellow-200 bg-yellow-50 dark:bg-gray-800 dark:border-yellow-700 rounded-lg p-4">
+              <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                투어 마감 설정
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">현재 참가자: <strong>{form.current_participants || '0'}명</strong> / {form.max_participants}명</span>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="is_closed"
+                      checked={form.is_closed || false}
+                      onChange={handleChange}
+                      className="w-4 h-4"
+                    />
+                    <span className="font-medium text-red-600">투어 마감</span>
+                  </label>
+                </div>
+                {form.is_closed && (
+                  <label className="flex flex-col gap-1">
+                    <span className="text-sm text-gray-600">마감 사유</span>
+                    <input
+                      name="closed_reason"
+                      type="text"
+                      value={form.closed_reason || ''}
+                      onChange={handleChange}
+                      placeholder="예: 조기 마감, 취소, 연기 등"
+                      className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800"
+                    />
+                  </label>
+                )}
+              </div>
             </div>
             
             {/* 일정 관련 필드 추가 */}

@@ -17,9 +17,12 @@ interface Tour {
   golf_course?: string;
   accommodation?: string;
   max_participants?: number;
+  current_participants?: number;
   price?: number;
   driver_name?: string;
-  // 필요시 추가 필드...
+  is_closed?: boolean;
+  closed_reason?: string;
+  closed_at?: string;
 }
 
 const GolfTourPortal = () => {
@@ -144,11 +147,20 @@ const GolfTourPortal = () => {
     return `${month}월 ${day}일(${dayOfWeek})`;
   };
 
+  const getTourStatus = (tour: Tour) => {
+    if (tour.is_closed) return 'closed';
+    const remainingSeats = (tour.max_participants || 0) - (tour.current_participants || 0);
+    if (remainingSeats <= 0) return 'full';
+    if (remainingSeats <= 3) return 'almost-full';
+    return 'available';
+  };
+
   const renderTourCard = (tour: Tour) => {
     const isSelected = selectedTour && selectedTour.id === tour.id;
-    const remainingSeats = (tour.max_participants || 0) - 0; // TODO: current_participants 추가 필요
-    const isAlmostFull = remainingSeats > 0 && remainingSeats <= 3;
-    const isFull = remainingSeats <= 0;
+    const status = getTourStatus(tour);
+    const remainingSeats = (tour.max_participants || 0) - (tour.current_participants || 0);
+    const isAlmostFull = status === 'almost-full';
+    const isFull = status === 'full' || status === 'closed';
     
     return (
       <div
@@ -170,11 +182,14 @@ const GolfTourPortal = () => {
             </div>
           </div>
           <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            status === 'closed' ? 'bg-red-100 text-red-700' :
             isFull ? 'bg-gray-100 text-gray-600' :
             isAlmostFull ? 'bg-orange-100 text-orange-700' :
             'bg-green-100 text-green-700'
           }`}>
-            {isFull ? '마감' : `잔여 ${remainingSeats}석`}
+            {status === 'closed' ? (tour.closed_reason || '마감') :
+             isFull ? '마감' : 
+             `잔여 ${remainingSeats}석`}
           </div>
         </div>
         <div className="mt-3 pt-3 border-t border-gray-200">
@@ -186,12 +201,12 @@ const GolfTourPortal = () => {
             <a
               href="tel:031-215-3990"
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                isFull 
+                status === 'closed' || isFull 
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
                   : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
               }`}
               onClick={(e) => {
-                if (isFull) e.preventDefault();
+                if (status === 'closed' || isFull) e.preventDefault();
                 e.stopPropagation();
               }}
             >
@@ -332,38 +347,7 @@ const GolfTourPortal = () => {
                       <p className="text-lg font-bold">{selectedTour.price?.toLocaleString()}원</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center mb-2">
-                        <Globe className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-semibold">골프장</span>
-                      </div>
-                      <p>{selectedTour.golf_course}</p>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center mb-2">
-                        <MapPin className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-semibold">숙소</span>
-                      </div>
-                      <p>{selectedTour.accommodation}</p>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center mb-2">
-                        <Users className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-semibold">인원</span>
-                      </div>
-                      <p>
-                        <span className="font-medium">{selectedTour.max_participants}</span>명
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center mb-2">
-                        <Phone className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-semibold">담당자</span>
-                      </div>
-                      <p>{selectedTour.driver_name}</p>
-                    </div>
-                  </div>
+
                   <div className="border-t pt-6">
                     {/* 비로그인 사용자 또는 해당 투어 비참가자: 투어 일정표만 표시 */}
                     {!user || (!isStaffView && !userTours.includes(selectedTour.id)) ? (
