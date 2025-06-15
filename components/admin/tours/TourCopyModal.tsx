@@ -125,8 +125,8 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
         }
       }
 
-      // 3. 탑승 정보 복사 (선택한 경우)
-      if (copyBoardingInfo) {
+      // 3. 여정 및 이동 정보 복사 (선택한 경우)
+      if (copyJourneyInfo) {
         // 탑승 시간 정보 복사
         const { data: boardingTimes } = await supabase
           .from('singsing_tour_boarding_times')
@@ -276,8 +276,8 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
               <input
                 type="checkbox"
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                checked={copyBoardingInfo}
-                onChange={(e) => setCopyBoardingInfo(e.target.checked)}
+                checked={copyJourneyInfo}
+                onChange={(e) => setCopyJourneyInfo(e.target.checked)}
               />
               <div className="ml-3 flex-1">
                 <div className="flex items-center gap-2">
