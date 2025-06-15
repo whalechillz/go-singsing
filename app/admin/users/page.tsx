@@ -179,6 +179,18 @@ export default function UserManagementPage() {
               // 비밀번호를 표시하는 알림
               alert(`사용자가 추가되었습니다.\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
             } else {
+              // RPC 함수 성공 시에도 public.users에 추가해야 함
+              const { error: publicError } = await supabase.from("users").insert({
+                name: formData.name,
+                phone: formData.phone || null,
+                email: formData.email,
+                role: formData.role,
+                role_id: formData.role_id || null,
+                is_active: formData.is_active
+              });
+              
+              if (publicError) throw publicError;
+              
               // RPC 함수 성공
               alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
             }
