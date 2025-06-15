@@ -21,8 +21,17 @@ function generateInquirySection(tourData: any, isStaff: boolean = false): string
   // 매니저/가이드 전화번호 표시 여부 확인
   const showManagerPhone = phoneSettings.show_guide_phone || phoneSettings.show_manager_phone;
   
+  // 다음 예정된 투어 정보 타입 정의
+  interface NextTour {
+    title: string;
+    date: string;
+    status: string;
+    price: string;
+    link: string;
+  }
+  
   // 다음 예정된 투어 정보 (실제 구현시 API에서 가져와야 함)
-  const nextTours = tourData.upcomingTours || [
+  const nextTours: NextTour[] = tourData.upcomingTours || [
     {
       title: '[파인힐스] 2박3일 순천버스핑',
       date: '2025. 6. 16. - 2025. 6. 18.',
@@ -81,7 +90,7 @@ function generateInquirySection(tourData: any, isStaff: boolean = false): string
     <div class="next-tours-section">
       <div class="section-title">🏌️ 다음 투어 일정</div>
       <div class="next-tours-grid">
-        ${nextTours.slice(0, 3).map(tour => `
+        ${nextTours.slice(0, 3).map((tour: NextTour) => `
           <div class="next-tour-item">
             <div class="tour-header">
               <div class="tour-title">${tour.title}</div>
