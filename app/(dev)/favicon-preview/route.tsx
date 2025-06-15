@@ -74,13 +74,16 @@ export async function GET() {
               left: 160,
             }}
           />
-          {/* 중앙 로고 */}
+          {/* 중앙 로고 - Black Han Sans 스타일 */}
           <div
             style={{
-              fontSize: 160,
-              fontWeight: 'bold',
+              fontSize: 200,
+              fontWeight: '900',
               color: '#003366',
-              fontFamily: 'sans-serif',
+              fontFamily: '"Arial Black", sans-serif',
+              letterSpacing: '-8px',
+              transform: 'scale(1.1, 1)',
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
             }}
           >
             싱

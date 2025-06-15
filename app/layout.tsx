@@ -61,7 +61,7 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Black+Han+Sans&family=Gothic+A1:wght@900&family=Do+Hyeon&family=Jua&display=swap"
           rel="stylesheet"
         />
         {/* PWA 및 테마 설정 */}
