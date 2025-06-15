@@ -509,10 +509,13 @@ export default function CustomerTourPortal({
           <div className="flex flex-col items-center mb-6">
             <h1 className="text-5xl font-bold mb-3 tracking-wider drop-shadow-md">SINGSING</h1>
             <p className="text-sm opacity-90 flex items-center gap-2">
-              <span>🚌 2박3일 골프패키지</span>
-              <span className="text-xs">·</span>
+              <span className="flex items-center gap-1">
+                <span className="text-base">🚌</span>
+                <span>2박3일 골프패키지</span>
+              </span>
+              <span className="text-xs opacity-60">·</span>
               <span>리무진버스 단체투어</span>
-              <span className="text-xs">·</span>
+              <span className="text-xs opacity-60">·</span>
               <span>전문 기사가이드 동행</span>
             </p>
           </div>

@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, Fragment } from "react";
-import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight } from "lucide-react";
+import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
 import { useRouter } from "next/navigation";
 import TourScheduleDisplay from "@/components/tour/TourScheduleDisplay";
-import Image from "next/image";
 
 // Tour 타입 정의
 interface Tour {
@@ -44,6 +43,7 @@ const GolfTourPortal = () => {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userTours, setUserTours] = useState<string[]>([]);
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
 
   // Supabase에서 투어 목록 fetch
   useEffect(() => {
@@ -102,6 +102,13 @@ const GolfTourPortal = () => {
         );
         
         setTours(toursWithParticipants as Tour[]);
+        
+        // 첫 번째 월을 자동으로 펼침
+        if (toursWithParticipants.length > 0) {
+          const firstMonth = `${new Date(toursWithParticipants[0].start_date).getFullYear()}-${String(new Date(toursWithParticipants[0].start_date).getMonth() + 1).padStart(2, '0')}`;
+          setExpandedMonths(new Set([firstMonth]));
+        }
+        
         setIsLoading(false);
       } catch (err) {
         setError("투어 정보를 불러오는 중 오류가 발생했습니다.");
@@ -190,6 +197,38 @@ const GolfTourPortal = () => {
     const day = date.getDate();
     const dayOfWeek = days[date.getDay()];
     return `${month}월 ${day}일(${dayOfWeek})`;
+  };
+
+  // 투어를 월별로 그룹화하는 함수
+  const groupToursByMonth = (tours: Tour[]) => {
+    const grouped = tours.reduce((acc, tour) => {
+      const date = new Date(tour.start_date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!acc[monthKey]) {
+        acc[monthKey] = [];
+      }
+      acc[monthKey].push(tour);
+      return acc;
+    }, {} as Record<string, Tour[]>);
+    
+    return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
+  };
+
+  // 월 토글 함수
+  const toggleMonth = (monthKey: string) => {
+    const newExpanded = new Set(expandedMonths);
+    if (newExpanded.has(monthKey)) {
+      newExpanded.delete(monthKey);
+    } else {
+      newExpanded.add(monthKey);
+    }
+    setExpandedMonths(newExpanded);
+  };
+
+  // 월 이름 포맷 함수
+  const formatMonthHeader = (monthKey: string) => {
+    const [year, month] = monthKey.split('-');
+    return `${year}년 ${parseInt(month)}월`;
   };
 
   // 투어 뱃지 계산 함수
@@ -286,7 +325,7 @@ const GolfTourPortal = () => {
     return (
       <div
         key={tour.id}
-        className={`border-2 rounded-lg shadow-md p-5 cursor-pointer transition-all hover:shadow-lg ${isSelected ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50" : "border-gray-200 bg-white"}`}
+        className={`border-2 rounded-lg shadow-sm p-5 cursor-pointer transition-all hover:shadow-md ${isSelected ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50" : "border-gray-200 bg-white"}`}
         onClick={() => handleCardClick(tour)}
       >
         <div className="flex justify-between items-start mb-3">
@@ -363,16 +402,7 @@ const GolfTourPortal = () => {
         <div className="container mx-auto max-w-6xl px-4">
           <div className="flex justify-between items-center">
             <div>
-              <div className="relative h-10 w-auto mb-1">
-                <Image
-                  src="/singsing_logo.svg"
-                  alt="싱싱골프투어 로고"
-                  width={200}
-                  height={40}
-                  className="h-10 w-auto object-contain filter brightness-0 invert"
-                  priority
-                />
-              </div>
+              <h1 className="text-3xl font-bold tracking-wider mb-1">SINGSING</h1>
               <p className="text-sm text-blue-100">🚌 2박3일 골프패키지 · 리무진버스 단체투어 · 전문 기사가이드 동행</p>
             </div>
             <div className="flex items-center space-x-4">
@@ -471,15 +501,110 @@ const GolfTourPortal = () => {
             {/* Tour list */}
             <div>
               <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-                <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">예약 가능한 투어</h2>
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-800">예약 가능한 투어</h2>
+                  {tours.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const allMonths = groupToursByMonth(tours).map(([key]) => key);
+                        if (expandedMonths.size === allMonths.length) {
+                          setExpandedMonths(new Set());
+                        } else {
+                          setExpandedMonths(new Set(allMonths));
+                        }
+                      }}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                    >
+                      {expandedMonths.size === groupToursByMonth(tours).length ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          모두 접기
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          모두 펼치기
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
                 {tours.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-gray-600">현재 예약 가능한 투어가 없습니다.</p>
                     <p className="text-sm text-gray-500 mt-2">새로운 투어 일정이 공 업데이트됩니다.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {tours.map(tour => (
+                  <div className="space-y-4">
+                    {groupToursByMonth(tours).map(([monthKey, monthTours]) => {
+                      const isExpanded = expandedMonths.has(monthKey);
+                      const totalToursInMonth = monthTours.length;
+                      const availableTours = monthTours.filter(tour => getTourStatus(tour) === 'available').length;
+                      const almostFullTours = monthTours.filter(tour => getTourStatus(tour) === 'almost-full').length;
+                      const fullTours = monthTours.filter(tour => getTourStatus(tour) === 'full' || getTourStatus(tour) === 'closed').length;
+                      
+                      // 현재 월인지 확인
+                      const currentMonth = new Date();
+                      const isCurrentMonth = monthKey === `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+                      
+                      return (
+                        <div key={monthKey} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                          {/* 월 헤더 */}
+                          <button
+                            onClick={() => toggleMonth(monthKey)}
+                            className={`w-full bg-gradient-to-r transition-all duration-200 px-4 py-3 flex items-center justify-between ${
+                              isCurrentMonth 
+                                ? 'from-blue-100 to-indigo-100 hover:from-blue-200 hover:to-indigo-200 border-b-2 border-blue-500' 
+                                : 'from-gray-50 to-gray-50 hover:from-blue-50 hover:to-indigo-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Calendar className="w-5 h-5 text-blue-600" />
+                              <span className="font-bold text-lg text-gray-800">
+                                {formatMonthHeader(monthKey)}
+                              </span>
+                              {isCurrentMonth && (
+                                <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                                  이번 달
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                              {/* 투어 상태 요약 */}
+                              <div className="flex items-center gap-2 text-xs sm:text-sm">
+                                {availableTours > 0 && (
+                                  <span className="text-green-600">
+                                    예약가능 {availableTours}
+                                  </span>
+                                )}
+                                {almostFullTours > 0 && (
+                                  <span className="text-orange-600">
+                                    마감임박 {almostFullTours}
+                                  </span>
+                                )}
+                                {fullTours > 0 && (
+                                  <span className="text-gray-500">
+                                    마감 {fullTours}
+                                  </span>
+                                )}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronUp className="w-5 h-5 text-gray-600" />
+                              ) : (
+                                <ChevronDown className="w-5 h-5 text-gray-600" />
+                              )}
+                            </div>
+                          </button>
+                          
+                          {/* 투어 목록 */}
+                          {isExpanded && (
+                            <div className="p-3 space-y-3 bg-gray-50">
+                              {monthTours.length === 0 ? (
+                                <div className="text-center py-4 text-gray-500">
+                                  해당 월에는 투어가 없습니다.
+                                </div>
+                              ) : (
+                                monthTours.map(tour => (
                       <Fragment key={tour.id}>
                         {renderTourCard(tour)}
                         {/* 선택된 투어 상세 정보 - 투어 카드 바로 아래에 표시 */}
@@ -590,7 +715,13 @@ const GolfTourPortal = () => {
                 </div>
                         )}
                       </Fragment>
-                    ))}
+                              ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
