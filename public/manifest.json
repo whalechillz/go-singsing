@@ -8,20 +8,20 @@
   "background_color": "#ffffff",
   "icons": [
     {
+      "src": "/singsing_square_logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/singsing_logo_192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/singsing_logo_180x180.png",
       "sizes": "180x180",
       "type": "image/png"
-    },
-    {
-      "src": "/singsing_logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
     }
   ],
   "orientation": "portrait",
