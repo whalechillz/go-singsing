@@ -345,7 +345,7 @@ export default function CustomerTourPortal({
     ? ['golf_timetable']
     : targetAudience === 'staff'
     ? ['staff_all', 'room_assignment_staff', 'staff_timetable']
-    : ['simplified', 'customer_all', 'room_assignment', 'customer_timetable'];
+    : ['customer_all', 'customer_schedule', 'customer_boarding', 'room_assignment', 'customer_timetable'];
   
   const essentialLinks = filteredLinks.filter(link => essentialDocs.includes(link.document_type));
   const additionalLinks = filteredLinks.filter(link => !essentialDocs.includes(link.document_type));
@@ -489,7 +489,7 @@ export default function CustomerTourPortal({
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-center gap-3 mb-4">
             <img 
-              src="https://go.singsinggolf.kr/favicon/singsing_logo_192x192.png" 
+              src="https://go.singsinggolf.kr/favicon/singsing_logo_180x180.png" 
               alt="싱싱골프투어 로고" 
               className="w-16 h-16 rounded-xl bg-white p-2 shadow-lg"
             />
@@ -577,31 +577,60 @@ export default function CustomerTourPortal({
             </h2>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            {essentialLinks.map((link) => {
-              const info = documentTypeInfo[link.document_type];
-              
-              return (
-                <a
-                  key={link.id}
-                  href={getDocumentUrl(link)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
-                >
-                  <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                    필수
-                  </div>
-                  <div className="text-3xl mb-3">{info?.icon || '📄'}</div>
-                  <h3 className="font-medium text-gray-800 mb-1">{info?.label || link.document_type}</h3>
-                  <p className="text-sm text-gray-600">{info?.desc}</p>
-                  <div className="mt-2 flex items-center justify-center">
-                    <span className="text-xs text-blue-600">터치하여 열기</span>
-                    <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
-                  </div>
-                </a>
-              );
-            })}
+          <div className="space-y-4">
+            {/* 첫 번째 줄: 통합문서와 일정표 */}
+            <div className="grid grid-cols-2 gap-4">
+              {essentialLinks.filter(link => ['customer_all', 'customer_schedule'].includes(link.document_type)).map((link) => {
+                const info = documentTypeInfo[link.document_type];
+                return (
+                  <a
+                    key={link.id}
+                    href={getDocumentUrl(link)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
+                  >
+                    <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                      필수
+                    </div>
+                    <div className="text-3xl mb-3">{info?.icon || '📄'}</div>
+                    <h3 className="font-medium text-gray-800 mb-1">{info?.label || link.document_type}</h3>
+                    <p className="text-sm text-gray-600">{info?.desc}</p>
+                    <div className="mt-2 flex items-center justify-center">
+                      <span className="text-xs text-blue-600">터치하여 열기</span>
+                      <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+            
+            {/* 두 번째 줄: 탑승안내와 다른 문서들 */}
+            <div className="grid grid-cols-2 gap-4">
+              {essentialLinks.filter(link => ['customer_boarding', 'room_assignment', 'customer_timetable'].includes(link.document_type)).map((link) => {
+                const info = documentTypeInfo[link.document_type];
+                return (
+                  <a
+                    key={link.id}
+                    href={getDocumentUrl(link)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
+                  >
+                    <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                      필수
+                    </div>
+                    <div className="text-3xl mb-3">{info?.icon || '📄'}</div>
+                    <h3 className="font-medium text-gray-800 mb-1">{info?.label || link.document_type}</h3>
+                    <p className="text-sm text-gray-600">{info?.desc}</p>
+                    <div className="mt-2 flex items-center justify-center">
+                      <span className="text-xs text-blue-600">터치하여 열기</span>
+                      <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -660,77 +689,20 @@ export default function CustomerTourPortal({
         )}
 
         {/* 다음 투어 안내 섹션 */}
-        {upcomingTours.length > 0 && (
-          <section className="mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-md">
-              <h3 className="text-lg font-semibold mb-5" style={{ color: theme.primary }}>
-                🏌️ 다음 투어 안내
-              </h3>
-              <div className="space-y-4">
-                {upcomingTours.map((tour) => {
-                  const startDate = new Date(tour.start_date);
-                  const endDate = new Date(tour.end_date);
-                  const month = startDate.getMonth() + 1;
-                  const day = startDate.getDate();
-                  const endDay = endDate.getDate();
-                  
-                  return (
-                    <div
-                      key={tour.id}
-                      className="border border-gray-100 rounded-xl p-4 hover:border-gray-200 transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-800 mb-1">
-                            {tour.title}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {month}월 {day}일 ~ {endDay}일
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                            tour.statusType === 'closed' 
-                              ? 'bg-red-100 text-red-700' 
-                              : tour.statusType === 'limited'
-                              ? 'bg-orange-100 text-orange-700'
-                              : 'bg-green-100 text-green-700'
-                          }`}>
-                            {tour.status}
-                          </div>
-                          {tour.price > 0 && (
-                            <p className="text-sm font-medium text-gray-700 mt-2">
-                              {tour.price.toLocaleString()}원
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <a
-                          href="tel:031-215-3990"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-                        >
-                          <Phone className="w-4 h-4" />
-                          문의하기
-                        </a>
-                        {tour.statusType !== 'closed' && (
-                          <span className="text-xs text-gray-500">
-                            예약 문의: 031-215-3990
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-600 text-center">
-                  더 많은 투어 일정은 전화로 문의해주세요 📞
-                </p>
-              </div>
+        <section className="mb-8">
+          <a
+            href="/"
+            className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
+          >
+            <div className="text-3xl mb-3">🏌️</div>
+            <h3 className="font-medium text-gray-800 mb-1">다음 투어 안내</h3>
+            <p className="text-sm text-gray-600">예정된 투어 일정 확인</p>
+            <div className="mt-2 flex items-center justify-center">
+              <span className="text-xs text-blue-600">터치하여 열기</span>
+              <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
             </div>
-          </section>
-        )}
+          </a>
+        </section>
 
         {/* 비상 연락처 섹션 */}
         {portalSettings.showContact !== false && (

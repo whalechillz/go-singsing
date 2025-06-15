@@ -12,38 +12,37 @@ export default function Icon() {
     (
       <div
         style={{
-          background: '#003366',
+          background: '#2c5282',
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: '8px',
+          borderRadius: '50%',
         }}
       >
-        {/* 골프공 */}
+        {/* 흰색 원 배경 */}
         <div
           style={{
-            width: 24,
-            height: 24,
+            width: 26,
+            height: 26,
             backgroundColor: 'white',
             borderRadius: '50%',
-            position: 'relative',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {/* 딤플 패턴 */}
+          {/* 4개의 작은 회색 점 */}
           <div
             style={{
               position: 'absolute',
               width: 4,
               height: 4,
-              backgroundColor: '#e0e0e0',
+              backgroundColor: '#d0d0d0',
               borderRadius: '50%',
-              top: 4,
-              left: 10,
+              top: 8,
+              left: 14,
             }}
           />
           <div
@@ -51,10 +50,10 @@ export default function Icon() {
               position: 'absolute',
               width: 4,
               height: 4,
-              backgroundColor: '#e0e0e0',
+              backgroundColor: '#d0d0d0',
               borderRadius: '50%',
-              top: 10,
-              left: 4,
+              top: 14,
+              left: 8,
             }}
           />
           <div
@@ -62,10 +61,10 @@ export default function Icon() {
               position: 'absolute',
               width: 4,
               height: 4,
-              backgroundColor: '#e0e0e0',
+              backgroundColor: '#d0d0d0',
               borderRadius: '50%',
-              top: 10,
-              right: 4,
+              top: 14,
+              right: 8,
             }}
           />
           <div
@@ -73,10 +72,10 @@ export default function Icon() {
               position: 'absolute',
               width: 4,
               height: 4,
-              backgroundColor: '#e0e0e0',
+              backgroundColor: '#d0d0d0',
               borderRadius: '50%',
-              bottom: 4,
-              left: 10,
+              bottom: 8,
+              left: 14,
             }}
           />
         </div>
