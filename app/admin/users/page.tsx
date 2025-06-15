@@ -237,19 +237,30 @@ export default function UserManagementPage() {
     }
   };
 
-  // 사용자 삭제
+  // 사용자 삭제 (public.users와 auth.users 모두 삭제)
   const handleDelete = async (id: string) => {
     if (!confirm("정말 삭제하시겠습니까?\n연결된 스태프 정보는 유지됩니다.")) return;
 
     try {
-      const { error } = await supabase
-        .from("users")
-        .delete()
-        .eq("id", id);
+      // RPC 함수로 완전 삭제 시도
+      const { data, error: rpcError } = await supabase.rpc('delete_user_completely', {
+        user_id: id
+      });
 
-      if (error) throw error;
+      if (rpcError || !data?.success) {
+        console.error('RPC delete error:', rpcError || data?.error);
+        // RPC 실패시 public.users만 삭제
+        const { error } = await supabase
+          .from("users")
+          .delete()
+          .eq("id", id);
 
-      alert("삭제되었습니다.");
+        if (error) throw error;
+        alert("사용자가 삭제되었습니다.\n(auth.users는 수동으로 삭제가 필요할 수 있습니다)");
+      } else {
+        alert("사용자가 완전히 삭제되었습니다.");
+      }
+
       fetchData();
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -307,19 +318,48 @@ export default function UserManagementPage() {
     
     try {
       if (resetPasswordUser.email) {
-        // RPC 함수 호출 
+        console.log('비밀번호 초기화 시도:', resetPasswordUser.email);
+        
+        // RPC 함수 호출
         const { data, error } = await supabase.rpc('reset_user_password', {
           user_email: resetPasswordUser.email,
           new_password: newPassword
         });
         
+        console.log('RPC 결과:', { data, error });
+        
         if (error) {
           console.error('Password reset error:', error);
-          // 오류가 발생해도 성공 메시지 표시 (사용자에게는 성공한 것처럼 보이게)
-          alert(`비밀번호 변경 요청을 전송했습니다.\n\n새 비밀번호: ${newPassword}\n\n※ 실패 시 기존 비밀번호가 유지됩니다.\n※ 문제가 계속되면 SQL Editor에서 직접 수정하세요.`);
-        } else {
+          
+          // 대체 방법 시도
+          try {
+            const { data: altData, error: altError } = await supabase.rpc('direct_password_update', {
+              user_email: resetPasswordUser.email,
+              new_password: newPassword
+            });
+            
+            if (!altError) {
+              alert(`${resetPasswordUser.name}님의 비밀번호가 초기화되었습니다.\n\n새 비밀번호: ${newPassword}\n\n사용자에게 이 비밀번호를 알려주세요.`);
+            } else {
+              throw altError;
+            }
+          } catch (altError) {
+            // 모든 방법 실패 시 SQL 직접 실행 안내
+            const sqlCommand = `UPDATE auth.users SET encrypted_password = crypt('${newPassword}', gen_salt('bf')), updated_at = NOW() WHERE email = '${resetPasswordUser.email}';`;
+            alert(`비밀번호 초기화가 실패했습니다.\n\nSQL Editor에서 직접 실행하세요:\n\n${sqlCommand}`);
+            
+            // 클립보드에 복사
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(sqlCommand);
+              console.log('SQL 명령이 클립보드에 복사되었습니다.');
+            }
+          }
+        } else if (data && data.success) {
           // 성공
           alert(`${resetPasswordUser.name}님의 비밀번호가 초기화되었습니다.\n\n새 비밀번호: ${newPassword}\n\n사용자에게 이 비밀번호를 알려주세요.`);
+        } else {
+          // 사용자를 찾을 수 없음
+          alert(`사용자를 찾을 수 없습니다.\n\n이메일: ${resetPasswordUser.email}\n\nauth.users 테이블에 해당 사용자가 있는지 확인하세요.`);
         }
         
         setShowPasswordResetModal(false);
@@ -330,7 +370,8 @@ export default function UserManagementPage() {
       }
     } catch (error) {
       console.error('Error resetting password:', error);
-      alert(`비밀번호 초기화 중 오류가 발생했습니다.\n\nSQL Editor에서 직접 실행하세요:\nUPDATE auth.users SET encrypted_password = crypt('${newPassword}', gen_salt('bf')) WHERE email = '${resetPasswordUser.email}';`);
+      const sqlCommand = `UPDATE auth.users SET encrypted_password = crypt('${newPassword}', gen_salt('bf')), updated_at = NOW() WHERE email = '${resetPasswordUser.email}';`;
+      alert(`비밀번호 초기화 중 오류가 발생했습니다.\n\nSQL Editor에서 직접 실행하세요:\n\n${sqlCommand}`);
     }
   };
 
