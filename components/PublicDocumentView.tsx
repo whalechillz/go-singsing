@@ -33,34 +33,61 @@ const STAFF_DOCUMENT_TYPES = [
 // document_type을 DocumentType으로 매핑
 const mapDocumentType = (docType: string): DocumentType => {
   const typeMap: Record<string, DocumentType> = {
+    // 이전 형식 (호환성)
     'schedule': 'customer_schedule',
     'boarding_guide': 'customer_boarding',
     'room_assignment': 'room_assignment',
     'timetable': 'customer_timetable',
     'simplified_schedule': 'simplified',
+    
+    // 현재 데이터베이스에서 사용하는 형식
+    'customer_schedule': 'customer_schedule',
+    'customer_boarding': 'customer_boarding',
+    'customer_timetable': 'customer_timetable',
+    'simplified': 'simplified',
+    
+    // 스탭용 문서
     'staff_schedule': 'staff_schedule',
     'staff_boarding': 'staff_boarding',
     'staff_room': 'room_assignment_staff',
+    'room_assignment_staff': 'room_assignment_staff',
     'staff_timetable': 'staff_timetable',
+    
+    // 통합 문서
     'customer_all': 'customer_schedule', // 통합 문서는 기본값으로 일정표
     'staff_all': 'staff_schedule', // 스탭용 통합 문서는 기본값으로 스탭 일정표
     'golf_timetable': 'staff_timetable', // 골프장 전용은 스탭 티타임표
   };
+  
+  // 디버깅을 위한 로그
+  console.log('Mapping document type:', docType, '->', typeMap[docType] || 'customer_schedule');
   
   return typeMap[docType] || 'customer_schedule';
 };
 
 const getDocumentTitle = (docType: string): string => {
   const titleMap: Record<string, string> = {
+    // 이전 형식 (호환성)
     'schedule': '일정표',
     'boarding_guide': '탑승 안내',
     'room_assignment': '객실 배정',
     'timetable': '티타임표',
     'simplified_schedule': '간편 일정',
+    
+    // 현재 데이터베이스에서 사용하는 형식
+    'customer_schedule': '일정표',
+    'customer_boarding': '탑승 안내',
+    'customer_timetable': '티타임표',
+    'simplified': '간편 일정',
+    
+    // 스탭용 문서
     'staff_schedule': '일정표 (스탭용)',
     'staff_boarding': '탑승 안내 (스탭용)',
     'staff_room': '객실 배정 (스탭용)',
+    'room_assignment_staff': '객실 배정 (스탭용)',
     'staff_timetable': '티타임표 (스탭용)',
+    
+    // 통합 문서
     'customer_all': '통합 문서',
     'staff_all': '통합 문서 (스탭용)',
     'golf_timetable': '티타임표 (골프장 전용)',
@@ -72,6 +99,13 @@ const getDocumentTitle = (docType: string): string => {
 export default function PublicDocumentView({ linkData }: PublicDocumentViewProps) {
   const tourId = linkData.tour_id;
   
+  // 디버깅: 받은 document_type 확인
+  console.log('=== PublicDocumentView Debug ===');
+  console.log('Received linkData:', linkData);
+  console.log('Document Type:', linkData.document_type);
+  console.log('Tour ID:', linkData.tour_id);
+  console.log('Public URL:', linkData.public_url);
+  
   // 통합 문서 여부 확인 (먼저 확인)
   const isAllDocuments = linkData.document_type === 'customer_all' || linkData.document_type === 'staff_all';
   const isStaffDocuments = linkData.document_type === 'staff_all';
@@ -79,6 +113,9 @@ export default function PublicDocumentView({ linkData }: PublicDocumentViewProps
   
   // 골프장 전용일 때는 staff_timetable로 고정
   const initialDocumentType = isGolfOnly ? 'staff_timetable' : mapDocumentType(linkData.document_type);
+  console.log('Initial Document Type after mapping:', initialDocumentType);
+  console.log('================================');
+  
   const [activeTab, setActiveTab] = useState<DocumentType>(initialDocumentType);
   
   const {

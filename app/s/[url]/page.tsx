@@ -19,11 +19,18 @@ export default async function ShortLinkDocument({
   const { url } = await params;
   
   // 공개 링크 정보 조회
+  console.log('=== ShortLinkDocument Debug (Server) ===');
+  console.log('Requested URL:', url);
+  
   const { data: linkData, error } = await supabase
     .from("public_document_links")
     .select("*")
     .eq("public_url", url)
     .single();
+    
+  console.log('Found linkData:', linkData);
+  console.log('Document Type from DB:', linkData?.document_type);
+  console.log('=====================================');
   
   // 링크가 없거나 비활성화된 경우
   if (!linkData || !linkData.is_active || error) {

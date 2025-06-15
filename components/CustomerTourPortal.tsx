@@ -351,6 +351,7 @@ export default function CustomerTourPortal({
   const additionalLinks = filteredLinks.filter(link => !essentialDocs.includes(link.document_type));
   
   // 디버깅: 모든 문서 링크 확인
+  console.log('=== CustomerTourPortal Debug ===');
   console.log('All Document Links:', documentLinks.map(l => ({ 
     type: l.document_type, 
     url: l.public_url,
@@ -361,6 +362,11 @@ export default function CustomerTourPortal({
     url: l.public_url,
     id: l.id 
   })));
+  
+  // 탑승 안내 문서만 필터링해서 확인
+  const boardingLinks = documentLinks.filter(l => l.document_type === 'customer_boarding');
+  console.log('Boarding Links specifically:', boardingLinks);
+  console.log('================================');
 
   return (
     <>
@@ -615,6 +621,10 @@ export default function CustomerTourPortal({
                       <span className="text-xs text-blue-600">터치하여 열기</span>
                       <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
                     </div>
+                    {/* 임시 디버깅: URL 표시 */}
+                    <div className="mt-2 text-xs text-gray-400 truncate">
+                      {link.public_url}
+                    </div>
                   </a>
                 );
               })}
@@ -625,7 +635,7 @@ export default function CustomerTourPortal({
               {essentialLinks.filter(link => ['customer_boarding', 'room_assignment', 'customer_timetable'].includes(link.document_type)).map((link) => {
                 const info = documentTypeInfo[link.document_type];
                 const url = getDocumentUrl(link);
-                console.log(`Document Type: ${link.document_type}, URL: ${url}`);
+                console.log(`Document Type: ${link.document_type}, URL: ${url}, Public URL: ${link.public_url}`);
                 return (
                   <a
                     key={link.id}
@@ -633,7 +643,10 @@ export default function CustomerTourPortal({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
-                    onClick={() => console.log(`Clicking: ${link.document_type} -> ${url}`)}
+                    onClick={() => {
+                      console.log(`Clicking: ${link.document_type} -> ${url}`);
+                      console.log(`Full link data:`, link);
+                    }}
                   >
                     <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                       필수
@@ -644,6 +657,10 @@ export default function CustomerTourPortal({
                     <div className="mt-2 flex items-center justify-center">
                       <span className="text-xs text-blue-600">터치하여 열기</span>
                       <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
+                    </div>
+                    {/* 임시 디버깅: URL 표시 */}
+                    <div className="mt-2 text-xs text-gray-400 truncate">
+                      {link.public_url}
                     </div>
                   </a>
                 );
