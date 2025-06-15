@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, Fragment } from "react";
-import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp, Camera } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
 import { useRouter } from "next/navigation";
 import TourScheduleDisplay from "@/components/tour/TourScheduleDisplay";
+import TourSchedulePreview from "@/components/tour/TourSchedulePreview";
 
 // Tour 타입 정의
 interface Tour {
@@ -44,6 +45,7 @@ const GolfTourPortal = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userTours, setUserTours] = useState<string[]>([]);
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+  const [showPreview, setShowPreview] = useState(false);
 
   // Supabase에서 투어 목록 fetch
   useEffect(() => {
@@ -144,6 +146,7 @@ const GolfTourPortal = () => {
 
   const handleCardClick = (tour: Tour) => {
     setSelectedTour(tour);
+    setShowPreview(false); // 새 투어 선택 시 미리보기 초기화
   };
 
   const handleDocumentClick = (doc: any) => {
@@ -634,33 +637,85 @@ const GolfTourPortal = () => {
                     {/* 비로그인 사용자 또는 해당 투어 비참가자: 투어 일정표만 표시 */}
                     {!user || (!isStaffView && !userTours.includes(selectedTour.id)) ? (
                       <div>
-                        <h3 className="text-lg font-bold mb-4">투어 일정표</h3>
-                        <TourScheduleDisplay tour={selectedTour} isPreview={true} />
+                        {/* 일정 엿보기 탭 */}
+                        {!showPreview ? (
+                          <>
+                            <h3 className="text-lg font-bold mb-4">투어 일정표</h3>
+                            <TourScheduleDisplay tour={selectedTour} isPreview={true} />
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-lg font-bold">여행 일정 미리보기</h3>
+                              <button
+                                onClick={() => setShowPreview(false)}
+                                className="text-sm text-blue-600 hover:text-blue-800"
+                              >
+                                ← 돌아가기
+                              </button>
+                            </div>
+                            <TourSchedulePreview tour={selectedTour} />
+                          </>
+                        )}
                         
                         {/* 로그인 유도 */}
                         <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                           {!user ? (
                             <>
                               <p className="text-sm text-blue-700 mb-2">
-                                더 많은 여행 서류를 보시려면 로그인해주세요.
+                                투어 참가자만 모든 여행 서류를 볼 수 있습니다.
                               </p>
                               <p className="text-xs text-gray-600 mb-3">
                                 • 상세 일정 • 탑승지 안내 • 객실 배정표 • 라운딩 시간표
                               </p>
-                              <a
-                                href="/login"
-                                className="inline-flex items-center gap-1 text-blue-700 font-medium text-sm hover:text-blue-800"
-                              >
-                                <LogIn className="w-4 h-4" />
-                                로그인하기
-                              </a>
+                              <div className="flex gap-2 flex-wrap">
+                                <button
+                                  onClick={() => setShowPreview(!showPreview)}
+                                  className="inline-flex items-center gap-1 text-blue-700 font-medium text-sm hover:text-blue-800 bg-white px-3 py-1.5 rounded-lg border border-blue-300 hover:border-blue-400 transition-colors"
+                                >
+                                  {showPreview ? (
+                                    <>
+                                      <Calendar className="w-4 h-4" />
+                                      일반 일정표 보기
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Camera className="w-4 h-4" />
+                                      일정 엿보기 😍
+                                    </>
+                                  )}
+                                </button>
+                                <a
+                                  href="/login"
+                                  className="inline-flex items-center gap-1 text-white bg-blue-600 hover:bg-blue-700 font-medium text-sm px-3 py-1.5 rounded-lg transition-colors"
+                                >
+                                  <LogIn className="w-4 h-4" />
+                                  로그인하기
+                                </a>
+                              </div>
                             </>
                           ) : (
                             <>
                               <p className="text-sm text-blue-700 mb-2">
-                                이 투어의 참가자만 모든 서류를 볼 수 있습니다.
+                                투어 참가자만 모든 여행 서류를 볼 수 있습니다.
                               </p>
-                              <p className="text-xs text-gray-600">
+                              <button
+                                onClick={() => setShowPreview(!showPreview)}
+                                className="inline-flex items-center gap-1 text-blue-700 font-medium text-sm hover:text-blue-800 bg-white px-3 py-1.5 rounded-lg border border-blue-300 hover:border-blue-400 transition-colors"
+                              >
+                                {showPreview ? (
+                                  <>
+                                    <Calendar className="w-4 h-4" />
+                                    일반 일정표 보기
+                                  </>
+                                ) : (
+                                  <>
+                                    <Camera className="w-4 h-4" />
+                                    일정 엿보기 😍
+                                  </>
+                                )}
+                              </button>
+                              <p className="text-xs text-gray-600 mt-2">
                                 예약 문의: 031-215-3990
                               </p>
                             </>
