@@ -506,22 +506,24 @@ export default function CustomerTourPortal({
         </div>
         
         <div className="max-w-md mx-auto">
-          <div className="flex flex-col items-center mb-4">
+          <div className="flex flex-col items-center mb-6">
             <img 
-              src="https://go.singsinggolf.kr/logo-horizontal.png" 
-              alt="싱싱골프투어 로고" 
-              className="h-12 mb-2 drop-shadow-md"
+              src="https://go.singsinggolf.kr/logo-with-slogan.png" 
+              alt="SINGSING - 리무진 버스로 떠나는 편안한 골프여행" 
+              className="h-16 drop-shadow-md"
               onError={(e) => {
                 e.currentTarget.src = 'https://go.singsinggolf.kr/favicon/singsing_logo_180x180.png';
-                e.currentTarget.className = 'w-16 h-16 rounded-xl bg-white p-2 shadow-lg mb-2';
+                e.currentTarget.className = 'w-16 h-16 rounded-xl bg-white p-2 shadow-lg';
               }}
             />
-            <p className="text-sm opacity-90">싱싱골프투어</p>
           </div>
-          <h2 className="text-xl font-medium mb-2">{tourData.title}</h2>
-          <p className="text-base opacity-90">
-            {formatDate(tourData.start_date)} ~ {formatDate(tourData.end_date)}
-          </p>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2 drop-shadow-md">싱싱골프투어</h1>
+            <h2 className="text-xl font-medium mb-2">{tourData.title}</h2>
+            <p className="text-base opacity-90">
+              {formatDate(tourData.start_date)} ~ {formatDate(tourData.end_date)}
+            </p>
+          </div>
           
           {/* D-Day 표시 */}
           {daysInfo && (
@@ -553,9 +555,8 @@ export default function CustomerTourPortal({
             </div>
           )}
           
-          <div className="absolute bottom-3 right-6 text-xs opacity-70 text-right">
-            수원시 영통구 법조로149번길 200<br/>
-            TEL 031-215-3990
+          <div className="mt-6 text-xs opacity-70 text-center">
+            수원시 영통구 법조로149번길 200 | TEL 031-215-3990
           </div>
         </div>
       </header>
