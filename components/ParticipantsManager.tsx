@@ -1094,19 +1094,25 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     };
     
     const statsParticipants = getParticipantsForStats();
+    
+    // 그룹 인원수를 고려한 총 인원 계산
+    const calculateTotalWithGroupSize = (participants: Participant[]) => {
+      return participants.reduce((sum, p) => sum + (p.group_size || 1), 0);
+    };
+    
     const paidCount = statsParticipants.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0).length;
     const unpaidCount = statsParticipants.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0).length;
     
     return {
-      total: statsParticipants.length,
-      confirmed: statsParticipants.filter(p => p.status === "확정").length,
-      unconfirmed: statsParticipants.filter(p => p.status === "미확정").length,
-      canceled: statsParticipants.filter(p => p.status === "취소").length,
+      total: calculateTotalWithGroupSize(statsParticipants),
+      confirmed: calculateTotalWithGroupSize(statsParticipants.filter(p => p.status === "확정")),
+      unconfirmed: calculateTotalWithGroupSize(statsParticipants.filter(p => p.status === "미확정")),
+      canceled: calculateTotalWithGroupSize(statsParticipants.filter(p => p.status === "취소")),
       vip: statsParticipants.filter(p => (p.join_count || 0) >= 5).length,
       paid: paidCount,
       unpaid: unpaidCount,
       paymentRate: statsParticipants.length > 0 ? Math.round((paidCount / statsParticipants.length) * 100) : 0,
-      currentFiltered: filteredParticipants.length
+      currentFiltered: calculateTotalWithGroupSize(filteredParticipants)
     };
   }, [participants, filteredParticipants, tourId, selectedTour]);
 
@@ -1667,11 +1673,11 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                     <p className="text-sm text-gray-600">
                       현재 표시된 목록: <span className="font-semibold text-gray-900">{stats.currentFiltered}</span>명
                       <span className="mx-2">|</span>
-                      확정: <span className="font-semibold text-green-600">{filteredParticipants.filter(p => p.status === "확정").length}</span>
+                      확정: <span className="font-semibold text-green-600">{filteredParticipants.filter(p => p.status === "확정").reduce((sum, p) => sum + (p.group_size || 1), 0)}</span>
                       <span className="mx-2">·</span>
-                      미확정: <span className="font-semibold text-red-600">{filteredParticipants.filter(p => p.status === "미확정").length}</span>
+                      미확정: <span className="font-semibold text-red-600">{filteredParticipants.filter(p => p.status === "미확정").reduce((sum, p) => sum + (p.group_size || 1), 0)}</span>
                       <span className="mx-2">·</span>
-                      취소: <span className="font-semibold text-gray-500">{filteredParticipants.filter(p => p.status === "취소").length}</span>
+                      취소: <span className="font-semibold text-gray-500">{filteredParticipants.filter(p => p.status === "취소").reduce((sum, p) => sum + (p.group_size || 1), 0)}</span>
                     </p>
                   </div>
                 )}

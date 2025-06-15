@@ -51,17 +51,26 @@ const TourListPage: React.FC = () => {
       if (toursData) {
         const toursWithParticipants = await Promise.all(
           toursData.map(async (tour) => {
-            const { count } = await supabase
+            // 참가자 데이터와 group_size 가져오기
+            const { data: participantsData } = await supabase
               .from("singsing_participants")
-              .select("*", { count: 'exact', head: true })
+              .select("group_size")
               .eq("tour_id", tour.id);
+            
+            // 실제 참가자 수 = 각 참가자의 group_size 합곀4
+            let totalParticipants = 0;
+            if (participantsData) {
+              totalParticipants = participantsData.reduce((sum, p) => {
+                return sum + (p.group_size || 1);
+              }, 0);
+            }
             
             const product = tour.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
             
             return {
               ...tour,
               golf_course: product?.golf_course || product?.name || "",
-              current_participants: count || 0,
+              current_participants: totalParticipants, // 그룹 인원수를 고려한 총 인원
               max_participants: tour.max_participants || 40, // 기본값 40명
               price: tour.price || 0
             };
@@ -86,13 +95,21 @@ const TourListPage: React.FC = () => {
     
     try {
       // 관련 참가자가 있는지 확인
-      const { count } = await supabase
+      const { data: participantsData } = await supabase
         .from("singsing_participants")
-        .select("*", { count: 'exact', head: true })
+        .select("group_size")
         .eq("tour_id", id);
       
-      if (count && count > 0) {
-        if (!window.confirm(`이 투어에는 ${count}명의 참가자가 등록되어 있습니다. 정말 삭제하시겠습니까?`)) {
+      // 실제 참가 인원수 계산
+      let totalParticipants = 0;
+      if (participantsData) {
+        totalParticipants = participantsData.reduce((sum, p) => {
+          return sum + (p.group_size || 1);
+        }, 0);
+      }
+      
+      if (totalParticipants > 0) {
+        if (!window.confirm(`이 투어에는 ${totalParticipants}명의 참가자가 등록되어 있습니다. 정말 삭제하시겠습니까?`)) {
           return;
         }
       }

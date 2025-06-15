@@ -72,17 +72,26 @@ const GolfTourPortal = () => {
         // 각 투어의 실제 참가자 수 계산
         const toursWithParticipants = await Promise.all(
           futureTours.map(async (tour) => {
-            const { count } = await supabase
+            // 참가자 데이터와 group_size 가져오기
+            const { data: participantsData } = await supabase
               .from("singsing_participants")
-              .select("*", { count: 'exact', head: true })
+              .select("group_size")
               .eq("tour_id", tour.id);
+            
+            // 실제 참가자 수 = 각 참가자의 group_size 합곀4
+            let totalParticipants = 0;
+            if (participantsData) {
+              totalParticipants = participantsData.reduce((sum, p) => {
+                return sum + (p.group_size || 1);
+              }, 0);
+            }
             
             const product = tour.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
             
             return {
               ...tour,
               golf_course: tour.golf_course || product?.golf_course || product?.name || "",
-              current_participants: count || 0,
+              current_participants: totalParticipants, // 그룹 인원수를 고려한 총 인원
               max_participants: tour.max_participants || 40 // 기본값 40명
             };
           })
