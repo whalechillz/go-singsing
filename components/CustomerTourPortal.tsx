@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Users, Hotel, Clock, Bus, MapPin, Calendar, Phone, Menu, X, Palette, ChevronRight, Copy, ExternalLink, CheckCircle2, AlertCircle, UserPlus, Info, Share2 } from 'lucide-react';
+import { FileText, Users, Hotel, Clock, Bus, MapPin, Calendar, Phone, Menu, X, Palette, ChevronRight, Copy, ExternalLink, CheckCircle2, AlertCircle, UserPlus, Info, Share2, Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 interface TourData {
@@ -912,14 +912,45 @@ export default function CustomerTourPortal({
         )}
 
         {/* 하단 안내 */}
-        <footer className="text-center py-6 text-gray-600 text-sm">
-          <p className="mb-2">싱싱골프투어와 함께하는 즐거운 여행되세요! 🏌️‍♂️</p>
-          <p>
-            문의사항은{' '}
-            <a href="tel:031-215-3990" className="font-medium" style={{ color: theme.primary }}>
+        <footer className="text-center py-8 text-gray-600 text-sm border-t border-gray-200 mt-8">
+          <div className="mb-4">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">싱싱골프투어</h3>
+            <p className="mb-4">싱싱골프투어와 함께하는 즐거운 여행되세요! 🏌️‍♂️</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+            <a 
+              href="tel:031-215-3990" 
+              className="flex items-center gap-2 font-medium hover:opacity-80 transition-opacity" 
+              style={{ color: theme.primary }}
+            >
+              <Phone className="w-4 h-4" />
               031-215-3990
             </a>
-            으로 연락주세요.
+            
+            <span className="hidden sm:block text-gray-400">|</span>
+            
+            <a
+              href="https://www.singsingtour.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 font-medium hover:opacity-80 transition-opacity"
+              style={{ color: theme.primary }}
+            >
+              <Globe className="w-4 h-4" />
+              공식 홈페이지
+            </a>
+            
+            <span className="hidden sm:block text-gray-400">|</span>
+            
+            <div className="flex items-center gap-2 text-gray-600">
+              <MapPin className="w-4 h-4" />
+              <span>수원시 영통구 법조로149번길 200</span>
+            </div>
+          </div>
+          
+          <p className="text-xs text-gray-500 mt-4">
+            © 2025 싱싱골프투어. All rights reserved.
           </p>
         </footer>
       </main>

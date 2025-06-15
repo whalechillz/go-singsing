@@ -405,12 +405,23 @@ const GolfTourPortal = () => {
               <h1 className="text-3xl font-bold tracking-wider mb-1">SINGSING</h1>
               <p className="text-sm text-blue-100">🚌 2박3일 골프패키지 · 리무진버스 단체투어 · 전문 기사가이드 동행</p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <a
+                href="https://www.singsingtour.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm bg-white/20 backdrop-blur text-white px-3 py-1.5 rounded hover:bg-white/30 transition-colors flex items-center gap-1 whitespace-nowrap"
+                title="싱싱골프투어 공식 홈페이지"
+              >
+                <Globe className="h-4 w-4" />
+                <span className="hidden sm:inline">공식 홈페이지</span>
+              </a>
+              
               {user ? (
                 <>
                   <div className="flex items-center gap-2">
                     <User className="h-5 w-5" />
-                    <div className="text-sm">
+                    <div className="text-sm hidden sm:block">
                       <p className="font-medium">{user.name || user.email}</p>
                       <p className="text-blue-200 text-xs">{getRoleName(user.role)}</p>
                     </div>
@@ -428,24 +439,24 @@ const GolfTourPortal = () => {
                     className="text-sm bg-red-600 text-white px-4 py-1.5 rounded hover:bg-red-700 transition-colors flex items-center gap-1"
                   >
                     <LogOut className="h-4 w-4" />
-                    로그아웃
+                    <span className="hidden sm:inline">로그아웃</span>
                   </button>
                 </>
               ) : (
                 <>
                   <a
                     href="tel:031-215-3990"
-                    className="text-sm bg-white text-blue-700 px-4 py-2 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                    className="text-sm bg-white text-blue-700 px-3 sm:px-4 py-2 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
                   >
                     <Phone className="h-4 w-4" />
                     <span className="font-medium">031-215-3990</span>
                   </a>
                   <a
                     href="/login"
-                    className="text-sm bg-blue-500 px-4 py-1.5 rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
+                    className="text-sm bg-blue-500 px-3 sm:px-4 py-1.5 rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
                   >
                     <LogIn className="h-4 w-4" />
-                    로그인
+                    <span className="hidden sm:inline">로그인</span>
                   </a>
                 </>
               )}
@@ -776,16 +787,62 @@ const GolfTourPortal = () => {
         </div>
       )}
       {/* Footer */}
-      <div className="mt-12 text-center text-gray-500 text-sm">
-        <p>싱싱골프투어 | 031-215-3990</p>
-        {!user && tours.length > 0 && (
-          <div className="mt-4 mb-8">
-            <p className="text-blue-700 font-medium">
-              더 많은 투어는 로그인하시면 보실 수 있습니다.
-            </p>
+      <footer className="mt-12 bg-gray-100 border-t border-gray-200">
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">싱싱골프투어</h2>
+            <p className="text-gray-600 mb-4">리무진 버스로 떠나는 편안한 골프여행</p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+              <a
+                href="tel:031-215-3990"
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+              >
+                <Phone className="w-5 h-5" />
+                <span className="text-lg">031-215-3990</span>
+              </a>
+              
+              <span className="hidden sm:block text-gray-400">|</span>
+              
+              <a
+                href="https://www.singsingtour.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+              >
+                <Globe className="w-5 h-5" />
+                <span>공식 홈페이지</span>
+              </a>
+              
+              <span className="hidden sm:block text-gray-400">|</span>
+              
+              <div className="text-gray-600">
+                <MapPin className="w-5 h-5 inline mr-1" />
+                수원시 영통구 법조로149번길 200
+              </div>
+            </div>
+            
+            {!user && tours.length > 0 && (
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg inline-block">
+                <p className="text-blue-700 font-medium">
+                  더 많은 투어와 특별 혜택은 로그인하시면 보실 수 있습니다.
+                </p>
+                <a
+                  href="/login"
+                  className="inline-flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  <LogIn className="w-4 h-4" />
+                  로그인하기
+                </a>
+              </div>
+            )}
+            
+            <div className="mt-8 pt-6 border-t border-gray-300 text-gray-500 text-sm">
+              <p>© 2025 싱싱골프투어. All rights reserved.</p>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      </footer>
     </div>
   );
 };
