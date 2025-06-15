@@ -114,6 +114,13 @@ export default async function TourPortalPage({
     .eq("is_active", true)
     .not("document_type", "eq", "portal");
     
+  // 디버깅: 서버에서 가져온 문서 링크 확인
+  console.log("Server-side document links:", documentLinks?.map(link => ({
+    id: link.id,
+    type: link.document_type,
+    url: link.public_url
+  })));
+    
   return (
     <CustomerTourPortal 
       tourData={tourData} 

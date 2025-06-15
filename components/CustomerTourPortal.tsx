@@ -349,6 +349,18 @@ export default function CustomerTourPortal({
   
   const essentialLinks = filteredLinks.filter(link => essentialDocs.includes(link.document_type));
   const additionalLinks = filteredLinks.filter(link => !essentialDocs.includes(link.document_type));
+  
+  // 디버깅: 모든 문서 링크 확인
+  console.log('All Document Links:', documentLinks.map(l => ({ 
+    type: l.document_type, 
+    url: l.public_url,
+    id: l.id 
+  })));
+  console.log('Essential Links:', essentialLinks.map(l => ({ 
+    type: l.document_type, 
+    url: l.public_url,
+    id: l.id 
+  })));
 
   return (
     <>
@@ -582,13 +594,16 @@ export default function CustomerTourPortal({
             <div className="grid grid-cols-2 gap-4">
               {essentialLinks.filter(link => ['customer_all', 'customer_schedule'].includes(link.document_type)).map((link) => {
                 const info = documentTypeInfo[link.document_type];
+                const url = getDocumentUrl(link);
+                console.log(`Document Type: ${link.document_type}, URL: ${url}`);
                 return (
                   <a
                     key={link.id}
-                    href={getDocumentUrl(link)}
+                    href={url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
+                    onClick={() => console.log(`Clicking: ${link.document_type} -> ${url}`)}
                   >
                     <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                       필수
@@ -609,13 +624,16 @@ export default function CustomerTourPortal({
             <div className="grid grid-cols-2 gap-4">
               {essentialLinks.filter(link => ['customer_boarding', 'room_assignment', 'customer_timetable'].includes(link.document_type)).map((link) => {
                 const info = documentTypeInfo[link.document_type];
+                const url = getDocumentUrl(link);
+                console.log(`Document Type: ${link.document_type}, URL: ${url}`);
                 return (
                   <a
                     key={link.id}
-                    href={getDocumentUrl(link)}
+                    href={url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
+                    onClick={() => console.log(`Clicking: ${link.document_type} -> ${url}`)}
                   >
                     <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                       필수
@@ -644,13 +662,16 @@ export default function CustomerTourPortal({
               <ul className="space-y-3">
                 {additionalLinks.map((link) => {
                   const info = documentTypeInfo[link.document_type];
+                  const url = getDocumentUrl(link);
+                  console.log(`Additional Doc - Type: ${link.document_type}, URL: ${url}`);
                   return (
                     <li key={link.id}>
                       <a
-                        href={getDocumentUrl(link)}
+                        href={url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all group"
+                        onClick={() => console.log(`Clicking Additional: ${link.document_type} -> ${url}`)}
                       >
                         <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-4 group-hover:shadow-md transition-shadow">
                           <span className="text-xl">{info?.icon || '📄'}</span>
