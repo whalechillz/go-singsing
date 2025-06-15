@@ -181,41 +181,8 @@ export default function UserManagementPage() {
 
             console.log('RPC Response:', { authData, authError });
 
-            // RPC 응답 확인
-            if (authError) {
-              console.error('RPC Error:', authError);
-              
-              // RPC 함수가 없는 경우 직접 public.users에만 추가
-              if (authError.message?.includes('function') || authError.message?.includes('does not exist')) {
-                console.log('RPC function not found, creating user directly in public.users');
-                
-                const { error: insertError } = await supabase
-                  .from('users')
-                  .insert({
-                    name: formData.name,
-                    phone: removePhoneHyphens(formData.phone) || null,
-                    email: formData.email,
-                    role: formData.role,
-                    role_id: formData.role_id || null,
-                    is_active: formData.is_active
-                  });
-
-                if (insertError) {
-                  console.error('Insert error:', insertError);
-                  alert('사용자 추가 중 오류가 발생했습니다.');
-                  return;
-                }
-
-                alert(`사용자가 추가되었습니다!\n\n이메일: ${formData.email}\n\n※ auth.users에는 등록되지 않아 로그인은 불가능합니다.\n관리자에게 문의하세요.`);
-                setShowModal(false);
-                resetForm();
-                fetchData();
-                return;
-              }
-            }
-
-            // RPC 성공 응답 처리
-            if (authData && (authData.success === true || authData.user_id)) {
+            // RPC 에러가 없으면 성공으로 간주
+            if (!authError) {
               alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
               setShowModal(false);
               resetForm();
@@ -223,25 +190,9 @@ export default function UserManagementPage() {
               return;
             }
 
-            // RPC 응답이 명확하지 않은 경우, 실제 생성 확인
-            console.log('Checking if user was created...');
-            
-            // 잠시 대기
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            const { data: newUser } = await supabase
-              .from('users')
-              .select('id')
-              .eq('email', formData.email)
-              .maybeSingle();
-
-            console.log('User check result:', newUser);
-
-            if (newUser) {
-              alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
-            } else {
-              // 사용자가 생성되지 않은 경우, public.users에만 추가
-              console.log('User not found in public.users, creating directly...');
+            // RPC 함수가 없는 경우만 public.users에 직접 추가
+            if (authError.message?.includes('function') || authError.message?.includes('does not exist')) {
+              console.log('RPC function not found, creating user directly in public.users');
               
               const { error: insertError } = await supabase
                 .from('users')
@@ -255,13 +206,26 @@ export default function UserManagementPage() {
                 });
 
               if (insertError) {
-                console.error('Direct insert error:', insertError);
-                alert('사용자 추가 중 오류가 발생했습니다.');
+                console.error('Insert error:', insertError);
+                if (insertError.message?.includes('duplicate')) {
+                  alert('이미 등록된 사용자입니다.');
+                } else {
+                  alert('사용자 추가 중 오류가 발생했습니다.');
+                }
                 return;
               }
 
               alert(`사용자가 추가되었습니다!\n\n이메일: ${formData.email}\n\n※ auth.users에는 등록되지 않아 로그인은 불가능합니다.\n관리자에게 문의하세요.`);
+            } else {
+              // 기타 RPC 에러
+              console.error('RPC Error:', authError);
+              alert(`사용자 추가 중 오류가 발생했습니다.\n\n${authError.message}`);
+              return;
             }
+
+            setShowModal(false);
+            resetForm();
+            fetchData();
             
           } catch (error: any) {
             console.error('User creation error:', error);
