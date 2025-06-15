@@ -17,6 +17,13 @@ type TourForm = {
   price: string;
   max_participants: string;
   tour_product_id: string;
+  
+  // 일정 관련 필드
+  departure_location: string;
+  itinerary: string;
+  included_items: string;
+  notes: string;
+  
   other_notices: string;
 };
 
@@ -29,6 +36,13 @@ const TourNewPage: React.FC = () => {
     price: "",
     max_participants: "",
     tour_product_id: "",
+    
+    // 일정 관련 필드
+    departure_location: "서울 강남 신논현역 9번 출구", // 기본값
+    itinerary: "",
+    included_items: "",
+    notes: "",
+    
     other_notices: ""
   });
   
@@ -103,6 +117,13 @@ const TourNewPage: React.FC = () => {
           price: form.price ? Number(form.price) : 0,
           max_participants: form.max_participants ? Number(form.max_participants) : 0,
           tour_product_id: form.tour_product_id || null,
+          
+          // 일정 관련 필드
+          departure_location: form.departure_location,
+          itinerary: form.itinerary,
+          included_items: form.included_items,
+          notes: form.notes,
+          
           other_notices: form.other_notices || null,
         }])  // types.ts를 수정했으므로 타입 에러 해결
         .select()
@@ -251,8 +272,54 @@ const TourNewPage: React.FC = () => {
               </label>
             </div>
             
+            {/* 일정 관련 필드 추가 */}
             <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">기타 공지사항</span>
+              <span className="font-medium">출발 장소</span>
+              <input 
+                name="departure_location" 
+                type="text" 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
+                value={form.departure_location} 
+                onChange={handleChange} 
+                placeholder="예: 서울 강남 신논현역 9번 출구"
+              />
+            </label>
+            
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">상세 일정</span>
+              <textarea 
+                name="itinerary" 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-h-[120px]" 
+                value={form.itinerary} 
+                onChange={handleChange}
+                placeholder="1일차:\n- 06:00 출발\n- 12:00 골프장 도착\n..."
+              />
+            </label>
+            
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">포함 사항</span>
+              <textarea 
+                name="included_items" 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-h-[80px]" 
+                value={form.included_items} 
+                onChange={handleChange}
+                placeholder="- 왕복 리무진 버스\n- 숙박 (2인 1실)\n- 식사\n- 그린피..."
+              />
+            </label>
+            
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">기타 안내 사항</span>
+              <textarea 
+                name="notes" 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-h-[60px]" 
+                value={form.notes} 
+                onChange={handleChange}
+                placeholder="추가 안내 사항을 입력하세요 (선택사항)"
+              />
+            </label>
+            
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">일정표 하단 공지사항</span>
               <textarea 
                 name="other_notices" 
                 className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 

@@ -20,6 +20,12 @@ type TourForm = {
   price: string;
   max_participants: string;
   
+  // 일정 관련 필드
+  departure_location: string;
+  itinerary: string;
+  included_items: string;
+  notes: string;
+  
   // 문서 표시 옵션
   show_staff_info: boolean;
   show_footer_message: boolean;
@@ -97,6 +103,12 @@ const TourEditPage: React.FC = () => {
     tour_product_id: "",
     price: "",
     max_participants: "",
+    
+    // 일정 관련 필드
+    departure_location: "",
+    itinerary: "",
+    included_items: "",
+    notes: "",
     
     // 문서 표시 옵션 (기본값)
     show_staff_info: true,
@@ -193,6 +205,12 @@ const TourEditPage: React.FC = () => {
           tour_product_id: tourData.tour_product_id || "",
           price: tourData.price?.toString() || "",
           max_participants: tourData.max_participants?.toString() || "",
+          
+          // 일정 관련 필드
+          departure_location: tourData.departure_location || "",
+          itinerary: tourData.itinerary || "",
+          included_items: tourData.included_items || "",
+          notes: tourData.notes || "",
           
           // 문서 표시 옵션
           show_staff_info: tourData.show_staff_info ?? true,
@@ -368,6 +386,13 @@ const TourEditPage: React.FC = () => {
         tour_product_id: form.tour_product_id || null,
         price: form.price ? Number(form.price) : null,
         max_participants: form.max_participants ? Number(form.max_participants) : null,
+        
+        // 일정 관련 필드
+        departure_location: form.departure_location,
+        itinerary: form.itinerary,
+        included_items: form.included_items,
+        notes: form.notes,
+        
         show_staff_info: form.show_staff_info,
         show_footer_message: form.show_footer_message,
         show_company_phone: form.show_company_phone,
@@ -562,8 +587,54 @@ const TourEditPage: React.FC = () => {
               </label>
             </div>
             
+            {/* 일정 관련 필드 추가 */}
             <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-              <span className="font-medium">기타 안내문구 (일정표 하단)</span>
+              <span className="font-medium">출발 장소</span>
+              <input 
+                name="departure_location" 
+                type="text" 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
+                value={form.departure_location} 
+                onChange={handleChange} 
+                placeholder="예: 서울 강남 신논현역 9번 출구"
+              />
+            </label>
+            
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">상세 일정</span>
+              <textarea 
+                name="itinerary" 
+                value={form.itinerary} 
+                onChange={handleChange} 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[120px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
+                placeholder="1일차: \n- 06:00 출발\n- 12:00 골프장 도착\n..." 
+              />
+            </label>
+            
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">포함 사항</span>
+              <textarea 
+                name="included_items" 
+                value={form.included_items} 
+                onChange={handleChange} 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[80px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
+                placeholder="- 왕복 리무진 버스\n- 숙박 (2인 1실)\n- 식사\n- 그린피..." 
+              />
+            </label>
+            
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">기타 안내 사항</span>
+              <textarea 
+                name="notes" 
+                value={form.notes} 
+                onChange={handleChange} 
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[60px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
+                placeholder="추가 안내 사항을 입력하세요" 
+              />
+            </label>
+            
+            <label className="flex flex-col gap-1 text-gray-700 dark:text-gray-300">
+              <span className="font-medium">일정표 하단 안내문구</span>
               <textarea name="other_notices" value={form.other_notices} onChange={handleChange} className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 min-h-[60px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
             </label>
           </>

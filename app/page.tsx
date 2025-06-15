@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
 import { useRouter } from "next/navigation";
+import TourScheduleDisplay from "@/components/tour/TourScheduleDisplay";
 
 // Tour 타입 정의
 interface Tour {
@@ -372,90 +373,52 @@ const GolfTourPortal = () => {
                     {!user || (!isStaffView && !userTours.includes(selectedTour.id)) ? (
                       <div>
                         <h3 className="text-lg font-bold mb-4">투어 일정표</h3>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <div className="flex items-center mb-3">
-                            <FileText className="w-5 h-5 text-blue-600 mr-2" />
-                            <span className="font-medium">투어 일정표</span>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-4">일정, 식사, 골프장, 숙박 안내</p>
-                          
-                          {/* 투어 일정표 미리보기 */}
-                          <div className="bg-white rounded-lg p-4 mb-4 border border-gray-200">
-                            <h4 className="font-semibold text-gray-800 mb-3">📅 {selectedTour.title}</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex">
-                                <span className="font-medium text-gray-600 w-20">출발일:</span>
-                                <span>{formatDate(selectedTour.start_date)}</span>
-                              </div>
-                              <div className="flex">
-                                <span className="font-medium text-gray-600 w-20">도착일:</span>
-                                <span>{formatDate(selectedTour.end_date)}</span>
-                              </div>
-                              <div className="flex">
-                                <span className="font-medium text-gray-600 w-20">골프장:</span>
-                                <span>{selectedTour.golf_course}</span>
-                              </div>
-                              <div className="flex">
-                                <span className="font-medium text-gray-600 w-20">숙박:</span>
-                                <span>{selectedTour.accommodation}</span>
-                              </div>
-                              <div className="flex">
-                                <span className="font-medium text-gray-600 w-20">인원:</span>
-                                <span>{selectedTour.max_participants}명</span>
-                              </div>
-                              <div className="flex">
-                                <span className="font-medium text-gray-600 w-20">가격:</span>
-                                <span className="font-bold text-blue-700">{selectedTour.price?.toLocaleString()}원</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <button
-                            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
-                            onClick={() => window.location.href = `/document/${selectedTour.id}/tour-schedule`}
-                          >
-                            전체 일정표 보기
-                          </button>
-                          
-                          {/* 로그인 유도 */}
-                          <div className="mt-4 p-4 bg-purple-50 rounded-lg">
-                            {!user ? (
-                              <>
-                                <p className="text-sm text-purple-700 mb-2">
-                                  더 많은 여행 서류를 보시려면 로그인해주세요.
-                                </p>
-                                <p className="text-xs text-gray-600 mb-3">
-                                  • 탑승지 안내 • 객실 배정표 • 라운딩 시간표
-                                </p>
-                                <a
-                                  href="/login"
-                                  className="inline-flex items-center gap-1 text-purple-700 font-medium text-sm hover:text-purple-800"
-                                >
-                                  <LogIn className="w-4 h-4" />
-                                  로그인하기
-                                </a>
-                              </>
-                            ) : (
-                              <>
-                                <p className="text-sm text-purple-700 mb-2">
-                                  이 투어의 참가자만 모든 서류를 볼 수 있습니다.
-                                </p>
-                                <p className="text-xs text-gray-600">
-                                  예약 문의: 031-215-3990
-                                </p>
-                              </>
-                            )}
-                          </div>
+                        <TourScheduleDisplay tour={selectedTour} isPreview={true} />
+                        
+                        {/* 로그인 유도 */}
+                        <div className="mt-4 p-4 bg-purple-50 rounded-lg">
+                          {!user ? (
+                            <>
+                              <p className="text-sm text-purple-700 mb-2">
+                                더 많은 여행 서류를 보시려면 로그인해주세요.
+                              </p>
+                              <p className="text-xs text-gray-600 mb-3">
+                                • 상세 일정 • 탑승지 안내 • 객실 배정표 • 라운딩 시간표
+                              </p>
+                              <a
+                                href="/login"
+                                className="inline-flex items-center gap-1 text-purple-700 font-medium text-sm hover:text-purple-800"
+                              >
+                                <LogIn className="w-4 h-4" />
+                                로그인하기
+                              </a>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm text-purple-700 mb-2">
+                                이 투어의 참가자만 모든 서류를 볼 수 있습니다.
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                예약 문의: 031-215-3990
+                              </p>
+                            </>
+                          )}
                         </div>
                       </div>
                     ) : (
                       /* 해당 투어 참가자 또는 스탭: 모든 문서 표시 */
                       <>
                         <h3 className="text-lg font-bold mb-4">여행 서류</h3>
-                        <div className="flex flex-col gap-3">
-                          {/* 문서 버튼 목록 */}
+                        
+                        {/* 투어 일정표 전체 보기 */}
+                        <div className="mb-4">
+                          <TourScheduleDisplay tour={selectedTour} isPreview={false} />
+                        </div>
+                        
+                        {/* 기타 문서들 */}
+                        <div className="flex flex-col gap-3 mt-6">
+                          <h4 className="font-medium text-gray-700">추가 서류</h4>
                           {[
-                            { id: 'tour-schedule', name: '투어 일정표', desc: '일정, 식사, 골프장, 숙박 안내', badge: '고객용', icon: <FileText className="w-5 h-5 text-blue-600 mr-2" /> },
                             { id: 'boarding-guide', name: '탑승지 안내', desc: '탑승지 및 교통 정보', badge: '고객용', icon: <MapPin className="w-5 h-5 text-blue-600 mr-2" /> },
                             { id: 'room-assignment', name: '객실 배정', desc: '객실 배정표', badge: '고객용', icon: <Users className="w-5 h-5 text-blue-600 mr-2" /> },
                             { id: 'rounding-timetable', name: '라운딩 시간표', desc: '라운딩 조 편성', badge: '고객용', icon: <Calendar className="w-5 h-5 text-blue-600 mr-2" /> },
@@ -469,7 +432,8 @@ const GolfTourPortal = () => {
                               }`}
                               onClick={() => {
                                 if (doc.staffOnly && !isStaffView) return;
-                                window.location.href = `/document/${selectedTour.id}/${doc.id}`;
+                                // TODO: 새로운 문서 시스템으로 연결
+                                alert(`${doc.name} 기능은 준비 중입니다.`);
                               }}
                               disabled={doc.staffOnly && !isStaffView}
                               aria-label={doc.name}
