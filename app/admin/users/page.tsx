@@ -56,7 +56,7 @@ export default function UserManagementPage() {
     email: "",
     role: "employee",
     role_id: "",
-    password: "",
+    password: "90001004", // 기본 비밀번호
     is_active: true
   });
 
@@ -117,10 +117,9 @@ export default function UserManagementPage() {
       return;
     }
     
-    // 새 사용자인 경우 비밀번호 필수
-    if (!editingUser && (!formData.password || formData.password.length < 6)) {
-      alert('새 사용자는 6자 이상의 비밀번호가 필수입니다.');
-      return;
+    // 비밀번호 기본값 설정
+    if (!editingUser && !formData.password) {
+      formData.password = "90001004";
     }
     
     // 이메일 형식 검증
@@ -147,57 +146,17 @@ export default function UserManagementPage() {
           .eq("id", editingUser.id);
 
         if (error) throw error;
+
+        // 이메일이 변경되었다면 auth.users도 업데이트 필요
+        if (editingUser.email !== formData.email && formData.email) {
+          alert(`이메일 변경은 보안상 SQL Editor에서 직접 수행해야 합니다.\n\n1. 기존 계정 삭제:\nDELETE FROM auth.users WHERE email = '${editingUser.email}';\n\n2. 새 계정 생성:\nINSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, aud, role, created_at, updated_at)\nVALUES (gen_random_uuid(), '${formData.email}', crypt('90001004', gen_salt('bf')), NOW(), '{"name": "${formData.name}", "role": "${formData.role}"}'::jsonb, 'authenticated', 'authenticated', NOW(), NOW());`);
+        }
       } else {
         // 추가
         if (formData.email) {
           // 이메일이 있는 경우 auth.users에도 추가
           try {
-            // 1. RPC 함수 호출 시도
-            const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
-              user_email: formData.email,
-              user_password: formData.password,
-              user_metadata: {
-                name: formData.name,
-                role: formData.role,
-                phone: formData.phone
-              }
-            });
-
-            if (authError) {
-              console.error('Auth user creation error:', authError);
-              // RPC 함수가 없으면 직접 SQL로 시도
-              const { error: directError } = await supabase.from("users").insert({
-                name: formData.name,
-                phone: removePhoneHyphens(formData.phone) || null,
-                email: formData.email,
-                role: formData.role,
-                role_id: formData.role_id || null,
-                is_active: formData.is_active
-              });
-              
-              if (directError) throw directError;
-              
-              // 비밀번호를 표시하는 알림
-              alert(`사용자가 추가되었습니다.\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
-            } else {
-              // RPC 함수 성공 시에도 public.users에 추가해야 함
-              const { error: publicError } = await supabase.from("users").insert({
-                name: formData.name,
-                phone: removePhoneHyphens(formData.phone) || null,
-                email: formData.email,
-                role: formData.role,
-                role_id: formData.role_id || null,
-                is_active: formData.is_active
-              });
-              
-              if (publicError) throw publicError;
-              
-              // RPC 함수 성공
-              alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
-            }
-          } catch (error) {
-            console.error('Error in auth creation process:', error);
-            // auth 생성 실패 시 public.users에만 추가
+            // 1. 먼저 public.users에 추가
             const { error: publicError } = await supabase.from("users").insert({
               name: formData.name,
               phone: removePhoneHyphens(formData.phone) || null,
@@ -208,7 +167,30 @@ export default function UserManagementPage() {
             });
             
             if (publicError) throw publicError;
-            alert(`사용자 정보가 추가되었지만, 로그인 계정 생성에 실패했습니다.\n관리자에게 문의하세요.`);
+
+            // 2. auth.users에 추가 (직접 SQL 실행)
+            const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
+              user_email: formData.email,
+              user_password: formData.password || '90001004', // 기본 비밀번호
+              user_metadata: {
+                name: formData.name,
+                role: formData.role,
+                phone: removePhoneHyphens(formData.phone)
+              }
+            });
+
+            if (authError) {
+              console.error('Auth creation failed:', authError);
+              // RPC 실패 시 수동으로 SQL 실행 안내
+              alert(`사용자가 추가되었지만 로그인 설정이 필요합니다.\n\nSQL Editor에서 다음을 실행하세요:\n\nINSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, aud, role, created_at, updated_at)\nVALUES (gen_random_uuid(), '${formData.email}', crypt('${formData.password || '90001004'}', gen_salt('bf')), NOW(), '{"name": "${formData.name}", "role": "${formData.role}"}'::jsonb, 'authenticated', 'authenticated', NOW(), NOW());`);
+            } else {
+              // 성공
+              alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
+            }
+          } catch (error) {
+            console.error('Error in user creation:', error);
+            alert('사용자 추가 중 오류가 발생했습니다.');
+            throw error;
           }
         } else {
           // 이메일이 없는 경우 public.users에만 추가
@@ -288,7 +270,7 @@ export default function UserManagementPage() {
       email: "",
       role: roles.length > 0 ? roles[0].name : "employee",
       role_id: "",
-      password: "",
+      password: "90001004", // 기본 비밀번호
       is_active: true
     });
     setEditingUser(null);
@@ -819,8 +801,8 @@ export default function UserManagementPage() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-mono"
-                      placeholder="비밀번호 입력 (최소 6자)"
-                      required
+                      placeholder="비밀번호 입력 (기본: 90001004)"
+                      required={false}
                       minLength={6}
                     />
                     <button
@@ -870,7 +852,7 @@ export default function UserManagementPage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={!editingUser && !formData.password}
+                disabled={false}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {editingUser ? "수정" : "추가"}

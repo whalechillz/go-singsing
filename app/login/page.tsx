@@ -38,16 +38,16 @@ export default function LoginPage() {
 
       if (data.user) {
         // 사용자 정보 가져오기
-        const { data: profileData } = await supabase
-          .from("profiles")
+        const { data: userData } = await supabase
+          .from("users")
           .select("role")
-          .eq("id", data.user.id)
+          .eq("email", data.user.email)
           .single();
 
         // 역할에 따라 리다이렉트
-        if (profileData?.role === "admin" || profileData?.role === "manager") {
+        if (userData?.role === "admin" || userData?.role === "manager") {
           router.push("/admin");
-        } else if (profileData?.role === "staff") {
+        } else if (userData?.role === "staff" || userData?.role === "driver") {
           router.push("/");
         } else {
           router.push("/");
