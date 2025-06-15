@@ -1,0 +1,17 @@
+# 싱싱골프투어 robots.txt
+# https://go.singsinggolf.kr
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /login
+
+# 주요 페이지 허용
+Allow: /quote/*
+Allow: /public-schedule/*
+Allow: /promo/*
+
+# 사이트맵
+Sitemap: https://go.singsinggolf.kr/sitemap.xml

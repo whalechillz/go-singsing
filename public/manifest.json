@@ -1,0 +1,32 @@
+{
+  "name": "싱싱골프투어 - Premium Golf Tour",
+  "short_name": "싱싱골프투어",
+  "description": "고품격 골프 여행의 시작, 싱싱골프투어가 함께합니다",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#003366",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/singsing_logo_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/singsing_logo_180x180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/singsing_logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "orientation": "portrait",
+  "lang": "ko-KR",
+  "categories": ["travel", "sports", "lifestyle"],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
