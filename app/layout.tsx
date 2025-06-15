@@ -8,6 +8,22 @@ export const metadata: Metadata = {
   description: "국내 골프여행 전문, 리무진버스 단체투어, 2박3일 골프패키지, 기사·가이드 동행, 맞춤 일정, 전화예약 031-215-3990",
   keywords: "골프투어, 골프여행, 2박3일 골프패키지, 단체골프, 리무진버스, 골프버스투어, 국내골프투어, 골프패키지여행, 싱싱골프투어",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: '/favicon/singsing_logo_192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon/singsing_logo_180x180.png', sizes: '180x180', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/favicon/singsing_logo_180x180.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'mask-icon',
+        url: '/singsing_logo.svg',
+        color: '#003366',
+      },
+    ],
+  },
   openGraph: {
     title: "싱싱골프투어 | 2박3일 골프패키지 리무진버스 단체투어",
     description: "✅ 리무진버스 이동 ✅ 2박3일 골프패키지 ✅ 전문 기사·가이드 ✅ 맞춤 일정 ✅ 단체 할인 | 전화예약 031-215-3990",
@@ -64,6 +80,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Nanum+Gothic:wght@400;700;800&family=Black+Han+Sans&family=Gothic+A1:wght@900&family=Do+Hyeon&family=Jua&display=swap"
           rel="stylesheet"
         />
+        {/* 파비콘 설정 */}
+        <link rel="icon" href="/favicon/singsing_logo_192x192.png" sizes="192x192" />
+        <link rel="icon" href="/favicon/singsing_logo_180x180.png" sizes="180x180" />
+        <link rel="apple-touch-icon" href="/favicon/singsing_logo_180x180.png" />
         {/* PWA 및 테마 설정 */}
         <meta name="theme-color" content="#003366" />
         <link rel="mask-icon" href="/singsing_logo.svg" color="#003366" />
