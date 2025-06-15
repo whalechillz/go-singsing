@@ -152,49 +152,45 @@ export default function UserManagementPage() {
         // 추가 모드
         if (formData.email) {
           try {
-            // 1. RPC 함수 사용하여 auth.users에 추가
+            // RPC 함수로 auth.users와 public.users 동시 생성
             const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
               input_email: formData.email,
               input_password: formData.password || '90001004',
               input_user_meta: {
                 name: formData.name,
                 role: formData.role,
-                phone: removePhoneHyphens(formData.phone)
+                phone: removePhoneHyphens(formData.phone),
+                role_id: formData.role_id,
+                is_active: formData.is_active
               }
             });
 
-            if (authError || !authData?.success) {
-              console.error('Auth creation error:', authError || authData?.error);
-              // 이메일이 이미 존재하는 경우
-              if (authData?.error?.includes('already exists')) {
-                alert('이미 등록된 이메일입니다.');
-                return;
-              }
-              throw new Error(authData?.error || 'Auth 사용자 생성 실패');
+            console.log('User creation result:', { authData, authError });
+
+            if (authError) {
+              console.error('User creation error:', authError);
+              throw authError;
             }
 
-            // 2. public.users에 추가
-            const { error: publicError } = await supabase.from("users").insert({
-              name: formData.name,
-              phone: removePhoneHyphens(formData.phone) || null,
-              email: formData.email,
-              role: formData.role,
-              role_id: formData.role_id || null,
-              is_active: formData.is_active
-            });
-            
-            if (publicError) {
-              console.error('Public user creation error:', publicError);
-              throw publicError;
+            if (authData?.success) {
+              // 성공
+              alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
+            } else if (authData?.error?.includes('already exists')) {
+              // 이미 존재하는 이메일
+              alert('이미 등록된 이메일입니다.');
+              return;
+            } else {
+              // 기타 오류
+              alert(`사용자 추가 중 오류가 발생했습니다.\n\n${authData?.error || '알 수 없는 오류'}`);
+              return;
             }
-
-            alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
             
           } catch (error: any) {
             console.error('User creation error:', error);
-            // RPC 함수가 없는 경우 안내
             if (error.message?.includes('function') || error.message?.includes('does not exist')) {
               alert('RPC 함수가 설정되지 않았습니다.\n\nSupabase SQL Editor에서 제공된 SQL을 실행한 후 다시 시도하세요.');
+            } else if (error.message?.includes('duplicate key')) {
+              alert('이미 등록된 사용자입니다.');
             } else {
               alert('사용자 추가 중 오류가 발생했습니다.');
             }
