@@ -506,13 +506,17 @@ export default function CustomerTourPortal({
         </div>
         
         <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex flex-col items-center mb-4">
             <img 
-              src="https://go.singsinggolf.kr/favicon/singsing_logo_180x180.png" 
+              src="https://go.singsinggolf.kr/logo-horizontal.png" 
               alt="싱싱골프투어 로고" 
-              className="w-16 h-16 rounded-xl bg-white p-2 shadow-lg"
+              className="h-12 mb-2 drop-shadow-md"
+              onError={(e) => {
+                e.currentTarget.src = 'https://go.singsinggolf.kr/favicon/singsing_logo_180x180.png';
+                e.currentTarget.className = 'w-16 h-16 rounded-xl bg-white p-2 shadow-lg mb-2';
+              }}
             />
-            <h1 className="text-3xl font-bold drop-shadow-md">싱싱골프투어</h1>
+            <p className="text-sm opacity-90">싱싱골프투어</p>
           </div>
           <h2 className="text-xl font-medium mb-2">{tourData.title}</h2>
           <p className="text-base opacity-90">
@@ -597,9 +601,9 @@ export default function CustomerTourPortal({
           </div>
           
           <div className="space-y-4">
-            {/* 첫 번째 줄: 통합문서와 일정표 */}
+            {/* 첫 번째 줄: 일정표, 탑승안내 */}
             <div className="grid grid-cols-2 gap-4">
-              {essentialLinks.filter(link => ['customer_all', 'customer_schedule'].includes(link.document_type)).map((link) => {
+              {essentialLinks.filter(link => ['customer_schedule', 'customer_boarding'].includes(link.document_type)).map((link) => {
                 const info = documentTypeInfo[link.document_type];
                 const url = getDocumentUrl(link);
                 console.log(`Document Type: ${link.document_type}, URL: ${url}`);
@@ -622,15 +626,14 @@ export default function CustomerTourPortal({
                       <span className="text-xs text-blue-600">터치하여 열기</span>
                       <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
                     </div>
-
                   </a>
                 );
               })}
             </div>
             
-            {/* 두 번째 줄: 탑승안내와 다른 문서들 */}
+            {/* 두 번째 줄: 티타임표, 객실배정표 */}
             <div className="grid grid-cols-2 gap-4">
-              {essentialLinks.filter(link => ['customer_boarding', 'room_assignment', 'customer_timetable'].includes(link.document_type)).map((link) => {
+              {essentialLinks.filter(link => ['customer_timetable', 'room_assignment'].includes(link.document_type)).map((link) => {
                 const info = documentTypeInfo[link.document_type];
                 const url = getDocumentUrl(link);
                 console.log(`Document Type: ${link.document_type}, URL: ${url}, Public URL: ${link.public_url}`);
@@ -661,6 +664,37 @@ export default function CustomerTourPortal({
                 );
               })}
             </div>
+            
+            {/* 통합문서 - 가로형 */}
+            {essentialLinks.filter(link => link.document_type === 'customer_all').map((link) => {
+              const info = documentTypeInfo[link.document_type];
+              const url = getDocumentUrl(link);
+              return (
+                <a
+                  key={link.id}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
+                  onClick={() => console.log(`Clicking: ${link.document_type} -> ${url}`)}
+                >
+                  <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                    통합
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-4xl">{info?.icon || '📄'}</div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-800 mb-1 text-lg">{info?.label || link.document_type}</h3>
+                      <p className="text-sm text-gray-600">{info?.desc}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm text-blue-600">열기</span>
+                      <ExternalLink className="w-4 h-4 text-blue-600" />
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </section>
 
@@ -706,7 +740,27 @@ export default function CustomerTourPortal({
           </section>
         )}
 
-        {/* 특별공지사항 섹션 */}
+        {/* 다음 투어 안내 셉션 */}
+        <section className="mb-8">
+          <a
+            href="/"
+            className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-4xl">🏌️</div>
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-800 mb-1 text-lg">다음 투어 안내</h3>
+                <p className="text-sm text-gray-600">예정된 투어 일정 확인</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-blue-600">열기</span>
+                <ExternalLink className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+          </a>
+        </section>
+
+        {/* 특별공지사항 셉션 */}
         {portalSettings.specialNotice && (
           <section className="mb-8">
             <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
@@ -721,21 +775,7 @@ export default function CustomerTourPortal({
           </section>
         )}
 
-        {/* 다음 투어 안내 섹션 */}
-        <section className="mb-8">
-          <a
-            href="/"
-            className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden block no-underline"
-          >
-            <div className="text-3xl mb-3">🏌️</div>
-            <h3 className="font-medium text-gray-800 mb-1">다음 투어 안내</h3>
-            <p className="text-sm text-gray-600">예정된 투어 일정 확인</p>
-            <div className="mt-2 flex items-center justify-center">
-              <span className="text-xs text-blue-600">터치하여 열기</span>
-              <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
-            </div>
-          </a>
-        </section>
+
 
         {/* 비상 연락처 섹션 */}
         {portalSettings.showContact !== false && (
