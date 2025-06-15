@@ -19,6 +19,7 @@ type Tour = {
   golf_course?: string;
   departure_location?: string;
   tour_product_id?: string;
+  actual_revenue?: number; // 실제 결제 금액
 };
 
 const TourListPage: React.FC = () => {
@@ -47,7 +48,7 @@ const TourListPage: React.FC = () => {
       
       const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
       
-      // 각 투어의 참가자 수 계산
+      // 각 투어의 참가자 수와 실제 결제 금액 계산
       if (toursData) {
         const toursWithParticipants = await Promise.all(
           toursData.map(async (tour) => {
@@ -57,11 +58,25 @@ const TourListPage: React.FC = () => {
               .select("group_size")
               .eq("tour_id", tour.id);
             
-            // 실제 참가자 수 = 각 참가자의 group_size 합곀4
+            // 실제 참가자 수 = 각 참가자의 group_size 합계
             let totalParticipants = 0;
             if (participantsData) {
               totalParticipants = participantsData.reduce((sum, p) => {
                 return sum + (p.group_size || 1);
+              }, 0);
+            }
+            
+            // 실제 결제 금액 계산
+            const { data: paymentsData } = await supabase
+              .from("singsing_payments")
+              .select("amount, payment_status")
+              .eq("tour_id", tour.id)
+              .in("payment_status", ["completed", "pending"]); // 완료된 결제와 대기중인 결제만
+            
+            let totalRevenue = 0;
+            if (paymentsData) {
+              totalRevenue = paymentsData.reduce((sum, p) => {
+                return sum + (p.amount || 0);
               }, 0);
             }
             
@@ -72,7 +87,8 @@ const TourListPage: React.FC = () => {
               golf_course: product?.golf_course || product?.name || "",
               current_participants: totalParticipants, // 그룹 인원수를 고려한 총 인원
               max_participants: tour.max_participants || 40, // 기본값 40명
-              price: tour.price || 0
+              price: tour.price || 0,
+              actual_revenue: totalRevenue // 실제 결제 금액 추가
             };
           })
         );

@@ -33,6 +33,7 @@ interface Tour {
   status?: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   golf_course?: string;
   departure_location?: string;
+  actual_revenue?: number; // 실제 결제 금액
 }
 
 interface TourListEnhancedProps {
@@ -242,7 +243,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     upcoming: tours.filter(t => getTourStatus(t) === 'upcoming').length,
     ongoing: tours.filter(t => getTourStatus(t) === 'ongoing').length,
     completed: tours.filter(t => getTourStatus(t) === 'completed').length,
-    totalRevenue: tours.reduce((sum, t) => sum + (t.price * (t.current_participants || 0)), 0),
+    totalRevenue: tours.reduce((sum, t) => sum + (t.actual_revenue || 0), 0), // 실제 결제 금액 사용
     available: tours.filter(t => {
       const status = getTourStatus(t);
       const isFull = (t.current_participants || 0) >= (t.max_participants || 0);
@@ -384,7 +385,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 <p className="text-2xl font-bold text-gray-900">
                   {tours
                     .filter(t => getTourStatus(t) === 'completed')
-                    .reduce((sum, t) => sum + (t.price * (t.current_participants || 0)), 0)
+                    .reduce((sum, t) => sum + (t.actual_revenue || 0), 0)
                     .toLocaleString()}원
                 </p>
               </div>
@@ -679,7 +680,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                       )}
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
-                      {((tour.price || 0) * (tour.current_participants || 0)).toLocaleString()}원
+                      {(tour.actual_revenue || 0).toLocaleString()}원
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap text-right text-sm font-medium" style={{overflow: 'visible'}}>
                       <div className="relative flex items-center justify-end" ref={showDropdown === tour.id ? dropdownRef : null}>

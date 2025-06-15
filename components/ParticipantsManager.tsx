@@ -1100,8 +1100,9 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       return participants.reduce((sum, p) => sum + (p.group_size || 1), 0);
     };
     
-    const paidCount = statsParticipants.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0).length;
-    const unpaidCount = statsParticipants.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0).length;
+    // 결제 관련 통계도 그룹 인원수 고려
+    const paidCount = calculateTotalWithGroupSize(statsParticipants.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0));
+    const unpaidCount = calculateTotalWithGroupSize(statsParticipants.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0));
     
     return {
       total: calculateTotalWithGroupSize(statsParticipants),
@@ -1111,11 +1112,12 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       vip: statsParticipants.filter(p => (p.join_count || 0) >= 5).length,
       paid: paidCount,
       unpaid: unpaidCount,
-      paymentRate: statsParticipants.length > 0 ? Math.round((paidCount / statsParticipants.length) * 100) : 0,
+      paymentRate: calculateTotalWithGroupSize(statsParticipants) > 0 ? Math.round((paidCount / calculateTotalWithGroupSize(statsParticipants)) * 100) : 0,
       currentFiltered: calculateTotalWithGroupSize(filteredParticipants)
     };
   }, [participants, filteredParticipants, tourId, selectedTour]);
 
+  // 탭 구성 - VIP는 레코드 수 기준, 나머지는 그룹 인원수 고려
   const tabs = tourId ? [
     // 투어별 페이지에서는 active/canceled 탭 제외
     { id: 'all', label: '전체', count: stats.total },
