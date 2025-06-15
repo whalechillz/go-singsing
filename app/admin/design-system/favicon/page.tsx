@@ -219,7 +219,7 @@ font-family: 'Black Han Sans', sans-serif;`}
             <h3 className="text-lg font-semibold mb-3">👨‍💻 개발자 노트</h3>
             <p className="text-sm text-gray-700 mb-3">
               이 페이지는 <code className="bg-gray-200 px-2 py-1 rounded">/app/admin/design-system/favicon</code>에 위치합니다.
-              관리자 사이드바에서 '디자인 시스템 > 파비콘 디자인' 메뉴를 통해 접근할 수 있습니다.
+              관리자 사이드바에서 '디자인 시스템 {'>'} 파비콘 디자인' 메뉴를 통해 접근할 수 있습니다.
             </p>
             <ul className="space-y-1 text-sm text-gray-600">
               <li>• 파비콘 수정: <code className="bg-gray-200 px-1">/app/icon.tsx</code></li>
