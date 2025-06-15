@@ -52,6 +52,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'participants'>('date');
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +134,13 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
         !tour.driver_name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !tour.golf_course?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
+    }
+    
+    // 예약 가능한 투어만 표시
+    if (showOnlyAvailable) {
+      const isFull = (tour.current_participants || 0) >= (tour.max_participants || 0);
+      const isAvailable = (status === 'upcoming' || status === 'ongoing') && !isFull;
+      if (!isAvailable) return false;
     }
     
     // 상태 필터
@@ -260,6 +268,20 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+          </div>
+          
+          {/* 예약 가능 필터 토글 */}
+          <div className="flex items-center">
+            <label className="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={showOnlyAvailable}
+                onChange={(e) => setShowOnlyAvailable(e.target.checked)}
+              />
+              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <span className="ml-3 text-sm font-medium text-gray-700">예약 가능한 투어만</span>
+            </label>
           </div>
           
           {/* 필터 */}
