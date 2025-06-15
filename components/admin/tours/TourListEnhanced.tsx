@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
+import BadgeSettingModal from './BadgeSettingModal';
 import { 
   Search, 
   Filter, 
@@ -15,7 +16,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  CreditCard
+  CreditCard,
+  Tag
 } from 'lucide-react';
 
 interface Tour {
@@ -34,6 +36,10 @@ interface Tour {
   golf_course?: string;
   departure_location?: string;
   actual_revenue?: number; // 실제 결제 금액
+  // 뱃지 관련 필드 추가
+  is_special_price?: boolean;
+  special_badge_text?: string;
+  badge_priority?: number;
 }
 
 interface TourListEnhancedProps {
@@ -62,6 +68,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [quickFilter, setQuickFilter] = useState<'none' | 'today' | 'week' | 'almostFull'>('none');
   const [prioritizeAvailable, setPrioritizeAvailable] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+  const [badgeModalTour, setBadgeModalTour] = useState<Tour | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -610,21 +617,27 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                     isAvailable ? 'bg-green-50' : ''
                   }`}>
                     <td className="px-6 py-6 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {isAvailable && (
-                          <div className="w-2 h-2 bg-green-500 rounded-full" title="예약 가능" />
-                        )}
-                        <div>
-                          <Link 
-                            href={`/admin/tours/${tour.id}`}
-                            className="text-sm font-medium text-gray-900 hover:text-blue-600"
-                          >
-                            {tour.title}
-                          </Link>
-                          <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
-                            {tour.golf_course && (
-                              <>
-                                <MapPin className="w-3 h-3" />
+                    <div className="flex items-center gap-2">
+                    {isAvailable && (
+                    <div className="w-2 h-2 bg-green-500 rounded-full" title="예약 가능" />
+                    )}
+                    <div>
+                    <Link 
+                    href={`/admin/tours/${tour.id}`}
+                    className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                    >
+                    {tour.title}
+                    </Link>
+                    {/* 수동 뱃지 표시 */}
+                    {tour.is_special_price && tour.special_badge_text && (
+                    <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-600">
+                    ⭐ {tour.special_badge_text}
+                    </span>
+                    )}
+                    <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                      {tour.golf_course && (
+                          <>
+                              <MapPin className="w-3 h-3" />
                                 {tour.golf_course}
                               </>
                             )}
@@ -745,6 +758,16 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                               >
                                 참가자 관리
                               </Link>
+                              <button
+                                onClick={() => {
+                                  setShowDropdown(null);
+                                  setBadgeModalTour(tour);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              >
+                                <Tag className="w-4 h-4" />
+                                뱃지 설정
+                              </button>
                               <Link
                                 href={`/admin/payments?tourId=${tour.id}`}
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -775,6 +798,19 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
           </div>
         )}
       </div>
+      
+      {/* 뱃지 설정 모달 */}
+      {badgeModalTour && (
+        <BadgeSettingModal
+          tour={badgeModalTour}
+          isOpen={!!badgeModalTour}
+          onClose={() => setBadgeModalTour(null)}
+          onSave={(updates) => {
+            // 로컬 상태 업데이트
+            onRefresh();
+          }}
+        />
+      )}
     </div>
   );
 };
