@@ -654,7 +654,7 @@ const GolfTourPortal = () => {
                                 ← 돌아가기
                               </button>
                             </div>
-                            <TourSchedulePreview tour={selectedTour} />
+                            <TourSchedulePreview tourId={selectedTour.id} />
                           </>
                         )}
                         
