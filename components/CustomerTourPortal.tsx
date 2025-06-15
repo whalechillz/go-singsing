@@ -507,18 +507,16 @@ export default function CustomerTourPortal({
         
         <div className="max-w-md mx-auto">
           <div className="flex flex-col items-center mb-6">
-            <img 
-              src="https://go.singsinggolf.kr/logo-with-slogan.png" 
-              alt="SINGSING - 리무진 버스로 떠나는 편안한 골프여행" 
-              className="h-16 drop-shadow-md"
-              onError={(e) => {
-                e.currentTarget.src = 'https://go.singsinggolf.kr/favicon/singsing_logo_180x180.png';
-                e.currentTarget.className = 'w-16 h-16 rounded-xl bg-white p-2 shadow-lg';
-              }}
-            />
+            <h1 className="text-5xl font-bold mb-3 tracking-wider drop-shadow-md">SINGSING</h1>
+            <p className="text-sm opacity-90 flex items-center gap-2">
+              <span>🚌 2박3일 골프패키지</span>
+              <span className="text-xs">·</span>
+              <span>리무진버스 단체투어</span>
+              <span className="text-xs">·</span>
+              <span>전문 기사가이드 동행</span>
+            </p>
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-2 drop-shadow-md">싱싱골프투어</h1>
             <h2 className="text-xl font-medium mb-2">{tourData.title}</h2>
             <p className="text-base opacity-90">
               {formatDate(tourData.start_date)} ~ {formatDate(tourData.end_date)}
