@@ -267,7 +267,7 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
                   <span className="text-sm font-medium text-gray-900">일정 정보</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  일별 스케줄, 식사 정보 등
+                  일별 세부 스케줄, 아침/점심/저녁 메뉴 정보
                 </p>
               </div>
             </label>
