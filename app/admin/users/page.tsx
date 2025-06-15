@@ -161,7 +161,16 @@ export default function UserManagementPage() {
 
             if (existingUser) {
               // public.users에는 있지만 auth.users에는 없을 수 있음
-              alert('해당 이메일은 public.users 테이블에 이미 등록되어 있습니다.\n\nauth.users에는 등록되지 않아 로그인이 불가능할 수 있습니다.\n\n"사용자 동기화" 버튼을 클릭하거나 SQL Editor에서 직접 auth.users에 추가해주세요.');
+              const continueWithPublicOnly = confirm('해당 이메일은 public.users 테이블에 이미 등록되어 있습니다.\n\nauth.users에는 등록되지 않아 로그인이 불가능할 수 있습니다.\n\n계속하시겠습니까?\n\n[확인] 처음부터 다시 작성\n[취소] 모달 닫기');
+              
+              if (continueWithPublicOnly) {
+                // 모달은 열어두고 이메일 필드만 비움
+                setFormData({ ...formData, email: '' });
+              } else {
+                // 모달 닫기
+                setShowModal(false);
+                resetForm();
+              }
               return;
             }
 
