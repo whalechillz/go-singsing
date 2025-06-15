@@ -160,17 +160,7 @@ export default function UserManagementPage() {
               .maybeSingle();
 
             if (existingUser) {
-              // public.users에는 있지만 auth.users에는 없을 수 있음
-              const continueWithPublicOnly = confirm('해당 이메일은 public.users 테이블에 이미 등록되어 있습니다.\n\nauth.users에는 등록되지 않아 로그인이 불가능할 수 있습니다.\n\n계속하시겠습니까?\n\n[확인] 처음부터 다시 작성\n[취소] 모달 닫기');
-              
-              if (continueWithPublicOnly) {
-                // 모달은 열어두고 이메일 필드만 비움
-                setFormData({ ...formData, email: '' });
-              } else {
-                // 모달 닫기
-                setShowModal(false);
-                resetForm();
-              }
+              alert('이미 등록된 이메일입니다.\n\n로그인이 불가능한 경우 "사용자 동기화" 버튼을 클릭해주세요.');
               return;
             }
 
