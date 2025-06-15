@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, Edit2, Trash2, Search, Mail, Phone, Shield, UserX, UserCheck, Key } from "lucide-react";
 import { SyncUsersButton } from "./sync-button";
+import { formatPhoneNumber, removePhoneHyphens, formatPhoneNumberOnInput } from "@/utils/phoneFormat";
 
 type User = {
   id: string;
@@ -133,7 +134,7 @@ export default function UserManagementPage() {
         // 수정
         const updateData: any = {
           name: formData.name,
-          phone: formData.phone || null,
+          phone: removePhoneHyphens(formData.phone) || null,
           email: formData.email || null,
           role: formData.role,
           role_id: formData.role_id || null,
@@ -167,7 +168,7 @@ export default function UserManagementPage() {
               // RPC 함수가 없으면 직접 SQL로 시도
               const { error: directError } = await supabase.from("users").insert({
                 name: formData.name,
-                phone: formData.phone || null,
+                phone: removePhoneHyphens(formData.phone) || null,
                 email: formData.email,
                 role: formData.role,
                 role_id: formData.role_id || null,
@@ -182,7 +183,7 @@ export default function UserManagementPage() {
               // RPC 함수 성공 시에도 public.users에 추가해야 함
               const { error: publicError } = await supabase.from("users").insert({
                 name: formData.name,
-                phone: formData.phone || null,
+                phone: removePhoneHyphens(formData.phone) || null,
                 email: formData.email,
                 role: formData.role,
                 role_id: formData.role_id || null,
@@ -199,7 +200,7 @@ export default function UserManagementPage() {
             // auth 생성 실패 시 public.users에만 추가
             const { error: publicError } = await supabase.from("users").insert({
               name: formData.name,
-              phone: formData.phone || null,
+              phone: removePhoneHyphens(formData.phone) || null,
               email: formData.email,
               role: formData.role,
               role_id: formData.role_id || null,
@@ -215,7 +216,7 @@ export default function UserManagementPage() {
             .from("users")
             .insert({
               name: formData.name,
-              phone: formData.phone || null,
+              phone: removePhoneHyphens(formData.phone) || null,
               email: null,
               role: formData.role,
               role_id: formData.role_id || null,
@@ -298,7 +299,7 @@ export default function UserManagementPage() {
     setEditingUser(user);
     setFormData({
       name: user.name,
-      phone: user.phone,
+      phone: formatPhoneNumber(user.phone),
       email: user.email || "",
       role: user.role,
       role_id: user.role_id || "",
@@ -355,7 +356,7 @@ export default function UserManagementPage() {
         .eq('name', emailSearchData.name);
       
       if (emailSearchData.phone) {
-        query = query.eq('phone', emailSearchData.phone);
+        query = query.eq('phone', removePhoneHyphens(emailSearchData.phone));
       }
       
       const { data, error } = await query;
@@ -392,8 +393,10 @@ export default function UserManagementPage() {
 
   // 필터링된 사용자 목록
   const filteredUsers = users.filter(user => {
+    const searchTermCleaned = removePhoneHyphens(searchTerm);
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (user.phone && user.phone.includes(searchTerm)) ||
+                         (user.phone && user.phone.includes(searchTermCleaned)) ||
+                         (user.phone && formatPhoneNumber(user.phone).includes(searchTerm)) ||
                          (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesRole = !filterRole || user.role === filterRole;
     const matchesStatus = filterStatus === "all" || 
@@ -525,7 +528,7 @@ export default function UserManagementPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900">
                       <Phone className="w-4 h-4 mr-1 text-gray-400" />
-                      {user.phone || '-'}
+                      {formatPhoneNumber(user.phone) || '-'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -689,9 +692,13 @@ export default function UserManagementPage() {
                 <input
                   type="tel"
                   value={emailSearchData.phone}
-                  onChange={(e) => setEmailSearchData({ ...emailSearchData, phone: e.target.value })}
+                  onChange={(e) => {
+                    const formatted = formatPhoneNumberOnInput(e.target.value, emailSearchData.phone);
+                    setEmailSearchData({ ...emailSearchData, phone: formatted });
+                  }}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="010-0000-0000 (더 정확한 검색을 위해)"
+                  maxLength={13}
                 />
               </div>
 
@@ -700,7 +707,7 @@ export default function UserManagementPage() {
                   <p className="font-medium text-blue-900 mb-2">찾은 사용자 정보:</p>
                   <p className="text-sm"><strong>이름:</strong> {emailSearchResult.name}</p>
                   <p className="text-sm"><strong>이메일:</strong> {emailSearchResult.email || '등록된 이메일 없음'}</p>
-                  <p className="text-sm"><strong>전화번호:</strong> {emailSearchResult.phone || '등록된 전화번호 없음'}</p>
+                  <p className="text-sm"><strong>전화번호:</strong> {formatPhoneNumber(emailSearchResult.phone) || '등록된 전화번호 없음'}</p>
                   <p className="text-sm"><strong>역할:</strong> {emailSearchResult.role}</p>
                 </div>
               )}
@@ -757,10 +764,17 @@ export default function UserManagementPage() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => {
+                    const formatted = formatPhoneNumberOnInput(e.target.value, formData.phone);
+                    setFormData({ ...formData, phone: formatted });
+                  }}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="010-0000-0000 (선택사항, 공유 가능)"
+                  placeholder="010-0000-0000"
+                  maxLength={13}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  * 숫자만 입력하세요. 하이픈(-)은 자동으로 추가됩니다.
+                </p>
               </div>
 
               <div>
