@@ -157,7 +157,7 @@ export default function UserManagementPage() {
               .from('users')
               .select('id')
               .eq('email', formData.email)
-              .single();
+              .maybeSingle();
 
             if (existingUser) {
               alert('이미 등록된 이메일입니다.');
@@ -190,7 +190,7 @@ export default function UserManagementPage() {
               .from('users')
               .select('id')
               .eq('email', formData.email)
-              .single();
+              .maybeSingle();
 
             if (newUser) {
               alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
