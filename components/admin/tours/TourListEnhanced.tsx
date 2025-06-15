@@ -80,8 +80,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
   // 투어 상태 계산
   const getTourStatus = (tour: Tour): string => {
-    if (tour.status) return tour.status;
-    
+    // 날짜를 기반으로 상태를 자동 계산 (DB의 status 값은 무시)
     const today = new Date();
     today.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
     
