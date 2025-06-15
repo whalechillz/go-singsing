@@ -55,7 +55,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     'memo-management': true,
     'tour-staff-management': true,
     'customer-management': true,
-    'quote-management': true 
+    'quote-management': true,
+    'design-system': true 
   });
   
   // pathname에 따라 activeNav 결정
@@ -161,22 +162,14 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       href: '/admin/tour-documents'
     },
     { 
-      id: 'design-templates', 
-      label: '디자인 템플릿', 
+      id: 'design-system', 
+      label: '디자인 시스템', 
       icon: <Palette className="w-5 h-5" />,
-      href: '/admin/design-templates'
-    },
-    { 
-      id: 'font-styles', 
-      label: '폰트 스타일', 
-      icon: <Type className="w-5 h-5" />,
-      href: '/admin/font-styles'
-    },
-    { 
-      id: 'favicon-showcase', 
-      label: '파비콘 디자인', 
-      icon: <Package className="w-5 h-5" />,
-      href: '/favicon/showcase'
+      subMenu: [
+        { id: 'design-templates', label: '디자인 템플릿', href: '/admin/design-templates' },
+        { id: 'font-styles', label: '폰트 스타일', href: '/admin/font-styles' },
+        { id: 'favicon-showcase', label: '파비콘 디자인', href: '/favicon/showcase' },
+      ]
     },
     { 
       id: 'schedule-templates', 
