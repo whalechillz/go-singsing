@@ -283,7 +283,8 @@ export default function CustomerTourPortal({
 
   const getDocumentUrl = (link: DocumentLink) => {
     const prefix = link.document_type === 'quote' ? 'q' : 's';
-    return `${window.location.origin}/${prefix}/${link.public_url}`;
+    // 문서 타입을 쿼리 파라미터로 추가하여 고유한 URL 생성
+    return `${window.location.origin}/${prefix}/${link.public_url}?type=${link.document_type}`;
   };
 
   const copyToClipboard = (text: string, linkId: string) => {
@@ -621,10 +622,7 @@ export default function CustomerTourPortal({
                       <span className="text-xs text-blue-600">터치하여 열기</span>
                       <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
                     </div>
-                    {/* 임시 디버깅: URL 표시 */}
-                    <div className="mt-2 text-xs text-gray-400 truncate">
-                      {link.public_url}
-                    </div>
+
                   </a>
                 );
               })}
@@ -658,10 +656,7 @@ export default function CustomerTourPortal({
                       <span className="text-xs text-blue-600">터치하여 열기</span>
                       <ExternalLink className="w-3 h-3 text-blue-600 ml-1" />
                     </div>
-                    {/* 임시 디버깅: URL 표시 */}
-                    <div className="mt-2 text-xs text-gray-400 truncate">
-                      {link.public_url}
-                    </div>
+
                   </a>
                 );
               })}

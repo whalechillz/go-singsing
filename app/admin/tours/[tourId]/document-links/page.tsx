@@ -256,12 +256,33 @@ export default function DocumentLinksPage() {
     }
   };
 
-  const generatePublicUrl = () => {
+  const generatePublicUrl = (documentType?: string) => {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < 8; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    
+    // 문서 타입에 따라 고유한 suffix 추가
+    if (documentType) {
+      const typeMap: Record<string, string> = {
+        'customer_all': '-all',
+        'customer_schedule': '-sch',
+        'customer_boarding': '-brd',
+        'room_assignment': '-room',
+        'customer_timetable': '-tee',
+        'staff_all': '-sall',
+        'staff_schedule': '-ssch',
+        'staff_boarding': '-sbrd',
+        'room_assignment_staff': '-sroom',
+        'staff_timetable': '-stee',
+        'golf_timetable': '-golf',
+        'simplified': '-simple',
+        'portal': ''
+      };
+      result += typeMap[documentType] || '';
+    }
+    
     return result;
   };
 
@@ -276,7 +297,7 @@ export default function DocumentLinksPage() {
         .insert({
           tour_id: tourId,
           document_type: newDocumentType,
-          public_url: generatePublicUrl(),
+          public_url: generatePublicUrl(newDocumentType),
           expires_at: expiresAt,
           is_active: true,
           view_count: 0
@@ -574,7 +595,7 @@ export default function DocumentLinksPage() {
         .insert({
           tour_id: tourId,
           document_type: 'portal',
-          public_url: generatePublicUrl(),
+          public_url: generatePublicUrl('portal'),
           expires_at: null,
           is_active: true,
           view_count: 0,

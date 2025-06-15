@@ -12,25 +12,54 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default async function ShortLinkDocument({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ url: string }>
+  searchParams?: Promise<{ type?: string }>
 }) {
   const { url } = await params;
+  const queryParams = await searchParams;
+  const docType = queryParams?.type;
   
   // 공개 링크 정보 조회
   console.log('=== ShortLinkDocument Debug (Server) ===');
   console.log('Requested URL:', url);
+  console.log('Document Type from Query:', docType);
   
-  const { data: linkData, error } = await supabase
+  // 먼저 해당 URL로 모든 문서 가져오기
+  const { data: allLinks, error: allLinksError } = await supabase
     .from("public_document_links")
     .select("*")
     .eq("public_url", url)
-    .single();
+    .eq("is_active", true);
     
-  console.log('Found linkData:', linkData);
+  console.log('All links with this URL:', allLinks?.map(l => ({ 
+    id: l.id, 
+    type: l.document_type, 
+    url: l.public_url 
+  })));
+  
+  let linkData = null;
+  let error = allLinksError;
+  
+  if (allLinks && allLinks.length > 0) {
+    if (docType) {
+      // URL에 type 파라미터가 있으면 해당 타입의 문서 찾기
+      linkData = allLinks.find(link => link.document_type === docType);
+      if (!linkData) {
+        console.log('Requested type not found, falling back to first link');
+        linkData = allLinks[0];
+      }
+    } else {
+      // type이 없으면 첫 번째 문서 사용
+      linkData = allLinks[0];
+    }
+  }
+    
+  console.log('Selected linkData:', linkData);
   console.log('Document Type from DB:', linkData?.document_type);
-  console.log('=====================================');
+  console.log('=====================================')
   
   // 링크가 없거나 비활성화된 경우
   if (!linkData || !linkData.is_active || error) {
