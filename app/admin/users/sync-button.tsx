@@ -17,7 +17,7 @@ export function SyncUsersButton() {
     try {
       // RPC 함수 호출
       // 동기화 전 카운트
-      const { data: beforeCount } = await supabase
+      const { count: beforeCount } = await supabase
         .from('users')
         .select('id', { count: 'exact', head: true });
       
@@ -35,7 +35,7 @@ export function SyncUsersButton() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 동기화 후 카운트
-      const { data: afterCount } = await supabase
+      const { count: afterCount } = await supabase
         .from('users')
         .select('id', { count: 'exact', head: true });
       
@@ -58,7 +58,7 @@ export function SyncUsersButton() {
     } catch (error) {
       console.error('동기화 오류:', error);
       // 오류 발생 시에도 진행
-      const { data: currentCount } = await supabase
+      const { count: currentCount } = await supabase
         .from('users')
         .select('id', { count: 'exact', head: true });
       
