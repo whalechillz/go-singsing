@@ -24,6 +24,7 @@ interface Tour {
   is_closed?: boolean;
   closed_reason?: string;
   closed_at?: string;
+  tour_product_id?: string;
 }
 
 const GolfTourPortal = () => {
@@ -45,7 +46,11 @@ const GolfTourPortal = () => {
     const fetchTours = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase.from("singsing_tours").select("*").order("start_date", { ascending: true });
+        const { data, error } = await supabase
+          .from("singsing_tours")
+          .select("*")
+          .is('quote_data', null)  // 견적서가 아닌 정식 투어만
+          .order("start_date", { ascending: true });
         if (error) throw error;
         
         // 오늘 날짜 이후의 투어만 필터링
@@ -57,7 +62,33 @@ const GolfTourPortal = () => {
           return tourDate >= today;
         });
         
-        setTours(futureTours as Tour[]);
+        // tour_products 정보 가져오기
+        const { data: productsData } = await supabase
+          .from("tour_products")
+          .select("id, name, golf_course");
+        
+        const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
+        
+        // 각 투어의 실제 참가자 수 계산
+        const toursWithParticipants = await Promise.all(
+          futureTours.map(async (tour) => {
+            const { count } = await supabase
+              .from("singsing_participants")
+              .select("*", { count: 'exact', head: true })
+              .eq("tour_id", tour.id);
+            
+            const product = tour.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
+            
+            return {
+              ...tour,
+              golf_course: tour.golf_course || product?.golf_course || product?.name || "",
+              current_participants: count || 0,
+              max_participants: tour.max_participants || 40 // 기본값 40명
+            };
+          })
+        );
+        
+        setTours(toursWithParticipants as Tour[]);
         setIsLoading(false);
       } catch (err) {
         setError("투어 정보를 불러오는 중 오류가 발생했습니다.");
@@ -79,7 +110,7 @@ const GolfTourPortal = () => {
       // 사용자가 참가한 투어 목록 가져오기
       if (userData) {
         const { data: participantData } = await supabase
-          .from('tour_participants')
+          .from('singsing_participants')
           .select('tour_id')
           .eq('email', userData.email);
         
