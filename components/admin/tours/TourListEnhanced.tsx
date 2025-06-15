@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
 import BadgeSettingModal from './BadgeSettingModal';
+import TourCopyModal from './TourCopyModal';
 import { 
   Search, 
   Filter, 
@@ -17,7 +18,8 @@ import {
   XCircle,
   AlertCircle,
   CreditCard,
-  Tag
+  Tag,
+  Copy
 } from 'lucide-react';
 
 interface Tour {
@@ -69,6 +71,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [prioritizeAvailable, setPrioritizeAvailable] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [badgeModalTour, setBadgeModalTour] = useState<Tour | null>(null);
+  const [copyModalTour, setCopyModalTour] = useState<Tour | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -726,7 +729,14 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                       {(tour.actual_revenue || 0).toLocaleString()}원
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap text-right text-sm font-medium" style={{overflow: 'visible'}}>
-                      <div className="relative flex items-center justify-end" ref={showDropdown === tour.id ? dropdownRef : null}>
+                      <div className="relative flex items-center justify-end gap-2" ref={showDropdown === tour.id ? dropdownRef : null}>
+                        <button
+                          onClick={() => setCopyModalTour(tour)}
+                          className="text-gray-600 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                          title="투어 복사"
+                        >
+                          <Copy className="w-5 h-5" />
+                        </button>
                         <button
                           onClick={() => setShowDropdown(showDropdown === tour.id ? null : tour.id)}
                           className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -809,6 +819,15 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
             // 로컬 상태 업데이트
             onRefresh();
           }}
+        />
+      )}
+      
+      {/* 투어 복사 모달 */}
+      {copyModalTour && (
+        <TourCopyModal
+          tour={copyModalTour}
+          isOpen={!!copyModalTour}
+          onClose={() => setCopyModalTour(null)}
         />
       )}
     </div>

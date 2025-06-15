@@ -180,8 +180,8 @@ const TourListPage: React.FC = () => {
     }
   };
 
-  const handleRefresh = () => {
-    fetchTours();
+  const handleRefresh = async () => {
+    await fetchTours();
   };
 
   return (
