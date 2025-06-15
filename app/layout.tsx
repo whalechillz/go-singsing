@@ -80,10 +80,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Nanum+Gothic:wght@400;700;800&family=Black+Han+Sans&family=Gothic+A1:wght@900&family=Do+Hyeon&family=Jua&display=swap"
           rel="stylesheet"
         />
-        {/* 파비콘 설정 */}
-        <link rel="icon" href="/favicon/singsing_logo_192x192.png" sizes="192x192" />
-        <link rel="icon" href="/favicon/singsing_logo_180x180.png" sizes="180x180" />
-        <link rel="apple-touch-icon" href="/favicon/singsing_logo_180x180.png" />
         {/* PWA 및 테마 설정 */}
         <meta name="theme-color" content="#003366" />
         <link rel="mask-icon" href="/singsing_logo.svg" color="#003366" />

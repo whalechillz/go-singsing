@@ -487,7 +487,14 @@ export default function CustomerTourPortal({
         </div>
         
         <div className="max-w-md mx-auto">
-          <h1 className="text-3xl font-bold mb-4 drop-shadow-md">싱싱골프투어</h1>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <img 
+              src="https://go.singsinggolf.kr/favicon/singsing_logo_192x192.png" 
+              alt="싱싱골프투어 로고" 
+              className="w-16 h-16 rounded-xl bg-white p-2 shadow-lg"
+            />
+            <h1 className="text-3xl font-bold drop-shadow-md">싱싱골프투어</h1>
+          </div>
           <h2 className="text-xl font-medium mb-2">{tourData.title}</h2>
           <p className="text-base opacity-90">
             {formatDate(tourData.start_date)} ~ {formatDate(tourData.end_date)}

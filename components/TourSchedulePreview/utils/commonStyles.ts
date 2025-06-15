@@ -20,7 +20,10 @@ export function generateCommonHeader(tourData: any, documentTitle: string, isSta
   
   return `
     <div class="route-header-box" style="background-color: ${colors.headerBg};">
-      <div class="route-header-title">싱싱골프투어</div>
+      <div class="header-logo-container">
+        <img src="https://go.singsinggolf.kr/favicon/singsing_logo_192x192.png" alt="싱싱골프투어 로고" class="header-logo-image" />
+        <div class="route-header-title">싱싱골프투어</div>
+      </div>
       <div class="route-header-subtitle">${tourData.title}</div>
       <div class="route-header-date">
         ${tourData.start_date && tourData.end_date ? 
@@ -51,10 +54,26 @@ export function getCommonHeaderStyles(isStaff: boolean = false): string {
       border-radius: 10px;
     }
     
+    .header-logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    
+    .header-logo-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      background: white;
+      padding: 5px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+    
     .route-header-title {
       font-size: 24px;
       font-weight: bold;
-      margin-bottom: 10px;
     }
     
     .route-header-subtitle {

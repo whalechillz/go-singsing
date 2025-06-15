@@ -115,7 +115,10 @@ export const createHeader = (logoText: string = '싱싱골프투어', companyInf
 // A그룹 권위있는 스타일 헤더 템플릿
 export const createAuthorityHeader = (title: string, subtitle?: string, companyInfo?: string): string => `
   <div class="header-authority">
-    <div class="logo">${title}</div>
+    <div class="logo-container">
+      <img src="https://go.singsinggolf.kr/favicon/singsing_logo_192x192.png" alt="싱싱골프투어 로고" class="logo-image" />
+      <div class="logo-text">${title}</div>
+    </div>
     ${subtitle ? `<div class="subtitle">${subtitle.split('\n').map(line => `<div>${line}</div>`).join('')}</div>` : ''}
     ${companyInfo ? `<div class="company-info">${companyInfo}</div>` : ''}
   </div>

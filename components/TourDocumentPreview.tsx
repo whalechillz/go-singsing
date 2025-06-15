@@ -176,7 +176,14 @@ export default function TourDocumentPreview({ tourId }: TourDocumentPreviewProps
     <div className="bg-white rounded-lg shadow-lg p-8 max-w-6xl mx-auto">
       {/* 헤더 */}
       <div className="bg-blue-900 text-white p-6 -m-8 mb-8 rounded-t-lg">
-        <h1 className="text-2xl font-bold mb-2">싱싱골프투어</h1>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <img 
+            src="https://go.singsinggolf.kr/favicon/singsing_logo_192x192.png" 
+            alt="싱싱골프투어 로고" 
+            className="w-12 h-12 rounded-lg bg-white p-1 shadow-lg"
+          />
+          <h1 className="text-2xl font-bold">싱싱골프투어</h1>
+        </div>
         <p className="text-xl mb-1">
           {tourInfo?.title || tourInfo?.tour_product?.name || '2박 3일 순천버스핑'}
         </p>

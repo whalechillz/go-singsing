@@ -33,7 +33,7 @@ function generateInquirySection(tourData: any, isStaff: boolean = false): string
   // 다음 예정된 투어 정보 (실제 구현시 API에서 가져와야 함)
   const nextTours: NextTour[] = tourData.upcomingTours || [
     {
-      title: '[파인힐스] 2박3일 순천버스핑',
+      title: '[오션비치] 2박3일 순천버스핑',
       date: '2025. 6. 16. - 2025. 6. 18.',
       status: '진행',
       price: '850,000원',
@@ -66,10 +66,10 @@ function generateInquirySection(tourData: any, isStaff: boolean = false): string
           <div class="doc-desc">전체 일정 한눈에</div>
         </a>
         
-        <a href="/portal/${tourData.id}" class="doc-item" target="_blank">
-          <div class="doc-icon">👥</div>
-          <div class="doc-title">참가자 명단</div>
-          <div class="doc-desc">팀 구성 확인</div>
+        <a href="/portal/${tourData.id}#boarding" class="doc-item" target="_blank">
+          <div class="doc-icon">🚌</div>
+          <div class="doc-title">탑승 안내</div>
+          <div class="doc-desc">출발 시간 및 위치</div>
         </a>
         
         <a href="/portal/${tourData.id}#room" class="doc-item" target="_blank">
@@ -375,6 +375,30 @@ function getScheduleStyles(isStaff: boolean = false): string {
       padding: 30px;
       text-align: center;
       margin: -30px -30px 30px -30px;
+    }
+    
+    .header-authority .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .header-authority .logo-image {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background: white;
+      padding: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .header-authority .logo-text {
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      color: white;
     }
     
     .header-authority .logo {
