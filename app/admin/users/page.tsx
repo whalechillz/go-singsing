@@ -164,102 +164,35 @@ export default function UserManagementPage() {
               return;
             }
 
-            console.log('Creating user with email:', formData.email);
-
-            // RPC 함수로 사용자 생성
-            const { data: authData, error: authError } = await supabase.rpc('create_auth_user', {
-              input_email: formData.email,
-              input_password: formData.password || '90001004',
-              input_user_meta: {
-                name: formData.name,
-                role: formData.role,
-                phone: removePhoneHyphens(formData.phone),
-                role_id: formData.role_id,
-                is_active: formData.is_active
-              }
+            // API 엔드포인트로 사용자 생성
+            const response = await fetch('/api/admin/create-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: formData.email,
+                password: formData.password || '90001004',
+                userData: {
+                  name: formData.name,
+                  phone: removePhoneHyphens(formData.phone),
+                  role: formData.role
+                }
+              })
             });
 
-            console.log('RPC Response:', { authData, authError });
+            const result = await response.json();
 
-            // RPC 에러가 없어도 실제로 생성되었는지 확인
-            if (!authError) {
-              console.log('RPC executed without error, checking actual creation...');
-              
-              // RPC 함수가 정상 동작했다면 authData에 결과가 있어야 함
-              if (authData && (authData.success === true || authData.user_id)) {
-                // 성공
-                alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
-                setShowModal(false);
-                resetForm();
-                fetchData();
-                return;
+            if (!response.ok) {
+              if (result.error?.includes('already exists')) {
+                alert('이미 등록된 이메일입니다.');
+              } else {
+                alert(`사용자 추가 중 오류가 발생했습니다: ${result.error}`);
               }
-              
-              // RPC가 실행되었지만 authData가 null인 경우
-              // public.users에만 추가하고 경고 메시지 표시
-              console.log('RPC returned null, creating only in public.users');
-              
-              const { error: insertError } = await supabase
-                .from('users')
-                .insert({
-                  name: formData.name,
-                  phone: removePhoneHyphens(formData.phone) || null,
-                  email: formData.email,
-                  role: formData.role,
-                  role_id: formData.role_id || null,
-                  is_active: formData.is_active
-                });
-
-              if (insertError) {
-                console.error('Insert error:', insertError);
-                if (insertError.message?.includes('duplicate')) {
-                  alert('이미 등록된 사용자입니다.');
-                } else {
-                  alert('사용자 추가 중 오류가 발생했습니다.');
-                }
-                return;
-              }
-
-              alert(`사용자가 public.users 테이블에만 추가되었습니다!\n\n이메일: ${formData.email}\n\n⚠️ 주의: auth.users에는 등록되지 않아 로그인이 불가능합니다.\n\n해결 방법:\n1. "사용자 동기화" 버튼을 클릭하여 auth.users에 추가\n2. SQL Editor에서 직접 auth.users에 추가`);
-              setShowModal(false);
-              resetForm();
-              fetchData();
               return;
             }
 
-            // RPC 함수가 없는 경우만 public.users에 직접 추가
-            if (authError.message?.includes('function') || authError.message?.includes('does not exist')) {
-              console.log('RPC function not found, creating user directly in public.users');
-              
-              const { error: insertError } = await supabase
-                .from('users')
-                .insert({
-                  name: formData.name,
-                  phone: removePhoneHyphens(formData.phone) || null,
-                  email: formData.email,
-                  role: formData.role,
-                  role_id: formData.role_id || null,
-                  is_active: formData.is_active
-                });
-
-              if (insertError) {
-                console.error('Insert error:', insertError);
-                if (insertError.message?.includes('duplicate')) {
-                  alert('이미 등록된 사용자입니다.');
-                } else {
-                  alert('사용자 추가 중 오류가 발생했습니다.');
-                }
-                return;
-              }
-
-              alert(`사용자가 추가되었습니다!\n\n이메일: ${formData.email}\n\n※ auth.users에는 등록되지 않아 로그인은 불가능합니다.\n관리자에게 문의하세요.`);
-            } else {
-              // 기타 RPC 에러
-              console.error('RPC Error:', authError);
-              alert(`사용자 추가 중 오류가 발생했습니다.\n\n${authError.message}`);
-              return;
-            }
-
+            alert(`사용자가 성공적으로 추가되었습니다!\n\n이메일: ${formData.email}\n초기 비밀번호: ${formData.password || '90001004'}\n\n※ 비밀번호를 안전하게 보관하고 사용자에게 전달해주세요.`);
             setShowModal(false);
             resetForm();
             fetchData();
