@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
  
 export const runtime = 'edge'
  
-export const alt = '싱싱골프투어 - Premium Golf Tour'
+export const alt = '싱싱골프투어 - 2박3일 골프패키지 리무진버스 단체투어'
 export const size = {
   width: 1200,
   height: 630,
@@ -36,12 +36,21 @@ export default async function Image() {
         </div>
         <div
           style={{
-            fontSize: 36,
+            fontSize: 32,
             color: '#87CEEB',
-            letterSpacing: 2,
+            marginBottom: 10,
           }}
         >
-          Premium Golf Tour
+          2박3일 골프패키지 · 리무진버스 단체투어
+        </div>
+        <div
+          style={{
+            fontSize: 28,
+            color: '#FFD700',
+            marginTop: 20,
+          }}
+        >
+          📞 031-215-3990
         </div>
       </div>
     ),

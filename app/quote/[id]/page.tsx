@@ -8,14 +8,26 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   try {
     const { data } = await supabase
       .from("singsing_tours")
-      .select("title")
+      .select("title, start_date, end_date, golf_course")
       .eq("id", id)
       .single();
     
-    if (data?.title) {
+    if (data) {
+      // 날짜 계산
+      const start = new Date(data.start_date);
+      const end = new Date(data.end_date);
+      const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      const days = nights + 1;
+      
       return {
-        title: `${data.title} - 싱싱골프투어 견적서`,
-        description: `싱싱골프투어 ${data.title} 견적서를 확인해보세요.`,
+        title: `${data.title} | ${nights}박${days}일 골프패키지 견적서 - 싱싱골프투어`,
+        description: `${data.golf_course} ${nights}박${days}일 골프패키지 견적서 | 리무진버스 이동, 숙박/식사 포함, 전문 기사·가이드 동행 | 싱싱골프투어 031-215-3990`,
+        keywords: `${data.golf_course}, ${nights}박${days}일 골프여행, 골프패키지, 리무진버스 골프투어, 단체골프여행`,
+        openGraph: {
+          title: `${data.title} | ${nights}박${days}일 골프패키지 견적서`,
+          description: `${data.golf_course} ${nights}박${days}일 골프여행 견적서 | ✅ 리무진버스 ✅ 숙박/식사 포함 ✅ 전문가이드 | 📞 031-215-3990`,
+          type: "article",
+        },
       };
     }
   } catch (error) {
@@ -23,8 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
   
   return {
-    title: '견적서 - 싱싱골프투어',
-    description: '싱싱골프투어 견적서를 확인해보세요.',
+    title: '골프패키지 견적서 - 싱싱골프투어 | 2박3일 리무진버스 단체투어',
+    description: '싱싱골프투어 골프패키지 견적서 | 리무진버스 이동, 숙박/식사 포함, 전문 기사·가이드 동행',
   };
 }
 

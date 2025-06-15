@@ -3,39 +3,59 @@ import type { Metadata } from "next";
 import KakaoInit from "@/components/KakaoInit";
 
 export const metadata: Metadata = {
-  title: "싱싱골프투어 - Premium Golf Tour",
-  description: "고품격 골프 여행의 시작, 싱싱골프투어가 함께합니다",
+  title: "싱싱골프투어 | 2박3일 골프패키지 전문 리무진버스 단체투어",
+  description: "국내 골프여행 전문, 리무진버스 단체투어, 2박3일 골프패키지, 기사·가이드 동행, 맞춤 일정, 전화예약 031-215-3990",
+  keywords: "골프투어, 골프여행, 2박3일 골프패키지, 단체골프, 리무진버스, 골프버스투어, 국내골프투어, 골프패키지여행, 싱싱골프투어",
   icons: {
     icon: [
-      { url: "/singsing_logo.svg", type: "image/svg+xml" },
-      { url: "/singsing_logo_192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/singsing_logo.svg?v=2", type: "image/svg+xml" },
+      { url: "/singsing_logo_192x192.png?v=2", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.ico?v=2", sizes: "any" },
     ],
     apple: [
-      { url: "/singsing_logo_180x180.png", sizes: "180x180", type: "image/png" },
+      { url: "/singsing_logo_180x180.png?v=2", sizes: "180x180", type: "image/png" },
     ],
   },
   manifest: "/manifest.json",
   openGraph: {
-    title: "싱싱골프투어 - Premium Golf Tour",
-    description: "고품격 골프 여행의 시작, 싱싱골프투어가 함께합니다",
+    title: "싱싱골프투어 | 2박3일 골프패키지 리무진버스 단체투어",
+    description: "✅ 리무진버스 이동 ✅ 2박3일 골프패키지 ✅ 전문 기사·가이드 ✅ 맞춤 일정 ✅ 단체 할인 | 전화예약 031-215-3990",
     siteName: "싱싱골프투어",
     locale: "ko_KR",
     type: "website",
+    url: "https://go.singsinggolf.kr",
     images: [
       {
         url: "/singsing_logo_192x192.png",
         width: 192,
         height: 192,
-        alt: "싱싱골프투어 로고",
+        alt: "싱싱골프투어 로고 - 국내 골프여행 전문",
       },
     ],
   },
   twitter: {
-    card: "summary",
-    title: "싱싱골프투어 - Premium Golf Tour",
-    description: "고품격 골프 여행의 시작, 싱싱골프투어가 함께합니다",
+    card: "summary_large_image",
+    title: "싱싱골프투어 | 2박3일 골프패키지 리무진버스 단체투어",
+    description: "국내 골프여행 전문 🚌 리무진버스 이동 ⛳ 2박3일 골프패키지 📞 031-215-3990",
     images: ["/singsing_logo_192x192.png"],
+  },
+  alternates: {
+    canonical: "https://go.singsinggolf.kr",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "google-site-verification-code", // 추후 Google Search Console 인증 코드 추가
+    naver: "naver-site-verification-code", // 추후 네이버 웹마스터도구 인증 코드 추가
   },
 };
 
@@ -56,6 +76,40 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/singsing_logo_180x180.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/singsing_logo_192x192.png" />
         <link rel="mask-icon" href="/singsing_logo.svg" color="#003366" />
+        {/* 구조화 데이터 (JSON-LD) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "TravelAgency",
+              "name": "싱싱골프투어",
+              "description": "국내 골프여행 전문, 2박3일 골프패키지, 리무진버스 단체투어",
+              "url": "https://go.singsinggolf.kr",
+              "telephone": "031-215-3990",
+              "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "KR",
+                "addressRegion": "경기도"
+              },
+              "priceRange": "$$",
+              "openingHours": "Mo-Fr 09:00-18:00",
+              "sameAs": [
+                "https://blog.naver.com/singsinggolf"
+              ],
+              "makesOffer": [
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "TravelAction",
+                    "name": "2박3일 골프패키지",
+                    "description": "리무진버스 이동, 숙박/식사 포함, 전문 기사·가이드 동행"
+                  }
+                }
+              ]
+            }),
+          }}
+        />
         {/* 카카오 SDK */}
         <script 
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"

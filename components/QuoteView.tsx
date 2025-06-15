@@ -745,8 +745,10 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
             <div>
               <h4 className="font-bold text-lg mb-4">싱싱골프투어</h4>
               <p className="text-gray-400 text-sm">
-                고품격 골프 여행의 시작,<br />
-                싱싱골프투어가 함께합니다.
+                국내 골프여행 전문<br />
+                2박3일 골프패키지<br />
+                리무진버스 단체투어<br />
+                전문 기사·가이드 동행
               </p>
             </div>
             <div>

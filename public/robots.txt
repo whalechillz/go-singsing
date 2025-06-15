@@ -1,5 +1,6 @@
 # 싱싱골프투어 robots.txt
 # https://go.singsinggolf.kr
+# 2박3일 골프패키지 리무진버스 단체투어 전문
 
 User-agent: *
 Allow: /
@@ -8,10 +9,14 @@ Disallow: /api/
 Disallow: /_next/
 Disallow: /login
 
-# 주요 페이지 허용
+# 주요 페이지 허용 (골프패키지 견적, 일정, 홍보)
 Allow: /quote/*
 Allow: /public-schedule/*
 Allow: /promo/*
+Allow: /tour-schedule/*
+
+# 검색엔진 크롤링 속도 제한
+Crawl-delay: 1
 
 # 사이트맵
 Sitemap: https://go.singsinggolf.kr/sitemap.xml

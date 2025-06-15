@@ -237,7 +237,7 @@ const GolfTourPortal = () => {
                   priority
                 />
               </div>
-              <p className="text-sm text-blue-100">리무진 버스로 떠나는 편안한 골프여행</p>
+              <p className="text-sm text-blue-100">🚌 2박3일 골프패키지 · 리무진버스 단체투어 · 전문 기사가이드 동행</p>
             </div>
             <div className="flex items-center space-x-4">
               {user ? (
