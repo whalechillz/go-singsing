@@ -12,6 +12,9 @@ type Tour = {
   price: number;
   max_participants: number;
   current_participants?: number;
+  is_closed?: boolean;
+  closed_reason?: string;
+  closed_at?: string;
   status?: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   golf_course?: string;
   departure_location?: string;
@@ -110,6 +113,39 @@ const TourListPage: React.FC = () => {
       alert("삭제 실패: " + error.message);
     }
   };
+  
+  const handleToggleClosed = async (tour: Tour) => {
+    try {
+      const newClosedStatus = !tour.is_closed;
+      const updateData: any = {
+        is_closed: newClosedStatus,
+        closed_at: newClosedStatus ? new Date().toISOString() : null,
+        closed_reason: newClosedStatus ? (
+          tour.closed_reason || 
+          ((tour.current_participants || 0) >= (tour.max_participants || 0) ? '조기 마감' : '마감')
+        ) : null
+      };
+      
+      const { error } = await supabase
+        .from("singsing_tours")
+        .update(updateData)
+        .eq("id", tour.id);
+        
+      if (error) throw error;
+      
+      // 로컬 상태 업데이트
+      setTours(prev => prev.map(t => 
+        t.id === tour.id 
+          ? { ...t, ...updateData }
+          : t
+      ));
+      
+      alert(newClosedStatus ? '투어가 마감되었습니다.' : '투어 마감이 해제되었습니다.');
+      
+    } catch (error: any) {
+      alert('마감 설정 실패: ' + error.message);
+    }
+  };
 
   const handleRefresh = () => {
     fetchTours();
@@ -122,6 +158,7 @@ const TourListPage: React.FC = () => {
       error={error}
       onDelete={handleDelete}
       onRefresh={handleRefresh}
+      onToggleClosed={handleToggleClosed}
     />
   );
 };

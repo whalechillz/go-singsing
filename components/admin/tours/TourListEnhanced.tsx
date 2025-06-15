@@ -27,6 +27,9 @@ interface Tour {
   price: number;
   max_participants: number;
   current_participants?: number;
+  is_closed?: boolean;
+  closed_reason?: string;
+  closed_at?: string;
   status?: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   golf_course?: string;
   departure_location?: string;
@@ -38,6 +41,7 @@ interface TourListEnhancedProps {
   error: string;
   onDelete: (id: string) => void;
   onRefresh: () => void;
+  onToggleClosed: (tour: Tour) => void;
 }
 
 const TourListEnhanced: React.FC<TourListEnhancedProps> = ({ 
@@ -45,7 +49,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   loading, 
   error, 
   onDelete,
-  onRefresh 
+  onRefresh,
+  onToggleClosed 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -55,6 +60,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [quickFilter, setQuickFilter] = useState<'none' | 'today' | 'week' | 'almostFull'>('none');
   const [prioritizeAvailable, setPrioritizeAvailable] = useState(false);
+  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -135,6 +141,13 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     const startDate = new Date(tour.start_date);
     startDate.setHours(0, 0, 0, 0);
     
+    // 탭 필터링
+    if (activeTab === 'active') {
+      if (status === 'completed') return false;
+    } else {
+      if (status !== 'completed') return false;
+    }
+    
     // 검색어 필터
     if (searchTerm && !tour.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
         !tour.driver_name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -162,11 +175,11 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
       }
     }
     
-    // 예약 가능한 투어만 표시
+    // 예약 가능한 투어만 표시 (마감된 투어 제외)
     if (showOnlyAvailable) {
-      const isFull = (tour.current_participants || 0) >= (tour.max_participants || 0);
-      const isAvailable = (status === 'upcoming' || status === 'ongoing') && !isFull;
-      if (!isAvailable) return false;
+    const isFull = (tour.current_participants || 0) >= (tour.max_participants || 0);
+    const isAvailable = (status === 'upcoming' || status === 'ongoing') && !isFull && !tour.is_closed;
+    if (!isAvailable) return false;
     }
     
     // 상태 필터
@@ -183,16 +196,20 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     return true;
   });
 
-  // 정렬
+  // 정렬 (마감 상태 고려)
   const sortedTours = [...filteredTours].sort((a, b) => {
+    // 마감된 투어는 하단으로
+    if (a.is_closed && !b.is_closed) return 1;
+    if (!a.is_closed && b.is_closed) return -1;
+    
     // 예약 가능한 투어 우선 표시
     if (prioritizeAvailable) {
       const aStatus = getTourStatus(a);
       const bStatus = getTourStatus(b);
       const aFull = (a.current_participants || 0) >= (a.max_participants || 0);
       const bFull = (b.current_participants || 0) >= (b.max_participants || 0);
-      const aAvailable = (aStatus === 'upcoming' || aStatus === 'ongoing') && !aFull;
-      const bAvailable = (bStatus === 'upcoming' || bStatus === 'ongoing') && !bFull;
+      const aAvailable = (aStatus === 'upcoming' || aStatus === 'ongoing') && !aFull && !a.is_closed;
+      const bAvailable = (bStatus === 'upcoming' || bStatus === 'ongoing') && !bFull && !b.is_closed;
       
       if (aAvailable && !bAvailable) return -1;
       if (!aAvailable && bAvailable) return 1;
@@ -219,7 +236,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     available: tours.filter(t => {
       const status = getTourStatus(t);
       const isFull = (t.current_participants || 0) >= (t.max_participants || 0);
-      return (status === 'upcoming' || status === 'ongoing') && !isFull;
+      return (status === 'upcoming' || status === 'ongoing') && !isFull && !t.is_closed;
     }).length
   };
 
@@ -230,6 +247,32 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* 탭 메뉴 */}
+      <div className="bg-white rounded-lg shadow px-1 py-1">
+        <nav className="flex space-x-1" aria-label="Tabs">
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`flex-1 text-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              activeTab === 'active'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            현재/예정 투어 ({tours.filter(t => getTourStatus(t) !== 'completed').length})
+          </button>
+          <button
+            onClick={() => setActiveTab('completed')}
+            className={`flex-1 text-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              activeTab === 'completed'
+                ? 'bg-gray-600 text-white'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            완료된 투어 ({stats.completed})
+          </button>
+        </nav>
+      </div>
+      
       {/* 액션 버튼 */}
       <div className="flex justify-end">
         <div className="flex gap-2">
@@ -250,50 +293,96 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
         </div>
       </div>
 
-      {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">예정된 투어</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.upcoming}</p>
+      {/* 통계 카드 - 탭에 따라 다르게 표시 */}
+      {activeTab === 'active' ? (
+        // 현재/예정 투어 통계
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">예정된 투어</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.upcoming}</p>
+              </div>
+              <Clock className="w-8 h-8 text-blue-500" />
             </div>
-            <Clock className="w-8 h-8 text-blue-500" />
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">진행중 투어</p>
+                <p className="text-2xl font-bold text-green-600">{stats.ongoing}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">예약 가능</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.available}</p>
+              </div>
+              <Users className="w-8 h-8 text-blue-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">마감된 투어</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {tours.filter(t => t.is_closed && getTourStatus(t) !== 'completed').length}
+                </p>
+              </div>
+              <XCircle className="w-8 h-8 text-red-500" />
+            </div>
           </div>
         </div>
-        
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">진행중 투어</p>
-              <p className="text-2xl font-bold text-green-600">{stats.ongoing}</p>
+      ) : (
+        // 완료된 투어 통계
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">완료된 투어</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-gray-500" />
             </div>
-            <CheckCircle className="w-8 h-8 text-green-500" />
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">총 참가자</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {tours
+                    .filter(t => getTourStatus(t) === 'completed')
+                    .reduce((sum, t) => sum + (t.current_participants || 0), 0)}
+                  명
+                </p>
+              </div>
+              <Users className="w-8 h-8 text-gray-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">총 수익</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {tours
+                    .filter(t => getTourStatus(t) === 'completed')
+                    .reduce((sum, t) => sum + (t.price * (t.current_participants || 0)), 0)
+                    .toLocaleString()}원
+                </p>
+              </div>
+              <DollarSign className="w-8 h-8 text-green-500" />
+            </div>
           </div>
         </div>
-        
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">완료된 투어</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-gray-500" />
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">예상 수익</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.totalRevenue.toLocaleString()}원
-              </p>
-            </div>
-            <DollarSign className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* 필터 및 검색 */}
       <div className="bg-white rounded-lg p-4 space-y-4">
@@ -471,10 +560,13 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 const status = getTourStatus(tour);
                 const occupancyRate = getOccupancyRate(tour);
                 const isFull = (tour.current_participants || 0) >= (tour.max_participants || 0);
-                const isAvailable = (status === 'upcoming' || status === 'ongoing') && !isFull;
+                const isAvailable = (status === 'upcoming' || status === 'ongoing') && !isFull && !tour.is_closed;
                 
                 return (
-                  <tr key={tour.id} className={`hover:bg-gray-50 ${isAvailable ? 'bg-green-50' : ''}`}>
+                  <tr key={tour.id} className={`hover:bg-gray-50 ${
+                    tour.is_closed ? 'bg-red-50 opacity-75' : 
+                    isAvailable ? 'bg-green-50' : ''
+                  }`}>
                     <td className="px-6 py-6 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         {isAvailable && (
@@ -542,7 +634,38 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                       </div>
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap">
-                      {getStatusBadge(status)}
+                      <div className="flex items-center gap-2">
+                        {tour.is_closed && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <XCircle className="w-3 h-3" />
+                            마감
+                          </span>
+                        )}
+                        {getStatusBadge(status)}
+                        {!tour.is_closed && status === 'upcoming' && activeTab === 'active' && (
+                          <button
+                            onClick={() => onToggleClosed(tour)}
+                            className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
+                            title="투어 마감"
+                          >
+                            마감하기
+                          </button>
+                        )}
+                        {tour.is_closed && activeTab === 'active' && (
+                          <button
+                            onClick={() => onToggleClosed(tour)}
+                            className="text-xs text-green-600 hover:text-green-800 font-medium px-2 py-1 rounded-md hover:bg-green-50 transition-colors"
+                            title="마감 해제"
+                          >
+                            마감해제
+                          </button>
+                        )}
+                      </div>
+                      {tour.closed_reason && (
+                        <div className="text-xs text-red-600 mt-1">
+                          사유: {tour.closed_reason}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
                       {((tour.price || 0) * (tour.current_participants || 0)).toLocaleString()}원
