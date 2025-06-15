@@ -46,7 +46,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "google-site-verification-code", // 추후 Google Search Console 인증 코드 추가
-    naver: "naver-site-verification-code", // 추후 네이버 웹마스터도구 인증 코드 추가
+    other: {
+      "naver-site-verification": "naver-site-verification-code", // 추후 네이버 웹마스터도구 인증 코드 추가
+    },
   },
 };
 
