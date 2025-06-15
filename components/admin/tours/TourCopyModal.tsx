@@ -58,6 +58,11 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
           price: tour.price,
           max_participants: tour.max_participants,
           tour_product_id: tour.tour_product_id,
+          // 일정 관련 필드들 복사 (이미지2의 필드들)
+          departure_location: tour.departure_location,
+          itinerary: tour.itinerary,
+          included_items: tour.included_items,
+          notes: tour.notes,
           // 기타 필드들 복사 (마감 상태 제외)
           footer_message: tour.footer_message,
           company_phone: tour.company_phone,
@@ -264,10 +269,10 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
               <div className="ml-3 flex-1">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-900">일정 정보</span>
+                  <span className="text-sm font-medium text-gray-900">일별 스케줄</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  일별 세부 스케줄, 아침/점심/저녁 메뉴 정보
+                  각 날짜별 세부 일정, 식사 정보
                 </p>
               </div>
             </label>
@@ -292,18 +297,39 @@ const TourCopyModal: React.FC<TourCopyModalProps> = ({ tour, isOpen, onClose }) 
           </div>
 
           {/* 안내 메시지 */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-sm text-blue-800">
-              <strong>복사되지 않는 항목:</strong>
-              <br />
-              • 참가자 정보
-              <br />
-              • 결제 정보
-              <br />
-              • 객실 배정
-              <br />
-              • 티타임 배정
-            </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-3">
+            <div>
+              <p className="text-sm text-blue-800 font-semibold mb-1">
+                기본적으로 복사되는 항목:
+              </p>
+              <p className="text-xs text-blue-700 ml-3">
+                • 투어 기본 정보 (제목, 날짜, 가격, 인원 등)
+                <br />
+                • 투어 상품 정보 (골프장, 호텔)
+                <br />
+                • 출발 장소, 상세 일정
+                <br />
+                • 포함 사항, 기타 안내 사항
+                <br />
+                • 문서 설정 및 연락처 정보
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-red-700 font-semibold mb-1">
+                복사되지 않는 항목:
+              </p>
+              <p className="text-xs text-red-600 ml-3">
+                • 참가자 정보
+                <br />
+                • 결제 정보
+                <br />
+                • 객실 배정
+                <br />
+                • 티타임 배정
+                <br />
+                • 스택진 정보
+              </p>
+            </div>
           </div>
         </div>
 
