@@ -24,6 +24,14 @@ function getSignature() {
 
 export async function POST(request: NextRequest) {
   try {
+    // 환경변수 확인
+    console.log("환경변수 확인:", {
+      hasApiKey: !!SOLAPI_API_KEY,
+      hasApiSecret: !!SOLAPI_API_SECRET,
+      hasSender: !!SOLAPI_SENDER,
+      sender: SOLAPI_SENDER
+    });
+
     const body = await request.json();
     const { type, recipients, title, content, template_id } = body;
 
@@ -41,6 +49,11 @@ export async function POST(request: NextRequest) {
     }));
 
     // 솔라피 API 호출
+    console.log("솔라피 API 호출:", {
+      messages: messages,
+      headers: getSignature()
+    });
+
     const response = await fetch("https://api.solapi.com/messages/v4/send-many", {
       method: "POST",
       headers: {
@@ -51,6 +64,7 @@ export async function POST(request: NextRequest) {
     });
 
     const result = await response.json();
+    console.log("솔라피 응답:", { status: response.status, result });
 
     if (!response.ok) {
       throw new Error(result.message || "솔라피 API 오류");
@@ -69,11 +83,20 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Solapi API Error:", error);
+    console.error("Solapi API Error:", {
+      message: error.message,
+      stack: error.stack,
+      error: error
+    });
     return NextResponse.json(
       { 
         success: false, 
-        message: error.message || "메시지 발송 중 오류가 발생했습니다." 
+        message: error.message || "메시지 발송 중 오류가 발생했습니다.",
+        debug: {
+          hasApiKey: !!SOLAPI_API_KEY,
+          hasApiSecret: !!SOLAPI_API_SECRET,
+          hasSender: !!SOLAPI_SENDER
+        }
       },
       { status: 500 }
     );
