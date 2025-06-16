@@ -31,22 +31,31 @@ interface TouristAttraction {
   booking_required?: boolean;
 }
 
-interface TourScheduleSpot {
+interface TourJourneyItem {
+  id: string;
   tour_id: string;
-  day: number;
-  sequence: number;
-  spot_id: string;
-  start_time?: string;
-  end_time?: string;
+  day_number: number;
+  order_index: number;
+  spot_id?: string;
+  arrival_time?: string;
+  departure_time?: string;
+  stay_duration?: string;
+  distance_from_prev?: string;
+  duration_from_prev?: string;
+  passenger_count?: number;
+  boarding_type?: string;
+  meal_type?: string;
+  meal_menu?: string;
+  golf_info?: any;
   notes?: string;
-  category: string;
+  display_options?: any;
   tourist_attraction?: TouristAttraction;
 }
 
 export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps) {
   const [loading, setLoading] = useState(true);
   const [tourData, setTourData] = useState<any>(null);
-  const [scheduleSpots, setScheduleSpots] = useState<TourScheduleSpot[]>([]);
+  const [journeyItems, setJourneyItems] = useState<TourJourneyItem[]>([]);
   const [selectedDay, setSelectedDay] = useState(1);
   const [totalDays, setTotalDays] = useState(0);
 
@@ -66,26 +75,29 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       if (tourError) throw tourError;
       setTourData(tour);
 
-      // 투어 일정 스팟 정보 가져오기
-      const { data: spots, error: spotsError } = await supabase
-        .from('tour_schedule_spots')
+      // 견적서 정보는 필요 없으므로 제거
+      // 투어 자체의 가격 정보를 사용
+
+      // 투어 일정 항목 정보 가져오기
+      const { data: items, error: itemsError } = await supabase
+        .from('tour_journey_items')
         .select(`
           *,
-          tourist_attraction:tourist_attractions(*)
+          tourist_attraction:tourist_attractions!spot_id(*)
         `)
         .eq('tour_id', tourId)
-        .order('day', { ascending: true })
-        .order('sequence', { ascending: true });
+        .order('day_number', { ascending: true })
+        .order('order_index', { ascending: true });
 
-      if (spotsError) throw spotsError;
+      if (itemsError) throw itemsError;
       
-      if (spots && spots.length > 0) {
-        setScheduleSpots(spots);
+      if (items && items.length > 0) {
+        setJourneyItems(items);
         // 총 일수 계산
-        const maxDay = Math.max(...spots.map(s => s.day));
+        const maxDay = Math.max(...items.map(item => item.day_number));
         setTotalDays(maxDay);
       } else {
-        // 스팟이 없으면 투어 기간으로 일수 계산
+        // 항목이 없으면 투어 기간으로 일수 계산
         if (tour.start_date && tour.end_date) {
           const start = new Date(tour.start_date);
           const end = new Date(tour.end_date);
@@ -152,10 +164,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   // 해당 일자의 스팟 가져오기
   const getDaySpots = (day: number) => {
-    return scheduleSpots.filter(spot => spot.day === day);
+    return journeyItems.filter(item => item.day_number === day);
   };
 
-  // 버스 출발 정보
+  // 버스 출발 정보 - 기본값 사용
   const busInfo = {
     departure: [
       { location: '수원역 4번 출구', time: '06:00' },
@@ -178,7 +190,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 rounded-t-2xl">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">[{tourData.golf_course}] {tourData.title}</h1>
+            <h1 className="text-3xl font-bold mb-2">{tourData.title}</h1>
             <p className="text-xl opacity-90">{nights}박 {days}일의 특별한 여행</p>
           </div>
           <div className="text-right">
@@ -196,7 +208,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div className="text-center">
             <MapPin className="w-6 h-6 mx-auto mb-2" />
             <p className="text-sm opacity-80">여행지</p>
-            <p className="font-semibold">{tourData.golf_course}</p>
+            <p className="font-semibold">{tourData.destination || '골프장'}</p>
           </div>
           <div className="text-center">
             <Users className="w-6 h-6 mx-auto mb-2" />
@@ -260,14 +272,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         <div className="p-6">
           {getDaySpots(selectedDay).length > 0 ? (
             <div className="space-y-4">
-              {getDaySpots(selectedDay).map((spot, index) => {
-                const attraction = spot.tourist_attraction;
+              {getDaySpots(selectedDay).map((item, index) => {
+                const attraction = item.tourist_attraction;
                 if (!attraction) return null;
                 
-                const Icon = getCategoryIcon(spot.category);
+                const Icon = getCategoryIcon(attraction.category || '기타');
                 
                 return (
-                  <div key={spot.spot_id} className={`rounded-xl p-5 ${getCategoryBgClass(spot.category)}`}>
+                  <div key={item.id} className={`rounded-xl p-5 ${getCategoryBgClass(attraction.category || '기타')}`}>
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0">
                         <Icon className="w-6 h-6" />
@@ -275,8 +287,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="text-lg font-semibold">{attraction.name}</h4>
-                          {spot.start_time && (
-                            <span className="text-sm font-medium">{spot.start_time}</span>
+                          {item.arrival_time && (
+                            <span className="text-sm font-medium">{item.arrival_time}</span>
                           )}
                         </div>
                         {attraction.description && (
@@ -298,9 +310,15 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                             />
                           </div>
                         )}
+                        {item.meal_menu && (
+                          <div className="mt-3 p-3 bg-white/50 rounded-lg">
+                            <p className="text-sm font-semibold">식사 메뉴</p>
+                            <p className="text-sm">{item.meal_menu}</p>
+                          </div>
+                        )}
                         {attraction.meal_info && (
                           <div className="mt-3 p-3 bg-white/50 rounded-lg">
-                            <p className="text-sm">{JSON.stringify(attraction.meal_info)}</p>
+                            <p className="text-sm">{typeof attraction.meal_info === 'object' ? JSON.stringify(attraction.meal_info) : attraction.meal_info}</p>
                           </div>
                         )}
                         {attraction.features && attraction.features.length > 0 && (
@@ -310,6 +328,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                                 {feature}
                               </span>
                             ))}
+                          </div>
+                        )}
+                        {item.notes && (
+                          <div className="mt-3 text-sm text-gray-600">
+                            <p>📝 {item.notes}</p>
                           </div>
                         )}
                       </div>
@@ -471,25 +494,33 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             {/* 1인 기준 가격 - 크게 표시 */}
             <div className="text-center mb-6">
               <p className="text-lg opacity-90 mb-2">1인 기준</p>
-              <p className="text-5xl font-bold mb-2">{tourData.price?.toLocaleString() || '750,000'}원</p>
+              <p className="text-5xl font-bold mb-2">
+                {(tourData.price || 750000).toLocaleString()}원
+              </p>
             </div>
             
             {/* 2인/4인 기준 - 작게 표시 */}
             <div className="grid grid-cols-2 gap-4 text-center pt-4 border-t border-white/30">
               <div>
                 <p className="text-sm opacity-80">2인 기준</p>
-                <p className="text-xl font-semibold">{((tourData.price || 750000) * 2).toLocaleString()}원</p>
+                <p className="text-xl font-semibold">
+                  {((tourData.price || 750000) * 2).toLocaleString()}원
+                </p>
               </div>
               <div>
                 <p className="text-sm opacity-80">4인 기준</p>
-                <p className="text-xl font-semibold">{((tourData.price || 750000) * 4).toLocaleString()}원</p>
+                <p className="text-xl font-semibold">
+                  {((tourData.price || 750000) * 4).toLocaleString()}원
+                </p>
               </div>
             </div>
             
             {/* 예약금 정보 */}
             <div className="mt-6 pt-4 border-t border-white/30 text-center">
               <p className="text-sm opacity-80">예약금</p>
-              <p className="text-2xl font-bold">10만원</p>
+              <p className="text-2xl font-bold">
+                {tourData.deposit_amount ? `${(tourData.deposit_amount / 10000).toFixed(0)}만원` : '10만원'}
+              </p>
               <p className="text-xs opacity-70">1인당</p>
             </div>
           </div>
