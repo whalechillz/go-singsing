@@ -242,8 +242,8 @@ export default function MessageManagementPage() {
         return;
       }
 
-      // 알리고 API 호출 (실제로는 서버 API를 통해 호출)
-      const response = await fetch("/api/aligo/send", {
+      // 솔라피 API 호출 (실제로는 서버 API를 통해 호출)
+      const response = await fetch("/api/solapi/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -379,7 +379,7 @@ export default function MessageManagementPage() {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">메시지 발송</h1>
-        <p className="text-gray-600 mt-1">알리고를 통한 SMS, 카카오톡 발송 관리</p>
+        <p className="text-gray-600 mt-1">솔라피를 통한 SMS, 카카오톡 발송 관리</p>
       </div>
 
       {/* 탭 네비게이션 */}
@@ -882,7 +882,7 @@ export default function MessageManagementPage() {
                     value={templateForm.kakao_template_code}
                     onChange={(e) => setTemplateForm({ ...templateForm, kakao_template_code: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="알리고에서 발급받은 템플릿 코드"
+                    placeholder="솔라피에서 발급받은 템플릿 코드"
                   />
                 </div>
               )}
@@ -956,7 +956,7 @@ export default function MessageManagementPage() {
               <div className="bg-white rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs text-gray-500">발신번호</span>
-                  <span className="text-xs text-gray-700">{process.env.NEXT_PUBLIC_ALIGO_SENDER || "031-215-3990"}</span>
+                  <span className="text-xs text-gray-700">{process.env.NEXT_PUBLIC_SOLAPI_SENDER || "031-215-3990"}</span>
                 </div>
                 
                 {previewTitle && (
