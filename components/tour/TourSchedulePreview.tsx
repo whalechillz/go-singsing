@@ -267,7 +267,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <span className="font-semibold">{stop.time}</span>
           </div>
           <p className="text-sm">
-              {stop.location.split(' ').filter(word => !word.includes(':') && !word.match(/^\d{2}:\d{2}$/)).join(' ')}
+              {stop.location.split(' ').filter((word: string) => !word.includes(':') && !word.match(/^\d{2}:\d{2}$/)).join(' ')}
               </p>
               </div>
             ))}
