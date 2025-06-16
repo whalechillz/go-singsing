@@ -58,6 +58,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [journeyItems, setJourneyItems] = useState<TourJourneyItem[]>([]);
   const [selectedDay, setSelectedDay] = useState(1);
   const [totalDays, setTotalDays] = useState(0);
+  const [boardingInfo, setBoardingInfo] = useState<any[]>([]);
 
   useEffect(() => {
     fetchTourData();
@@ -77,6 +78,19 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
       // 견적서 정보는 필요 없으므로 제거
       // 투어 자체의 가격 정보를 사용
+      
+      // 투어 상품 정보 가져오기 (골프장 정보 포함)
+      if (tour.tour_product_id) {
+        const { data: productData, error: productError } = await supabase
+          .from('tour_products')
+          .select('*')
+          .eq('id', tour.tour_product_id)
+          .single();
+          
+        if (!productError && productData) {
+          tour.product = productData;
+        }
+      }
 
       // 투어 일정 항목 정보 가져오기
       const { data: items, error: itemsError } = await supabase
@@ -104,6 +118,17 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
           setTotalDays(days);
         }
+      }
+      
+      // 탑승 장소 정보 가져오기
+      const { data: boardingPlaces } = await supabase
+        .from('tour_boarding_places')
+        .select('*')
+        .eq('tour_id', tourId)
+        .order('boarding_order', { ascending: true });
+        
+      if (boardingPlaces && boardingPlaces.length > 0) {
+        setBoardingInfo(boardingPlaces);
       }
     } catch (error) {
       console.error('Error fetching tour data:', error);
@@ -167,9 +192,16 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     return journeyItems.filter(item => item.day_number === day);
   };
 
-  // 버스 출발 정보 - 기본값 사용
+  // 버스 출발 정보
   const busInfo = {
-    departure: [
+    departure: boardingInfo.length > 0 ? boardingInfo.map(place => ({
+      location: place.place_name,
+      time: place.boarding_time ? new Date(`2000-01-01T${place.boarding_time}`).toLocaleTimeString('ko-KR', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      }) : ''
+    })) : [
       { location: '수원역 4번 출구', time: '06:00' },
       { location: '영통 홈플러스', time: '06:20' },
       { location: '동탄 메타폴리스', time: '06:40' }
@@ -208,7 +240,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           <div className="text-center">
             <MapPin className="w-6 h-6 mx-auto mb-2" />
             <p className="text-sm opacity-80">여행지</p>
-            <p className="font-semibold">{tourData.destination || '골프장'}</p>
+            <p className="font-semibold">{tourData.product?.golf_course || tourData.destination || '골프장'}</p>
           </div>
           <div className="text-center">
             <Users className="w-6 h-6 mx-auto mb-2" />
@@ -218,8 +250,8 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         </div>
       </div>
 
-      {/* 버스 출발 정보 */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6 -mt-4 rounded-xl mx-4 relative z-10 shadow-lg">
+      {/* 버스 출발 정보 - 여백 추가 */}
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6 mt-6 rounded-xl mx-4 shadow-lg">
         <div className="flex items-center gap-3 mb-4">
           <Bus className="w-8 h-8" />
           <div>
@@ -229,14 +261,16 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         </div>
         <div className="grid grid-cols-3 gap-4">
           {busInfo.departure.map((stop, idx) => (
-            <div key={idx} className="bg-white/20 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Navigation className="w-4 h-4" />
-                <span className="font-semibold">{stop.time}</span>
+          <div key={idx} className="bg-white/20 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+          <Navigation className="w-4 h-4" />
+          <span className="font-semibold">{stop.time}</span>
+          </div>
+          <p className="text-sm">
+              {stop.location.split(' ').filter(word => !word.includes(':') && !word.match(/^\d{2}:\d{2}$/)).join(' ')}
+              </p>
               </div>
-              <p className="text-sm">{stop.location}</p>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
@@ -310,15 +344,19 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                             />
                           </div>
                         )}
-                        {item.meal_menu && (
+                        {item.meal_menu && item.meal_menu !== '{"menu":"김밥, 생수","price":"","meal_type":"조식"}' && (
                           <div className="mt-3 p-3 bg-white/50 rounded-lg">
                             <p className="text-sm font-semibold">식사 메뉴</p>
-                            <p className="text-sm">{item.meal_menu}</p>
-                          </div>
-                        )}
-                        {attraction.meal_info && (
-                          <div className="mt-3 p-3 bg-white/50 rounded-lg">
-                            <p className="text-sm">{typeof attraction.meal_info === 'object' ? JSON.stringify(attraction.meal_info) : attraction.meal_info}</p>
+                            <p className="text-sm">
+                              {(() => {
+                                try {
+                                  const menuData = JSON.parse(item.meal_menu);
+                                  return menuData.menu || item.meal_menu;
+                                } catch {
+                                  return item.meal_menu;
+                                }
+                              })()}
+                            </p>
                           </div>
                         )}
                         {attraction.features && attraction.features.length > 0 && (
@@ -359,51 +397,22 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                 포함사항
               </h3>
               <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-green-600 text-xs">✓</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">리무진 버스</p>
-                    <p className="text-sm text-gray-600">45인승 최고급 차량</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-green-600 text-xs">✓</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">그린피 및 카트비</p>
-                    <p className="text-sm text-gray-600">18홀 × {days}일</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-green-600 text-xs">✓</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">호텔 {nights}박</p>
-                    <p className="text-sm text-gray-600">2인 1실 기준</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-green-600 text-xs">✓</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">조식 {nights}회</p>
-                    <p className="text-sm text-gray-600">호텔 조식</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-green-600 text-xs">✓</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">전문 기사가이드</p>
-                    <p className="text-sm text-gray-600">경험 많은 전문가</p>
-                  </div>
-                </li>
+                {(tourData.includes || tourData.product?.default_includes || [
+                  '리무진 버스 (45인승 최고급 차량)',
+                  `그린피 및 카트비 (18홀 × ${days}일)`,
+                  `호텔 ${nights}박 (2인 1실 기준)`,
+                  `조식 ${nights}회 (호텔 조식)`,
+                  '전문 기사가이드 (경험 많은 전문가)'
+                ]).map((item, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-green-600 text-xs">✓</span>
+                    </div>
+                    <div>
+                      <p className="font-medium">{item}</p>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -414,33 +423,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                 특별 혜택
               </h3>
               <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-600 text-xs">★</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">지역 맛집 투어</p>
-                    <p className="text-sm text-gray-600">엄선된 맛집만</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-600 text-xs">★</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">그룹 사진 촬영</p>
-                    <p className="text-sm text-gray-600">전문 작가 촬영</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-600 text-xs">★</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">물 및 간식 제공</p>
-                    <p className="text-sm text-gray-600">버스 내 상시</p>
-                  </div>
-                </li>
+                {(tourData.special_benefits || tourData.product?.default_special_benefits || [
+                  '지역 맛집 투어 (엄선된 맛집만)',
+                  '그룹 사진 촬영 (전문 작가 촬영)',
+                  '물 및 간식 제공 (버스 내 상시)'
+                ]).map((item, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-purple-600 text-xs">★</span>
+                    </div>
+                    <div>
+                      <p className="font-medium">{item}</p>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -451,33 +447,20 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                 불포함사항
               </h3>
               <ul className="space-y-3 text-gray-700">
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-red-500 text-xs">×</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">캐디피</p>
-                    <p className="text-sm text-gray-600">약 15만원</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-red-500 text-xs">×</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">중식 및 석식</p>
-                    <p className="text-sm text-gray-600">개인 부담</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-red-500 text-xs">×</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">개인 경비</p>
-                    <p className="text-sm text-gray-600">기타 개인 비용</p>
-                  </div>
-                </li>
+                {(tourData.excludes || tourData.product?.default_excludes || [
+                  '캐디피 (약 15만원)',
+                  '중식 및 석식 (개인 부담)',
+                  '개인 경비 (기타 개인 비용)'
+                ]).map((item, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-red-500 text-xs">×</span>
+                    </div>
+                    <div>
+                      <p className="font-medium">{item}</p>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -552,7 +535,9 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             </a>
             
             <a
-              href="https://open.kakao.com/o/singsinggolf"
+              href="http://pf.kakao.com/_vSVuV"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
             >
               <CreditCard className="w-6 h-6" />
