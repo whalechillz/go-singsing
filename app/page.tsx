@@ -670,12 +670,7 @@ const GolfTourPortal = () => {
                               </p>
                               <div className="flex gap-2 flex-wrap">
                                 <button
-                                  onClick={() => {
-                                    console.log('일정 엿보기 버튼 클릭');
-                                    console.log('현재 showPreview:', showPreview);
-                                    console.log('selectedTour:', selectedTour);
-                                    setShowPreview(!showPreview);
-                                  }}
+                                  onClick={() => setShowPreview(!showPreview)}
                                   className="inline-flex items-center gap-1 text-blue-700 font-medium text-sm hover:text-blue-800 bg-white px-3 py-1.5 rounded-lg border border-blue-300 hover:border-blue-400 transition-colors"
                                 >
                                   {showPreview ? (
@@ -705,12 +700,7 @@ const GolfTourPortal = () => {
                                 투어 참가자만 모든 여행 서류를 볼 수 있습니다.
                               </p>
                               <button
-                                onClick={() => {
-                                  console.log('일정 엿보기 버튼 클릭 (로그인 상태)');
-                                  console.log('현재 showPreview:', showPreview);
-                                  console.log('selectedTour:', selectedTour);
-                                  setShowPreview(!showPreview);
-                                }}
+                                onClick={() => setShowPreview(!showPreview)}
                                 className="inline-flex items-center gap-1 text-blue-700 font-medium text-sm hover:text-blue-800 bg-white px-3 py-1.5 rounded-lg border border-blue-300 hover:border-blue-400 transition-colors"
                               >
                                 {showPreview ? (
