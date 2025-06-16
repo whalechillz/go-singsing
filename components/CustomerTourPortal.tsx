@@ -564,6 +564,27 @@ export default function CustomerTourPortal({
 
       {/* 메인 섹션 */}
       <main className="container max-w-lg mx-auto px-5 py-8">
+        {/* 특별공지사항 섹션 - 최상단 배치 */}
+        {portalSettings.specialNotice && (
+          <section className="mb-8 -mx-5 px-5 py-4 bg-gradient-to-r from-red-50 to-yellow-50">
+            <div className="bg-white border-2 border-red-300 rounded-2xl p-6 shadow-xl">
+              <div className="flex items-start gap-3">
+                <div className="bg-red-100 rounded-full p-2">
+                  <Info className="w-6 h-6 text-red-600 animate-pulse" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-red-800 mb-3 text-lg flex items-center gap-2">
+                    <span className="animate-pulse">🚨</span> 긴급공지사항
+                  </h3>
+                  <div className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    {portalSettings.specialNotice}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+        
         {/* 투어 종료 후 안내 */}
         {daysInfo && daysInfo.type === 'expired' && (
           <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
@@ -761,21 +782,6 @@ export default function CustomerTourPortal({
             </div>
           </a>
         </section>
-
-        {/* 특별공지사항 셉션 */}
-        {portalSettings.specialNotice && (
-          <section className="mb-8">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
-              <div className="flex items-start gap-3">
-                <Info className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800 mb-2">📢 특별공지사항</h3>
-                  <p className="text-gray-700 whitespace-pre-wrap">{portalSettings.specialNotice}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
 
 
 
