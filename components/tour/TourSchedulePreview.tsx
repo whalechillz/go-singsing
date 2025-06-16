@@ -194,7 +194,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
 
   // 버스 출발 정보
   const busInfo = {
-    departure: boardingInfo.length > 0 ? boardingInfo.map(place => ({
+    departure: boardingInfo.length > 0 ? boardingInfo.map((place: any) => ({
       location: place.place_name,
       time: place.boarding_time ? new Date(`2000-01-01T${place.boarding_time}`).toLocaleTimeString('ko-KR', { 
         hour: '2-digit', 
@@ -260,7 +260,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          {busInfo.departure.map((stop, idx) => (
+          {busInfo.departure.map((stop: any, idx: number) => (
           <div key={idx} className="bg-white/20 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-1">
           <Navigation className="w-4 h-4" />
@@ -286,7 +286,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         {/* 일자별 탭 */}
         <div className="border-b border-gray-200">
           <div className="flex overflow-x-auto">
-            {Array.from({ length: totalDays }, (_, i) => i + 1).map((day) => (
+            {Array.from({ length: totalDays }, (_, i) => i + 1).map((day: number) => (
               <button
                 key={day}
                 onClick={() => setSelectedDay(day)}
@@ -306,7 +306,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         <div className="p-6">
           {getDaySpots(selectedDay).length > 0 ? (
             <div className="space-y-4">
-              {getDaySpots(selectedDay).map((item, index) => {
+              {getDaySpots(selectedDay).map((item: TourJourneyItem, index: number) => {
                 const attraction = item.tourist_attraction;
                 if (!attraction) return null;
                 
@@ -361,7 +361,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                         )}
                         {attraction.features && attraction.features.length > 0 && (
                           <div className="mt-3 flex flex-wrap gap-2">
-                            {attraction.features.map((feature, idx) => (
+                            {attraction.features.map((feature: string, idx: number) => (
                               <span key={idx} className="text-xs px-2 py-1 bg-white/50 rounded-full">
                                 {feature}
                               </span>
@@ -403,7 +403,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   `호텔 ${nights}박 (2인 1실 기준)`,
                   `조식 ${nights}회 (호텔 조식)`,
                   '전문 기사가이드 (경험 많은 전문가)'
-                ]).map((item, index) => (
+                ]).map((item: string, index: number) => (
                   <li key={index} className="flex items-start gap-3">
                     <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-green-600 text-xs">✓</span>
@@ -427,7 +427,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   '지역 맛집 투어 (엄선된 맛집만)',
                   '그룹 사진 촬영 (전문 작가 촬영)',
                   '물 및 간식 제공 (버스 내 상시)'
-                ]).map((item, index) => (
+                ]).map((item: string, index: number) => (
                   <li key={index} className="flex items-start gap-3">
                     <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-purple-600 text-xs">★</span>
@@ -451,7 +451,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   '캐디피 (약 15만원)',
                   '중식 및 석식 (개인 부담)',
                   '개인 경비 (기타 개인 비용)'
-                ]).map((item, index) => (
+                ]).map((item: string, index: number) => (
                   <li key={index} className="flex items-start gap-3">
                     <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-red-500 text-xs">×</span>
