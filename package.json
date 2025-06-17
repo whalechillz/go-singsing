@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "tsx scripts/migrate-participants.ts",
-    "create-migration-template": "tsx scripts/create-migration-template.ts"
+    "create-migration-template": "tsx scripts/create-migration-template.ts",
+    "check-participants": "tsx scripts/debug/check-participant-count.ts",
+    "fix-duplicates": "tsx scripts/debug/fix-duplicate-participants.ts",
+    "check-tours": "tsx scripts/check-tour-participants.ts"
   },
   "dependencies": {
     "@octokit/rest": "^21.1.1",

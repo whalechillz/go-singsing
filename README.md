@@ -32,6 +32,16 @@ npm run build
 ./deploy.sh
 ```
 
+## 🔧 유용한 스크립트
+
+```bash
+# 참가자 수 불일치 확인
+npm run check-participants
+
+# 중복 참가자 정리
+npm run fix-duplicates
+```
+
 ## 📞 문의
 
 - 전화: 031-215-3990
