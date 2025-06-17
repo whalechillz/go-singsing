@@ -131,6 +131,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   const [selectedParticipantForMemo, setSelectedParticipantForMemo] = useState<{id: string, name: string, tourId: string} | null>(null);
   const [scrollToId, setScrollToId] = useState<string | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'marketing' | 'operational'>('operational'); // 뷰 모드 추가
 
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
@@ -1095,27 +1096,41 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     
     const statsParticipants = getParticipantsForStats();
     
-    // 그룹 인원수를 고려한 총 인원 계산
-    const calculateTotalWithGroupSize = (participants: Participant[]) => {
-      return participants.reduce((sum, p) => sum + (p.group_size || 1), 0);
+    // 뷰 모드에 따른 인원 계산
+    const calculateTotal = (participants: Participant[]) => {
+      if (viewMode === 'marketing') {
+        // 마케팅 뷰: group_size 기준
+        return participants.reduce((sum, p) => sum + (p.group_size || 1), 0);
+      } else {
+        // 운영 뷰: 실제 확정된 인원 (companions + 1)
+        return participants.reduce((sum, p) => {
+          if (p.is_confirmed) {
+            const actualCount = p.companions && p.companions.filter(c => c).length > 0 
+              ? p.companions.filter(c => c).length + 1 
+              : 1;
+            return sum + actualCount;
+          }
+          return sum;
+        }, 0);
+      }
     };
     
-    // 결제 관련 통계도 그룹 인원수 고려
-    const paidCount = calculateTotalWithGroupSize(statsParticipants.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0));
-    const unpaidCount = calculateTotalWithGroupSize(statsParticipants.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0));
+    // 결제 관련 통계도 뷰 모드 고려
+    const paidCount = calculateTotal(statsParticipants.filter(p => p.paymentSummary && p.paymentSummary.totalAmount > 0));
+    const unpaidCount = calculateTotal(statsParticipants.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0));
     
     return {
-      total: calculateTotalWithGroupSize(statsParticipants),
-      confirmed: calculateTotalWithGroupSize(statsParticipants.filter(p => p.status === "확정")),
-      unconfirmed: calculateTotalWithGroupSize(statsParticipants.filter(p => p.status === "미확정")),
-      canceled: calculateTotalWithGroupSize(statsParticipants.filter(p => p.status === "취소")),
+      total: calculateTotal(statsParticipants),
+      confirmed: calculateTotal(statsParticipants.filter(p => p.status === "확정")),
+      unconfirmed: calculateTotal(statsParticipants.filter(p => p.status === "미확정")),
+      canceled: calculateTotal(statsParticipants.filter(p => p.status === "취소")),
       vip: statsParticipants.filter(p => (p.join_count || 0) >= 5).length,
       paid: paidCount,
       unpaid: unpaidCount,
-      paymentRate: calculateTotalWithGroupSize(statsParticipants) > 0 ? Math.round((paidCount / calculateTotalWithGroupSize(statsParticipants)) * 100) : 0,
-      currentFiltered: calculateTotalWithGroupSize(filteredParticipants)
+      paymentRate: calculateTotal(statsParticipants) > 0 ? Math.round((paidCount / calculateTotal(statsParticipants)) * 100) : 0,
+      currentFiltered: calculateTotal(filteredParticipants)
     };
-  }, [participants, filteredParticipants, tourId, selectedTour]);
+  }, [participants, filteredParticipants, tourId, selectedTour, viewMode]);
 
   // 탭 구성 - VIP는 레코드 수 기준, 나머지는 그룹 인원수 고려
   const tabs = tourId ? [
@@ -1280,6 +1295,47 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                 </div>
               </div>
 
+              {/* 뷰 모드 토글 */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-gray-100 rounded-lg p-1 inline-flex">
+                  <button
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                      viewMode === 'operational' 
+                        ? 'bg-white text-gray-900 shadow-sm' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    onClick={() => setViewMode('operational')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      <span>운영 뷰</span>
+                      <span className="text-xs text-gray-500">(확정자)</span>
+                    </div>
+                  </button>
+                  <button
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                      viewMode === 'marketing' 
+                        ? 'bg-white text-gray-900 shadow-sm' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    onClick={() => setViewMode('marketing')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <span>마케팅 뷰</span>
+                      <span className="text-xs text-gray-500">(전체 예약)</span>
+                    </div>
+                  </button>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {viewMode === 'marketing' ? (
+                    <span>💡 예약 시 입력한 그룹 인원수를 기준으로 집계합니다</span>
+                  ) : (
+                    <span>💡 실제 확정된 참가자만 집계합니다</span>
+                  )}
+                </div>
+              </div>
+
               {/* 일괄 작업 버튼 - 선택된 항목이 있을 때만 표시 */}
               {selectedIds.length > 0 && (
                 <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -1425,10 +1481,25 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                                       </div>
                                     )}
                                   </div>
-                                  {(participant.group_size || 0) > 1 && (
+                                  {/* 뷰 모드에 따른 인원수 표시 */}
+                                  {viewMode === 'marketing' && (participant.group_size || 0) > 1 && (
                                     <span className="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">
                                       {participant.group_size}명
                                     </span>
+                                  )}
+                                  {viewMode === 'operational' && (
+                                    <>                                      {participant.is_confirmed ? (
+                                        <span className="ml-2 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                                          {participant.companions && participant.companions.filter(c => c).length > 0
+                                            ? participant.companions.filter(c => c).length + 1
+                                            : 1}명
+                                        </span>
+                                      ) : (
+                                        <span className="ml-2 bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-xs font-medium">
+                                          미확정
+                                        </span>
+                                      )}
+                                    </>
                                   )}
                                   {/* 본인이 일괄결제자인 경우에만 표시 */}
                                   {participant.is_group_payer && (
@@ -1633,9 +1704,14 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
             {/* 통계 요약 */}
             <div className="mt-6 admin-card">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  참가자 현황 요약 {tourId ? `(${tours.find(t => t.id === tourId)?.title || '투어'})` : (selectedTour ? `(${selectedTour.title})` : '(전체)')}
-                </h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    참가자 현황 요약 {tourId ? `(${tours.find(t => t.id === tourId)?.title || '투어'})` : (selectedTour ? `(${selectedTour.title})` : '(전체)')}
+                  </h3>
+                  <span className="text-sm font-medium px-3 py-1 rounded-full bg-blue-100 text-blue-700">
+                    {viewMode === 'marketing' ? '📊 마케팅 기준' : '✅ 운영 기준'}
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">총 참가자:</p>
@@ -1675,11 +1751,56 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                     <p className="text-sm text-gray-600">
                       현재 표시된 목록: <span className="font-semibold text-gray-900">{stats.currentFiltered}</span>명
                       <span className="mx-2">|</span>
-                      확정: <span className="font-semibold text-green-600">{filteredParticipants.filter(p => p.status === "확정").reduce((sum, p) => sum + (p.group_size || 1), 0)}</span>
+                      확정: <span className="font-semibold text-green-600">{(() => {
+                        const confirmed = filteredParticipants.filter(p => p.status === "확정");
+                        if (viewMode === 'marketing') {
+                          return confirmed.reduce((sum, p) => sum + (p.group_size || 1), 0);
+                        } else {
+                          return confirmed.reduce((sum, p) => {
+                            if (p.is_confirmed) {
+                              const actualCount = p.companions && p.companions.filter(c => c).length > 0 
+                                ? p.companions.filter(c => c).length + 1 
+                                : 1;
+                              return sum + actualCount;
+                            }
+                            return sum;
+                          }, 0);
+                        }
+                      })()}</span>
                       <span className="mx-2">·</span>
-                      미확정: <span className="font-semibold text-red-600">{filteredParticipants.filter(p => p.status === "미확정").reduce((sum, p) => sum + (p.group_size || 1), 0)}</span>
+                      미확정: <span className="font-semibold text-red-600">{(() => {
+                        const unconfirmed = filteredParticipants.filter(p => p.status === "미확정");
+                        if (viewMode === 'marketing') {
+                          return unconfirmed.reduce((sum, p) => sum + (p.group_size || 1), 0);
+                        } else {
+                          return unconfirmed.reduce((sum, p) => {
+                            if (p.is_confirmed) {
+                              const actualCount = p.companions && p.companions.filter(c => c).length > 0 
+                                ? p.companions.filter(c => c).length + 1 
+                                : 1;
+                              return sum + actualCount;
+                            }
+                            return sum;
+                          }, 0);
+                        }
+                      })()}</span>
                       <span className="mx-2">·</span>
-                      취소: <span className="font-semibold text-gray-500">{filteredParticipants.filter(p => p.status === "취소").reduce((sum, p) => sum + (p.group_size || 1), 0)}</span>
+                      취소: <span className="font-semibold text-gray-500">{(() => {
+                        const canceled = filteredParticipants.filter(p => p.status === "취소");
+                        if (viewMode === 'marketing') {
+                          return canceled.reduce((sum, p) => sum + (p.group_size || 1), 0);
+                        } else {
+                          return canceled.reduce((sum, p) => {
+                            if (p.is_confirmed) {
+                              const actualCount = p.companions && p.companions.filter(c => c).length > 0 
+                                ? p.companions.filter(c => c).length + 1 
+                                : 1;
+                              return sum + actualCount;
+                            }
+                            return sum;
+                          }, 0);
+                        }
+                      })()}</span>
                     </p>
                   </div>
                 )}
