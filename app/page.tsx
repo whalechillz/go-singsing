@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Fragment } from "react";
-import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp, Camera, BedDouble } from "lucide-react";
+import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp, Camera, BedDouble, Bus } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
@@ -17,6 +17,7 @@ interface Tour {
   end_date: string;
   golf_course?: string;
   accommodation?: string;
+  departure_location?: string;
   max_participants?: number;
   current_participants?: number;
   marketing_participant_count?: number;
@@ -72,26 +73,21 @@ const GolfTourPortal = () => {
         // tour_products 정보 가져오기
         const { data: productsData } = await supabase
           .from("tour_products")
-          .select("id, name, golf_course, accommodation");
+          .select("id, name, golf_course, accommodation, departure_location");
         
         const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
         
         // 각 투어의 실제 참가자 수 계산
         const toursWithParticipants = await Promise.all(
           futureTours.map(async (tour) => {
-            // 참가자 데이터와 group_size 가져오기
-            const { data: participantsData } = await supabase
+            // 참가자 수 계산 (레코드 수)
+            const { count: participantCount } = await supabase
               .from("singsing_participants")
-              .select("group_size")
+              .select("id", { count: 'exact', head: true })
               .eq("tour_id", tour.id);
             
-            // 실제 참가자 수 = 각 참가자의 group_size 합곀4
-            let totalParticipants = 0;
-            if (participantsData) {
-              totalParticipants = participantsData.reduce((sum, p) => {
-                return sum + (p.group_size || 1);
-              }, 0);
-            }
+            // 실제 참가자 수 = 레코드 수 (줄 수)
+            const totalParticipants = participantCount || 0;
             
             const product = tour.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
             
@@ -99,7 +95,8 @@ const GolfTourPortal = () => {
               ...tour,
               golf_course: tour.golf_course || product?.golf_course || product?.name || "",
               accommodation: tour.accommodation || product?.accommodation || "",
-              current_participants: tour.marketing_participant_count || totalParticipants, // 마케팅 표시 인원 우선 사용
+              departure_location: tour.departure_location || product?.departure_location || "",
+              current_participants: totalParticipants, // 실제 참가자 수 (레코드 수)
               max_participants: tour.max_participants || 40 // 기본값 40명
             };
           })
@@ -361,6 +358,12 @@ const GolfTourPortal = () => {
               <div className="flex items-center text-gray-600 mt-1">
                 <BedDouble className="w-4 h-4 mr-1" />
                 <span className="text-sm">{tour.accommodation}</span>
+              </div>
+            )}
+            {tour.departure_location && (
+              <div className="flex items-center text-gray-600 mt-1">
+                <Bus className="w-4 h-4 mr-1" />
+                <span className="text-sm">{tour.departure_location}</span>
               </div>
             )}
             <div className="flex items-center text-gray-600 mt-1">
