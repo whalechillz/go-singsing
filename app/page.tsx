@@ -91,6 +91,14 @@ const GolfTourPortal = () => {
             
             const product = tour.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
             
+            // 디버그 로그
+            if (tour.title.includes("단둑투어")) {
+              console.log('투어 정보:', tour.title);
+              console.log('tour_product_id:', tour.tour_product_id);
+              console.log('product:', product);
+              console.log('hotel 필드:', product?.hotel);
+            }
+            
             return {
               ...tour,
               golf_course: tour.golf_course || product?.golf_course || product?.name || "",
