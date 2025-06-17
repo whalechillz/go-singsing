@@ -2,7 +2,7 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
-import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare } from 'lucide-react';
+import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare, Users } from 'lucide-react';
 import QuickMemo from "@/components/memo/QuickMemo";
 import MemoViewer from "@/components/memo/MemoViewer";
 import QuickParticipantAdd from "@/components/QuickParticipantAdd";
