@@ -1,249 +1,120 @@
-# 싱싱골프투어 프로젝트 상태
+# 싱싱골프투어 프로젝트 현황
 
-프로젝트의 주요 변경사항과 개발 진행 상황을 시간순으로 기록합니다.
+*최종 업데이트: 2025-06-18*
 
-## 프로젝트 개요
+## 🚀 프로젝트 개요
+
 - **프로젝트명**: 싱싱골프투어 관리 시스템
 - **URL**: go.singsinggolf.kr
-- **프레임워크**: Next.js 15.3.1 + TypeScript
-- **데이터베이스**: Supabase (PostgreSQL)
-- **스타일링**: Tailwind CSS
+- **기술 스택**:
+  - Frontend: Next.js 14 (App Router), TypeScript, Tailwind CSS
+  - Backend: Supabase (PostgreSQL)
+  - 배포: Vercel
+
+## 📊 현재 상태
+
+### ✅ 구현 완료 기능
+
+#### 1. 투어 관리
+- 투어 CRUD (생성/조회/수정/삭제)
+- 마케팅 표시 인원 관리
+- 투어 마감 기능
+- 자동 뱃지 시스템 (마감임박, 인기, 최저가)
+- 수동 뱃지 설정
+
+#### 2. 참가자 관리
+- 참가자 등록/수정/삭제
+- 실시간 참가자 수 자동 계산
+- 성별 정보 관리
+- 그룹/팀 관리
+
+#### 3. 일정 관리
+- 기본 일정표 (singsing_tours 필드)
+- 일정 엿보기 (tour_journey_items + tourist_attractions)
+- Day별 상세 일정
+- 탑승 정보 관리
+
+#### 4. 결제 관리
+- 결제 내역 관리
+- 환불 처리
+- 결제 상태 추적
+
+#### 5. 문서 시스템
+- 고객용 일정표
+- 스탭용 문서
+- 권한별 차등 표시
+
+## 🗂️ 데이터베이스 구조
+
+### 핵심 뷰
+- `tour_with_auto_badges` - 고객 페이지용 통합 뷰
+
+### 주요 테이블
+- `singsing_tours` - 투어 기본 정보
+- `tour_journey_items` - 일정 항목
+- `tourist_attractions` - 장소 정보
+- `singsing_participants` - 참가자
+- `singsing_payments` - 결제
+- `tour_products` - 투어 상품
+
+자세한 내용은 [DATA_STRUCTURE_GUIDE.md](./DATA_STRUCTURE_GUIDE.md) 참조
+
+## 🔄 진행 중인 작업
+
+1. **일정 관리 UI 개선**
+   - tour_journey_items 관리 인터페이스
+   - tourist_attractions 데이터 입력 도구
+
+2. **문서 시스템 고도화**
+   - PDF 다운로드
+   - 이메일 발송
+
+## 🐛 알려진 이슈
+
+1. **데이터 일관성**
+   - singsing_tours의 레거시 필드 정리 필요
+   - 일부 중복 데이터 존재
+
+2. **성능**
+   - 대량 참가자 조회시 최적화 필요
+   - 이미지 로딩 최적화
+
+## 📝 다음 단계
+
+### Phase 1: 데이터 정리 (1주)
+- [ ] 레거시 필드 마이그레이션
+- [ ] 미사용 테이블 정리
+- [ ] 인덱스 최적화
+
+### Phase 2: UI/UX 개선 (2주)
+- [ ] 일정 관리 통합 UI
+- [ ] 모바일 최적화
+- [ ] 대시보드 개선
+
+### Phase 3: 기능 고도화 (3주)
+- [ ] 알림 시스템 (카카오톡)
+- [ ] 자동 배정 시스템
+- [ ] 고급 통계/분석
+
+## ⚠️ 주의사항
+
+1. **데이터 작업시**
+   - `tour_with_auto_badges`는 뷰이므로 직접 수정 불가
+   - `current_participants`는 자동 계산 필드
+   - 마이그레이션 전 백업 필수
+
+2. **코드 작업시**
+   - 데이터 레이어 구분 명확히
+   - TypeScript 타입 정의 확인
+   - 테스트 환경 먼저 검증
+
+## 📞 문의
+- 기술 문의: [개발팀 연락처]
+- 비즈니스 문의: 031-215-3990
 
 ---
 
-## 변경 이력
-
-### 2025-06-03 🗄️ 데이터베이스 구조 최적화
-
-#### 주요 변경사항
-1. **미사용 테이블 삭제**
-   - 백업 테이블 제거 (singsing_tours_backup, singsing_tee_times_backup 등)
-   - document 관련 미사용 테이블 제거 (document_footers, document_notices, document_templates)
-   - boarding_guide 관련 테이블 제거 (통합 완료)
-   - 기타 미사용 테이블 제거 (tour_basic_info, singsing_pickup_points, users 등)
-
-2. **미사용 컬럼 삭제**
-   - tour_products 테이블: schedule, reservation_notice, note, usage_guide 컬럼 제거
-
-3. **성능 최적화**
-   - 8개의 인덱스 추가 (tours, participants, schedules, payments, tee_times)
-   - 자주 조회되는 필드에 대한 인덱스 생성으로 쿼리 성능 향상
-
-4. **최종 구조**
-   - 15개의 핵심 테이블 + 1개의 뷰로 정리
-   - 깔끔하고 효율적인 데이터베이스 구조 확립
-
----
-
-### 2025-06-02 ✨ 데이터베이스 통합 및 UI 개선
-
-#### 주요 변경사항
-1. **데이터베이스 구조 개선**
-   - boarding_guide 관련 3개 테이블을 기존 테이블로 통합
-   - singsing_tours 테이블에 notices 필드 추가
-   - singsing_schedules 테이블에 boarding_info 필드 추가
-   - tour_schedule_preview 뷰 생성
-
-2. **UI/UX 개선**
-   - IntegratedScheduleManager 컴포넌트 생성 (일정, 탑승, 공지사항 통합)
-   - TourSchedulePreview 개선 (3가지 뷰, PDF/인쇄/공유 기능)
-   - 탭 구조 간소화 및 워크플로우 개선
-
-3. **기능 통합**
-   - 일정 관리, 탑승 정보, 공지사항을 하나의 인터페이스로 통합
-   - 미리보기 기능 강화 (전체/탑승안내/간단 뷰)
-
----
-
-### 2025-06-01 🚻 성별 표시 기능 추가
-
-#### 주요 변경사항
-1. **데이터베이스 변경**
-   - singsing_participants 테이블에 gender 필드 추가
-   - 허용값: 'M' (남성), 'F' (여성), NULL (미지정)
-
-2. **표시 로직**
-   - 팀 구성별 자동 표시 (혼성팀/남성팀/여성팀)
-   - 혼성팀 내 소수 성별 개별 표시
-
-3. **UI 개선**
-   - 참가자 관리 폼에 성별 선택 추가
-   - 엑셀 업로드 시 성별 컬럼 지원
-   - 골프장 코스별 색상 구분 개선
-
----
-
-### 2025-05-30 📋 5개 투어 관리 페이지 완성
-
-#### 주요 변경사항
-1. **투어 상세 페이지 구현**
-   - 참가자 관리: `/admin/tours/[tourId]/participants`
-   - 객실 배정: `/admin/tours/[tourId]/room-assignment`
-   - 일정 관리: `/admin/tours/[tourId]/schedule`
-   - 티오프 시간: `/admin/tours/[tourId]/tee-times`
-   - 탑승 스케줄: `/admin/tours/[tourId]/boarding`
-
-2. **기능 완성**
-   - 투어별 상세 관리 기능
-   - 통계 대시보드
-   - 결제 관리 V3
-
----
-
-### 2025-01-27 💰 결제 시스템 개선
-
-#### 주요 변경사항
-1. **결제 기능 고도화**
-   - 계약금(30%)/잔금(70%) 자동 계산
-   - 결제 상태 관리 (완료/대기/취소/환불)
-   - 환불 처리 기능
-   - 그룹 결제 최적화
-
-2. **참가자 관리 개선**
-   - 동반자 정보 UI 통합
-   - 그룹 인원수 관리 개선
-   - 일괄 결제 옵션 통합
-   - 동반자 개별 삭제 기능
-
----
-
-## 현재 데이터베이스 구조
-
-### 주요 테이블 (15개)
-```
-tour_products (여행상품 템플릿)
-    └─→ singsing_tours (실제 투어)
-            ├─→ singsing_participants (참가자)
-            ├─→ singsing_schedules (일정)
-            ├─→ singsing_tee_times (티타임)
-            ├─→ singsing_rooms (객실)
-            ├─→ singsing_payments (결제)
-            └─→ singsing_tour_staff (스탭)
-
-기타 테이블:
-- singsing_boarding_places (탑승지 마스터)
-- singsing_tour_boarding_times (투어별 탑승 시간)
-- singsing_participant_tee_times (참가자-티타임 연결)
-- singsing_memo_templates (메모 템플릿)
-- singsing_memos (메모)
-- singsing_work_memos (업무 메모)
-- documents (문서)
-```
-
-### 주요 뷰
-- tour_schedule_preview: 투어 일정 미리보기 통합 뷰
-
-### 인덱스 (성능 최적화)
-- idx_singsing_tours_start_date
-- idx_singsing_participants_tour_id
-- idx_singsing_participants_status
-- idx_singsing_schedules_tour_id
-- idx_singsing_schedules_date
-- idx_singsing_payments_tour_id
-- idx_singsing_tee_times_tour_id
-- idx_singsing_tee_times_play_date
-
----
-
-## 주요 컴포넌트
-
-| 컴포넌트 | 설명 | 상태 |
-|----------|------|------|
-| IntegratedScheduleManager | 통합 일정 관리 (일정, 탑승, 공지) | ✅ 최신 |
-| TourSchedulePreview | 개선된 일정표 미리보기 | ✅ 최신 |
-| ParticipantsManagerV2 | 참가자 관리 (성별 표시 포함) | ✅ 안정 |
-| TeeTimeAssignmentManagerV2 | 티타임 배정 관리 | ✅ 안정 |
-| RoomAssignmentManager | 객실 배정 관리 | ✅ 안정 |
-| Dashboard | 통계 대시보드 | ✅ 안정 |
-
----
-
-## 환경 설정
-
-### 필수 환경 변수
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://weciawnqjutghprtpztg.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
-GITHUB_TOKEN=github_pat_...
-```
-
-### 개발 서버 실행
-```bash
-npm install
-npm run dev
-```
-
-### 프로덕션 빌드
-```bash
-npm run build
-npm start
-```
-
----
-
-## 향후 계획
-
-### 단기 (1-2개월)
-1. **Phase 4**: 문서 생성 시스템 고도화
-   - PDF 템플릿 커스터마이징
-   - 다양한 문서 형식 지원
-   - 고객별 맞춤 문서 생성
-
-2. **Phase 5**: 권한 시스템
-   - Supabase Auth 설정
-   - RLS 정책 적용
-   - 사용자 역할별 접근 제어
-
-### 중기 (3-6개월)
-1. **Phase 6**: 알림 시스템
-   - 솔라피 API 연동 (알림톡)
-   - 슬랙 연동 (내부 알림)
-   - 이메일 알림
-
-2. **모바일 최적화**
-   - 반응형 디자인 개선
-   - 터치 인터페이스 최적화
-   - PWA 구현
-
-### 장기 (6개월+)
-1. **모바일 앱 개발**
-2. **AI 기반 투어 추천**
-3. **실시간 협업 기능**
-4. **투어 사진 갤러리**
-
----
-
-## 작업 가이드라인
-
-### 데이터베이스 변경 시
-1. 마이그레이션 파일 작성
-2. 백업 테이블 생성
-3. 변경사항 테스트
-4. 롤백 계획 수립
-5. 문서 업데이트
-
-### 컴포넌트 개발 시
-1. TypeScript 타입 정의
-2. Tailwind safelist 확인
-3. 통합 컴포넌트 우선 사용
-4. 성능 최적화 고려
-5. 접근성 확보
-
-### 보안 고려사항
-1. 환경 변수 관리
-2. 고객 정보 보호
-3. API 접근 제어
-4. 로그 관리
-
----
-
-## 관련 문서
-- [빠른 시작 가이드](/docs/QUICK_START_GUIDE.md)
-- [개발자 가이드](/docs/DEVELOPER_GUIDE.md)
-- [데이터베이스 변경사항](/docs/DATABASE_CHANGES.md)
-- [데이터베이스 스키마](/docs/database/README.md)
-- [UI/UX 구조](/docs/ui-ux-structure.md)
-- [시스템 구조](/docs/system-structure.md)
-
----
-*최종 업데이트: 2025-06-03*
+관련 문서:
+- [DATA_STRUCTURE_GUIDE.md](./DATA_STRUCTURE_GUIDE.md)
+- [QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md)
+- [deployment_guide.md](./deployment_guide.md)
