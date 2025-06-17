@@ -20,6 +20,7 @@ type TourForm = {
   price: string;
   max_participants: string;
   current_participants?: string;
+  marketing_participant_count?: string;
   is_closed?: boolean;
   closed_reason?: string;
   
@@ -209,6 +210,7 @@ const TourEditPage: React.FC = () => {
           price: tourData.price?.toString() || "",
           max_participants: tourData.max_participants?.toString() || "",
           current_participants: tourData.current_participants?.toString() || "0",
+          marketing_participant_count: tourData.marketing_participant_count?.toString() || tourData.current_participants?.toString() || "0",
           is_closed: tourData.is_closed || false,
           closed_reason: tourData.closed_reason || "",
           
@@ -392,6 +394,7 @@ const TourEditPage: React.FC = () => {
         tour_product_id: form.tour_product_id || null,
         price: form.price ? Number(form.price) : null,
         max_participants: form.max_participants ? Number(form.max_participants) : null,
+        marketing_participant_count: form.marketing_participant_count ? Number(form.marketing_participant_count) : null,
         is_closed: form.is_closed || false,
         closed_reason: form.is_closed ? form.closed_reason : null,
         closed_at: form.is_closed ? new Date().toISOString() : null,
@@ -596,39 +599,67 @@ const TourEditPage: React.FC = () => {
               </label>
             </div>
             
-            {/* 마감 설정 */}
+            {/* 참가자 수 및 마감 설정 */}
             <div className="border border-yellow-200 bg-yellow-50 dark:bg-gray-800 dark:border-yellow-700 rounded-lg p-4">
               <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                 <Info className="w-4 h-4" />
-                투어 마감 설정
+                참가자 수 관리
               </h4>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">현재 참가자: <strong>{form.current_participants || '0'}명</strong> / {form.max_participants}명</span>
-                  <label className="flex items-center gap-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-gray-600">실제 참가자</span>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      {form.current_participants || '0'}명
+                      <span className="text-sm font-normal text-gray-500"> / {form.max_participants}명</span>
+                    </p>
+                  </div>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-sm text-gray-600">마케팅 표시 인원</span>
                     <input
-                      type="checkbox"
-                      name="is_closed"
-                      checked={form.is_closed || false}
+                      name="marketing_participant_count"
+                      type="number"
+                      value={form.marketing_participant_count || ''}
                       onChange={handleChange}
-                      className="w-4 h-4"
+                      className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800"
+                      placeholder="실제 참가자 수와 다르게 표시할 수 있습니다"
                     />
-                    <span className="font-medium text-red-600">투어 마감</span>
                   </label>
                 </div>
-                {form.is_closed && (
-                  <label className="flex flex-col gap-1">
-                    <span className="text-sm text-gray-600">마감 사유</span>
-                    <input
-                      name="closed_reason"
-                      type="text"
-                      value={form.closed_reason || ''}
-                      onChange={handleChange}
-                      placeholder="예: 조기 마감, 취소, 연기 등"
-                      className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800"
-                    />
-                  </label>
-                )}
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded text-sm text-blue-700 dark:text-blue-300">
+                  <p className="font-medium mb-1">💡 마케팅 표시 인원 사용법</p>
+                  <p className="text-xs">고객용 페이지에서 참가자 수를 실제보다 많거나 적게 표시하여 마케팅 효과를 높일 수 있습니다.</p>
+                  <p className="text-xs mt-1">예: 실제 16명 → 마케팅 표시 20명 (인기 있어 보이게)</p>
+                  <p className="text-xs">예: 실제 2명 → 마케팅 표시 8명 (최소 인원 충족 보이게)</p>
+                </div>
+                <div className="border-t pt-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">투어 마감 설정</span>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="is_closed"
+                        checked={form.is_closed || false}
+                        onChange={handleChange}
+                        className="w-4 h-4"
+                      />
+                      <span className="font-medium text-red-600">투어 마감</span>
+                    </label>
+                  </div>
+                  {form.is_closed && (
+                    <label className="flex flex-col gap-1">
+                      <span className="text-sm text-gray-600">마감 사유</span>
+                      <input
+                        name="closed_reason"
+                        type="text"
+                        value={form.closed_reason || ''}
+                        onChange={handleChange}
+                        placeholder="예: 조기 마감, 취소, 연기 등"
+                        className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800"
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
             </div>
             

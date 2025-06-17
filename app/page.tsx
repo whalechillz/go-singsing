@@ -19,6 +19,7 @@ interface Tour {
   accommodation?: string;
   max_participants?: number;
   current_participants?: number;
+  marketing_participant_count?: number;
   price?: number;
   driver_name?: string;
   is_closed?: boolean;
@@ -97,7 +98,7 @@ const GolfTourPortal = () => {
             return {
               ...tour,
               golf_course: tour.golf_course || product?.golf_course || product?.name || "",
-              current_participants: totalParticipants, // 그룹 인원수를 고려한 총 인원
+              current_participants: tour.marketing_participant_count || totalParticipants, // 마케팅 표시 인원 우선 사용
               max_participants: tour.max_participants || 40 // 기본값 40명
             };
           })
