@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Fragment } from "react";
-import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp, Camera, BedDouble, Bus } from "lucide-react";
+import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp, Camera, BedDouble } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
@@ -73,7 +73,7 @@ const GolfTourPortal = () => {
         // tour_products 정보 가져오기
         const { data: productsData } = await supabase
           .from("tour_products")
-          .select("id, name, golf_course, accommodation, departure_location");
+          .select("id, name, golf_course, hotel");
         
         const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
         
@@ -94,8 +94,8 @@ const GolfTourPortal = () => {
             return {
               ...tour,
               golf_course: tour.golf_course || product?.golf_course || product?.name || "",
-              accommodation: tour.accommodation || product?.accommodation || "",
-              departure_location: tour.departure_location || product?.departure_location || "",
+              accommodation: tour.accommodation || product?.hotel || "",
+              departure_location: tour.departure_location || "",
               current_participants: totalParticipants, // 실제 참가자 수 (레코드 수)
               max_participants: tour.max_participants || 40 // 기본값 40명
             };
@@ -360,12 +360,7 @@ const GolfTourPortal = () => {
                 <span className="text-sm">{tour.accommodation}</span>
               </div>
             )}
-            {tour.departure_location && (
-              <div className="flex items-center text-gray-600 mt-1">
-                <Bus className="w-4 h-4 mr-1" />
-                <span className="text-sm">{tour.departure_location}</span>
-              </div>
-            )}
+            {/* 출발 장소는 나중에 추가 예정 */}
             <div className="flex items-center text-gray-600 mt-1">
               <Calendar className="w-4 h-4 mr-1" />
               <span className="text-sm">{tour.start_date} ~ {tour.end_date}</span>
