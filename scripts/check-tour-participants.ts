@@ -1,16 +1,22 @@
-import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Read .env.local file manually
+const envPath = path.join(process.cwd(), '.env.local');
+const envContent = fs.readFileSync(envPath, 'utf-8');
+const envVars: Record<string, string> = {};
 
-// Load environment variables
-config({ path: resolve(__dirname, '../.env.local') });
+envContent.split('\n').forEach(line => {
+  const [key, ...valueParts] = line.split('=');
+  if (key && valueParts.length > 0) {
+    const value = valueParts.join('=').trim();
+    envVars[key.trim()] = value.replace(/^["']|["']$/g, '');
+  }
+});
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = envVars.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = envVars.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('❌ Supabase 환경 변수가 설정되지 않았습니다.');

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Fragment } from "react";
-import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp, Camera } from "lucide-react";
+import { Calendar, Clock, Globe, Users, Bookmark, FileText, Phone, MapPin, Lock, LogIn, LogOut, User, ChevronRight, ChevronDown, ChevronUp, Camera, BedDouble } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { getCurrentUser, signOut, UserProfile } from "@/lib/auth";
 import MemoList from "@/components/memo/MemoList";
@@ -72,7 +72,7 @@ const GolfTourPortal = () => {
         // tour_products 정보 가져오기
         const { data: productsData } = await supabase
           .from("tour_products")
-          .select("id, name, golf_course");
+          .select("id, name, golf_course, accommodation");
         
         const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
         
@@ -98,6 +98,7 @@ const GolfTourPortal = () => {
             return {
               ...tour,
               golf_course: tour.golf_course || product?.golf_course || product?.name || "",
+              accommodation: tour.accommodation || product?.accommodation || "",
               current_participants: tour.marketing_participant_count || totalParticipants, // 마케팅 표시 인원 우선 사용
               max_participants: tour.max_participants || 40 // 기본값 40명
             };
@@ -356,6 +357,12 @@ const GolfTourPortal = () => {
               <MapPin className="w-4 h-4 mr-1" />
               <span className="text-sm">{tour.golf_course}</span>
             </div>
+            {tour.accommodation && (
+              <div className="flex items-center text-gray-600 mt-1">
+                <BedDouble className="w-4 h-4 mr-1" />
+                <span className="text-sm">{tour.accommodation}</span>
+              </div>
+            )}
             <div className="flex items-center text-gray-600 mt-1">
               <Calendar className="w-4 h-4 mr-1" />
               <span className="text-sm">{tour.start_date} ~ {tour.end_date}</span>
