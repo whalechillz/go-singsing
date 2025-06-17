@@ -234,11 +234,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     
     // 같은 상태 그룹 내에서의 정렬
     
-    // 마감된 투어는 하단으로
-    if (a.is_closed && !b.is_closed) return 1;
-    if (!a.is_closed && b.is_closed) return -1;
-    
-    // 예약 가능한 투어 우선 표시
+    // 예약 가능한 투어 우선 표시 (옵션이 켜져 있을 때만)
     if (prioritizeAvailable) {
       const aFull = (a.current_participants || 0) >= (a.max_participants || 0);
       const bFull = (b.current_participants || 0) >= (b.max_participants || 0);
@@ -257,12 +253,21 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
         return (b.current_participants || 0) - (a.current_participants || 0);
       case 'date':
       default:
+        // 날짜순 정렬을 우선시 (마감 여부와 관계없이)
         // 진행중/예정은 오름차순 (가까운 날짜부터)
         // 완료는 내림차순 (최근 완료부터)
         if (aStatus === 'completed' && bStatus === 'completed') {
           return new Date(b.end_date).getTime() - new Date(a.end_date).getTime();
         }
-        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+        const dateResult = new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+        
+        // 날짜가 같을 때만 마감 상태 고려
+        if (dateResult === 0) {
+          if (a.is_closed && !b.is_closed) return 1;
+          if (!a.is_closed && b.is_closed) return -1;
+        }
+        
+        return dateResult;
     }
   });
 
