@@ -9,7 +9,10 @@ git add .
 
 # 커밋 메시지 입력
 if [ -z "$1" ]; then
-    git commit -m "feat: 60대 여성 시니어 친화적 404 페이지 추가"
+    echo "❌ 커밋 메시지를 입력해주세요!"
+    echo "사용법: ./git-commit.sh \"커밋 메시지\""
+    echo "예시: ./git-commit.sh \"feat: 새로운 기능 추가\""
+    exit 1
 else
     git commit -m "$1"
 fi
