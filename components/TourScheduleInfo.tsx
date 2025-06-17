@@ -124,7 +124,6 @@ const TourScheduleInfo: React.FC<Props> = ({ tour, schedules, journeyItems = [] 
           <div className="bg-purple-600 text-white px-4 py-3 rounded-t-lg flex items-center gap-2">
             <Bus className="w-5 h-5" />
             <span className="font-bold">리무진 버스 출발 안내</span>
-            <span className="text-sm">45인승 리무진 버스 • 경기41바 1010･1234･5678)</span>
           </div>
           
           <div className="bg-gray-50 rounded-b-lg shadow-md p-4">
