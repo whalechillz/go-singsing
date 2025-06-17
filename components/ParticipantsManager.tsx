@@ -1116,7 +1116,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       paymentRate: calculateTotal(statsParticipants) > 0 ? Math.round((paidCount / calculateTotal(statsParticipants)) * 100) : 0,
       currentFiltered: calculateTotal(filteredParticipants)
     };
-  }, [participants, filteredParticipants, tourId, selectedTour, viewMode]);
+  }, [participants, filteredParticipants, tourId, selectedTour]);
 
   // 탭 구성 - VIP는 레코드 수 기준, 나머지는 그룹 인원수 고려
   const tabs = tourId ? [
