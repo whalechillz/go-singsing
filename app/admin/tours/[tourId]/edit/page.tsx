@@ -309,6 +309,19 @@ const TourEditPage: React.FC = () => {
         setSelectedProduct(product);
       }
       
+      // 실제 참가자 수 계산 (각 참가자는 1명으로 계산)
+      const { count: participantCount } = await supabase
+        .from("singsing_participants")
+        .select("id", { count: 'exact', head: true })
+        .eq("tour_id", tourId);
+        
+      if (participantCount !== null) {
+        setForm(prev => ({
+          ...prev,
+          current_participants: participantCount.toString()
+        }));
+      }
+      
       setLoading(false);
     };
     
