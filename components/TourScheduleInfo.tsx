@@ -110,8 +110,56 @@ const TourScheduleInfo: React.FC<Props> = ({ tour, schedules, journeyItems = [] 
     return acc;
   }, {} as Record<number, JourneyItem[]>);
 
+  // 첫날 탑승지만 추출 (리무진 버스 출발 안내용)
+  const boardingItems = journeyItems.filter(item => 
+    item.day_number === 1 && 
+    (item.boarding_place || (item.spot && item.spot.category === 'boarding'))
+  ).sort((a, b) => a.order_index - b.order_index);
+
   return (
     <div className="mb-8">
+      {/* 리무진 버스 출발 안내 섹션 추가 */}
+      {boardingItems.length > 0 && (
+        <div className="mb-6">
+          <div className="bg-purple-600 text-white px-4 py-3 rounded-t-lg flex items-center gap-2">
+            <Bus className="w-5 h-5" />
+            <span className="font-bold">리무진 버스 출발 안내</span>
+            <span className="text-sm">45인승 리무진 버스 • 경기41바 1010･1234･5678)</span>
+          </div>
+          
+          <div className="bg-gray-50 rounded-b-lg shadow-md p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {boardingItems.map((item, index) => {
+                const boardingPlace = item.boarding_place || item.spot;
+                const departureTime = item.departure_time ? item.departure_time.slice(0, 5) : '';
+                const arrivalTime = item.arrival_time ? item.arrival_time.slice(0, 5) : '';
+                
+                return (
+                  <div key={item.id || index} className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-lg font-bold text-purple-700">
+                        {departureTime}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {boardingPlace?.address?.split(' ').slice(0, 2).join(' ') || ''}
+                      </div>
+                    </div>
+                    <div className="font-medium text-gray-800 mb-1">
+                      {boardingPlace?.name || ''}
+                    </div>
+                    {boardingPlace?.description && (
+                      <div className="text-xs text-gray-600">
+                        {boardingPlace.description}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-6">
         {schedules.map((schedule, idx) => {
           const dayNumber = schedule.title?.match(/Day\s*(\d+)/i)?.[1] || (idx + 1);

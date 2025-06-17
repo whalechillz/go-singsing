@@ -29,8 +29,8 @@ export function generateBoardingGuideHTML(
           ${boardingItems.map((item, index) => {
             const boardingSpot = item.spot;
             if (!boardingSpot) return '';
-            const departureTime = item.departure_time ? item.departure_time.slice(0, 5) : '미정';
-            const { timePrefix, displayTime } = formatTime(departureTime);
+            const departureTime = item.departure_time ? item.departure_time.slice(0, 5) : '';
+            const { timePrefix, displayTime } = departureTime ? formatTime(departureTime) : { timePrefix: '', displayTime: '' };
             
             return `
               <div class="boarding-card">
@@ -41,7 +41,7 @@ export function generateBoardingGuideHTML(
                   <div class="card-date">${formatDate(tourData.start_date, true)}</div>
                   <div class="card-info">
                     <div class="info-parking">주차: ${boardingSpot.parking_info || '제한적'}</div>
-                    <div class="info-arrival">${item.arrival_time ? item.arrival_time.slice(0, 5) : getArrivalTime(item.departure_time || '미정')} 도착</div>
+                    <div class="info-arrival">${item.arrival_time ? item.arrival_time.slice(0, 5) : getArrivalTime(item.departure_time || '')} 도착</div>
                   </div>
                   
                   ${boardingSpot.description || boardingSpot.address || boardingSpot.naver_map_url ? `
@@ -166,7 +166,7 @@ function generateStaffBoardingHTML(tourData: TourData, journeyItems: any[], part
         
         // journeyItems에서 해당 탑승지 정보 찾기
         const boardingItem = boardingItems.find(item => item.spot && item.spot.name === location);
-        const departureTime = boardingItem?.departure_time ? boardingItem.departure_time.slice(0, 5) : '미정';
+        const departureTime = boardingItem?.departure_time ? boardingItem.departure_time.slice(0, 5) : '';
         
         return `
           <div class="location-section">
