@@ -1,6 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// 타입 정의
+interface MarketingIncludedItem {
+  marketing_content_id: string;
+  category: string;
+  icon?: string;
+  title: string;
+  description?: string;
+  display_order: number;
+  is_highlight?: boolean;
+}
+
+interface MarketingSpecialBenefit {
+  marketing_content_id: string;
+  benefit_type: string;
+  title: string;
+  description?: string;
+  value?: string;
+  badge_text?: string;
+  badge_color?: string;
+  display_order: number;
+}
+
 // Supabase 클라이언트 생성
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -81,9 +103,27 @@ export async function GET(request: NextRequest) {
   }
 }
 
+interface RequestItem {
+  category: 'included' | 'benefits' | 'excluded';
+  icon?: string;
+  title: string;
+  description?: string;
+  display_order: number;
+  is_highlight?: boolean;
+  benefit_type?: string;
+  value?: string;
+  badge_text?: string;
+  badge_color?: string;
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { tourProductId, tourId, contentType, items } = body;
+  const { tourProductId, tourId, contentType, items } = body as {
+    tourProductId?: string;
+    tourId?: string;
+    contentType: string;
+    items: RequestItem[];
+  };
 
   if (!items || !Array.isArray(items)) {
     return NextResponse.json({ error: '유효하지 않은 데이터입니다.' }, { status: 400 });
@@ -139,8 +179,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 새 항목 삽입
-    const includedItems = [];
-    const specialBenefits = [];
+    const includedItems: MarketingIncludedItem[] = [];
+    const specialBenefits: MarketingSpecialBenefit[] = [];
 
     items.forEach(item => {
       if (item.category === 'benefits' && item.benefit_type) {
