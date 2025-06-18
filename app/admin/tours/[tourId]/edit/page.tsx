@@ -2,7 +2,8 @@
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Plus, X, Users, Phone, FileText, Settings, Info } from "lucide-react";
+import { Plus, X, Users, Phone, FileText, Settings, Info, Sparkles } from "lucide-react";
+import MarketingContentManager from "@/components/admin/MarketingContentManager";
 
 type StaffMember = {
   id?: string;
@@ -185,7 +186,7 @@ const TourEditPage: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [products, setProducts] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"basic" | "staff" | "document">("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "staff" | "document" | "marketing">("basic");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   useEffect(() => {
@@ -519,6 +520,14 @@ const TourEditPage: React.FC = () => {
           <FileText className="w-4 h-4 inline mr-1" />
           문서 설정
         </button>
+        <button
+          type="button"
+          className={`pb-2 px-1 font-medium ${activeTab === "marketing" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"}`}
+          onClick={() => setActiveTab("marketing")}
+        >
+          <Sparkles className="w-4 h-4 inline mr-1" />
+          마케팅 콘텐츠
+        </button>
       </div>
       
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -788,6 +797,17 @@ const TourEditPage: React.FC = () => {
                 </div>
               ))
             )}
+          </div>
+        )}
+        
+        {/* 마케팅 콘텐츠 탭 */}
+        {activeTab === "marketing" && (
+          <div className="-mx-8 -my-4">
+            <MarketingContentManager
+              tourId={tourId}
+              tourProductId={form.tour_product_id}
+              contentType="tour_specific"
+            />
           </div>
         )}
         

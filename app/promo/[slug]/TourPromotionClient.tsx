@@ -15,6 +15,7 @@ import {
   FileText,
   Download
 } from 'lucide-react';
+import { TourMarketingSection } from '@/components/marketing/SingSingMarketingDisplay';
 
 interface Attraction {
   id: string;
@@ -167,6 +168,12 @@ export default function TourPromotionClient({ promo, attractionOptions, document
           </div>
         </div>
       </div>
+
+      {/* 마케팅 콘텐츠 (포함사항, 특별혜택, 불포함사항) */}
+      <TourMarketingSection 
+        tourId={tour.id}
+        tourProductId={(tour as any).tour_product_id}
+      />
 
       {/* 일정 및 관광지 옵션 */}
       <div className="py-12">

@@ -45,6 +45,7 @@ export default async function TourPromotionPage({ params }: Props) {
       *,
       tour:singsing_tours(
         *,
+        tour_product_id,
         schedules:singsing_schedules(
           *,
           schedule_items:singsing_schedule_items(*)
