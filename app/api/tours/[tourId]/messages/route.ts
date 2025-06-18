@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase 클라이언트 초기화
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// 빌드 시 정적 분석 방지
+export const dynamic = 'force-dynamic';
+
+// Supabase 클라이언트를 함수 내에서 초기화
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    // 환경 변수가 없는 경우 (빌드 시 등) 더미 클라이언트 반환
+    console.warn('Supabase configuration is missing');
+    return null;
+  }
+  
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
 
 // 알리고 SMS API 설정
 const ALIGO_API_URL = 'https://apis.aligo.in/send/';
@@ -37,6 +49,11 @@ export async function POST(request: NextRequest) {
       phoneNumbers = recipients;
     } else {
       // 투어 참가자 전체에게 발송
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        throw new Error('Database connection failed');
+      }
+      
       const { data: participants, error } = await supabase
         .from('singsing_participants')
         .select('name, phone')
@@ -260,6 +277,12 @@ async function saveMessageHistory(data: {
 }) {
   // message_history 테이블이 없을 수 있으므로 try-catch로 감싸기
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      console.warn('Cannot save message history: database connection failed');
+      return;
+    }
+    
     const { error } = await supabase
       .from('message_history')
       .insert([data]);
@@ -280,6 +303,14 @@ export async function GET(request: NextRequest) {
   const batchId = searchParams.get('batchId');
 
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+    
     let query = supabase
       .from('message_history')
       .select('*')
