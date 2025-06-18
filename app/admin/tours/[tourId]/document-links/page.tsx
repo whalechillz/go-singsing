@@ -3,8 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, Info, MessageCircle, Mail, Smartphone, Search, Eye, BookOpen } from 'lucide-react';
-import TemplatePicker from '@/components/TemplatePicker';
+import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, Info, MessageCircle, Mail, Smartphone, Search, Eye } from 'lucide-react';
 
 interface DocumentLink {
   id: string;
@@ -48,11 +47,8 @@ export default function DocumentLinksPage() {
   const [driverPhone, setDriverPhone] = useState('');
   const [targetAudience, setTargetAudience] = useState<'customer' | 'staff' | 'golf'>('customer');
   const [showOnlyDriver, setShowOnlyDriver] = useState(false);
-  const [specialNotice, setSpecialNotice] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharingLink, setSharingLink] = useState<DocumentLink | null>(null);
-  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-  const [templateMode, setTemplateMode] = useState<'create' | 'edit'>('create');
   
   // UI/UX 개선을 위한 상태
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,7 +72,6 @@ export default function DocumentLinksPage() {
   const [editDriverPhone, setEditDriverPhone] = useState('');
   const [editTargetAudience, setEditTargetAudience] = useState<'customer' | 'staff' | 'golf'>('customer');
   const [editShowOnlyDriver, setEditShowOnlyDriver] = useState(false);
-  const [editSpecialNotice, setEditSpecialNotice] = useState('');
   
   // 테마 정의
   const themes = {
@@ -498,7 +493,6 @@ export default function DocumentLinksPage() {
       setEditShowContactInfo(settings.showContact !== false);
       setEditEnableThemeSelector(settings.enableThemeSelector !== false);
       setEditTargetAudience(settings.targetAudience || 'customer');
-      setEditSpecialNotice(settings.specialNotice || '');
       
       // 항상 DB에서 최신 연락처 정보 불러오기
       const contacts = await fetchTourContacts();
@@ -589,8 +583,8 @@ export default function DocumentLinksPage() {
           manager: showOnlyDriver ? '' : managerPhone,
           driver: driverPhone
         },
-        targetAudience: targetAudience,
-        specialNotice: specialNotice
+        targetAudience: targetAudience
+        // specialNotice: null // 긴급공지 시스템으로 대체됨
       };
 
       const { data, error } = await supabase
@@ -630,8 +624,8 @@ export default function DocumentLinksPage() {
           manager: editShowOnlyDriver ? '' : editManagerPhone,
           driver: editDriverPhone
         },
-        targetAudience: editTargetAudience,
-        specialNotice: editSpecialNotice
+        targetAudience: editTargetAudience
+        // specialNotice: null // 긴급공지 시스템으로 대체됨
       };
 
       const { error } = await supabase
@@ -1341,36 +1335,7 @@ export default function DocumentLinksPage() {
                 </div>
               )}
               
-              {/* 특별공지사항 입력 */}
-              <div className="space-y-2">
-                <label htmlFor="special-notice" className="block text-sm font-medium text-gray-700">
-                  특별공지사항 (선택)
-                </label>
-                <div className="relative">
-                  <textarea
-                    id="special-notice"
-                    value={specialNotice}
-                    onChange={(e) => setSpecialNotice(e.target.value)}
-                    placeholder="투어 관련 특별한 안내사항이 있다면 입력하세요"
-                    rows={3}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTemplateMode('create');
-                      setShowTemplatePicker(true);
-                    }}
-                    className="absolute top-2 right-2 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    템플릿
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500">
-                  예: 호텔 체크인 시간 변경, 골프장 드레스 코드, 특별 준비물 등
-                </p>
-              </div>
+
             </div>
             
             <div className="flex gap-2 mt-6">
@@ -1566,36 +1531,7 @@ export default function DocumentLinksPage() {
                 </div>
               )}
               
-              {/* 특별공지사항 입력 */}
-              <div className="space-y-2">
-                <label htmlFor="edit-special-notice" className="block text-sm font-medium text-gray-700">
-                  특별공지사항 (선택)
-                </label>
-                <div className="relative">
-                  <textarea
-                    id="edit-special-notice"
-                    value={editSpecialNotice}
-                    onChange={(e) => setEditSpecialNotice(e.target.value)}
-                    placeholder="투어 관련 특별한 안내사항이 있다면 입력하세요"
-                    rows={3}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTemplateMode('edit');
-                      setShowTemplatePicker(true);
-                    }}
-                    className="absolute top-2 right-2 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    템플릿
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500">
-                  예: 호텔 체크인 시간 변경, 골프장 드레스 코드, 특별 준비물 등
-                </p>
-              </div>
+
             </div>
             
             <div className="flex gap-2 mt-6">
@@ -1691,28 +1627,7 @@ export default function DocumentLinksPage() {
           </div>
         </div>
       )}
-      
-      {/* 템플릿 선택기 */}
-      {showTemplatePicker && (
-        <TemplatePicker
-          onSelect={(content) => {
-            if (templateMode === 'create') {
-              setSpecialNotice(specialNotice ? specialNotice + '\n\n' + content : content);
-            } else {
-              setEditSpecialNotice(editSpecialNotice ? editSpecialNotice + '\n\n' + content : content);
-            }
-            setShowTemplatePicker(false);
-          }}
-          onClose={() => setShowTemplatePicker(false)}
-          tourData={{
-            title: tour?.title,
-            start_date: tour?.start_date,
-            end_date: tour?.end_date,
-            manager_phone: templateMode === 'create' ? managerPhone : editManagerPhone,
-            driver_phone: templateMode === 'create' ? driverPhone : editDriverPhone
-          }}
-        />
-      )}
+
     </div>
   );
 }
