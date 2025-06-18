@@ -1,9 +1,17 @@
-"use client";
+        <button
+          type="button"
+          className={`pb-2 px-1 font-medium ${activeTab === "marketing" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"}`}
+          onClick={() => setActiveTab("marketing")}
+        >
+          <Sparkles className="w-4 h-4 inline mr-1" />
+          마케팅 콘텐츠
+        </button>"use client";
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Plus, X, Users, Phone, FileText, Settings, Info, Sparkles } from "lucide-react";
+import { Plus, X, Users, Phone, FileText, Settings, Info, Sparkles, Bell } from "lucide-react";
 import MarketingContentManager from "@/components/admin/MarketingContentManager";
+import SpecialNoticesManager from "@/components/admin/SpecialNoticesManager";
 
 type StaffMember = {
   id?: string;
@@ -186,8 +194,9 @@ const TourEditPage: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [products, setProducts] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"basic" | "staff" | "document" | "marketing">("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "staff" | "document" | "marketing" | "notices">("basic");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [specialNotices, setSpecialNotices] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -203,6 +212,9 @@ const TourEditPage: React.FC = () => {
       if (tourError) {
         setError(tourError.message);
       } else if (tourData) {
+        // special_notices 초기화
+        setSpecialNotices(tourData.special_notices || []);
+        
         setForm({
           title: tourData.title || "",
           start_date: tourData.start_date ? tourData.start_date.substring(0, 10) : "",
@@ -245,7 +257,7 @@ const TourEditPage: React.FC = () => {
             simplified: true
           },
           
-          // 문서별 전화번호 표시 설정
+          // 전화번호 표시 설정
           phone_display_settings: tourData.phone_display_settings || {
             customer_schedule: {
               show_company_phone: true,
@@ -413,6 +425,9 @@ const TourEditPage: React.FC = () => {
         closed_reason: form.is_closed ? form.closed_reason : null,
         closed_at: form.is_closed ? new Date().toISOString() : null,
         
+        // 특별공지사항 추가
+        special_notices: specialNotices,
+        
         // 일정 관련 필드
         departure_location: form.departure_location,
         itinerary: form.itinerary,
@@ -527,6 +542,14 @@ const TourEditPage: React.FC = () => {
         >
           <Sparkles className="w-4 h-4 inline mr-1" />
           마케팅 콘텐츠
+        </button>
+        <button
+          type="button"
+          className={`pb-2 px-1 font-medium ${activeTab === "notices" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"}`}
+          onClick={() => setActiveTab("notices")}
+        >
+          <Bell className="w-4 h-4 inline mr-1" />
+          긴급공지
         </button>
       </div>
       
@@ -807,6 +830,18 @@ const TourEditPage: React.FC = () => {
               tourId={tourId}
               tourProductId={form.tour_product_id}
               contentType="tour_specific"
+            />
+          </div>
+        )}
+        
+        {/* 긴급공지사항 탭 */}
+        {activeTab === "notices" && (
+          <div className="-mx-8 -my-4">
+            <SpecialNoticesManager
+              tourId={tourId}
+              notices={specialNotices}
+              onUpdate={setSpecialNotices}
+              tourStartDate={form.start_date}
             />
           </div>
         )}
