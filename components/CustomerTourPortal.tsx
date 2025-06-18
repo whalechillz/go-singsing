@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Users, Hotel, Clock, Bus, MapPin, Calendar, Phone, Menu, X, Palette, ChevronRight, Copy, ExternalLink, CheckCircle2, AlertCircle, UserPlus, Info, Share2, Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import SwipeableNotice from '@/components/portal/SwipeableNotice';
 
 interface TourData {
   id: string;
@@ -11,6 +12,7 @@ interface TourData {
   end_date: string;
   participant_count?: number;
   destination?: string;
+  special_notices?: any; // JSONB array of notices
 }
 
 interface DocumentLink {
@@ -565,7 +567,15 @@ export default function CustomerTourPortal({
       {/* 메인 섹션 */}
       <main className="container max-w-lg mx-auto px-5 py-8">
         {/* 특별공지사항 섹션 - 최상단 배치 */}
-        {portalSettings.specialNotice && (
+        {tourData.special_notices && tourData.special_notices.length > 0 && (
+          <SwipeableNotice 
+            notices={tourData.special_notices} 
+            tourStartDate={tourData.start_date}
+          />
+        )}
+        
+        {/* 기존 포털 설정의 공지사항 (하위 호환성) */}
+        {portalSettings.specialNotice && !tourData.special_notices && (
           <section className="mb-8 -mx-5 px-5 py-4 bg-gradient-to-r from-red-50 to-yellow-50">
             <div className="bg-white border-2 border-red-300 rounded-2xl p-6 shadow-xl">
               <div className="flex items-start gap-3">
