@@ -37,7 +37,7 @@ export const SINGSING_ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 // 배지 스타일 정의
-export const BADGE_STYLES = {
+export const BADGE_STYLES: Record<string, { className: string; label: string }> = {
   'red': {
     className: 'bg-red-500 text-white border-0',
     label: '특별제공'
