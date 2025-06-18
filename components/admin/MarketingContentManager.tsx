@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, GripVertical, Save } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
@@ -246,19 +246,16 @@ export default function MarketingContentManager({
                       <div className="grid grid-cols-12 gap-3">
                         {/* 아이콘 선택 */}
                         <Select
+                          className="col-span-2"
                           value={item.icon || ''}
-                          onValueChange={(value) => updateItem(globalIndex, 'icon', value)}
+                          onChange={(e) => updateItem(globalIndex, 'icon', e.target.value)}
                         >
-                          <SelectTrigger className="col-span-2">
-                            <SelectValue placeholder="아이콘" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ICON_OPTIONS.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
+                          <option value="">아이콘</option>
+                          {ICON_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
                         </Select>
 
                         {/* 제목 */}
@@ -282,19 +279,15 @@ export default function MarketingContentManager({
                       {activeCategory === 'benefits' && (
                         <div className="grid grid-cols-12 gap-3">
                           <Select
+                            className="col-span-3"
                             value={item.benefit_type || 'discount'}
-                            onValueChange={(value) => updateItem(globalIndex, 'benefit_type', value)}
+                            onChange={(e) => updateItem(globalIndex, 'benefit_type', e.target.value)}
                           >
-                            <SelectTrigger className="col-span-3">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {BENEFIT_TYPES.map(type => (
-                                <SelectItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
+                            {BENEFIT_TYPES.map(type => (
+                              <option key={type.value} value={type.value}>
+                                {type.label}
+                              </option>
+                            ))}
                           </Select>
 
                           <Input
@@ -312,22 +305,15 @@ export default function MarketingContentManager({
                           />
 
                           <Select
+                            className="col-span-3"
                             value={item.badge_color || 'red'}
-                            onValueChange={(value) => updateItem(globalIndex, 'badge_color', value)}
+                            onChange={(e) => updateItem(globalIndex, 'badge_color', e.target.value)}
                           >
-                            <SelectTrigger className="col-span-3">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {BADGE_COLORS.map(color => (
-                                <SelectItem key={color.value} value={color.value}>
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-4 h-4 rounded ${color.className}`} />
-                                    {color.label}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
+                            {BADGE_COLORS.map(color => (
+                              <option key={color.value} value={color.value}>
+                                {color.label}
+                              </option>
+                            ))}
                           </Select>
                         </div>
                       )}
