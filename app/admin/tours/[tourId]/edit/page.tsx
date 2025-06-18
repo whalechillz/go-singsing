@@ -1,11 +1,4 @@
-        <button
-          type="button"
-          className={`pb-2 px-1 font-medium ${activeTab === "marketing" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"}`}
-          onClick={() => setActiveTab("marketing")}
-        >
-          <Sparkles className="w-4 h-4 inline mr-1" />
-          마케팅 콘텐츠
-        </button>"use client";
+"use client";
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -403,8 +396,6 @@ const TourEditPage: React.FC = () => {
     }
     setStaff(staff.filter((_, i) => i !== index));
   };
-
-
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
