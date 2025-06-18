@@ -574,27 +574,6 @@ export default function CustomerTourPortal({
           />
         )}
         
-        {/* 기존 포털 설정의 공지사항 (하위 호환성) */}
-        {portalSettings.specialNotice && !tourData.special_notices && (
-          <section className="mb-8 -mx-5 px-5 py-4 bg-gradient-to-r from-red-50 to-yellow-50">
-            <div className="bg-white border-2 border-red-300 rounded-2xl p-6 shadow-xl">
-              <div className="flex items-start gap-3">
-                <div className="bg-red-100 rounded-full p-2">
-                  <Info className="w-6 h-6 text-red-600 animate-pulse" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-red-800 mb-3 text-lg flex items-center gap-2">
-                    <span className="animate-pulse">🚨</span> 긴급공지사항
-                  </h3>
-                  <div className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-                    {portalSettings.specialNotice}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-        
         {/* 투어 종료 후 안내 */}
         {daysInfo && daysInfo.type === 'expired' && (
           <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
