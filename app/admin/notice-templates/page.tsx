@@ -380,7 +380,7 @@ export default function NoticeTemplatesPage() {
                     {template.short_content && (
                       <button
                         onClick={() => {
-                          copyToClipboard(template.short_content);
+                          copyToClipboard(template.short_content || '');
                           incrementUsageCount(template.id);
                         }}
                         className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 text-sm"
