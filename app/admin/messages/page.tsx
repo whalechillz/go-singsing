@@ -5,8 +5,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { 
   Send, MessageSquare, Clock, CheckCircle, XCircle, 
   AlertTriangle, Filter, Search, Plus, Edit2, Trash2,
-  Phone, User, Calendar, FileText, Eye, X
+  Phone, User, Calendar, FileText, Eye, X, BookOpen
 } from "lucide-react";
+import TemplatePicker from '@/components/TemplatePicker';
 
 type Customer = {
   id: string;
@@ -76,6 +77,7 @@ export default function MessageManagementPage() {
   const [previewContent, setPreviewContent] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewPhone, setPreviewPhone] = useState("");
+  const [showNoticePicker, setShowNoticePicker] = useState(false);
 
   // 발송 이력 필터
   const [filterDateRange, setFilterDateRange] = useState<"today" | "week" | "month" | "all">("week");
@@ -488,13 +490,23 @@ export default function MessageManagementPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       메시지 내용
                     </label>
-                    <textarea
-                      value={messageContent}
-                      onChange={(e) => setMessageContent(e.target.value)}
-                      rows={6}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="메시지 내용을 입력하세요"
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={messageContent}
+                        onChange={(e) => setMessageContent(e.target.value)}
+                        rows={6}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="메시지 내용을 입력하세요"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNoticePicker(true)}
+                        className="absolute top-2 right-2 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1"
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        공지 템플릿
+                      </button>
+                    </div>
                     <div className="flex justify-between items-center mt-1">
                       <p className="text-xs text-gray-500">
                         {getByteLength(messageContent)}바이트 / 
@@ -983,6 +995,25 @@ export default function MessageManagementPage() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* 공지사항 템플릿 선택기 */}
+      {showNoticePicker && (
+        <TemplatePicker
+          onSelect={(content, shortContent) => {
+            // 메시지용 짧은 버전이 있으면 사용, 없으면 전체 내용 사용
+            if (shortContent && messageType === "sms") {
+              // SMS일 때는 짧은 버전 우선
+              setMessageContent(shortContent);
+            } else {
+              // LMS/MMS일 때는 전체 내용
+              setMessageContent(shortContent || content);
+            }
+            setShowNoticePicker(false);
+          }}
+          onClose={() => setShowNoticePicker(false)}
+          mode={messageType === "sms" ? "message" : "full"}
+        />
       )}
     </div>
   );

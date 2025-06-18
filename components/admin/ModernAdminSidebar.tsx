@@ -91,6 +91,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/design-system/favicon')) return 'favicon-showcase';
     if (pathname.startsWith('/admin/design-system/badges')) return 'badge-design';
     if (pathname.startsWith('/admin/schedule-templates')) return 'schedule-templates';
+    if (pathname.startsWith('/admin/notice-templates')) return 'notice-templates';
     if (pathname.startsWith('/admin/statistics')) return 'statistics';
     if (pathname.startsWith('/admin/settings')) return 'settings';
     return 'dashboard';
@@ -178,6 +179,12 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       label: '일정표 템플릿', 
       icon: <FileText className="w-5 h-5" />,
       href: '/admin/schedule-templates'
+    },
+    { 
+      id: 'notice-templates', 
+      label: '공지사항 템플릿', 
+      icon: <MessageSquare className="w-5 h-5" />,
+      href: '/admin/notice-templates'
     },
     { 
       id: 'memo-management', 
