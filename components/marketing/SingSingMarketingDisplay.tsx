@@ -61,7 +61,16 @@ export const BADGE_STYLES = {
 };
 
 // 카테고리별 스타일 정의
-export const CATEGORY_STYLES = {
+interface CategoryStyle {
+  icon: string;
+  title: string;
+  iconBg: string;
+  iconColor: string;
+  itemIcon: string;
+  cardClass?: string;
+}
+
+export const CATEGORY_STYLES: Record<'included' | 'benefits' | 'excluded', CategoryStyle> = {
   'included': {
     icon: '✅',
     title: '포함사항',
@@ -128,7 +137,7 @@ export function SingSingMarketingDisplay({ items, className = '' }: SingSingMark
           {categoryItems.map((item) => {
             const isSpecialBenefit = categoryKey === 'benefits';
             const ItemWrapper = isSpecialBenefit ? Card : 'div';
-            const wrapperProps = isSpecialBenefit ? { className: `p-4 ${style.cardClass}` } : {};
+            const wrapperProps = isSpecialBenefit ? { className: `p-4 ${style.cardClass || ''}` } : {};
 
             return (
               <ItemWrapper key={item.id} {...wrapperProps}>
