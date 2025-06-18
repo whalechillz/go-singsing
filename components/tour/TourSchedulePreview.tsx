@@ -74,6 +74,14 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         .single();
 
       if (tourError) throw tourError;
+      
+      // 참가자 수 계산
+      const { count: participantCount } = await supabase
+        .from('singsing_participants')
+        .select('id', { count: 'exact', head: true })
+        .eq('tour_id', tourId);
+      
+      tour.current_participants = participantCount || 0;
       setTourData(tour);
 
       // 견적서 정보는 필요 없으므로 제거
@@ -501,44 +509,68 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           </div>
         </div>
 
-        {/* 문의하기 */}
+        {/* 문의하기 - 마감된 투어 체크 */}
         <div className="bg-gradient-to-b from-gray-50 to-white p-8 rounded-b-2xl">
           <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">지금 바로 예약하세요!</h3>
-            <p className="text-gray-600">취소율이 낮은 인기 코스입니다. 서두르세요!</p>
+            {tourData.is_closed || ((tourData.max_participants || 0) - (tourData.current_participants || 0) <= 0) ? (
+              <>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">마감된 투어입니다</h3>
+                <p className="text-gray-600">다음 기회에 만나요!</p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">지금 바로 예약하세요!</h3>
+                <p className="text-gray-600">취소율이 낮은 인기 코스입니다. 서두르세요!</p>
+              </>
+            )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <a
-              href="tel:031-215-3990"
-              className="flex items-center justify-center gap-3 bg-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-purple-300 group"
-            >
-              <Phone className="w-6 h-6 text-purple-600 group-hover:animate-pulse" />
-              <div className="text-left">
-                <p className="text-sm text-gray-600">전화 예약</p>
-                <p className="text-lg font-bold text-gray-800">031-215-3990</p>
+          {/* 마감되지 않은 경우에만 버튼 표시 */}
+          {!tourData.is_closed && ((tourData.max_participants || 0) - (tourData.current_participants || 0) > 0) && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                <a
+                  href="tel:031-215-3990"
+                  className="flex items-center justify-center gap-3 bg-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-purple-300 group"
+                >
+                  <Phone className="w-6 h-6 text-purple-600 group-hover:animate-pulse" />
+                  <div className="text-left">
+                    <p className="text-sm text-gray-600">전화 예약</p>
+                    <p className="text-lg font-bold text-gray-800">031-215-3990</p>
+                  </div>
+                </a>
+                
+                <a
+                  href="http://pf.kakao.com/_vSVuV"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                >
+                  <CreditCard className="w-6 h-6" />
+                  <div className="text-left">
+                    <p className="text-sm opacity-90">온라인 예약</p>
+                    <p className="text-lg font-bold">카카오톡 상담</p>
+                  </div>
+                </a>
               </div>
-            </a>
-            
-            <a
-              href="http://pf.kakao.com/_vSVuV"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
-            >
-              <CreditCard className="w-6 h-6" />
-              <div className="text-left">
-                <p className="text-sm opacity-90">온라인 예약</p>
-                <p className="text-lg font-bold">카카오톡 상담</p>
+              
+              <div className="mt-8 p-4 bg-yellow-50 rounded-lg text-center">
+                <p className="text-sm text-yellow-800">
+                  <span className="font-bold">⏰ 마감 임박!</span> 잔여석이 빠르게 줄어들고 있습니다.
+                </p>
               </div>
-            </a>
-          </div>
+            </>
+          )}
           
-          <div className="mt-8 p-4 bg-yellow-50 rounded-lg text-center">
-            <p className="text-sm text-yellow-800">
-              <span className="font-bold">⏰ 마감 임박!</span> 잔여석이 빠르게 줄어들고 있습니다.
-            </p>
-          </div>
+          {/* 마감된 경우 안내 */}
+          {(tourData.is_closed || ((tourData.max_participants || 0) - (tourData.current_participants || 0) <= 0)) && (
+            <div className="mt-4 p-4 bg-gray-100 rounded-lg text-center">
+              <p className="text-gray-600">
+                현재 마감된 투어입니다.<br/>
+                다른 투어를 확인해주세요.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
