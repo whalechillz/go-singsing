@@ -58,7 +58,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
   const [journeyItems, setJourneyItems] = useState<TourJourneyItem[]>([]);
   const [selectedDay, setSelectedDay] = useState(1);
   const [totalDays, setTotalDays] = useState(0);
-  const [boardingInfo, setBoardingInfo] = useState<any[]>([]);
+  const [boardingItems, setBoardingItems] = useState<TourJourneyItem[]>([]);
 
   useEffect(() => {
     fetchTourData();
@@ -110,6 +110,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         // 총 일수 계산
         const maxDay = Math.max(...items.map(item => item.day_number));
         setTotalDays(maxDay);
+        
+        // 첫날 탑승지만 추출
+        const boardingPlaces = items.filter(item => 
+          item.day_number === 1 && 
+          item.tourist_attraction?.category === 'boarding'
+        ).sort((a, b) => a.order_index - b.order_index);
+        setBoardingItems(boardingPlaces);
       } else {
         // 항목이 없으면 투어 기간으로 일수 계산
         if (tour.start_date && tour.end_date) {
@@ -118,17 +125,6 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
           setTotalDays(days);
         }
-      }
-      
-      // 탑승 장소 정보 가져오기
-      const { data: boardingPlaces } = await supabase
-        .from('tour_boarding_places')
-        .select('*')
-        .eq('tour_id', tourId)
-        .order('boarding_order', { ascending: true });
-        
-      if (boardingPlaces && boardingPlaces.length > 0) {
-        setBoardingInfo(boardingPlaces);
       }
     } catch (error) {
       console.error('Error fetching tour data:', error);
@@ -192,23 +188,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
     return journeyItems.filter(item => item.day_number === day);
   };
 
-  // 버스 출발 정보
-  const busInfo = {
-    departure: boardingInfo.length > 0 ? boardingInfo.map((place: any) => ({
-      location: place.place_name,
-      time: place.boarding_time ? new Date(`2000-01-01T${place.boarding_time}`).toLocaleTimeString('ko-KR', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      }) : ''
-    })) : [
-      { location: '수원역 4번 출구', time: '06:00' },
-      { location: '영통 홈플러스', time: '06:20' },
-      { location: '동탄 메타폴리스', time: '06:40' }
-    ],
-    busType: '45인승 리무진 버스',
-    driver: '김기사님 (010-1234-5678)'
-  };
+
 
   // 날짜 계산
   const startDate = new Date(tourData.start_date);
@@ -250,29 +230,35 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         </div>
       </div>
 
-      {/* 버스 출발 정보 - 여백 추가 */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6 mt-6 rounded-xl mx-4 shadow-lg">
-        <div className="flex items-center gap-3 mb-4">
-          <Bus className="w-8 h-8" />
-          <div>
-            <h3 className="text-xl font-bold">리무진 버스 출발 안내</h3>
-            <p className="text-sm opacity-90">{busInfo.busType} · {busInfo.driver}</p>
+      {/* 버스 출발 정보 - 실제 데이터 사용 */}
+      {boardingItems.length > 0 && (
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6 mt-6 rounded-xl mx-4 shadow-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <Bus className="w-8 h-8" />
+            <div>
+              <h3 className="text-xl font-bold">리무진 버스 출발 안내</h3>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {boardingItems.map((item: TourJourneyItem, idx: number) => {
+              const boardingPlace = item.tourist_attraction;
+              const departureTime = item.departure_time ? item.departure_time.slice(0, 5) : '';
+              
+              return (
+                <div key={idx} className="bg-white/20 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Navigation className="w-4 h-4" />
+                    <span className="font-semibold">{departureTime}</span>
+                  </div>
+                  <p className="text-sm">
+                    {boardingPlace?.name || ''}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          {busInfo.departure.map((stop: any, idx: number) => (
-          <div key={idx} className="bg-white/20 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-          <Navigation className="w-4 h-4" />
-          <span className="font-semibold">{stop.time}</span>
-          </div>
-          <p className="text-sm">
-              {stop.location.split(' ').filter((word: string) => !word.includes(':') && !word.match(/^\d{2}:\d{2}$/)).join(' ')}
-              </p>
-              </div>
-            ))}
-        </div>
-      </div>
+      )}
 
       {/* 여행 일정 */}
       <div className="bg-white shadow-xl">
