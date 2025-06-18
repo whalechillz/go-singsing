@@ -3,12 +3,8 @@ import { createHeader, createAuthorityHeader, createSection, createInfoBox, crea
 import { formatDate, formatTextWithBold, getScheduleIcon, simplifyCourseName } from '../utils/formatters';
 import { generateCommonFooter, getCommonFooterStyles } from '../utils/commonStyles';
 
-interface ExtendedTourData extends TourData {
-  showInquirySection?: boolean;
-}
-
-// 문의사항 섹션 생성
-function generateInquirySection(tourData: ExtendedTourData, isStaff: boolean = false): string {
+// 다음 투어 정보 및 문의사항 섹션 생성
+function generateInquirySection(tourData: any, isStaff: boolean = false): string {
   // 담당자 정보 가져오기
   const driver = tourData.staff?.find((s: any) => s.role === '기사');
   const manager = tourData.staff?.find((s: any) => s.role === '매니저') || 
@@ -25,9 +21,89 @@ function generateInquirySection(tourData: ExtendedTourData, isStaff: boolean = f
   // 매니저/가이드 전화번호 표시 여부 확인
   const showManagerPhone = phoneSettings.show_guide_phone || phoneSettings.show_manager_phone;
   
+  // 다음 예정된 투어 정보 타입 정의
+  interface NextTour {
+    title: string;
+    date: string;
+    status: string;
+    price: string;
+    link: string;
+  }
+  
+  // 다음 예정된 투어 정보 (실제 구현시 API에서 가져와야 함)
+  const nextTours: NextTour[] = tourData.upcomingTours || [
+    {
+      title: '[오션비치] 2박3일 순천버스핑',
+      date: '2025. 6. 16. - 2025. 6. 18.',
+      status: '진행',
+      price: '850,000원',
+      link: '/tours/tour1'
+    },
+    {
+      title: '[영광컨] 2박3일 오션뷔 버스핑',
+      date: '2025-08-11 - 2025-08-13',
+      status: '예약 10석',
+      price: '840,000원',
+      link: '/tours/tour2'
+    },
+    {
+      title: '[오영숙] 해남 페이지 컨적서',
+      date: '2025-08-18 - 2025-08-20',
+      status: '접수 2/4',
+      price: '750,000원',
+      link: '/tours/tour3'
+    }
+  ];
+  
   return `
+    <!-- 중요 문서 바로가기 -->
+    <div class="important-docs-section">
+      <div class="section-title">📄 투어 문서</div>
+      <div class="docs-grid">
+        <a href="/tour-schedule/${tourData.id}" class="doc-item" target="_blank">
+          <div class="doc-icon">📅</div>
+          <div class="doc-title">간편일정</div>
+          <div class="doc-desc">전체 일정 한눈에</div>
+        </a>
+        
+        <a href="/portal/${tourData.id}#boarding" class="doc-item" target="_blank">
+          <div class="doc-icon">🚌</div>
+          <div class="doc-title">탑승 안내</div>
+          <div class="doc-desc">출발 시간 및 위치</div>
+        </a>
+        
+        <a href="/portal/${tourData.id}#room" class="doc-item" target="_blank">
+          <div class="doc-icon">🏨</div>
+          <div class="doc-title">객실 배정표</div>
+          <div class="doc-desc">숙소 배정 확인</div>
+        </a>
+        
+        <a href="/portal/${tourData.id}#teetime" class="doc-item" target="_blank">
+          <div class="doc-icon">⛳</div>
+          <div class="doc-title">티타임표</div>
+          <div class="doc-desc">조편성 확인</div>
+        </a>
+      </div>
+    </div>
+    
+    <!-- 다음 투어 안내 -->
+    <div class="next-tours-section">
+      <div class="section-title">🏌️ 다음 투어 일정</div>
+      <div class="next-tours-grid">
+        ${nextTours.slice(0, 3).map((tour: NextTour) => `
+          <div class="next-tour-item">
+            <div class="tour-header">
+              <div class="tour-title">${tour.title}</div>
+              <div class="tour-status ${tour.status === '진행' ? 'status-active' : 'status-available'}">${tour.status}</div>
+            </div>
+            <div class="tour-date">📅 ${tour.date}</div>
+            <div class="tour-price">💰 ${tour.price}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    
     <!-- 문의사항 섹션 -->
-    ${tourData.showInquirySection !== false ? `
     <div class="inquiry-section">
       <div class="inquiry-title">🤔 문의사항이 있으신가요?</div>
       <div class="inquiry-content">
@@ -62,15 +138,10 @@ function generateInquirySection(tourData: ExtendedTourData, isStaff: boolean = f
         </div>
       </div>
     </div>
-    ` : ''}
   `;
 }
 
-export function generateCustomerScheduleHTML(
-  tourData: TourData | ExtendedTourData, 
-  productData: ProductData | null, 
-  isStaff: boolean = false
-): string {
+export function generateCustomerScheduleHTML(tourData: TourData, productData: ProductData | null, isStaff: boolean = false): string {
   // 날짜 및 제목 정보 준비
   const dateStr = tourData.start_date && tourData.end_date ? 
     `${formatDate(tourData.start_date, true)} ~ ${formatDate(tourData.end_date, true)}` : '';
@@ -225,7 +296,7 @@ export function generateCustomerScheduleHTML(
       </div>
       ` : ''}
       
-      ${generateInquirySection(tourData as ExtendedTourData, isStaff)}
+      ${generateInquirySection(tourData, isStaff)}
       
       ${generateCommonFooter(tourData, isStaff, isStaff ? 'staff_schedule' : 'customer_schedule')}
     </div>
@@ -639,6 +710,128 @@ function getScheduleStyles(isStaff: boolean = false): string {
       margin-bottom: 0;
     }
     
+    /* 중요 문서 섹션 스타일 */
+    .important-docs-section {
+      margin: 40px 0;
+      padding: 25px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 12px;
+    }
+    
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .doc-item {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: block;
+    }
+    
+    .doc-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+      background: #f8fbff;
+    }
+    
+    .doc-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    
+    .doc-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c5282;
+      margin-bottom: 5px;
+    }
+    
+    .doc-desc {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    /* 다음 투어 섹션 스타일 */
+    .next-tours-section {
+      margin: 40px 0;
+      padding: 25px;
+      background: #f8fbff;
+      border-radius: 12px;
+      border: 1px solid #e7f3ff;
+    }
+    
+    .next-tours-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .next-tour-item {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #e0e0e0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .next-tour-item:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    
+    .tour-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    
+    .tour-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2c5282;
+      flex: 1;
+      margin-right: 10px;
+      line-height: 1.4;
+    }
+    
+    .tour-status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 15px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    
+    .status-active {
+      background: #4ade80;
+      color: white;
+    }
+    
+    .status-available {
+      background: #60a5fa;
+      color: white;
+    }
+    
+    .tour-date, .tour-price {
+      font-size: 14px;
+      color: #666;
+      margin: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     
     /* 문의사항 섹션 스타일 */
     .inquiry-section {
@@ -728,6 +921,11 @@ function getScheduleStyles(isStaff: boolean = false): string {
     
     /* 모바일 최적화 */
     @media (max-width: 768px) {
+      .next-tours-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      
       .inquiry-grid {
         grid-template-columns: 1fr;
         gap: 15px;
@@ -744,6 +942,11 @@ function getScheduleStyles(isStaff: boolean = false): string {
     
     /* 인쇄용 스타일 */
     @media print {
+      .next-tours-section {
+        background: #f0f0f0 !important;
+        page-break-inside: avoid;
+      }
+      
       .inquiry-section {
         background: #e0e0e0 !important;
         color: #333 !important;
