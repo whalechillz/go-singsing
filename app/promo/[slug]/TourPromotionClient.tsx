@@ -40,18 +40,12 @@ interface AttractionOption {
   attraction?: Attraction;
 }
 
-interface Schedule {
-  id: string;
-  day_number: number;
-  date: string;
-}
-
 interface Tour {
   id: string;
   title: string;
   start_date: string;
   end_date: string;
-  schedules?: Schedule[];
+  tour_period?: string;
 }
 
 interface Promo {
