@@ -16,7 +16,7 @@ import {
   Download,
   Camera
 } from 'lucide-react';
-import { TourMarketingSection } from '@/components/marketing/SingSingMarketingDisplay';
+import SimpleTourMarketingSection from '@/components/marketing/SimpleTourMarketingSection';
 import TourSchedulePreview from '@/components/tour/TourSchedulePreview';
 
 interface Attraction {
@@ -173,9 +173,10 @@ export default function TourPromotionClient({ promo, attractionOptions, document
       </div>
 
       {/* 마케팅 콘텐츠 (포함사항, 특별혜택, 불포함사항) */}
-      <TourMarketingSection 
+      <SimpleTourMarketingSection 
         tourId={tour.id}
         tourProductId={(tour as any).tour_product_id}
+        className="bg-white"
       />
 
       {/* 일정 엿보기 섹션 */}
