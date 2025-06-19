@@ -21,7 +21,8 @@ import {
   Share2,
   CheckCircle,
   Info,
-  X
+  X,
+  FileDown
 } from 'lucide-react';
 
 interface QuoteViewProps {
@@ -140,6 +141,11 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
     }
   };
 
+  const handleSimpleVersion = () => {
+    // 간소화 버전으로 이동
+    window.open(`/quote/${quoteId}/simple`, '_blank');
+  };
+
   const handleDownloadPDF = () => {
     // 프린트 다이얼로그를 열면서 PDF로 저장 안내
     window.print();
@@ -228,11 +234,20 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
                 <Share2 className="w-5 h-5" />
               </button>
               <button
+                onClick={handleSimpleVersion}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="간소화 버전 PDF"
+              >
+                <FileDown className="w-5 h-5" />
+                간단 버전
+              </button>
+              <button
                 onClick={handleDownloadPDF}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="PDF 다운로드"
+                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="상세 버전 PDF"
               >
                 <Download className="w-5 h-5" />
+                상세 버전
               </button>
             </div>
           </div>
