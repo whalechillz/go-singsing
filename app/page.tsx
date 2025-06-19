@@ -410,15 +410,15 @@ const GolfTourPortal = () => {
         {/* 미리보기 링크 추가 (스탭/관리자만) */}
         {isStaffView && (
         <a
-        href={`/promo/${tour.id}`}
+        href={`/promo/${tour.id}?preview=true`}
         target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition"
-          onClick={(e) => e.stopPropagation()}
+        rel="noopener noreferrer"
+        className="flex items-center gap-1 px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition"
+        onClick={(e) => e.stopPropagation()}
         >
-            <Camera className="w-4 h-4" />
-              미리보기
-          </a>
+        <Camera className="w-4 h-4" />
+        미리보기
+        </a>
         )}
           <a
               href="tel:031-215-3990"

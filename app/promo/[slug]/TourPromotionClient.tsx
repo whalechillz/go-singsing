@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   MapPin, 
   Calendar, 
@@ -13,9 +13,11 @@ import {
   Hotel,
   Utensils,
   FileText,
-  Download
+  Download,
+  Camera
 } from 'lucide-react';
 import { TourMarketingSection } from '@/components/marketing/SingSingMarketingDisplay';
+import TourSchedulePreview from '@/components/tour-schedule-preview/TourSchedulePreview';
 
 interface Attraction {
   id: string;
@@ -79,7 +81,22 @@ interface TourPromotionClientProps {
 
 export default function TourPromotionClient({ promo, attractionOptions, documentLinks = [] }: TourPromotionClientProps) {
   const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
+  const [showSchedulePreview, setShowSchedulePreview] = useState(true); // 기본적으로 일정 엿보기 표시
   const tour = promo.tour;
+  
+  // 페이지 로드 시 일정 엿보기 섹션으로 자동 스크롤
+  useEffect(() => {
+    // URL에 미리보기 파라미터가 있으면 자동 스크롤
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('preview') === 'true') {
+      setTimeout(() => {
+        const scheduleSection = document.getElementById('schedule-preview-section');
+        if (scheduleSection) {
+          scheduleSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
+    }
+  }, []);
   
   // 일정별로 관광지 옵션 그룹화
   const optionsBySchedule = attractionOptions.reduce((acc, option) => {
@@ -174,6 +191,29 @@ export default function TourPromotionClient({ promo, attractionOptions, document
         tourId={tour.id}
         tourProductId={(tour as any).tour_product_id}
       />
+
+      {/* 일정 엿보기 섹션 */}
+      <div id="schedule-preview-section" className="py-12 bg-gradient-to-b from-purple-50 to-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-bold shadow-lg mb-4">
+              <Camera className="w-5 h-5" />
+              일정 엿보기 😍
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              싱싱골프투어의 특별한 일정을 미리 확인해보세요!
+            </h3>
+            <p className="text-gray-600">
+              각 일자별 상세 일정과 관광지 정보를 확인하실 수 있습니다
+            </p>
+          </div>
+          
+          {/* 일정 미리보기 컴포넌트 */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <TourSchedulePreview tourId={tour.id} />
+          </div>
+        </div>
+      </div>
 
       {/* 일정 및 관광지 옵션 */}
       <div className="py-12">
