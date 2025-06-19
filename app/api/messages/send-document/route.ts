@@ -32,11 +32,19 @@ export async function POST(request: NextRequest) {
     if (historyError) throw historyError;
     
     // 2. 참가자 정보 가져오기
-    const { data: participants, error: participantsError } = await supabase
+    let query = supabase
       .from('singsing_participants')
       .select('id, name, phone')
-      .in('id', participantIds.length > 0 ? participantIds : [])
-      .eq(participantIds.length === 0 ? 'tour_id' : 'id', participantIds.length === 0 ? tourId : participantIds[0]);
+      .eq('tour_id', tourId);
+    
+    // 선택된 참가자가 있으면 해당 참가자만, 없으면 확정된 전체 참가자
+    if (participantIds.length > 0) {
+      query = query.in('id', participantIds);
+    } else {
+      query = query.eq('status', '확정');
+    }
+    
+    const { data: participants, error: participantsError } = await query;
     
     if (participantsError) throw participantsError;
     

@@ -44,13 +44,29 @@ export default function DocumentSendModal({
     
     setTour(tourData);
     
-    // 문서 링크 가져오기
-    const { data: docsData } = await supabase
-      .from("document_links")
+    // 문서 링크 가져오기 (public_document_links 또는 document_links)
+    let docsQuery = supabase
+      .from("public_document_links")
       .select("*")
       .eq("tour_id", tourId)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
+    
+    let { data: docsData, error: docsError } = await docsQuery;
+    
+    // public_document_links가 없으면 document_links 시도
+    if (docsError || !docsData || docsData.length === 0) {
+      const { data: altDocsData } = await supabase
+        .from("document_links")
+        .select("*")
+        .eq("tour_id", tourId)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      
+      if (altDocsData) {
+        docsData = altDocsData;
+      }
+    }
     
     setDocuments(docsData || []);
     
@@ -68,7 +84,7 @@ export default function DocumentSendModal({
         .from("singsing_participants")
         .select("*")
         .eq("tour_id", tourId)
-        .eq("status", "confirmed");
+        .eq("status", "확정");
       
       setParticipants(participantsData || []);
     }
