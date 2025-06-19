@@ -72,11 +72,7 @@ export default async function TourPromotionPage({ params }: Props) {
         .from('singsing_tours')
         .select(`
           *,
-          tour_product_id,
-          schedules:singsing_schedules(
-            *,
-            schedule_items:singsing_schedule_items(*)
-          )
+          tour_product_id
         `)
         .eq('id', slug)
         .single();
@@ -113,11 +109,7 @@ export default async function TourPromotionPage({ params }: Props) {
           *,
           tour:singsing_tours(
             *,
-            tour_product_id,
-            schedules:singsing_schedules(
-              *,
-              schedule_items:singsing_schedule_items(*)
-            )
+            tour_product_id
           )
         `)
         .eq('slug', slug)
