@@ -76,12 +76,11 @@ interface TourPromotionClientProps {
 
 export default function TourPromotionClient({ promo, attractionOptions, documentLinks = [] }: TourPromotionClientProps) {
   const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
-  const [showSchedulePreview, setShowSchedulePreview] = useState(true); // 기본적으로 일정 엿보기 표시
+  const [showSchedulePreview, setShowSchedulePreview] = useState(true);
   const tour = promo.tour;
   
   // 페이지 로드 시 일정 엿보기 섹션으로 자동 스크롤
   useEffect(() => {
-    // URL에 미리보기 파라미터가 있으면 자동 스크롤
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('preview') === 'true') {
       setTimeout(() => {
