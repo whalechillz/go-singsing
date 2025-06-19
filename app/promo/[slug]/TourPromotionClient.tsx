@@ -9,9 +9,6 @@ import {
   Check,
   Clock,
   DollarSign,
-  Bus,
-  Hotel,
-  Utensils,
   FileText,
   Download,
   Camera
@@ -142,35 +139,7 @@ export default function TourPromotionClient({ promo, attractionOptions, document
         </div>
       </div>
 
-      {/* 투어 하이라이트 */}
-      <div className="bg-white py-12">
-        <div className="max-w-6xl mx-auto px-4">
-          <h3 className="text-2xl font-bold text-center mb-8">투어 특징</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bus className="w-8 h-8 text-blue-600" />
-              </div>
-              <h4 className="font-semibold mb-2">편안한 이동</h4>
-              <p className="text-gray-600">전용 버스로 편안하게 이동합니다</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Hotel className="w-8 h-8 text-green-600" />
-              </div>
-              <h4 className="font-semibold mb-2">프리미엄 숙박</h4>
-              <p className="text-gray-600">엄선된 골프텔에서의 편안한 휴식</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Utensils className="w-8 h-8 text-purple-600" />
-              </div>
-              <h4 className="font-semibold mb-2">맛있는 식사</h4>
-              <p className="text-gray-600">지역 특색있는 맛집에서의 식사</p>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* 마케팅 콘텐츠 (포함사항, 특별혜택, 불포함사항) */}
       <SimpleTourMarketingSection 
