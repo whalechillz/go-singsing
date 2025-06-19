@@ -10,6 +10,25 @@ interface DocumentSendModalProps {
   selectedParticipants?: string[]; // 선택된 참가자 ID 배열
 }
 
+const getDocumentTypeName = (type: string) => {
+  const typeMap: Record<string, string> = {
+    'portal': '통합 표지',
+    'customer_all': '고객용 통합',
+    'staff_all': '스탭용 통합',
+    'golf_timetable': '골프장 티타임표',
+    'customer_schedule': '고객용 일정표',
+    'staff_schedule': '스탭용 일정표',
+    'customer_boarding': '고객용 탑승안내',
+    'staff_boarding': '스탭용 탑승안내',
+    'room_assignment': '고객용 객실배정',
+    'room_assignment_staff': '스탭용 객실배정',
+    'customer_timetable': '고객용 티타임표',
+    'staff_timetable': '스탭용 티타임표',
+    'simplified': '간편일정',
+  };
+  return typeMap[type] || type;
+};
+
 export default function DocumentSendModal({ 
   isOpen, 
   onClose, 
@@ -34,6 +53,7 @@ export default function DocumentSendModal({
   
   const fetchData = async () => {
     setLoading(true);
+    console.log('DocumentSendModal fetchData 시작:', { tourId, selectedParticipants });
     
     // 투어 정보 가져오기
     const { data: tourData } = await supabase
@@ -42,6 +62,7 @@ export default function DocumentSendModal({
       .eq("id", tourId)
       .single();
     
+    console.log('투어 데이터:', tourData);
     setTour(tourData);
     
     // 문서 링크 가져오기 (public_document_links 또는 document_links)
@@ -68,6 +89,7 @@ export default function DocumentSendModal({
       }
     }
     
+    console.log('문서 데이터:', docsData);
     setDocuments(docsData || []);
     
     // 참가자 정보 가져오기
@@ -77,27 +99,36 @@ export default function DocumentSendModal({
         .select("*")
         .in("id", selectedParticipants);
       
+      console.log('참가자 데이터:', participantsData);
       setParticipants(participantsData || []);
     } else {
-      // 전체 참가자 가져오기
+      // 전체 참가자 가져오기 (확정, 미확정 포함)
       const { data: participantsData } = await supabase
         .from("singsing_participants")
         .select("*")
         .eq("tour_id", tourId)
-        .eq("status", "확정");
+        .in("status", ["확정", "미확정"]); // 취소된 참가자만 제외
       
+      console.log('전체 참가자 데이터:', participantsData);
       setParticipants(participantsData || []);
     }
     
-    // 발송 이력 가져오기
-    const { data: historyData } = await supabase
-      .from("document_send_history")
-      .select("*")
-      .eq("tour_id", tourId)
-      .order("sent_at", { ascending: false })
-      .limit(10);
-    
-    setSendHistory(historyData || []);
+    // 발송 이력 가져오기 (테이블이 없을 수 있으므로 에러 처리)
+    try {
+      const { data: historyData, error: historyError } = await supabase
+        .from("document_send_history")
+        .select("*")
+        .eq("tour_id", tourId)
+        .order("sent_at", { ascending: false })
+        .limit(10);
+      
+      if (!historyError) {
+        setSendHistory(historyData || []);
+      }
+    } catch (error) {
+      console.log('발송 이력 테이블이 없거나 접근 불가:', error);
+      setSendHistory([]);
+    }
     
     setLoading(false);
   };
@@ -115,8 +146,11 @@ export default function DocumentSendModal({
     
     const docLinks = selectedDocs.map(docId => {
       const doc = documents.find(d => d.id === docId);
-      return `📄 ${doc?.title}
-https://go.singsinggolf.kr/s/${doc?.short_code}`;
+      const docName = doc?.title || getDocumentTypeName(doc?.document_type);
+      const url = doc?.public_url ? 
+        `https://go.singsinggolf.kr/s/${doc.public_url}` :
+        `https://go.singsinggolf.kr/s/${doc?.short_code}`;
+      return `📄 ${docName}\n${url}`;
     }).join("\n");
     
     if (sendMethod === "kakao") {
@@ -222,7 +256,10 @@ ${docLinks}
                   {selectedParticipants.length > 0 ? (
                     <p>선택된 참가자 {participants.length}명</p>
                   ) : (
-                    <p>전체 참가자 (확정된 참가자만)</p>
+                    <p>전체 참가자 {participants.length}명 (확정, 미확정 포함)</p>
+                  )}
+                  {participants.length === 0 && (
+                    <p className="text-red-500 mt-1">발송할 참가자가 없습니다.</p>
                   )}
                 </div>
               </div>
@@ -233,8 +270,14 @@ ${docLinks}
                   <FileText className="w-4 h-4" />
                   발송할 문서 선택
                 </h3>
-                <div className="space-y-2">
-                  {documents.map((doc) => (
+                {documents.length === 0 ? (
+                  <div className="bg-gray-50 p-4 rounded-lg text-center text-gray-500">
+                    <p>생성된 문서 링크가 없습니다.</p>
+                    <p className="text-sm mt-1">문서 링크 관리에서 먼저 문서를 생성해주세요.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {documents.map((doc) => (
                     <label 
                       key={doc.id} 
                       className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
@@ -246,9 +289,12 @@ ${docLinks}
                         className="w-4 h-4"
                       />
                       <div className="flex-1">
-                      <div className="font-medium">{doc.title || doc.document_type}</div>
+                      <div className="font-medium">{doc.title || getDocumentTypeName(doc.document_type)}</div>
                       <div className="text-sm text-gray-500">
-                      https://go.singsinggolf.kr/s/{doc.short_code || doc.public_url}
+                        {doc.public_url ? 
+                          `https://go.singsinggolf.kr/s/${doc.public_url}` :
+                          `https://go.singsinggolf.kr/s/${doc.short_code}`
+                        }
                       </div>
                       </div>
                       <div className="text-xs text-gray-400">
@@ -257,6 +303,7 @@ ${docLinks}
                     </label>
                   ))}
                 </div>
+                )}
               </div>
               
               {/* 발송 방법 */}
