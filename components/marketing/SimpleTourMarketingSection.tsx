@@ -111,11 +111,14 @@ export default function SimpleTourMarketingSection({
           <h3 className="text-2xl font-bold text-gray-900">투어 안내사항</h3>
           <p className="text-gray-600 mt-2">싱싱골프투어가 준비한 특별한 혜택을 확인하세요</p>
         </div>
-        <SimpleMarketingContent
-          includedItems={includedItems}
-          excludedItems={excludedItems}
-          specialBenefits={specialBenefits}
-        />
+        <div className="flex justify-center">
+          <SimpleMarketingContent
+            includedItems={includedItems}
+            excludedItems={excludedItems}
+            specialBenefits={specialBenefits}
+            className="w-full"
+          />
+        </div>
       </div>
     </div>
   );

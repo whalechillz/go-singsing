@@ -63,21 +63,21 @@ export default function SimpleMarketingContent({
   }
 
   return (
-    <div className={`bg-gray-50/50 rounded-2xl p-8 ${className}`}>
-      <div className="grid md:grid-cols-3 gap-8">
+    <div className={`bg-gray-50/50 rounded-2xl p-6 md:p-8 ${className}`}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
         {/* 포함사항 */}
         {includedItems.length > 0 && (
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-2 mb-3">
               <Check className="w-5 h-5 text-green-600" />
               <h4 className="font-semibold text-gray-900">포함사항</h4>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-2 text-left">
               {includedItems
                 .sort((a, b) => a.display_order - b.display_order)
                 .map((item) => (
                   <li key={item.id} className="flex items-center gap-2 text-sm text-gray-700">
-                    <span className="text-base">{ICON_MAP[item.icon] || '✓'}</span>
+                    <span className="text-base flex-shrink-0">{ICON_MAP[item.icon] || '✓'}</span>
                     <span className={item.is_highlight ? 'font-medium text-gray-900' : ''}>
                       {item.title}
                     </span>
@@ -89,17 +89,17 @@ export default function SimpleMarketingContent({
 
         {/* 특별 혜택 */}
         {specialBenefits.length > 0 && (
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-2 mb-3">
               <Star className="w-5 h-5 text-purple-600" />
               <h4 className="font-semibold text-gray-900">특별 혜택</h4>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-2 text-left">
               {specialBenefits
                 .sort((a, b) => a.display_order - b.display_order)
                 .map((benefit) => (
                   <li key={benefit.id} className="flex items-center gap-2 text-sm">
-                    <span className="text-base">⭐</span>
+                    <span className="text-base flex-shrink-0">⭐</span>
                     <span className="text-gray-700">
                       {benefit.title}
                       {benefit.value && (
@@ -116,17 +116,17 @@ export default function SimpleMarketingContent({
 
         {/* 불포함사항 */}
         {excludedItems.length > 0 && (
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-2 mb-3">
               <X className="w-5 h-5 text-red-600" />
               <h4 className="font-semibold text-gray-900">불포함사항</h4>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-2 text-left">
               {excludedItems
                 .sort((a, b) => a.display_order - b.display_order)
                 .map((item) => (
                   <li key={item.id} className="flex items-center gap-2 text-sm text-gray-700">
-                    <span className="text-base">{ICON_MAP[item.icon] || '✗'}</span>
+                    <span className="text-base flex-shrink-0">{ICON_MAP[item.icon] || '✗'}</span>
                     <span>{item.title}</span>
                   </li>
                 ))}
