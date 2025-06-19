@@ -24,8 +24,16 @@ interface Tour {
   created_at: string;
 }
 
+interface TourWithPromotion extends Tour {
+  promotion?: {
+    id: string;
+    slug: string;
+    is_public: boolean;
+  };
+}
+
 export default function PromotionsPage() {
-  const [tours, setTours] = useState<Tour[]>([]);
+  const [tours, setTours] = useState<TourWithPromotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const router = useRouter();
@@ -38,13 +46,21 @@ export default function PromotionsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("singsing_tours")
-      .select("*")
+      .select(`
+        *,
+        promotion:tour_promotion_pages(*)
+      `)
       .order("start_date", { ascending: false });
 
     if (error) {
       console.error("Error fetching tours:", error);
     } else {
-      setTours(data || []);
+      // promotion 배열을 단일 객체로 변환
+      const toursWithPromotion = data?.map(tour => ({
+        ...tour,
+        promotion: tour.promotion?.[0] || null
+      })) || [];
+      setTours(toursWithPromotion);
     }
     setLoading(false);
   };
@@ -73,10 +89,12 @@ export default function PromotionsPage() {
     }
   };
 
-  const copyPromotionLink = async (tourId: string) => {
-    const link = `${window.location.origin}/promo/${tourId}`;
+  const copyPromotionLink = async (tour: TourWithPromotion) => {
+    // slug가 있으면 slug 사용, 없으면 tour_id 사용
+    const urlParam = tour.promotion?.slug || tour.id;
+    const link = `${window.location.origin}/promo/${urlParam}`;
     await navigator.clipboard.writeText(link);
-    setCopiedId(tourId);
+    setCopiedId(tour.id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -160,7 +178,10 @@ export default function PromotionsPage() {
                     </button>
                     
                     <button
-                      onClick={() => window.open(`/promo/${tour.id}`, '_blank')}
+                      onClick={() => {
+                        const urlParam = tour.promotion?.slug || tour.id;
+                        window.open(`/promo/${urlParam}`, '_blank');
+                      }}
                       className="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
                     >
                       <Eye className="w-4 h-4" />
@@ -168,7 +189,7 @@ export default function PromotionsPage() {
                     </button>
 
                     <button
-                      onClick={() => copyPromotionLink(tour.id)}
+                      onClick={() => copyPromotionLink(tour)}
                       className="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
                       title="링크 복사"
                     >
@@ -185,7 +206,7 @@ export default function PromotionsPage() {
                     <p className="text-xs text-gray-500 mb-1">홍보 페이지 링크</p>
                     <div className="flex items-center gap-2">
                       <code className="text-xs text-blue-600 break-all flex-1">
-                        {window.location.origin}/promo/{tour.id}
+                        {window.location.origin}/promo/{tour.promotion?.slug || tour.id}
                       </code>
                       <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
                     </div>
