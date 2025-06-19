@@ -24,6 +24,25 @@ function getSignature() {
 }
 
 export async function POST(request: NextRequest) {
+  // 환경 변수 확인
+  const missingEnvVars = [];
+  if (!SOLAPI_API_KEY) missingEnvVars.push('SOLAPI_API_KEY');
+  if (!SOLAPI_API_SECRET) missingEnvVars.push('SOLAPI_API_SECRET');
+  if (!SOLAPI_SENDER) missingEnvVars.push('SOLAPI_SENDER');
+  if (!SOLAPI_PFID) missingEnvVars.push('SOLAPI_PFID');
+  
+  if (missingEnvVars.length > 0) {
+    console.error('필수 환경 변수 누락:', missingEnvVars);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: `필수 환경 변수가 설정되지 않았습니다: ${missingEnvVars.join(', ')}`,
+        details: 'Vercel 대시보드에서 Settings > Environment Variables에 환경 변수를 추가해주세요.'
+      },
+      { status: 500 }
+    );
+  }
+  
   try {
     const body = await request.json();
     
