@@ -3,7 +3,8 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, Info, MessageCircle, Mail, Smartphone, Search, Eye } from 'lucide-react';
+import { FileText, Copy, ExternalLink, Trash2, Plus, X, Edit2, Palette, Share2, Info, MessageCircle, Mail, Smartphone, Search, Eye, Send } from 'lucide-react';
+import DocumentSendModal from '@/components/DocumentSendModal';
 
 interface DocumentLink {
   id: string;
@@ -55,6 +56,7 @@ export default function DocumentLinksPage() {
   const [filterType, setFilterType] = useState('all');
   const [sortBy, setSortBy] = useState<'created' | 'views' | 'type'>('created');
   const [showOnlyActive, setShowOnlyActive] = useState(true);
+  const [showDocumentSendModal, setShowDocumentSendModal] = useState(false);
   
   // 새 문서 링크 폼 상태
   const [newDocumentType, setNewDocumentType] = useState('customer_all');
@@ -753,6 +755,13 @@ export default function DocumentLinksPage() {
           >
             <Plus className="w-4 h-4" />
             새 문서 링크 생성
+          </button>
+          <button
+            onClick={() => setShowDocumentSendModal(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          >
+            <Send className="w-4 h-4" />
+            참가자에게 문서 발송
           </button>
         </div>
         
@@ -1628,6 +1637,13 @@ export default function DocumentLinksPage() {
         </div>
       )}
 
+      {/* 문서 발송 모달 */}
+      <DocumentSendModal
+        isOpen={showDocumentSendModal}
+        onClose={() => setShowDocumentSendModal(false)}
+        tourId={tourId}
+        selectedParticipants={[]}
+      />
     </div>
   );
 }

@@ -2,10 +2,11 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
-import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare } from 'lucide-react';
+import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare, Send } from 'lucide-react';
 import QuickMemo from "@/components/memo/QuickMemo";
 import MemoViewer from "@/components/memo/MemoViewer";
 import QuickParticipantAdd from "@/components/QuickParticipantAdd";
+import DocumentSendModal from "@/components/DocumentSendModal";
 
 // 공통 ParticipantsManager Props
 interface ParticipantsManagerProps {
@@ -131,6 +132,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   const [selectedParticipantForMemo, setSelectedParticipantForMemo] = useState<{id: string, name: string, tourId: string} | null>(null);
   const [scrollToId, setScrollToId] = useState<string | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [showDocumentSendModal, setShowDocumentSendModal] = useState<boolean>(false);
   // const [viewMode, setViewMode] = useState<'marketing' | 'operational'>('operational'); // 뷰 모드 제거
 
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
@@ -1269,6 +1271,21 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                     />
                   </label>
 
+                  {/* 문서 발송 버튼 - 투어별 페이지에서만 */}
+                  {tourId && (
+                    <button
+                      className="bg-green-600 text-white px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors shadow-sm"
+                      onClick={() => {
+                        setSelectedIds([]); // 전체 발송을 위해 선택 초기화
+                        setShowDocumentSendModal(true);
+                      }}
+                      title="문서 발송"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span className="hidden sm:inline text-sm">문서 발송</span>
+                    </button>
+                  )}
+
                   {/* 참가자 추가 - Primary Action */}
                   <button
                     className="bg-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
@@ -1314,6 +1331,19 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                   >
                     일괄 편집
                   </button>
+                  {/* 문서 발송 버튼 추가 */}
+                  {tourId && (
+                    <>
+                      <div className="w-px h-5 bg-gray-300 mx-2" />
+                      <button
+                        className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
+                        onClick={() => setShowDocumentSendModal(true)}
+                      >
+                        <Send className="w-3 h-3" />
+                        문서 발송
+                      </button>
+                    </>
+                  )}
                   <div className="w-px h-5 bg-gray-300 mx-2" />
                   <button
                     className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
@@ -2304,6 +2334,20 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
             </div>
           </div>
         </div>
+      )}
+
+      {/* 문서 발송 모달 */}
+      {tourId && (
+        <DocumentSendModal
+          isOpen={showDocumentSendModal}
+          onClose={() => {
+            setShowDocumentSendModal(false);
+            setSelectedIds([]);
+            setSelectAll(false);
+          }}
+          tourId={tourId}
+          selectedParticipants={selectedIds}
+        />
       )}
     </div>
   );

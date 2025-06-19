@@ -235,8 +235,11 @@ export default function MessageManagementPage() {
       let recipients: { phone: string; customer_id?: string }[] = [];
       
       if (directPhone) {
-        // 직접 입력한 번호
-        recipients.push({ phone: directPhone });
+        // 직접 입력한 번호 (쉼표로 구분된 다중 번호 지원)
+        const phones = directPhone.split(',').map(p => p.trim()).filter(p => p);
+        phones.forEach(phone => {
+          recipients.push({ phone });
+        });
       } else if (selectedCustomers.length > 0) {
         // 선택한 고객들
         const selectedCustomerData = customers.filter(c => selectedCustomers.includes(c.id));
@@ -543,7 +546,7 @@ export default function MessageManagementPage() {
                       value={directPhone}
                       onChange={(e) => setDirectPhone(e.target.value)}
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="010-0000-0000 (고객 선택 대신 직접 입력)"
+                      placeholder="010-0000-0000, 010-1111-1111 (쉼표로 구분하여 여러 번호 입력 가능)"
                     />
                   </div>
                 </div>
