@@ -135,47 +135,32 @@ ${docLinks}
     setLoading(true);
     
     try {
-      // 발송 기록 생성
-      const { data: historyData, error: historyError } = await supabase
-        .from("document_send_history")
-        .insert({
-          tour_id: tourId,
-          document_ids: selectedDocs,
-          participant_count: participants.length,
-          send_method: sendMethod,
-          message_template: messageTemplate,
-          sent_by: "admin", // 실제로는 로그인한 사용자 ID
-        })
-        .select()
-        .single();
-      
-      if (historyError) throw historyError;
-      
-      // 각 참가자에게 메시지 발송
-      const sendPromises = participants.map(async (participant) => {
-        const personalizedMessage = messageTemplate.replace("#{이름}", participant.name);
-        
-        // 메시지 발송 로직 (실제 구현 필요)
-        await supabase
-          .from("message_queue")
-          .insert({
-            recipient_phone: participant.phone,
-            recipient_name: participant.name,
-            message_type: sendMethod === "kakao" ? "ALIMTALK" : "SMS",
-            message_content: personalizedMessage,
-            tour_id: tourId,
-            document_send_history_id: historyData.id,
-            status: "pending"
-          });
+      // API 호출
+      const response = await fetch('/api/messages/send-document', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tourId,
+          documentIds: selectedDocs,
+          participantIds: participants.map(p => p.id),
+          sendMethod,
+          messageTemplate
+        }),
       });
       
-      await Promise.all(sendPromises);
+      const result = await response.json();
       
-      alert(`${participants.length}명에게 문서가 발송되었습니다.`);
-      onClose();
+      if (result.success) {
+        alert(result.message);
+        onClose();
+      } else {
+        alert(result.error || '발송 중 오류가 발생했습니다.');
+      }
     } catch (error) {
-      console.error("발송 오류:", error);
-      alert("발송 중 오류가 발생했습니다.");
+      console.error('발송 오류:', error);
+      alert('발송 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
