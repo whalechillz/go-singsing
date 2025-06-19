@@ -180,5 +180,6 @@ export default async function TourPromotionPage({ params }: Props) {
       promo={promo}
       attractionOptions={attractionOptions || []}
       documentLinks={documentLinks || []}
+    />
   );
 }
