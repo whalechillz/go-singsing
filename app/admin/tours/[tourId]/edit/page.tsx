@@ -816,12 +816,26 @@ const TourEditPage: React.FC = () => {
         
         {/* 마케팅 콘텐츠 탭 */}
         {activeTab === "marketing" && (
-          <div className="-mx-8 -my-4">
-            <MarketingContentManager
-              tourId={tourId}
-              tourProductId={form.tour_product_id}
-              contentType="tour_specific"
-            />
+          <div className="space-y-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-2">마케팅 콘텐츠 관리</h3>
+              <p className="text-sm text-blue-700 mb-4">
+                투어별 포함사항, 특별혜택, 불포함사항을 관리합니다.
+              </p>
+              <a
+                href={`/admin/marketing-content?tourId=${tourId}`}
+                target="_blank"
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                <Sparkles className="w-4 h-4" />
+                마케팅 콘텐츠 관리 페이지로 이동
+              </a>
+            </div>
+            <div className="text-sm text-gray-600">
+              <p>• 포함사항/특별혜택/불포함사항을 체계적으로 관리할 수 있습니다</p>
+              <p>• 홍보 페이지에 자동으로 반영됩니다</p>
+              <p>• 투어 상품의 기본값을 가져와서 커스터마이징할 수 있습니다</p>
+            </div>
           </div>
         )}
         

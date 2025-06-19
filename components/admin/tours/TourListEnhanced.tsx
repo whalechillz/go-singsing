@@ -790,6 +790,13 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                               >
                                 결제 관리
                               </Link>
+                              <Link
+                                href={`/admin/tours/${tour.id}/promotion`}
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setShowDropdown(null)}
+                              >
+                                홍보 페이지 관리
+                              </Link>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();

@@ -100,6 +100,13 @@ export default function MarketingContentPage() {
   useEffect(() => {
     loadTours();
     loadTourProducts();
+    
+    // URL 파라미터에서 tourId 가져오기
+    const params = new URLSearchParams(window.location.search);
+    const tourIdFromUrl = params.get('tourId');
+    if (tourIdFromUrl) {
+      setSelectedTourId(tourIdFromUrl);
+    }
   }, []);
 
   // 투어 선택 시 마케팅 콘텐츠 로드
