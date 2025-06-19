@@ -17,7 +17,7 @@ import {
   Camera
 } from 'lucide-react';
 import { TourMarketingSection } from '@/components/marketing/SingSingMarketingDisplay';
-import TourSchedulePreview from '@/components/tour-schedule-preview/TourSchedulePreview';
+import TourSchedulePreview from '@/components/tour/TourSchedulePreview';
 
 interface Attraction {
   id: string;
