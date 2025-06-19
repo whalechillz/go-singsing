@@ -141,8 +141,13 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
   };
 
   const handleDownloadPDF = () => {
-    // PDF 다운로드 기능 구현
-    alert('PDF 다운로드 기능은 준비 중입니다.');
+    // 프린트 다이얼로그를 열면서 PDF로 저장 안내
+    window.print();
+    
+    // 사용자에게 PDF 저장 방법 안내
+    setTimeout(() => {
+      alert('🖨️ 프린트 화면에서\n\n1. "대상" 또는 "프린터" 옵션에서 "PDF로 저장" 선택\n2. "저장" 버튼 클릭\n\n※ 크롬의 경우: 대상 → "PDF로 저장" 선택');
+    }, 100);
   };
 
   if (loading) {
@@ -196,7 +201,7 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* 헤더 */}
-      <div className="bg-white shadow-sm sticky top-0 z-50 backdrop-blur-lg bg-white/90">
+      <div className="bg-white shadow-sm sticky top-0 z-50 backdrop-blur-lg bg-white/90 print:hidden">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -739,7 +744,7 @@ export default function QuoteView({ quoteId }: QuoteViewProps) {
       </div>
 
       {/* 푸터 */}
-      <div className="bg-gray-900 text-white mt-16">
+      <div className="bg-gray-900 text-white mt-16 print:hidden">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>

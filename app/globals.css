@@ -402,3 +402,152 @@ html {
     padding: 0.5rem 0.75rem;
   }
 }
+
+/* Print styles for better readability */
+@media print {
+  /* 기본 설정 */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  body {
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    color: #000 !important;
+    background: white !important;
+  }
+  
+  /* 제목과 헤더 스타일 강화 */
+  h1, h2, h3, h4, h5, h6 {
+    color: #000 !important;
+    font-weight: bold !important;
+    page-break-after: avoid;
+    margin-top: 1em !important;
+    margin-bottom: 0.5em !important;
+  }
+  
+  h1 {
+    font-size: 24pt !important;
+  }
+  
+  h2 {
+    font-size: 18pt !important;
+  }
+  
+  h3 {
+    font-size: 14pt !important;
+  }
+  
+  /* 본문 텍스트 가독성 향상 */
+  p, li, td, th {
+    font-size: 11pt !important;
+    color: #000 !important;
+    line-height: 1.6 !important;
+  }
+  
+  /* 테이블 스타일 강화 */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  
+  th {
+    background-color: #f3f4f6 !important;
+    font-weight: bold !important;
+    border: 1px solid #000 !important;
+    padding: 8px !important;
+  }
+  
+  td {
+    border: 1px solid #666 !important;
+    padding: 6px !important;
+  }
+  
+  /* 카드와 박스 스타일 */
+  .bg-white, .rounded-2xl, .shadow-lg {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+  
+  /* 불필요한 요소 숨기기 */
+  .print\:hidden,
+  button,
+  .sticky,
+  nav,
+  footer {
+    display: none !important;
+  }
+  
+  /* 배경색 제거 및 텍스트 색상 강화 */
+  .bg-gradient-to-br,
+  .bg-gradient-to-r,
+  .bg-blue-600,
+  .bg-indigo-600,
+  .bg-blue-100,
+  .bg-green-100,
+  .bg-purple-100,
+  .bg-orange-100 {
+    background: none !important;
+    color: #000 !important;
+  }
+  
+  /* 텍스트 색상 강제 설정 */
+  .text-white,
+  .text-gray-600,
+  .text-gray-700,
+  .text-blue-600,
+  .text-green-600 {
+    color: #000 !important;
+  }
+  
+  .text-gray-500,
+  .text-blue-100 {
+    color: #333 !important;
+  }
+  
+  /* 아이콘 크기 조정 */
+  svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  
+  /* 페이지 나누기 */
+  .page-break {
+    page-break-before: always;
+  }
+  
+  /* 링크 스타일 */
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+  
+  /* 가격 정보 강조 */
+  .text-xl, .text-2xl {
+    font-weight: bold !important;
+    color: #000 !important;
+  }
+  
+  /* 견적서 전용 스타일 */
+  /* 히어로 섹션 단순화 */
+  .relative.overflow-hidden {
+    padding: 20px !important;
+    border: 2px solid #000 !important;
+    margin-bottom: 20px !important;
+  }
+  
+  /* 일정 카드 가독성 향상 */
+  .border-2.rounded-xl {
+    border: 1px solid #000 !important;
+    margin-bottom: 10px !important;
+    page-break-inside: avoid;
+  }
+  
+  /* 포함/불포함 사항 명확히 */
+  ul li {
+    list-style-type: disc !important;
+    margin-left: 20px !important;
+  }
+}
