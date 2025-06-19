@@ -16,7 +16,6 @@ import {
   Download,
   Camera
 } from 'lucide-react';
-
 import TourSchedulePreview from '@/components/tour/TourSchedulePreview';
 
 interface Attraction {
@@ -171,8 +170,6 @@ export default function TourPromotionClient({ promo, attractionOptions, document
           </div>
         </div>
       </div>
-
-
 
       {/* 일정 엿보기 섹션 */}
       <div id="schedule-preview-section" className="py-12 bg-gradient-to-b from-purple-50 to-white">
