@@ -145,16 +145,16 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
       <div className="print:hidden fixed top-4 right-4 z-50 flex gap-2">
         <button
           onClick={handleDetailVersion}
-          className="bg-gray-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-gray-700 flex items-center gap-2 text-lg font-medium"
+          className="bg-gray-600 text-white px-3 py-1.5 rounded-md shadow-lg hover:bg-gray-700 flex items-center gap-1.5 text-sm font-medium"
         >
-          <FileText className="w-6 h-6" />
+          <FileText className="w-4 h-4" />
           상세 버전
         </button>
         <button
           onClick={handlePrint}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 flex items-center gap-2 text-lg font-medium"
+          className="bg-gray-700 text-white px-3 py-1.5 rounded-md shadow-lg hover:bg-gray-800 flex items-center gap-1.5 text-sm font-medium"
         >
-          <Printer className="w-6 h-6" />
+          <Printer className="w-4 h-4" />
           프린트/PDF 저장
         </button>
       </div>
@@ -170,9 +170,9 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
         {/* 메인 컨텐츠 - flex-grow로 공간 채우기 */}
         <div className="flex-grow">
           {/* 투어 제목 및 날짜 통합 */}
-          <div className="mb-5 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-300">
+          <div className="mb-5 p-5 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-400">
             <p className="text-center text-sm text-gray-600 mb-2">견적서</p>
-            <h2 className="text-xl font-bold text-center text-blue-900 mb-2">
+            <h2 className="text-xl font-bold text-center text-gray-800 mb-2">
               {quote.title}
             </h2>
             <div className="text-center">
@@ -180,14 +180,14 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
                 <Calendar className="inline w-4 h-4 mr-1" />
                 {formatDate(quote.start_date)} ~ {formatDate(quote.end_date)}
               </p>
-              <p className="text-blue-600 font-bold text-sm">{duration.nights}박 {duration.days}일 일정</p>
+              <p className="text-gray-700 font-bold text-sm">{duration.nights}박 {duration.days}일 일정</p>
             </div>
           </div>
 
           {/* 가격 정보와 일정 통합 */}
           <div className="mb-5">
             {/* 가격 정보 */}
-            <div className="p-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl">
+            <div className="p-5 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-t-xl">
               <h3 className="text-xl font-bold mb-3 text-center">견적 금액</h3>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
@@ -198,7 +198,7 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
                   <p className="text-base mb-1">예상 인원</p>
                   <p className="text-2xl font-bold">{quoteData?.participants?.estimated_count || quote.max_participants}명</p>
                 </div>
-                <div className="bg-white/20 rounded-lg p-3">
+                <div className="bg-white/10 rounded-lg p-3">
                   <p className="text-base mb-1">총 예상 금액</p>
                   <p className="text-2xl font-bold">
                     {((quoteData?.participants?.estimated_count || quote.max_participants) * quote.price).toLocaleString()}원
@@ -218,7 +218,7 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
                   
                   return (
                     <div key={dayNum} className="flex items-center gap-3 p-2">
-                      <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                      <div className="flex-shrink-0 w-12 h-12 bg-gray-600 text-white rounded-full flex items-center justify-center font-bold">
                         D{dayNum}
                       </div>
                       <div className="flex-1">
@@ -237,8 +237,8 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
 
           {/* 포함/불포함 사항 - 더 깔끔하게 */}
           <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="p-4 bg-green-50 rounded-lg border border-green-300">
-              <h3 className="text-lg font-bold text-green-800 mb-2 flex items-center gap-1">
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-400">
+              <h3 className="text-lg font-bold text-gray-700 mb-2 flex items-center gap-1">
                 <CheckCircle className="w-5 h-5" />
                 포함 사항
               </h3>
@@ -251,7 +251,7 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
                 ]).map((item: string, index: number) => (
                   item && (
                     <li key={index} className="flex items-start gap-1.5">
-                      <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                       <span className="font-medium">{item}</span>
                     </li>
                   )
@@ -259,8 +259,8 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
               </ul>
             </div>
 
-            <div className="p-4 bg-red-50 rounded-lg border border-red-300">
-              <h3 className="text-lg font-bold text-red-800 mb-2 flex items-center gap-1">
+            <div className="p-4 bg-gray-100 rounded-lg border border-gray-500">
+              <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-1">
                 <X className="w-5 h-5" />
                 불포함 사항
               </h3>
@@ -273,7 +273,7 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
                 ]).map((item: string, index: number) => (
                   item && (
                     <li key={index} className="flex items-start gap-1.5">
-                      <X className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                      <X className="w-4 h-4 text-gray-700 mt-0.5 flex-shrink-0" />
                       <span className="font-medium">{item}</span>
                     </li>
                   )
@@ -284,8 +284,8 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
 
           {/* 추가 안내사항 */}
           {quote.quote_notes && (
-            <div className="mb-5 p-4 bg-yellow-50 rounded-lg border border-yellow-400">
-              <h3 className="text-lg font-bold text-yellow-800 mb-2 flex items-center gap-1">
+            <div className="mb-5 p-4 bg-gray-50 rounded-lg border border-gray-400">
+              <h3 className="text-lg font-bold text-gray-700 mb-2 flex items-center gap-1">
                 <Info className="w-5 h-5" />
                 추가 안내사항
               </h3>
@@ -300,12 +300,12 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
           <div className="text-center">
             <h3 className="text-lg font-bold mb-3">예약 문의</h3>
             <div className="flex justify-center items-center gap-6">
-              <a href="tel:031-215-3990" className="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
-                <Phone className="w-5 h-5 text-blue-600" />
+              <a href="tel:031-215-3990" className="flex items-center gap-1.5 hover:text-gray-700 transition-colors">
+                <Phone className="w-5 h-5 text-gray-700" />
                 <span className="font-bold text-base">031-215-3990</span>
               </a>
-              <a href="mailto:singsinggolf@naver.com" className="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
-                <Mail className="w-5 h-5 text-blue-600" />
+              <a href="mailto:singsinggolf@naver.com" className="flex items-center gap-1.5 hover:text-gray-700 transition-colors">
+                <Mail className="w-5 h-5 text-gray-700" />
                 <span className="font-bold text-base">singsinggolf@naver.com</span>
               </a>
             </div>
@@ -321,21 +321,27 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
         @media print {
           .simple-quote-view {
             font-size: 13pt !important;
+            /* 전체 그레이스케일 적용 */
+            filter: grayscale(100%) !important;
+            -webkit-filter: grayscale(100%) !important;
           }
           
           .simple-quote-view h1 {
             font-size: 20pt !important;
             font-weight: 900 !important;
+            color: #000 !important;
           }
           
           .simple-quote-view h2 {
             font-size: 18pt !important;
             font-weight: 800 !important;
+            color: #111 !important;
           }
           
           .simple-quote-view h3 {
             font-size: 16pt !important;
             font-weight: 700 !important;
+            color: #222 !important;
           }
           
           .simple-quote-view p,
@@ -343,68 +349,140 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
             font-size: 13pt !important;
             line-height: 1.6 !important;
             font-weight: 500 !important;
+            color: #333 !important;
           }
           
           .simple-quote-view .text-xs {
             font-size: 11pt !important;
+            color: #444 !important;
           }
           
           .simple-quote-view .text-sm {
             font-size: 12pt !important;
+            color: #333 !important;
           }
           
           .simple-quote-view .text-base {
             font-size: 13pt !important;
+            color: #333 !important;
           }
           
           .simple-quote-view .text-lg {
             font-size: 15pt !important;
+            color: #222 !important;
           }
           
           .simple-quote-view .text-xl {
             font-size: 17pt !important;
             font-weight: 700 !important;
+            color: #111 !important;
           }
           
           .simple-quote-view .text-2xl {
             font-size: 19pt !important;
             font-weight: 700 !important;
+            color: #000 !important;
           }
           
           .simple-quote-view .text-3xl {
             font-size: 22pt !important;
             font-weight: 800 !important;
+            color: #000 !important;
           }
           
           .simple-quote-view .text-4xl {
             font-size: 26pt !important;
             font-weight: 900 !important;
+            color: #000 !important;
           }
           
-          /* 가격 정보 강조 */
+          /* 배경색 모두 그레이스케일로 */
           .simple-quote-view .bg-gradient-to-r {
-            border: 2px solid #1e40af !important;
-            background: #eff6ff !important;
-            color: #1e40af !important;
+            background: #f5f5f5 !important;
+            border: 2px solid #333 !important;
+            color: #000 !important;
+          }
+          
+          .simple-quote-view .bg-white\/20 {
+            background: #e8e8e8 !important;
+            border: 1px solid #666 !important;
           }
           
           /* 가격과 일정 연결 박스 */
           .simple-quote-view .bg-gray-50 {
-            border: 1px solid #6b7280 !important;
+            background: #fafafa !important;
+            border: 1px solid #666 !important;
           }
           
-          /* 포함/불포함 사항 강조 */
+          .simple-quote-view .from-blue-50,
+          .simple-quote-view .to-indigo-50 {
+            background: #f8f8f8 !important;
+          }
+          
+          .simple-quote-view .border-blue-300 {
+            border-color: #666 !important;
+          }
+          
+          /* 포함/불포함 사항 - 그레이스케일 */
           .simple-quote-view .bg-green-50 {
-            border: 1.5px solid #16a34a !important;
+            background: #f9f9f9 !important;
+            border: 1.5px solid #555 !important;
           }
           
           .simple-quote-view .bg-red-50 {
-            border: 1.5px solid #dc2626 !important;
+            background: #f7f7f7 !important;
+            border: 1.5px solid #666 !important;
           }
           
-          /* 추가 안내사항 */
+          .simple-quote-view .text-green-800,
+          .simple-quote-view .text-green-600 {
+            color: #333 !important;
+          }
+          
+          .simple-quote-view .text-red-800,
+          .simple-quote-view .text-red-600 {
+            color: #444 !important;
+          }
+          
+          /* 추가 안내사항 - 그레이스케일 */
           .simple-quote-view .bg-yellow-50 {
-            border: 1.5px solid #ca8a04 !important;
+            background: #f8f8f8 !important;
+            border: 1.5px solid #555 !important;
+          }
+          
+          .simple-quote-view .text-yellow-800 {
+            color: #333 !important;
+          }
+          
+          /* 파란색 요소들 그레이로 */
+          .simple-quote-view .bg-blue-600,
+          .simple-quote-view .from-blue-600,
+          .simple-quote-view .to-indigo-600 {
+            background: #444 !important;
+            color: white !important;
+          }
+          
+          .simple-quote-view .text-blue-600,
+          .simple-quote-view .text-blue-900 {
+            color: #222 !important;
+          }
+          
+          /* 아이콘 색상 조정 */
+          .simple-quote-view svg {
+            color: #444 !important;
+          }
+          
+          /* 링크 스타일 */
+          .simple-quote-view a {
+            color: #000 !important;
+            text-decoration: none !important;
+          }
+          
+          /* 테두리 통일 */
+          .simple-quote-view .border,
+          .simple-quote-view .border-t,
+          .simple-quote-view .border-gray-300 {
+            border-color: #666 !important;
           }
           
           @page {
