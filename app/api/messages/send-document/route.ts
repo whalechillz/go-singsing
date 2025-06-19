@@ -23,6 +23,22 @@ function getSignature() {
   };
 }
 
+// SMS용 바이트 계산 함수 (한글 2바이트)
+function getByteLength(str: string): number {
+  let byteLength = 0;
+  for (let i = 0; i < str.length; i++) {
+    const charCode = str.charCodeAt(i);
+    // ASCII 문자 (0x00-0x7F)
+    if (charCode <= 0x7F) {
+      byteLength += 1;
+    } else {
+      // 한글 및 기타 유니코드 문자는 2바이트로 계산
+      byteLength += 2;
+    }
+  }
+  return byteLength;
+}
+
 export async function POST(request: NextRequest) {
   // 환경 변수 확인
   const missingEnvVars = [];
@@ -91,34 +107,46 @@ export async function POST(request: NextRequest) {
       // 솔라피 메시지 데이터 생성
       const messages = participants.map((participant) => {
         const personalizedContent = messageTemplate.replace('#{이름}', participant.name || '고객님');
+        
+        // 메시지 길이 확인 (SMS용 바이트 계산 - 한글 2바이트)
+        const byteLength = getByteLength(personalizedContent);
+        console.log(`메시지 길이 - 참가자: ${participant.name}, SMS바이트: ${byteLength}, 문자수: ${personalizedContent.length}`);
+        
+        // 메시지 내용 확인 (디버깅용)
+        if (byteLength > 80) {
+          console.log(`긴 메시지 내용 확인: ${personalizedContent.substring(0, 50)}...`);
+        }
+        
         const message: any = {
-          to: participant.phone.replace(/-/g, ""),
-          from: SOLAPI_SENDER.replace(/-/g, ""),
+          to: participant.phone.replace(/-/g, "").replace(/\s/g, "").replace(/\+82/g, "0"), // 하이픈, 공백, 국가코드 제거
+          from: SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, ""),
           text: personalizedContent,
         };
         
-        // 카카오 알림톡 템플릿이 등록될 때까지 SMS로 발송
-        // TODO: Solapi에 템플릿 등록 후 아래 주석 해제하고 SMS 코드 제거
-        /*
-        if (sendMethod === "kakao" && SOLAPI_PFID) {
+        // 전화번호 형식 확인
+        if (!message.to.match(/^01[0-9]{8,9}$/)) {
+          console.error(`잘못된 전화번호 형식: ${participant.phone} -> ${message.to}`);
+        }
+        
+        // 카카오 알림톡 사용 시 (알리고에서 사용하던 템플릿 ID 입력)
+        const TEMPLATE_ID = ""; // 알리고에서 사용하던 템플릿 ID를 여기에 입력 (예: "TM_1234")
+        
+        if (sendMethod === "kakao" && SOLAPI_PFID && TEMPLATE_ID) {
+          // 카카오 알림톡으로 발송
           message.type = "ATA";
           message.kakaoOptions = {
             pfId: SOLAPI_PFID,
-            templateId: "실제_템플릿_ID", // Solapi에서 등록한 템플릿 ID 입력
-            disableSms: true // SMS 대체 발송 허용 여부
+            templateId: TEMPLATE_ID,
+            disableSms: false // 실패 시 SMS로 대체 발송
           };
         } else {
-          message.type = personalizedContent.length > 90 ? "LMS" : "SMS";
+          // SMS/LMS로 발송
+          // SMS는 90바이트까지, LMS는 2000바이트까지
+          // 한글은 UTF-8에서 3바이트이므로 정확한 바이트 계산 필요
+          message.type = byteLength > 90 ? "LMS" : "SMS";
           if (message.type === "LMS") {
             message.subject = "[싱싱골프] 투어 문서 안내";
           }
-        }
-        */
-        
-        // 현재는 모든 메시지를 SMS/LMS로 발송
-        message.type = personalizedContent.length > 90 ? "LMS" : "SMS";
-        if (message.type === "LMS") {
-          message.subject = "[싱싱골프] 투어 문서 안내";
         }
         
         return message;
