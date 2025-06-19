@@ -85,6 +85,13 @@ export default function MessageManagementPage() {
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [searchPhone, setSearchPhone] = useState("");
 
+  // 메시지 타입 변경 시 SMS면 제목 제거
+  useEffect(() => {
+    if (messageType === "sms") {
+      setMessageTitle("");
+    }
+  }, [messageType]);
+
   // 데이터 불러오기
   const fetchData = async () => {
     setLoading(true);
@@ -185,8 +192,13 @@ export default function MessageManagementPage() {
       const template = templates.find(t => t.id === selectedTemplate);
       if (template) {
         setMessageContent(template.content);
-        setMessageTitle(template.title || "");
         setMessageType(template.type);
+        // 템플릿 타입에 따라 제목 설정
+        if (template.type !== "sms") {
+          setMessageTitle(template.title || "");
+        } else {
+          setMessageTitle(""); // SMS는 제목 없음
+        }
       }
     }
   }, [selectedTemplate, templates]);
@@ -251,7 +263,7 @@ export default function MessageManagementPage() {
         body: JSON.stringify({
           type: messageType,
           recipients,
-          title: messageTitle,
+          title: messageType !== "sms" ? messageTitle : "", // SMS는 제목 없음
           content: messageContent,
           template_id: selectedTemplate || null
         })
