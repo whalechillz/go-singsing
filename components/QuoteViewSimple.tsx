@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import Image from 'next/image';
 import { 
   Calendar,
   Users,
@@ -164,15 +163,9 @@ export default function QuoteViewSimple({ quoteId }: QuoteViewSimpleProps) {
       <div className="max-w-[210mm] mx-auto p-8 bg-white min-h-[297mm]">
         {/* 헤더 */}
         <div className="text-center mb-8 pb-6 border-b-2 border-gray-300">
-          <Image
-            src="/singsing_logo.svg"
-            alt="싱싱골프투어"
-            width={200}
-            height={50}
-            className="mx-auto mb-4"
-          />
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">견적서</h1>
-          <p className="text-xl text-gray-600">Premium Golf Tour</p>
+          <h1 className="text-4xl font-bold tracking-wider mb-2">SINGSING</h1>
+          <p className="text-sm text-gray-600 mb-4">🚌 2박3일 골프패키지 · 리무진버스 단체투어 · 전문 기사가이드 동행</p>
+          <h2 className="text-3xl font-bold text-gray-900">견적서</h2>
         </div>
 
         {/* 투어 제목 및 기본 정보 */}

@@ -538,6 +538,11 @@ html {
     margin-bottom: 20px !important;
   }
   
+  /* 로고와 슬로건 강화 */
+  h1 {
+    letter-spacing: 0.1em !important;
+  }
+  
   /* 일정 카드 가독성 향상 */
   .border-2.rounded-xl {
     border: 1px solid #000 !important;
