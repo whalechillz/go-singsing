@@ -105,8 +105,12 @@ export default function SimpleTourMarketingSection({
   }
 
   return (
-    <div className={`py-12 ${className}`}>
+    <div className={`${className}`}>
       <div className="max-w-6xl mx-auto px-4">
+        <div className="text-center mb-6">
+          <h3 className="text-2xl font-bold text-gray-900">투어 안내사항</h3>
+          <p className="text-gray-600 mt-2">싱싱골프투어가 준비한 특별한 혜택을 확인하세요</p>
+        </div>
         <SimpleMarketingContent
           includedItems={includedItems}
           excludedItems={excludedItems}

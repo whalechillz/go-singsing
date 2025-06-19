@@ -63,8 +63,8 @@ export default function SimpleMarketingContent({
   }
 
   return (
-    <div className={`bg-gray-50 rounded-xl p-6 ${className}`}>
-      <div className="grid md:grid-cols-3 gap-6">
+    <div className={`bg-gray-50/50 rounded-2xl p-8 ${className}`}>
+      <div className="grid md:grid-cols-3 gap-8">
         {/* 포함사항 */}
         {includedItems.length > 0 && (
           <div>

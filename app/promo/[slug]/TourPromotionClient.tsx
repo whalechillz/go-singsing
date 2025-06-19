@@ -172,13 +172,6 @@ export default function TourPromotionClient({ promo, attractionOptions, document
         </div>
       </div>
 
-      {/* 마케팅 콘텐츠 (포함사항, 특별혜택, 불포함사항) */}
-      <SimpleTourMarketingSection 
-        tourId={tour.id}
-        tourProductId={(tour as any).tour_product_id}
-        className="bg-white"
-      />
-
       {/* 일정 엿보기 섹션 */}
       <div id="schedule-preview-section" className="py-12 bg-gradient-to-b from-purple-50 to-white">
         <div className="max-w-6xl mx-auto px-4">
@@ -340,6 +333,13 @@ export default function TourPromotionClient({ promo, attractionOptions, document
           </div>
         </div>
       )}
+
+      {/* 마케팅 콘텐츠 (포함사항, 특별혜택, 불포함사항) */}
+      <SimpleTourMarketingSection 
+        tourId={tour.id}
+        tourProductId={(tour as any).tour_product_id}
+        className="py-12"
+      />
 
       {/* CTA 섹션 */}
       <div className="bg-blue-600 text-white py-16">
