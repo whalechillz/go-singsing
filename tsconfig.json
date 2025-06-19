@@ -29,6 +29,7 @@
     "scripts",
     "docs",
     "backup",
-    "backup_*"
+    "backup_*",
+    "temp"
   ]
 }
