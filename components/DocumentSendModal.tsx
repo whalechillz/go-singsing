@@ -183,9 +183,19 @@ ${docLinks}
     }
     
     setLoading(true);
+    console.log('발송 시작:', {
+      tourId,
+      documentIds: selectedDocs,
+      participantIds: participants.map(p => p.id),
+      sendMethod,
+      messageTemplate
+    });
     
     try {
-      // API 호출
+      // API 호출 with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30초 타임아웃
+      
       const response = await fetch('/api/messages/send-document', {
         method: 'POST',
         headers: {
@@ -198,19 +208,41 @@ ${docLinks}
           sendMethod,
           messageTemplate
         }),
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
+      
+      console.log('API 응답 상태:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const result = await response.json();
+      console.log('API 응답 결과:', result);
       
       if (result.success) {
-        alert(result.message);
+        alert(result.message || `${participants.length}명에게 문서가 발송되었습니다.`);
         onClose();
       } else {
-        alert(result.error || '발송 중 오류가 발생했습니다.');
+        console.error('API 에러:', result);
+        // 임시로 메시지 텍스트를 클립보드에 복사
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(messageTemplate).then(() => {
+            alert('발송에 실패했습니다. 메시지가 클립보드에 복사되었으니 수동으로 발송해주세요.');
+          });
+        } else {
+          alert(result.error || '발송 중 오류가 발생했습니다.');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('발송 오류:', error);
-      alert('발송 중 오류가 발생했습니다.');
+      if (error.name === 'AbortError') {
+        alert('요청 시간이 초과되었습니다. 다시 시도해주세요.');
+      } else {
+        alert(`발송 중 오류가 발생했습니다: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
