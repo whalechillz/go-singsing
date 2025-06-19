@@ -19,11 +19,11 @@ function generateInquirySection(tourData: ExtendedTourData, isStaff: boolean = f
     show_company_phone: true,
     show_driver_phone: true,
     show_guide_phone: false,
-    show_manager_phone: false
+    show_golf_phone: false
   };
   
   // 매니저/가이드 전화번호 표시 여부 확인
-  const showManagerPhone = phoneSettings.show_guide_phone || phoneSettings.show_manager_phone;
+  const showManagerPhone = phoneSettings.show_guide_phone;
   
   return `
     <!-- 문의사항 섹션 -->
