@@ -29,7 +29,6 @@ export async function POST(request: NextRequest) {
   if (!SOLAPI_API_KEY) missingEnvVars.push('SOLAPI_API_KEY');
   if (!SOLAPI_API_SECRET) missingEnvVars.push('SOLAPI_API_SECRET');
   if (!SOLAPI_SENDER) missingEnvVars.push('SOLAPI_SENDER');
-  if (!SOLAPI_PFID) missingEnvVars.push('SOLAPI_PFID');
   
   if (missingEnvVars.length > 0) {
     console.error('필수 환경 변수 누락:', missingEnvVars);
@@ -88,9 +87,6 @@ export async function POST(request: NextRequest) {
     console.log(`${participants.length}명의 참가자에게 발송 예정`);
     
     // Solapi를 통한 실제 메시지 발송
-    let actualSendMethod = sendMethod;
-    let solapiResult: any = null;
-    
     try {
       // 솔라피 메시지 데이터 생성
       const messages = participants.map((participant) => {
@@ -101,24 +97,28 @@ export async function POST(request: NextRequest) {
           text: personalizedContent,
         };
         
-        // 카카오 알림톡 시도
+        // 카카오 알림톡 템플릿이 등록될 때까지 SMS로 발송
+        // TODO: Solapi에 템플릿 등록 후 아래 주석 해제하고 SMS 코드 제거
+        /*
         if (sendMethod === "kakao" && SOLAPI_PFID) {
           message.type = "ATA";
           message.kakaoOptions = {
             pfId: SOLAPI_PFID,
-            // templateId는 실제 등록된 템플릿 ID로 변경 필요
-            // 템플릿이 없으면 카카오톡 발송이 실패하고 SMS로 대체됩니다
-            templateId: "singsing_document_link", // TODO: 실제 템플릿 ID로 변경
-            disableSms: false // SMS 대체 발송 허용
+            templateId: "실제_템플릿_ID", // Solapi에서 등록한 템플릿 ID 입력
+            disableSms: true // SMS 대체 발송 허용 여부
           };
         } else {
-          // SMS 발송
-          message.type = "SMS";
-          // 90바이트 초과시 자동으로 LMS로 전환
-          if (personalizedContent.length > 90) {
-            message.type = "LMS";
+          message.type = personalizedContent.length > 90 ? "LMS" : "SMS";
+          if (message.type === "LMS") {
             message.subject = "[싱싱골프] 투어 문서 안내";
           }
+        }
+        */
+        
+        // 현재는 모든 메시지를 SMS/LMS로 발송
+        message.type = personalizedContent.length > 90 ? "LMS" : "SMS";
+        if (message.type === "LMS") {
+          message.subject = "[싱싱골프] 투어 문서 안내";
         }
         
         return message;
@@ -127,9 +127,8 @@ export async function POST(request: NextRequest) {
       // 솔라피 API 호출
       console.log("솔라피 API 호출 준비:", {
         messageCount: messages.length,
-        sendMethod,
-        hasPfid: !!SOLAPI_PFID,
-        messageType: messages[0]?.type
+        messageType: messages[0]?.type,
+        firstPhone: messages[0]?.to
       });
 
       const solapiResponse = await fetch("https://api.solapi.com/messages/v4/send-many", {
@@ -141,7 +140,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({ messages }),
       });
 
-      solapiResult = await solapiResponse.json();
+      const solapiResult = await solapiResponse.json();
       console.log("솔라피 응답:", { 
         status: solapiResponse.status, 
         result: solapiResult,
@@ -150,54 +149,14 @@ export async function POST(request: NextRequest) {
 
       // 솔라피 응답이 성공이 아니면 에러 처리
       if (!solapiResponse.ok) {
-        // 카카오 알림톡 실패시 SMS로 재시도
-        if (sendMethod === "kakao" && solapiResult.message?.includes("template")) {
-          console.log("카카오 알림톡 실패, SMS로 재시도");
-          actualSendMethod = "sms";
-          
-          // SMS로 메시지 재구성
-          const smsMessages = participants.map((participant) => {
-            const personalizedContent = messageTemplate.replace('#{이름}', participant.name || '고객님');
-            const message: any = {
-              to: participant.phone.replace(/-/g, ""),
-              from: SOLAPI_SENDER.replace(/-/g, ""),
-              text: personalizedContent,
-              type: personalizedContent.length > 90 ? "LMS" : "SMS"
-            };
-            
-            if (message.type === "LMS") {
-              message.subject = "[싱싱골프] 투어 문서 안내";
-            }
-            
-            return message;
-          });
-          
-          // SMS로 재발송
-          const smsResponse = await fetch("https://api.solapi.com/messages/v4/send-many", {
-            method: "POST",
-            headers: {
-              ...getSignature(),
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ messages: smsMessages }),
-          });
-          
-          solapiResult = await smsResponse.json();
-          console.log("SMS 재발송 결과:", solapiResult);
-          
-          if (!smsResponse.ok) {
-            throw new Error(solapiResult.message || "SMS 발송도 실패했습니다.");
-          }
-        } else {
-          throw new Error(solapiResult.message || "솔라피 API 오류");
-        }
+        throw new Error(solapiResult.message || "솔라피 API 오류");
       }
       
       // 메시지 로그 저장 (성공)
       try {
         const messageLogs = participants.map(participant => ({
           customer_id: participant.id,
-          message_type: actualSendMethod === 'kakao' ? 'ALIMTALK' : 'SMS',
+          message_type: messages[0]?.type || 'SMS',
           template_id: 'document_link',
           phone_number: participant.phone,
           title: `[싱싱골프] 투어 문서 안내`,
@@ -214,17 +173,17 @@ export async function POST(request: NextRequest) {
         console.log('메시지 로그 저장 실패 (무시):', logError);
       }
       
-      // 비용 계산
-      const unitCost = actualSendMethod === 'kakao' ? 9 : 20;
+      // 비용 계산 (현재는 SMS/LMS 기준)
+      const unitCost = messages[0]?.type === 'LMS' ? 30 : 20; // LMS 30원, SMS 20원
       const totalCost = unitCost * participants.length;
       
       return NextResponse.json({
         success: true,
-        message: `${participants.length}명에게 문서가 발송되었습니다. (${actualSendMethod === 'kakao' ? '카카오 알림톡' : 'SMS'})`,
+        message: `${participants.length}명에게 문서가 발송되었습니다. (${messages[0]?.type || 'SMS'})`,
         participantCount: participants.length,
         cost: totalCost,
         groupId: solapiResult.groupId,
-        sendMethod: actualSendMethod
+        sendMethod: messages[0]?.type || 'SMS'
       });
       
     } catch (solapiError: any) {
@@ -259,8 +218,7 @@ export async function POST(request: NextRequest) {
             message: solapiError.message,
             hasApiKey: !!SOLAPI_API_KEY,
             hasApiSecret: !!SOLAPI_API_SECRET,
-            hasSender: !!SOLAPI_SENDER,
-            hasPfid: !!SOLAPI_PFID
+            hasSender: !!SOLAPI_SENDER
           }
         },
         { status: 500 }
