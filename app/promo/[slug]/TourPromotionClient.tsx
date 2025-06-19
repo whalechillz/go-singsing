@@ -188,7 +188,10 @@ export default function TourPromotionClient({ promo, attractionOptions, document
           
           {/* 일정 미리보기 컴포넌트 */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <TourSchedulePreview tourId={tour.id} />
+            <TourSchedulePreview 
+              tourId={tour.id} 
+              showCTA={false}  // 홍보페이지에서는 CTA를 표시하지 않음
+            />
           </div>
         </div>
       </div>

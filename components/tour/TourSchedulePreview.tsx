@@ -8,6 +8,8 @@ import SimpleTourMarketingSection from '@/components/marketing/SimpleTourMarketi
 
 interface TourSchedulePreviewProps {
   tourId: string;
+  showCTA?: boolean; // CTA 표시 여부 (기본값: true)
+  ctaStyle?: 'gradient' | 'yellow'; // CTA 스타일 (기본값: 'gradient')
 }
 
 interface TouristAttraction {
@@ -53,7 +55,11 @@ interface TourJourneyItem {
   tourist_attraction?: TouristAttraction;
 }
 
-export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps) {
+export default function TourSchedulePreview({ 
+  tourId, 
+  showCTA = true,
+  ctaStyle = 'gradient' 
+}: TourSchedulePreviewProps) {
   const [loading, setLoading] = useState(true);
   const [tourData, setTourData] = useState<any>(null);
   const [journeyItems, setJourneyItems] = useState<TourJourneyItem[]>([]);
@@ -440,7 +446,11 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
         </div>
 
         {/* 문의하기 - 마감된 투어 체크 */}
-        <div className="bg-gradient-to-b from-gray-50 to-white p-8 rounded-b-2xl">
+        {showCTA && (
+        <div className={ctaStyle === 'yellow' 
+          ? "bg-yellow-400 text-gray-900 p-8 rounded-b-2xl" 
+          : "bg-gradient-to-b from-gray-50 to-white p-8 rounded-b-2xl"
+        }>
           <div className="text-center mb-6">
             {tourData.is_closed || ((tourData.max_participants || 0) - (tourData.current_participants || 0) <= 0) ? (
               <>
@@ -461,7 +471,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                 <a
                   href="tel:031-215-3990"
-                  className="flex items-center justify-center gap-3 bg-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-purple-300 group"
+                  className={ctaStyle === 'yellow' 
+                    ? "flex items-center justify-center gap-3 bg-white text-blue-600 px-6 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                    : "flex items-center justify-center gap-3 bg-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-purple-300 group"
+                  }
                 >
                   <Phone className="w-6 h-6 text-purple-600 group-hover:animate-pulse" />
                   <div className="text-left">
@@ -474,7 +487,10 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
                   href="http://pf.kakao.com/_vSVuV"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                  className={ctaStyle === 'yellow'
+                    ? "flex items-center justify-center gap-3 bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    : "flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                  }
                 >
                   <CreditCard className="w-6 h-6" />
                   <div className="text-left">
@@ -502,6 +518,7 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );
