@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     });
     
     // 참가자 정보 가져오기
-    let participants = [];
+    let participants: Array<{id: string, name: string, phone: string}> = [];
     if (participantIds && participantIds.length > 0) {
       const { data, error } = await supabase
         .from('singsing_participants')
