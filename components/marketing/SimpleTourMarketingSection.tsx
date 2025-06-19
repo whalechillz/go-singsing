@@ -8,12 +8,14 @@ interface SimpleTourMarketingSectionProps {
   tourId: string;
   tourProductId?: string;
   className?: string;
+  showTitle?: boolean; // 제목 표시 여부 옵션 추가
 }
 
 export default function SimpleTourMarketingSection({ 
   tourId, 
   tourProductId,
-  className = ''
+  className = '',
+  showTitle = true // 기본값은 true로 설정
 }: SimpleTourMarketingSectionProps) {
   const [loading, setLoading] = useState(true);
   const [includedItems, setIncludedItems] = useState<any[]>([]);
@@ -93,7 +95,7 @@ export default function SimpleTourMarketingSection({
 
   if (loading) {
     return (
-      <div className="bg-gray-50 rounded-xl p-6 animate-pulse">
+      <div className={`animate-pulse ${className}`}>
         <div className="h-40 bg-gray-200 rounded"></div>
       </div>
     );
@@ -107,10 +109,12 @@ export default function SimpleTourMarketingSection({
   return (
     <div className={`${className}`}>
       <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-6">
-          <h3 className="text-2xl font-bold text-gray-900">투어 안내사항</h3>
-          <p className="text-gray-600 mt-2">싱싱골프투어가 준비한 특별한 혜택을 확인하세요</p>
-        </div>
+        {showTitle && (
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-900">투어 안내사항</h3>
+            <p className="text-gray-600 mt-2">싱싱골프투어가 준비한 특별한 혜택을 확인하세요</p>
+          </div>
+        )}
         <div className="flex justify-center">
           <SimpleMarketingContent
             includedItems={includedItems}

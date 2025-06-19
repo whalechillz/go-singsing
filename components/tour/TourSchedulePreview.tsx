@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Calendar, MapPin, Users, Clock, Camera, Plane, Hotel, Utensils, Bus, Phone, CreditCard, CheckCircle2, Navigation, Star, Coffee, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import SimpleTourMarketingSection from '@/components/marketing/SimpleTourMarketingSection';
 
 interface TourSchedulePreviewProps {
   tourId: string;
@@ -381,84 +382,13 @@ export default function TourSchedulePreview({ tourId }: TourSchedulePreviewProps
           )}
         </div>
 
-        {/* 견적 요약 */}
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 포함사항 */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                포함사항
-              </h3>
-              <ul className="space-y-3">
-                {(tourData.includes || tourData.product?.default_includes || [
-                  '리무진 버스 (45인승 최고급 차량)',
-                  `그린피 및 카트비 (18홀 × ${days}일)`,
-                  `호텔 ${nights}박 (2인 1실 기준)`,
-                  `조식 ${nights}회 (호텔 조식)`,
-                  '전문 기사가이드 (경험 많은 전문가)'
-                ]).map((item: string, index: number) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-green-600 text-xs">✓</span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{item}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* 추가 혜택 */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Star className="w-5 h-5 text-purple-600" />
-                특별 혜택
-              </h3>
-              <ul className="space-y-3">
-                {(tourData.special_benefits || tourData.product?.default_special_benefits || [
-                  '지역 맛집 투어 (엄선된 맛집만)',
-                  '그룹 사진 촬영 (전문 작가 촬영)',
-                  '물 및 간식 제공 (버스 내 상시)'
-                ]).map((item: string, index: number) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-purple-600 text-xs">★</span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{item}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* 불포함사항 */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <span className="text-red-600">⚠️</span>
-                불포함사항
-              </h3>
-              <ul className="space-y-3 text-gray-700">
-                {(tourData.excludes || tourData.product?.default_excludes || [
-                  '캐디피 (약 15만원)',
-                  '중식 및 석식 (개인 부담)',
-                  '개인 경비 (기타 개인 비용)'
-                ]).map((item: string, index: number) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-red-500 text-xs">×</span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{item}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
+        {/* 마케팅 콘텐츠 (포함사항, 특별혜택, 불포함사항) */}
+        <SimpleTourMarketingSection 
+          tourId={tourId}
+          tourProductId={tourData.tour_product_id}
+          className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6"
+          showTitle={false}
+        />
 
         {/* 견적 금액 - 1인 기준 크게, 2인/4인 기준 작게 */}
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-8">
