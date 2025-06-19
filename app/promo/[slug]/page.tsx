@@ -19,8 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select(`
       *,
       tour:singsing_tours(*)
-    `)
-    .single();
+    `);
   
   // ID로 조회하거나 slug로 조회
   if (isUUID) {
@@ -29,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     query = query.eq('slug', slug);
   }
   
-  const { data: promo } = await query;
+  const { data: promo } = await query.single();
 
   if (!promo) {
     return {
@@ -68,8 +67,7 @@ export default async function TourPromotionPage({ params }: Props) {
         )
       )
     `)
-    .eq('is_public', true)
-    .single();
+    .eq('is_public', true);
   
   // ID로 조회하거나 slug로 조회
   if (isUUID) {
@@ -78,7 +76,7 @@ export default async function TourPromotionPage({ params }: Props) {
     query = query.eq('slug', slug);
   }
   
-  const { data: promo, error } = await query;
+  const { data: promo, error } = await query.single();
 
   if (error || !promo) {
     notFound();
