@@ -42,64 +42,63 @@ const TourScheduleDisplay: React.FC<TourScheduleProps> = ({ tour, isPreview = fa
   };
 
   return (
-    <div className={`bg-white rounded-lg ${isPreview ? 'p-4' : 'p-6 shadow-lg'}`}>
-      {/* 헤더 */}
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+    <div className={`bg-white rounded-lg ${isPreview ? 'p-3' : 'p-4 shadow-md'}`}>
+      {/* 컴팩트 헤더 */}
+      <div className="mb-3">
+        <h3 className="text-lg font-bold text-gray-900">
           {tour.title}
-        </h2>
-        <p className="text-gray-600">
+        </h3>
+        <p className="text-sm text-gray-600">
           {formatDate(tour.start_date)} ~ {formatDate(tour.end_date)} ({calculateDuration()})
         </p>
       </div>
 
-      {/* 주요 정보 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center mb-2">
-            <MapPin className="w-5 h-5 text-blue-600 mr-2" />
-            <span className="font-semibold">골프장</span>
+      {/* 컴팩트 주요 정보 - 2열 그리드 */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+          <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs text-gray-600">골프장</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{tour.golf_course || '미정'}</p>
           </div>
-          <p className="text-gray-700">{tour.golf_course || '정보 없음'}</p>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center mb-2">
-            <Hotel className="w-5 h-5 text-blue-600 mr-2" />
-            <span className="font-semibold">숙박</span>
+        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+          <Hotel className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs text-gray-600">숙박</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{tour.accommodation || '미정'}</p>
           </div>
-          <p className="text-gray-700">{tour.accommodation || '정보 없음'}</p>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center mb-2">
-            <Users className="w-5 h-5 text-blue-600 mr-2" />
-            <span className="font-semibold">모집 인원</span>
+        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+          <Users className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs text-gray-600">인원</p>
+            <p className="text-sm font-medium text-gray-900">
+              {tour.current_participants || 0}/{tour.max_participants || 0}명
+            </p>
           </div>
-          <p className="text-gray-700">
-            {tour.current_participants || 0} / {tour.max_participants || 0}명
-          </p>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center mb-2">
-            <DollarSign className="w-5 h-5 text-blue-600 mr-2" />
-            <span className="font-semibold">참가비</span>
+        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+          <DollarSign className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs text-gray-600">참가비</p>
+            <p className="text-sm font-bold text-gray-900">
+              {tour.price?.toLocaleString() || 0}원
+            </p>
           </div>
-          <p className="text-gray-700 font-bold text-lg">
-            {tour.price?.toLocaleString() || 0}원
-          </p>
         </div>
       </div>
 
-      {/* 출발 정보 */}
+      {/* 출발 정보 - 컴팩트 */}
       {tour.departure_location && (
-        <div className="border-t pt-4 mb-4">
-          <div className="flex items-center mb-2">
-            <Bus className="w-5 h-5 text-green-600 mr-2" />
-            <span className="font-semibold">출발 장소</span>
+        <div className="border-t pt-2 mb-2">
+          <div className="flex items-center gap-2">
+            <Bus className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-medium">출발: {tour.departure_location}</span>
           </div>
-          <p className="text-gray-700">{tour.departure_location}</p>
         </div>
       )}
 
@@ -136,34 +135,26 @@ const TourScheduleDisplay: React.FC<TourScheduleProps> = ({ tour, isPreview = fa
         </div>
       )}
 
-      {/* 담당자 정보 */}
-      <div className="border-t pt-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">담당 기사님</p>
-            <p className="font-medium">{tour.driver_name || '미정'}</p>
+      {/* 담당자 정보 - 더 컴팩트 */}
+      {!isPreview && (
+        <div className="border-t pt-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600">담당 기사:</span>
+              <span className="text-sm font-medium">{tour.driver_name || '미정'}</span>
+            </div>
+            <a
+              href="tel:031-215-3990"
+              className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition"
+            >
+              <Phone className="w-3 h-3" />
+              예약
+            </a>
           </div>
-          <a
-            href="tel:031-215-3990"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            <Phone className="w-4 h-4" />
-            예약 문의
-          </a>
-        </div>
-      </div>
-
-      {/* 프리뷰 모드에서 전체 보기 버튼 */}
-      {isPreview && (
-        <div className="mt-4 text-center">
-          <button
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-            onClick={() => {/* 전체 일정표 모달 또는 페이지로 이동 */}}
-          >
-            전체 일정표 보기 →
-          </button>
         </div>
       )}
+
+
     </div>
   );
 };

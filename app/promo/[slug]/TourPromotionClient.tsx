@@ -352,22 +352,15 @@ export default function TourPromotionClient({ promo, attractionOptions, document
               <Phone className="w-5 h-5" />
               전화 문의하기
             </a>
-            <button
-              onClick={() => {
-                const message = `${tour.title} 예약 문의드립니다.\n선택한 관광지 옵션:\n${
-                  Object.values(selectedOptions).map((optionId: string) => {
-                    const option = attractionOptions.find((opt: AttractionOption) => opt.id === optionId);
-                    return `- ${option?.attraction?.name}${option?.additional_cost ? ` (+${option.additional_cost.toLocaleString()}원)` : ''}`;
-                  }).join('\n')
-                }\n총 추가요금: ${calculateTotalPrice().toLocaleString()}원`;
-                
-                window.open(`https://wa.me/821032153990?text=${encodeURIComponent(message)}`, '_blank');
-              }}
+            <a
+              href="http://pf.kakao.com/_vSVuV"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-yellow-400 text-gray-900 rounded-lg font-semibold hover:bg-yellow-500 transition-colors"
             >
               카톡으로 문의하기
               <ChevronRight className="w-5 h-5" />
-            </button>
+            </a>
           </div>
         </div>
       </div>

@@ -152,8 +152,15 @@ const GolfTourPortal = () => {
   }, []);
 
   const handleCardClick = (tour: Tour) => {
-    setSelectedTour(tour);
-    setShowPreview(false); // 새 투어 선택 시 미리보기 초기화
+    // 같은 투어를 다시 클릭하면 닫기
+    if (selectedTour && selectedTour.id === tour.id) {
+      setSelectedTour(null);
+      setShowPreview(false);
+    } else {
+      setSelectedTour(tour);
+      // 비로그인 사용자는 일정 엿보기를 기본으로 표시
+      setShowPreview(!user || (!isStaffView && !userTours.includes(tour.id)));
+    }
   };
 
   const handleDocumentClick = (doc: any) => {
@@ -457,7 +464,7 @@ const GolfTourPortal = () => {
                 href="https://www.singsingtour.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm bg-white/20 backdrop-blur text-white px-3 py-1.5 rounded hover:bg-white/30 transition-colors flex items-center gap-1 whitespace-nowrap"
+                className="text-sm bg-white/20 backdrop-blur text-white px-2 sm:px-3 py-1.5 rounded hover:bg-white/30 transition-colors flex items-center gap-1"
                 title="싱싱골프투어 공식 홈페이지"
               >
                 <Globe className="h-4 w-4" />
@@ -476,14 +483,14 @@ const GolfTourPortal = () => {
                   {(user.role === 'admin' || user.role === 'manager') && (
                     <a
                       href="/admin"
-                      className="text-sm bg-white text-blue-800 px-4 py-1.5 rounded hover:bg-blue-100 transition-colors"
+                      className="text-sm bg-white text-blue-800 px-2 sm:px-4 py-1.5 rounded hover:bg-blue-100 transition-colors hidden sm:inline-block"
                     >
                       관리자 페이지
                     </a>
                   )}
                   <button
                     onClick={handleLogout}
-                    className="text-sm bg-red-600 text-white px-4 py-1.5 rounded hover:bg-red-700 transition-colors flex items-center gap-1"
+                    className="text-sm bg-red-600 text-white px-2 sm:px-4 py-1.5 rounded hover:bg-red-700 transition-colors flex items-center gap-1"
                   >
                     <LogOut className="h-4 w-4" />
                     <span className="hidden sm:inline">로그아웃</span>
@@ -493,14 +500,15 @@ const GolfTourPortal = () => {
                 <>
                   <a
                     href="tel:031-215-3990"
-                    className="text-sm bg-white text-blue-700 px-3 sm:px-4 py-2 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                    className="text-sm bg-white text-blue-700 px-2 sm:px-4 py-2 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                    title="031-215-3990"
                   >
                     <Phone className="h-4 w-4" />
-                    <span className="font-medium">031-215-3990</span>
+                    <span className="hidden sm:inline font-medium">031-215-3990</span>
                   </a>
                   <a
                     href="/login"
-                    className="text-sm bg-blue-500 px-3 sm:px-4 py-1.5 rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
+                    className="text-sm bg-blue-500 px-2 sm:px-4 py-1.5 rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
                   >
                     <LogIn className="h-4 w-4" />
                     <span className="hidden sm:inline">로그인</span>
@@ -681,28 +689,41 @@ const GolfTourPortal = () => {
                     {/* 비로그인 사용자 또는 해당 투어 비참가자: 투어 일정표만 표시 */}
                     {!user || (!isStaffView && !userTours.includes(selectedTour.id)) ? (
                       <div>
-                        {/* 일정 엿보기 탭 */}
+                        {/* 일정 탭 헤더 */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4">
+                            <button
+                              onClick={() => setShowPreview(false)}
+                              className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${
+                                !showPreview 
+                                  ? 'bg-blue-600 text-white' 
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              간단 정보
+                            </button>
+                            <button
+                              onClick={() => setShowPreview(true)}
+                              className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all flex items-center gap-1 ${
+                                showPreview 
+                                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              <Camera className="w-4 h-4" />
+                              일정 엿보기 😍
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* 선택된 탭 컨텐츠 */}
                         {!showPreview ? (
-                          <>
-                            <h3 className="text-lg font-bold mb-4">투어 일정표</h3>
-                            <TourScheduleDisplay tour={selectedTour} isPreview={true} />
-                          </>
+                          <TourScheduleDisplay tour={selectedTour} isPreview={true} />
                         ) : (
-                          <>
-                            <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-lg font-bold">여행 일정 미리보기</h3>
-                              <button
-                                onClick={() => setShowPreview(false)}
-                                className="text-sm text-blue-600 hover:text-blue-800"
-                              >
-                                ← 돌아가기
-                              </button>
-                            </div>
-                            <TourSchedulePreview tourId={selectedTour.id} />
-                          </>
+                          <TourSchedulePreview tourId={selectedTour.id} />
                         )}
                         
-                        {/* 로그인 유도 */}
+                        {/* 로그인 유도 메시지 */}
                         <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                           {!user ? (
                             <>
@@ -712,54 +733,20 @@ const GolfTourPortal = () => {
                               <p className="text-xs text-gray-600 mb-3">
                                 • 상세 일정 • 탑승지 안내 • 객실 배정표 • 라운딩 시간표
                               </p>
-                              <div className="flex gap-2 flex-wrap">
-                                <button
-                                  onClick={() => setShowPreview(!showPreview)}
-                                  className="inline-flex items-center gap-1 text-blue-700 font-medium text-sm hover:text-blue-800 bg-white px-3 py-1.5 rounded-lg border border-blue-300 hover:border-blue-400 transition-colors"
-                                >
-                                  {showPreview ? (
-                                    <>
-                                      <Calendar className="w-4 h-4" />
-                                      일반 일정표 보기
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Camera className="w-4 h-4" />
-                                      일정 엿보기 😍
-                                    </>
-                                  )}
-                                </button>
-                                <a
-                                  href="/login"
-                                  className="inline-flex items-center gap-1 text-white bg-blue-600 hover:bg-blue-700 font-medium text-sm px-3 py-1.5 rounded-lg transition-colors"
-                                >
-                                  <LogIn className="w-4 h-4" />
-                                  로그인하기
-                                </a>
-                              </div>
+                              <a
+                                href="/login"
+                                className="inline-flex items-center gap-1 text-white bg-blue-600 hover:bg-blue-700 font-medium text-sm px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                <LogIn className="w-4 h-4" />
+                                로그인하기
+                              </a>
                             </>
                           ) : (
                             <>
                               <p className="text-sm text-blue-700 mb-2">
                                 투어 참가자만 모든 여행 서류를 볼 수 있습니다.
                               </p>
-                              <button
-                                onClick={() => setShowPreview(!showPreview)}
-                                className="inline-flex items-center gap-1 text-blue-700 font-medium text-sm hover:text-blue-800 bg-white px-3 py-1.5 rounded-lg border border-blue-300 hover:border-blue-400 transition-colors"
-                              >
-                                {showPreview ? (
-                                  <>
-                                    <Calendar className="w-4 h-4" />
-                                    일반 일정표 보기
-                                  </>
-                                ) : (
-                                  <>
-                                    <Camera className="w-4 h-4" />
-                                    일정 엿보기 😍
-                                  </>
-                                )}
-                              </button>
-                              <p className="text-xs text-gray-600 mt-2">
+                              <p className="text-xs text-gray-600">
                                 예약 문의: 031-215-3990
                               </p>
                             </>
@@ -769,12 +756,39 @@ const GolfTourPortal = () => {
                     ) : (
                       /* 해당 투어 참가자 또는 스탭: 모든 문서 표시 */
                       <>
-                        <h3 className="text-lg font-bold mb-4">여행 서류</h3>
-                        
-                        {/* 투어 일정표 전체 보기 */}
-                        <div className="mb-4">
-                          <TourScheduleDisplay tour={selectedTour} isPreview={false} />
+                        {/* 탭 헤더 */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4">
+                            <button
+                              onClick={() => setShowPreview(false)}
+                              className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${
+                                !showPreview 
+                                  ? 'bg-blue-600 text-white' 
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              여행 서류
+                            </button>
+                            <button
+                              onClick={() => setShowPreview(true)}
+                              className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all flex items-center gap-1 ${
+                                showPreview 
+                                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              <Camera className="w-4 h-4" />
+                              상세 일정 보기
+                            </button>
+                          </div>
                         </div>
+                        
+                        {/* 투어 일정표 */}
+                        {!showPreview ? (
+                          <>
+                            <div className="mb-4">
+                              <TourScheduleDisplay tour={selectedTour} isPreview={false} />
+                            </div>
                         
                         {/* 기타 문서들 */}
                         <div className="flex flex-col gap-3 mt-6">
@@ -819,6 +833,11 @@ const GolfTourPortal = () => {
                             </button>
                           ))}
                         </div>
+                          </>
+                        ) : (
+                          /* 상세 일정 보기 */
+                          <TourSchedulePreview tourId={selectedTour.id} />
+                        )}
                       </>
                     )}
                   </div>
