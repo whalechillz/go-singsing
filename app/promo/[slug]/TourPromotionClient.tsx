@@ -112,7 +112,7 @@ export default function TourPromotionClient({ promo, attractionOptions, document
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 히어로 섹션 */}
-      <div className="relative h-[50vh] min-h-[400px] bg-gradient-to-br from-blue-600 to-blue-800">
+      <div className="relative h-[30vh] min-h-[300px] bg-gradient-to-br from-blue-600 to-blue-800">
         {promo.main_image_url && (
           <img 
             src={promo.main_image_url} 
