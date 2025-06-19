@@ -67,6 +67,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.includes('/tee-time')) return 'tee-time';
     if (pathname.startsWith('/admin/tours')) return 'tours';
     if (pathname.startsWith('/admin/tour-products')) return 'tour-products';
+    if (pathname.startsWith('/admin/marketing-content')) return 'marketing-content';
     if (pathname.startsWith('/admin/attractions')) return 'attractions';
     if (pathname.startsWith('/admin/participants')) return 'participants-list';
     if (pathname.startsWith('/admin/payments')) return 'payments';
@@ -113,6 +114,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       subMenu: [
         { id: 'tours', label: '투어 스케줄 관리', href: '/admin/tours' },
         { id: 'tour-products', label: '여행상품 관리', href: '/admin/tour-products' },
+        { id: 'marketing-content', label: '마케팅 콘텐츠', href: '/admin/marketing-content' },
         { id: 'attractions', label: '스팟 관리', href: '/admin/attractions' },
       ]
     },
