@@ -836,6 +836,24 @@ const TourEditPage: React.FC = () => {
               <p>• 홍보 페이지에 자동으로 반영됩니다</p>
               <p>• 투어 상품의 기본값을 가져와서 커스터마이징할 수 있습니다</p>
             </div>
+            
+            {/* 안내 메시지 추가 */}
+            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mt-6">
+              <p className="text-sm text-yellow-800">
+                <span className="font-medium">💡 알림:</span> 다른 탭에서 수정한 내용이 있다면, 해당 탭으로 이동하여 먼저 저장해주세요.
+              </p>
+            </div>
+            
+            {/* 돌아가기 버튼 */}
+            <div className="flex justify-center mt-6">
+              <button
+                type="button"
+                onClick={() => router.push("/admin/tours")}
+                className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400"
+              >
+                투어 목록으로 돌아가기
+              </button>
+            </div>
           </div>
         )}
         
@@ -1320,22 +1338,25 @@ const TourEditPage: React.FC = () => {
         
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         
-        <div className="flex gap-2 mt-4">
-          <button 
-            type="submit" 
-            className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-700 focus:bg-blue-700" 
-            disabled={saving}
-          >
-            {saving ? "저장 중..." : "변경사항 저장"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/tours")}
-            className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400"
-          >
-            취소
-          </button>
-        </div>
+        {/* 마케팅 콘텐츠 탭에서는 저장 버튼 숨기기 */}
+        {activeTab !== "marketing" && (
+          <div className="flex gap-2 mt-4">
+            <button 
+              type="submit" 
+              className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-700 focus:bg-blue-700" 
+              disabled={saving}
+            >
+              {saving ? "저장 중..." : "변경사항 저장"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/admin/tours")}
+              className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400"
+            >
+              취소
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );
