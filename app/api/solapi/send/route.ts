@@ -36,17 +36,29 @@ export async function POST(request: NextRequest) {
     const { type, recipients, title, content, template_id } = body;
 
     // 솔라피 메시지 데이터
-    const messages = recipients.map((recipient: any) => ({
-      to: recipient.phone.replace(/-/g, ""),
-      from: SOLAPI_SENDER.replace(/-/g, ""),
-      text: content,
-      type: type === "kakao_alimtalk" ? "ATA" : type.toUpperCase(),
-      subject: title, // LMS, MMS용
-      kakaoOptions: type === "kakao_alimtalk" ? {
-        pfId: SOLAPI_PFID,
-        templateId: template_id,
-      } : undefined,
-    }));
+    const messages = recipients.map((recipient: any) => {
+      const message: any = {
+        to: recipient.phone.replace(/-/g, ""),
+        from: SOLAPI_SENDER.replace(/-/g, ""),
+        text: content,
+        type: type === "kakao_alimtalk" ? "ATA" : type.toUpperCase(),
+      };
+      
+      // SMS는 subject를 지원하지 않음
+      if (type !== "sms" && title) {
+        message.subject = title;
+      }
+      
+      // 카카오 알림톡 옵션
+      if (type === "kakao_alimtalk") {
+        message.kakaoOptions = {
+          pfId: SOLAPI_PFID,
+          templateId: template_id,
+        };
+      }
+      
+      return message;
+    });
 
     // 솔라피 API 호출
     console.log("솔라피 API 호출:", {
