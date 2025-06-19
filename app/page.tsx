@@ -224,6 +224,21 @@ const GolfTourPortal = () => {
     return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
   };
 
+  // 같은 투어의 여러 일정을 그룹화하는 함수
+  const groupToursByProduct = (tours: Tour[]) => {
+    const grouped = tours.reduce((acc, tour) => {
+      // tour_product_id가 있으면 그것으로, 없으면 title로 그룹화
+      const groupKey = tour.tour_product_id || tour.title;
+      if (!acc[groupKey]) {
+        acc[groupKey] = [];
+      }
+      acc[groupKey].push(tour);
+      return acc;
+    }, {} as Record<string, Tour[]>);
+    
+    return Object.entries(grouped);
+  };
+
   // 월 토글 함수
   const toggleMonth = (monthKey: string) => {
     const newExpanded = new Set(expandedMonths);
@@ -386,28 +401,43 @@ const GolfTourPortal = () => {
           </div>
         </div>
         <div className="mt-3 pt-3 border-t border-gray-200">
-          <div className="flex justify-between items-center">
-            <div>
-              <span className="text-2xl font-bold text-gray-900">{tour.price?.toLocaleString()}원</span>
-              <span className="text-sm text-gray-500 ml-1">/ 1인</span>
-            </div>
-            <a
-              href="tel:031-215-3990"
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                status === 'closed' || isFull 
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
-              }`}
-              onClick={(e) => {
-                if (status === 'closed' || isFull) e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <Phone className="w-4 h-4" />
-              전화 예약
-            </a>
-          </div>
+        <div className="flex justify-between items-center">
+        <div>
+        <span className="text-2xl font-bold text-gray-900">{tour.price?.toLocaleString()}원</span>
+        <span className="text-sm text-gray-500 ml-1">/ 1인</span>
         </div>
+        <div className="flex gap-2">
+        {/* 미리보기 링크 추가 (스탭/관리자만) */}
+        {isStaffView && (
+        <a
+        href={`/promo/${tour.id}`}
+        target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition"
+          onClick={(e) => e.stopPropagation()}
+        >
+            <Camera className="w-4 h-4" />
+              미리보기
+          </a>
+        )}
+          <a
+              href="tel:031-215-3990"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                      status === 'closed' || isFull 
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
+                    }`}
+                    onClick={(e) => {
+                      if (status === 'closed' || isFull) e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Phone className="w-4 h-4" />
+                    전화 예약
+                  </a>
+                </div>
+              </div>
+            </div>
       </div>
     );
   };
