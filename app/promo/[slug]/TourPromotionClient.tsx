@@ -30,11 +30,13 @@ interface Attraction {
 
 interface AttractionOption {
   id: string;
-  schedule_id: string;
+  tour_id: string;
   attraction_id: string;
-  additional_price: number;
-  is_default: boolean;
+  is_included: boolean;
+  is_optional: boolean;
+  additional_cost: number;
   order_no: number;
+  notes?: string;
   attraction?: Attraction;
 }
 
@@ -98,21 +100,11 @@ export default function TourPromotionClient({ promo, attractionOptions, document
     }
   }, []);
   
-  // 일정별로 관광지 옵션 그룹화
-  const optionsBySchedule = attractionOptions.reduce((acc, option) => {
-    const scheduleId = option.schedule_id;
-    if (!acc[scheduleId]) {
-      acc[scheduleId] = [];
-    }
-    acc[scheduleId].push(option);
-    return acc;
-  }, {} as { [key: string]: AttractionOption[] });
-
   // 총 추가 요금 계산
   const calculateTotalPrice = () => {
     return Object.values(selectedOptions).reduce((total: number, optionId: string) => {
       const option = attractionOptions.find((opt: AttractionOption) => opt.id === optionId);
-      return total + (option?.additional_price || 0);
+      return total + (option?.additional_cost || 0);
     }, 0);
   };
 
@@ -215,79 +207,79 @@ export default function TourPromotionClient({ promo, attractionOptions, document
         </div>
       </div>
 
-      {/* 일정 및 관광지 옵션 */}
+      {/* 일정 및 관광지 옵션 - attractionOptions가 있을 때만 표시 */}
+      {attractionOptions && attractionOptions.length > 0 && (
       <div className="py-12">
         <div className="max-w-6xl mx-auto px-4">
-          <h3 className="text-2xl font-bold text-center mb-8">일정별 관광 옵션</h3>
+          <h3 className="text-2xl font-bold text-center mb-8">추가 선택 관광지</h3>
           
-          <div className="space-y-8">
-            {tour.schedules?.map((schedule) => {
-              const options = optionsBySchedule[schedule.id] || [];
-              if (options.length === 0) return null;
-
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {attractionOptions.map((option) => {
+              const isSelected = Object.values(selectedOptions).includes(option.id);
+              
               return (
-                <div key={schedule.id} className="bg-white rounded-xl shadow-lg p-6">
-                  <h4 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                    Day {schedule.day_number} - {new Date(schedule.date).toLocaleDateString('ko-KR', { 
-                      month: 'long', 
-                      day: 'numeric',
-                      weekday: 'short'
-                    })}
-                  </h4>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {options.map((option) => {
-                      const isSelected = selectedOptions[schedule.id] === option.id;
-                      
-                      return (
-                        <button
-                          key={option.id}
-                          onClick={() => handleOptionSelect(schedule.id, option.id)}
-                          className={`relative p-4 rounded-lg border-2 transition-all ${
-                            isSelected 
-                              ? 'border-blue-500 bg-blue-50' 
-                              : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
-                          }`}
-                        >
-                          {isSelected && (
-                            <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                              <Check className="w-4 h-4 text-white" />
-                            </div>
-                          )}
-                          
-                          {option.attraction?.main_image_url && (
-                            <img 
-                              src={option.attraction.main_image_url}
-                              alt={option.attraction.name}
-                              className="w-full h-32 object-cover rounded-md mb-3"
-                            />
-                          )}
-                          
-                          <h5 className="font-semibold mb-1">{option.attraction?.name}</h5>
-                          <p className="text-sm text-gray-600 mb-2">
-                            {option.attraction?.description}
-                          </p>
-                          
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                            <span className="text-sm text-gray-500">
-                              <Clock className="w-4 h-4 inline mr-1" />
-                              약 {option.attraction?.recommended_duration || 60}분
-                            </span>
-                            <span className={`font-semibold ${
-                              option.additional_price > 0 ? 'text-red-600' : 'text-green-600'
-                            }`}>
-                              {option.additional_price > 0 
-                                ? `+${option.additional_price.toLocaleString()}원`
-                                : option.is_default ? '기본' : '무료'
-                              }
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    if (isSelected) {
+                      // 선택 해제
+                      setSelectedOptions(prev => {
+                        const newOptions = { ...prev };
+                        Object.keys(newOptions).forEach(key => {
+                          if (newOptions[key] === option.id) {
+                            delete newOptions[key];
+                          }
+                        });
+                        return newOptions;
+                      });
+                    } else {
+                      // 선택
+                      setSelectedOptions(prev => ({
+                        ...prev,
+                        [option.id]: option.id
+                      }));
+                    }
+                  }}
+                  className={`relative p-4 rounded-lg border-2 transition-all ${
+                    isSelected 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300 hover:shadow-md bg-white'
+                  }`}
+                >
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  
+                  {option.attraction?.main_image_url && (
+                    <img 
+                      src={option.attraction.main_image_url}
+                      alt={option.attraction.name}
+                      className="w-full h-32 object-cover rounded-md mb-3"
+                    />
+                  )}
+                  
+                  <h5 className="font-semibold mb-1">{option.attraction?.name}</h5>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {option.attraction?.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                    <span className="text-sm text-gray-500">
+                      <Clock className="w-4 h-4 inline mr-1" />
+                      약 {option.attraction?.recommended_duration || 60}분
+                    </span>
+                    <span className={`font-semibold ${
+                      option.additional_cost > 0 ? 'text-red-600' : 'text-green-600'
+                    }`}>
+                      {option.additional_cost > 0 
+                        ? `+${option.additional_cost.toLocaleString()}원`
+                        : option.is_included ? '포함' : '무료'
+                      }
+                    </span>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -305,6 +297,7 @@ export default function TourPromotionClient({ promo, attractionOptions, document
           )}
         </div>
       </div>
+      )}
 
       {/* 문서 다운로드 섹션 */}
       {documentLinks.length > 0 && (
@@ -364,7 +357,7 @@ export default function TourPromotionClient({ promo, attractionOptions, document
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="tel:010-1234-5678"
+              href="tel:031-215-3990"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
               <Phone className="w-5 h-5" />
@@ -373,13 +366,13 @@ export default function TourPromotionClient({ promo, attractionOptions, document
             <button
               onClick={() => {
                 const message = `${tour.title} 예약 문의드립니다.\n선택한 관광지 옵션:\n${
-                  Object.entries(selectedOptions).map(([scheduleId, optionId]: [string, string]) => {
+                  Object.values(selectedOptions).map((optionId: string) => {
                     const option = attractionOptions.find((opt: AttractionOption) => opt.id === optionId);
-                    return `- ${option?.attraction?.name}${option?.additional_price ? ` (+${option.additional_price.toLocaleString()}원)` : ''}`;
+                    return `- ${option?.attraction?.name}${option?.additional_cost ? ` (+${option.additional_cost.toLocaleString()}원)` : ''}`;
                   }).join('\n')
                 }\n총 추가요금: ${calculateTotalPrice().toLocaleString()}원`;
                 
-                window.open(`https://wa.me/821012345678?text=${encodeURIComponent(message)}`, '_blank');
+                window.open(`https://wa.me/821032153990?text=${encodeURIComponent(message)}`, '_blank');
               }}
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-yellow-400 text-gray-900 rounded-lg font-semibold hover:bg-yellow-500 transition-colors"
             >
