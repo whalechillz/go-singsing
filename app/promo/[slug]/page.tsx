@@ -10,14 +10,26 @@ interface Props {
 // 메타데이터 생성
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const { data: promo } = await supabase
+  
+  // UUID 패턴 확인 (ID인지 slug인지 구분)
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+  
+  let query = supabase
     .from('tour_promotion_pages')
     .select(`
       *,
       tour:singsing_tours(*)
     `)
-    .eq('slug', slug)
     .single();
+  
+  // ID로 조회하거나 slug로 조회
+  if (isUUID) {
+    query = query.eq('tour_id', slug);
+  } else {
+    query = query.eq('slug', slug);
+  }
+  
+  const { data: promo } = await query;
 
   if (!promo) {
     return {
@@ -38,8 +50,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function TourPromotionPage({ params }: Props) {
   const { slug } = await params;
+  
+  // UUID 패턴 확인 (ID인지 slug인지 구분)
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+  
   // 홍보 페이지 정보 가져오기
-  const { data: promo, error } = await supabase
+  let query = supabase
     .from('tour_promotion_pages')
     .select(`
       *,
@@ -52,9 +68,17 @@ export default async function TourPromotionPage({ params }: Props) {
         )
       )
     `)
-    .eq('slug', slug)
     .eq('is_public', true)
     .single();
+  
+  // ID로 조회하거나 slug로 조회
+  if (isUUID) {
+    query = query.eq('tour_id', slug);
+  } else {
+    query = query.eq('slug', slug);
+  }
+  
+  const { data: promo, error } = await query;
 
   if (error || !promo) {
     notFound();
