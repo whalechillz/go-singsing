@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
         }
         
         // 카카오 알림톡 사용 시 (알리고에서 사용하던 템플릿 ID 입력)
-        const TEMPLATE_ID = ""; // 알리고에서 사용하던 템플릿 ID를 여기에 입력 (예: "TM_1234")
+        const TEMPLATE_ID = ""; // 문서 발송용 템플릿 ID 필요
         
         if (sendMethod === "kakao" && SOLAPI_PFID && TEMPLATE_ID) {
           // 카카오 알림톡으로 발송
