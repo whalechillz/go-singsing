@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     });
 
     const body = await request.json();
-    const { type, recipients, title, content, template_id } = body;
+    const { type, recipients, title, content, template_id, image_url } = body;
 
     // 솔라피 메시지 데이터
     const messages = recipients.map((recipient: any) => {
@@ -47,6 +47,13 @@ export async function POST(request: NextRequest) {
       // SMS는 subject를 지원하지 않음
       if (type !== "sms" && title) {
         message.subject = title;
+      }
+      
+      // MMS 이미지 처리
+      if (type === "mms" && image_url) {
+        message.imageId = image_url; // 실제로는 솔라피에 이미지를 업로드하고 ID를 받아야 함
+        // 또는
+        message.fileUrl = image_url; // URL 직접 사용 (솔라피 버전에 따라 다름)
       }
       
       // 카카오 알림톡 옵션

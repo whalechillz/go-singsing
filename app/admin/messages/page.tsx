@@ -5,9 +5,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { 
   Send, MessageSquare, Clock, CheckCircle, XCircle, 
   AlertTriangle, Filter, Search, Plus, Edit2, Trash2,
-  Phone, User, Calendar, FileText, Eye, X, BookOpen
+  Phone, User, Calendar, FileText, Eye, X, BookOpen,
+  Upload, Image as ImageIcon
 } from "lucide-react";
 import TemplatePicker from '@/components/TemplatePicker';
+import MmsImageUpload from '@/components/MmsImageUpload';
 
 type Customer = {
   id: string;
@@ -59,6 +61,8 @@ export default function MessageManagementPage() {
   const [messageContent, setMessageContent] = useState("");
   const [messageTitle, setMessageTitle] = useState("");
   const [directPhone, setDirectPhone] = useState("");
+  const [messageImage, setMessageImage] = useState<string>("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // 템플릿 모달
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -77,6 +81,7 @@ export default function MessageManagementPage() {
   const [previewContent, setPreviewContent] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewPhone, setPreviewPhone] = useState("");
+  const [previewImage, setPreviewImage] = useState("");
   const [showNoticePicker, setShowNoticePicker] = useState(false);
 
   // 발송 이력 필터
@@ -220,6 +225,7 @@ export default function MessageManagementPage() {
     setPreviewContent(preview);
     setPreviewTitle(messageTitle);
     setPreviewPhone(directPhone || "010-1234-5678");
+    setPreviewImage(messageType === "mms" ? messageImage : "");
     setShowPreviewModal(true);
   };
 
@@ -268,7 +274,8 @@ export default function MessageManagementPage() {
           recipients,
           title: messageType !== "sms" ? messageTitle : "", // SMS는 제목 없음
           content: messageContent,
-          template_id: selectedTemplate || null
+          template_id: selectedTemplate || null,
+          image_url: messageType === "mms" ? messageImage : null
         })
       });
 
@@ -284,6 +291,7 @@ export default function MessageManagementPage() {
       setMessageContent("");
       setMessageTitle("");
       setSelectedTemplate("");
+      setMessageImage("");
       
       // 이력 새로고침
       fetchData();
@@ -536,6 +544,20 @@ export default function MessageManagementPage() {
                       </button>
                     </div>
                   </div>
+
+                  {messageType === "mms" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        이미지 첨부
+                      </label>
+                      <MmsImageUpload
+                        imageUrl={messageImage}
+                        onImageChange={setMessageImage}
+                        isUploading={uploadingImage}
+                        onUploadingChange={setUploadingImage}
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -988,6 +1010,16 @@ export default function MessageManagementPage() {
                 
                 {previewTitle && (
                   <h4 className="font-medium text-sm mb-2">{previewTitle}</h4>
+                )}
+                
+                {previewImage && messageType === "mms" && (
+                  <div className="mb-3">
+                    <img 
+                      src={previewImage} 
+                      alt="MMS 첨부 이미지" 
+                      className="w-full rounded-lg"
+                    />
+                  </div>
                 )}
                 
                 <div className="text-sm text-gray-800 whitespace-pre-wrap">
