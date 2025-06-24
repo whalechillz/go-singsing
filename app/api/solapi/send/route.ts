@@ -92,9 +92,15 @@ export async function POST(request: NextRequest) {
     // 비용 계산
     const cost = calculateCost(type, recipients.length);
 
+    // 발송 결과 처리
+    const sent = result.results ? result.results.filter((r: any) => r.status === 'success').length : recipients.length;
+    const failed = recipients.length - sent;
+
     return NextResponse.json({
       success: true,
       message: "메시지가 발송되었습니다.",
+      sent: sent,
+      failed: failed,
       count: recipients.length,
       cost: cost,
       groupId: result.groupId,
