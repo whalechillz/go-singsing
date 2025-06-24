@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { uploadImage, deleteImage, validateImageFile } from '@/utils/imageUpload';
+import { uploadTouristAttractionImage, deleteTouristAttractionImage } from '@/utils/imageUpload';
+import ImageUploadDropzone from '@/components/admin/ImageUploadDropzone';
 import { 
   Plus, Edit, Trash2, MapPin, Clock, Star, Tag, Image as ImageIcon, 
   Phone, Upload, X as XIcon, Search, Coffee, ShoppingBag, Activity,
@@ -151,7 +152,6 @@ export default function SpotManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAttraction, setEditingAttraction] = useState<TouristAttraction | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortOption, setSortOption] = useState<SortOption>('created_desc');
   const [showActiveOnly, setShowActiveOnly] = useState(false);
@@ -163,7 +163,6 @@ export default function SpotManagementPage() {
     images: [],
     currentIndex: 0
   });
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Form states
   const [allImages, setAllImages] = useState<string[]>([]);
@@ -349,57 +348,44 @@ export default function SpotManagementPage() {
     setShowActiveOnly(false);
   };
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (allImages.length >= 10) {
-      alert('최대 10장까지만 업로드할 수 있습니다.');
-      return;
-    }
-
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      alert(validation.error);
-      return;
-    }
-
-    setUploadingImage(true);
+  // 이미지 업로드 핸들러
+  const handleImageUpload = async (files: File[]) => {
     try {
-      const { url, error } = await uploadImage(file, 'tourist-attractions');
-      if (error) {
-        alert(`이미지 업로드에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
-      } else if (url) {
-        setAllImages(prev => [...prev, url]);
-        if (allImages.length === 0) {
-          setMainImageIndex(0);
-        }
-      }
-    } catch (error: any) {
-      alert(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
-    } finally {
-      setUploadingImage(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      const uploadPromises = files.map(file => uploadTouristAttractionImage(file));
+      const results = await Promise.all(uploadPromises);
+      
+      const newImageUrls = results.filter(url => url !== null) as string[];
+      setAllImages(prev => [...prev, ...newImageUrls]);
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error);
+      throw error;
     }
   };
 
-  const removeImage = async (index: number) => {
-    const imageUrl = allImages[index];
-    if (imageUrl && imageUrl.includes('supabase')) {
-      await deleteImage(imageUrl);
-    }
-    
-    const newImages = allImages.filter((_, i) => i !== index);
-    setAllImages(newImages);
-    
-    if (index === mainImageIndex) {
-      setMainImageIndex(0);
-    } else if (index < mainImageIndex) {
-      setMainImageIndex(mainImageIndex - 1);
+  // 이미지 삭제 핸들러
+  const handleImageDelete = async (imageUrl: string, index: number) => {
+    try {
+      // Storage에서 이미지 삭제
+      await deleteTouristAttractionImage(imageUrl);
+      
+      // 상태에서 이미지 제거
+      const newImages = [...allImages];
+      newImages.splice(index, 1);
+      setAllImages(newImages);
+      
+      // 대표 이미지 인덱스 조정
+      if (mainImageIndex === index) {
+        setMainImageIndex(0);
+      } else if (mainImageIndex > index) {
+        setMainImageIndex(mainImageIndex - 1);
+      }
+    } catch (error) {
+      console.error('이미지 삭제 실패:', error);
+      alert('이미지 삭제에 실패했습니다.');
     }
   };
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -606,9 +592,6 @@ export default function SpotManagementPage() {
         price: ''
       }
     });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const addArrayField = (field: 'image_urls' | 'features' | 'tags') => {
@@ -632,25 +615,7 @@ export default function SpotManagementPage() {
     }));
   };
 
-  const moveImage = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= allImages.length) return;
-    
-    const newImages = [...allImages];
-    const [movedImage] = newImages.splice(fromIndex, 1);
-    newImages.splice(toIndex, 0, movedImage);
-    
-    let newMainIndex = mainImageIndex;
-    if (fromIndex === mainImageIndex) {
-      newMainIndex = toIndex;
-    } else if (fromIndex < mainImageIndex && toIndex >= mainImageIndex) {
-      newMainIndex = mainImageIndex - 1;
-    } else if (fromIndex > mainImageIndex && toIndex <= mainImageIndex) {
-      newMainIndex = mainImageIndex + 1;
-    }
-    
-    setAllImages(newImages);
-    setMainImageIndex(newMainIndex);
-  };
+
 
   const getCategoryIcon = (category: Category, className: string = "w-4 h-4") => {
     const Icon = categoryConfig[category]?.icon || MoreHorizontal;
@@ -1401,131 +1366,15 @@ export default function SpotManagementPage() {
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">이미지 관리</label>
-                  
-                  {allImages.length > 0 && mainImageIndex >= 0 && mainImageIndex < allImages.length && (
-                    <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-700 mb-2">현재 선택된 대표 이미지</p>
-                      <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
-                        <img 
-                          src={allImages[mainImageIndex]} 
-                          alt="대표 이미지 미리보기"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                          대표 이미지 (#{mainImageIndex + 1})
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    {allImages.map((imageUrl, index) => (
-                      <div key={index} className="relative">
-                        <div className="relative h-32 bg-gray-100 rounded-lg overflow-hidden">
-                          <img 
-                            src={imageUrl} 
-                            alt={`이미지 ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                          >
-                            <XIcon className="w-4 h-4" />
-                          </button>
-                          
-                          <div className="absolute top-2 left-2 bg-gray-900/70 text-white text-xs px-2 py-1 rounded-full">
-                            {index + 1}
-                          </div>
-                          
-                          <div className="absolute bottom-2 left-2 flex gap-1">
-                            {index > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => moveImage(index, index - 1)}
-                                className="p-1 bg-black/50 text-white rounded hover:bg-black/70 transition-colors"
-                                title="왼쪽으로 이동"
-                              >
-                                <ChevronLeft className="w-3 h-3" />
-                              </button>
-                            )}
-                            {index < allImages.length - 1 && (
-                              <button
-                                type="button"
-                                onClick={() => moveImage(index, index + 1)}
-                                className="p-1 bg-black/50 text-white rounded hover:bg-black/70 transition-colors"
-                                title="오른쪽으로 이동"
-                              >
-                                <ChevronRight className="w-3 h-3" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="mainImage"
-                            checked={mainImageIndex === index}
-                            onChange={() => setMainImageIndex(index)}
-                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className={`text-sm ${mainImageIndex === index ? 'font-medium text-blue-600' : 'text-gray-600'}`}>
-                            대표 이미지
-                          </span>
-                        </label>
-                      </div>
-                    ))}
-                    
-                    {allImages.length < 10 && (
-                      <div className="relative">
-                        <div className="h-32">
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/jpeg,image/jpg,image/png,image/webp"
-                            onChange={handleImageSelect}
-                            className="hidden"
-                            id="image-upload"
-                          />
-                          <label
-                            htmlFor="image-upload"
-                            className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer flex flex-col items-center justify-center gap-2 text-gray-600 hover:text-gray-700"
-                          >
-                            {uploadingImage ? (
-                              <>
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                                <span className="text-xs">업로드 중...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="w-6 h-6" />
-                                <span className="text-xs">이미지 추가</span>
-                              </>
-                            )}
-                          </label>
-                        </div>
-                        <div className="mt-2 h-6"></div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">
-                      최대 10장까지 업로드 가능합니다. 현재 {allImages.length}장의 이미지가 등록되어 있습니다.
-                      {allImages.length > 0 && (
-                        <span className={mainImageIndex === -1 ? 'text-red-500 font-medium' : ''}>
-                          {' '}대표 이미지를 선택해주세요.
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      • 좌우 화살표 버튼으로 이미지 순서를 변경할 수 있습니다.<br/>
-                      • 라디오 버튼을 클릭하여 대표 이미지를 변경할 수 있습니다.
-                    </p>
-                  </div>
-                </div>
+                {/* 이미지 업로드 Dropzone 컴포넌트 */}
+                <ImageUploadDropzone
+                  images={allImages}
+                  mainImageIndex={mainImageIndex}
+                  onImagesChange={setAllImages}
+                  onMainImageChange={setMainImageIndex}
+                  onUpload={handleImageUpload}
+                  maxImages={10}
+                />
 
                 <div>
                   <label className="block text-sm font-medium mb-1">특징</label>

@@ -112,3 +112,31 @@ export const validateImageFile = (file: File): { valid: boolean; error?: string 
   
   return { valid: true };
 };
+
+// Tourist Attraction용 헬퍼 함수들
+export const uploadTouristAttractionImage = async (file: File): Promise<string | null> => {
+  const validation = validateImageFile(file);
+  if (!validation.valid) {
+    alert(validation.error);
+    return null;
+  }
+  
+  const { url, error } = await uploadImage(file, 'tourist-attractions');
+  if (error) {
+    console.error('Failed to upload image:', error);
+    alert('이미지 업로드에 실패했습니다.');
+    return null;
+  }
+  
+  return url;
+};
+
+export const deleteTouristAttractionImage = async (url: string): Promise<boolean> => {
+  const { success, error } = await deleteImage(url, 'tourist-attractions');
+  if (error) {
+    console.error('Failed to delete image:', error);
+    return false;
+  }
+  
+  return success;
+};
