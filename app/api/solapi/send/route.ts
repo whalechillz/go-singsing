@@ -25,15 +25,71 @@ function getSignature() {
 export async function POST(request: NextRequest) {
   try {
     // 환경변수 확인
-    console.log("환경변수 확인:", {
-      hasApiKey: !!SOLAPI_API_KEY,
-      hasApiSecret: !!SOLAPI_API_SECRET,
-      hasSender: !!SOLAPI_SENDER,
-      sender: SOLAPI_SENDER
-    });
+    if (!SOLAPI_API_KEY || !SOLAPI_API_SECRET || !SOLAPI_SENDER) {
+      console.error("필수 환경변수 누락:", {
+        hasApiKey: !!SOLAPI_API_KEY,
+        hasApiSecret: !!SOLAPI_API_SECRET,
+        hasSender: !!SOLAPI_SENDER
+      });
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: "서버 설정 오류: 필수 환경변수가 설정되지 않았습니다."
+        },
+        { status: 500 }
+      );
+    }
 
     const body = await request.json();
     const { type, recipients, title, content, template_id, image_url } = body;
+
+    console.log("메시지 발송 요청:", {
+      type,
+      recipientCount: recipients.length,
+      hasTitle: !!title,
+      hasImage: !!image_url
+    });
+
+    // 이미지 처리 (MMS인 경우)
+    let imageFileId = null;
+    if (type === "mms" && image_url) {
+      try {
+        console.log("MMS 이미지 처리 시작:", image_url);
+        
+        // Supabase 이미지 다운로드
+        const imageResponse = await fetch(image_url);
+        if (!imageResponse.ok) {
+          throw new Error("이미지 다운로드 실패");
+        }
+        
+        const imageBuffer = await imageResponse.arrayBuffer();
+        const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
+        
+        // FormData 생성 (브라우저 스타일)
+        const formData = new FormData();
+        formData.append('file', imageBlob, 'image.jpg');
+        
+        // 솔라피에 이미지 업로드
+        const uploadResponse = await fetch("https://api.solapi.com/storage/v1/files", {
+          method: "POST",
+          headers: getSignature(),
+          body: formData
+        });
+
+        if (uploadResponse.ok) {
+          const uploadResult = await uploadResponse.json();
+          imageFileId = uploadResult.fileId;
+          console.log("이미지 업로드 성공:", imageFileId);
+        } else {
+          const errorText = await uploadResponse.text();
+          console.error("솔라피 이미지 업로드 실패:", errorText);
+          // 이미지 업로드 실패해도 메시지는 발송 (이미지 없이)
+        }
+      } catch (imageError) {
+        console.error("이미지 처리 중 오류:", imageError);
+        // 이미지 처리 실패해도 메시지는 발송
+      }
+    }
 
     // 솔라피 메시지 데이터
     const messages = recipients.map((recipient: any) => {
@@ -49,11 +105,9 @@ export async function POST(request: NextRequest) {
         message.subject = title;
       }
       
-      // MMS 이미지 처리
-      if (type === "mms" && image_url) {
-        message.imageId = image_url; // 실제로는 솔라피에 이미지를 업로드하고 ID를 받아야 함
-        // 또는
-        message.fileUrl = image_url; // URL 직접 사용 (솔라피 버전에 따라 다름)
+      // MMS 이미지 추가
+      if (type === "mms" && imageFileId) {
+        message.imageId = imageFileId;
       }
       
       // 카카오 알림톡 옵션
@@ -68,12 +122,10 @@ export async function POST(request: NextRequest) {
     });
 
     // 솔라피 API 호출
-    console.log("솔라피 API 호출:", {
-      messages: messages,
-      headers: getSignature()
-    });
+    const apiUrl = "https://api.solapi.com/messages/v4/send-many";
+    console.log("API 호출:", apiUrl);
 
-    const response = await fetch("https://api.solapi.com/messages/v4/send-many", {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         ...getSignature(),
@@ -82,11 +134,23 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ messages }),
     });
 
-    const result = await response.json();
-    console.log("솔라피 응답:", { status: response.status, result });
+    const responseText = await response.text();
+    console.log("솔라피 응답:", { 
+      status: response.status, 
+      statusText: response.statusText,
+      body: responseText 
+    });
+
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      console.error("응답 파싱 실패:", responseText);
+      throw new Error("솔라피 API 응답을 파싱할 수 없습니다.");
+    }
 
     if (!response.ok) {
-      throw new Error(result.message || "솔라피 API 오류");
+      throw new Error(result.message || `솔라피 API 오류 (${response.status})`);
     }
 
     // 비용 계산
@@ -95,6 +159,31 @@ export async function POST(request: NextRequest) {
     // 발송 결과 처리
     const sent = result.results ? result.results.filter((r: any) => r.status === 'success').length : recipients.length;
     const failed = recipients.length - sent;
+
+    // 발송 로그 저장
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const logs = recipients.map((recipient: any) => ({
+        customer_id: recipient.customer_id || null,
+        message_type: type,
+        phone_number: recipient.phone.replace(/-/g, ""),
+        title: title || null,
+        content: content,
+        status: result.results ? 'sent' : 'pending',
+        cost: calculateCost(type, 1),
+        sent_at: new Date().toISOString()
+      }));
+
+      await supabase.from('message_logs').insert(logs);
+    } catch (logError) {
+      console.error("로그 저장 실패:", logError);
+      // 로그 저장 실패해도 응답은 반환
+    }
 
     return NextResponse.json({
       success: true,
@@ -117,11 +206,7 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         message: error.message || "메시지 발송 중 오류가 발생했습니다.",
-        debug: {
-          hasApiKey: !!SOLAPI_API_KEY,
-          hasApiSecret: !!SOLAPI_API_SECRET,
-          hasSender: !!SOLAPI_SENDER
-        }
+        error: error.toString()
       },
       { status: 500 }
     );

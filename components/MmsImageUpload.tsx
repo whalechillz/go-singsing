@@ -36,7 +36,11 @@ export default function MmsImageUpload({
       
       // 기존 이미지가 있으면 삭제
       if (imageUrl) {
-        await deleteImage(imageUrl, 'mms-images');
+        try {
+          await deleteImage(imageUrl, 'mms-images');
+        } catch (deleteError) {
+          console.warn('기존 이미지 삭제 중 오류 (무시):', deleteError);
+        }
       }
       
       // 새 이미지 업로드
@@ -77,7 +81,8 @@ export default function MmsImageUpload({
       onImageChange('');
     } catch (error) {
       console.error('이미지 삭제 실패:', error);
-      alert('이미지 삭제에 실패했습니다.');
+      // 에러가 발생해도 UI에서는 제거
+      onImageChange('');
     } finally {
       onUploadingChange(false);
     }
