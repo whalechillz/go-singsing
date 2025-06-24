@@ -484,7 +484,7 @@ export default function TourSchedulePreview({
                 </a>
                 
                 <a
-                  href="http://pf.kakao.com/_vSVuV"
+                  href="http://pf.kakao.com/_TNKVxb/chat"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={ctaStyle === 'yellow'

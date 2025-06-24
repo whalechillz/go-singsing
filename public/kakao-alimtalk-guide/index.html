@@ -42,29 +42,72 @@
 
             <section id="templates">
                 <h2>2. 템플릿 종류</h2>
+                <div class="info-box">
+                    <h3>📋 템플릿 분류 기준</h3>
+                    <ul>
+                        <li><strong>통합표지:</strong> "종합" 키워드 사용 (예: 종합 여정 안내)</li>
+                        <li><strong>고객용:</strong> 일반 명칭 사용 (예: 일정표 안내)</li>
+                        <li><strong>스탭용:</strong> "스탭용" 추가 (예: 스탭용 일정표)</li>
+                    </ul>
+                </div>
                 <div class="template-grid">
                     <div class="template-card">
-                        <h3>📄 투어 문서 안내</h3>
+                        <h3>📑 종합 여정 안내</h3>
                         <div class="template-content">
-                            <p><strong>용도:</strong> 개별 문서 발송</p>
-                            <p><strong>URL 형식:</strong> /s/#{url}</p>
-                            <p><strong>버튼명:</strong> 📄 문서 확인하기</p>
-                            <div class="template-preview">
-                                <img src="tour-document-template.png" alt="투어 문서 안내 템플릿">
-                            </div>
+                            <p><strong>용도:</strong> 통합표지 (Portal)</p>
+                            <p><strong>URL:</strong> /portal/#{url}</p>
+                            <p><strong>아이콘:</strong> grid-3x3</p>
+                            <p><strong>텍스트:</strong> 종합여정</p>
                         </div>
                     </div>
                     <div class="template-card">
-                        <h3>📊 투어 통합 안내</h3>
+                        <h3>📅 일정표 안내</h3>
                         <div class="template-content">
-                            <p><strong>용도:</strong> 포털 문서 발송</p>
-                            <p><strong>URL 형식:</strong> /portal/#{url}</p>
-                            <p><strong>버튼명:</strong> 📊 통합 문서 보기</p>
-                            <div class="template-preview">
-                                <img src="tour-portal-template.png" alt="투어 통합 안내 템플릿">
-                            </div>
+                            <p><strong>용도:</strong> 고객용 일정표</p>
+                            <p><strong>URL:</strong> /s/#{url}</p>
+                            <p><strong>아이콘:</strong> calendar-days</p>
+                            <p><strong>텍스트:</strong> 일정표</p>
                         </div>
                     </div>
+                    <div class="template-card">
+                        <h3>🚌 탑승 안내</h3>
+                        <div class="template-content">
+                            <p><strong>용도:</strong> 고객용 탑승정보</p>
+                            <p><strong>URL:</strong> /s/#{url}</p>
+                            <p><strong>아이콘:</strong> bus</p>
+                            <p><strong>텍스트:</strong> 탑승안내</p>
+                        </div>
+                    </div>
+                    <div class="template-card">
+                        <h3>🏨 객실 배정</h3>
+                        <div class="template-content">
+                            <p><strong>용도:</strong> 고객용 숙소안내</p>
+                            <p><strong>URL:</strong> /s/#{url}</p>
+                            <p><strong>아이콘:</strong> bed</p>
+                            <p><strong>텍스트:</strong> 객실배정</p>
+                        </div>
+                    </div>
+                    <div class="template-card">
+                        <h3>⛳ 티타임표 안내</h3>
+                        <div class="template-content">
+                            <p><strong>용도:</strong> 고객용 골프일정</p>
+                            <p><strong>URL:</strong> /s/#{url}</p>
+                            <p><strong>아이콘:</strong> flag</p>
+                            <p><strong>텍스트:</strong> 티타임표</p>
+                        </div>
+                    </div>
+                    <div class="template-card">
+                        <h3>📋 간편일정 안내</h3>
+                        <div class="template-content">
+                            <p><strong>용도:</strong> 요약 일정</p>
+                            <p><strong>URL:</strong> /s/#{url}</p>
+                            <p><strong>아이콘:</strong> layout-template</p>
+                            <p><strong>텍스트:</strong> 간편일정</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="note-box">
+                    <p><strong>참고:</strong> 각 템플릿은 고객용/스탭용으로 분리 등록 가능합니다.</p>
                 </div>
 
                 <div class="code-example">

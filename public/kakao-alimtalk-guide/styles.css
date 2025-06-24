@@ -256,6 +256,30 @@ code {
     margin-bottom: 10px;
 }
 
+/* Info Box */
+.info-box {
+    background: #e3f2fd;
+    border-left: 4px solid var(--primary-color);
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 5px;
+}
+
+.info-box h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+/* Note Box */
+.note-box {
+    background: #f5f5f5;
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 5px;
+    text-align: center;
+}
+
 /* FAQ */
 .faq details {
     background: var(--bg-color);

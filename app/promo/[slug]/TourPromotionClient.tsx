@@ -353,7 +353,7 @@ export default function TourPromotionClient({ promo, attractionOptions, document
               전화 문의하기
             </a>
             <a
-              href="http://pf.kakao.com/_vSVuV"
+              href="http://pf.kakao.com/_TNKVxb/chat"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-yellow-400 text-gray-900 rounded-lg font-semibold hover:bg-yellow-500 transition-colors"
