@@ -175,6 +175,7 @@ export default function ImageUploadDropzone({
                   {/* 왼쪽 이동 */}
                   {index > 0 && (
                     <Button
+                      type="button"
                       size="sm"
                       variant="secondary"
                       onClick={() => moveImage(index, 'left')}
@@ -187,6 +188,7 @@ export default function ImageUploadDropzone({
                   {/* 대표 이미지 설정 */}
                   {index !== mainImageIndex && (
                     <Button
+                      type="button"
                       size="sm"
                       variant="secondary"
                       onClick={() => onMainImageChange(index)}
@@ -199,6 +201,7 @@ export default function ImageUploadDropzone({
                   {/* 오른쪽 이동 */}
                   {index < images.length - 1 && (
                     <Button
+                      type="button"
                       size="sm"
                       variant="secondary"
                       onClick={() => moveImage(index, 'right')}
@@ -210,11 +213,12 @@ export default function ImageUploadDropzone({
                   
                   {/* 삭제 버튼 */}
                   <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => removeImage(index)}
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => removeImage(index)}
                     className="h-8 w-8 p-0"
-                  >
+                    >
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
