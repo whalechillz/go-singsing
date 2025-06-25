@@ -132,6 +132,12 @@ export async function POST(request: NextRequest) {
         
         // 카카오 알림톡 사용 시
         if (sendMethod === "kakao" && SOLAPI_PFID && templateData?.kakao_template_code) {
+          console.log('카카오 알림톡 설정:', {
+            templateId: templateData.kakao_template_code,
+            pfId: SOLAPI_PFID,
+            templateName: templateData.kakao_template_name,
+            hasButtons: !!templateData.buttons
+          });
           // 카카오 알림톡으로 발송
           message.type = "ATA";
           message.kakaoOptions = {
@@ -142,7 +148,23 @@ export async function POST(request: NextRequest) {
           
           // 버튼 추가 (있는 경우)
           if (templateData.buttons && templateData.buttons.length > 0) {
-            message.kakaoOptions.buttons = templateData.buttons;
+            // 버튼 URL 변수 치환
+            const processedButtons = templateData.buttons.map((btn: any) => {
+              if (typeof btn === 'string') {
+                try {
+                  btn = JSON.parse(btn);
+                } catch (e) {
+                  console.error('버튼 파싱 오류:', e);
+                }
+              }
+              return {
+                ...btn,
+                linkMo: btn.linkMo?.replace(/#{url}/g, 'https://go.singsinggolf.kr'),
+                linkPc: btn.linkPc?.replace(/#{url}/g, 'https://go.singsinggolf.kr')
+              };
+            });
+            message.kakaoOptions.buttons = processedButtons;
+            console.log('처리된 버튼:', processedButtons);
           }
         } else {
           // SMS/LMS로 발송
