@@ -84,8 +84,33 @@ export async function POST(request: NextRequest) {
     // 카카오 알림톡용 템플릿 ID를 가져오기
     const kakaoTemplateId = templateData.kakao_template_code;
 
-    for (const participant of participants) {
-      try {
+    // 솔라피 v4 그룹 메시지 발송
+    try {
+      // 1. 메시지 그룹 생성
+      const groupResponse = await fetch("https://api.solapi.com/messages/v4/groups", {
+        method: "POST",
+        headers: {
+          ...getSignature(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({})
+      });
+
+      if (!groupResponse.ok) {
+        const errorText = await groupResponse.text();
+        console.error('그룹 생성 실패:', errorText);
+        throw new Error('메시지 그룹 생성 실패');
+      }
+
+      const groupData = await groupResponse.json();
+      const groupId = groupData.groupId;
+
+      console.log('메시지 그룹 생성됨:', groupId);
+
+      // 2. 그룹에 메시지 추가
+      const messages = [];
+      
+      for (const participant of participants) {
         // 템플릿 변수 치환
         let messageContent = templateData.content;
         messageContent = messageContent.replace(/#{이름}/g, participant.name);
@@ -123,94 +148,87 @@ export async function POST(request: NextRequest) {
             break;
         }
 
-        // 솔라피 API 직접 호출
         const cleanPhone = participant.phone.replace(/-/g, "").replace(/\s/g, "");
         const cleanSender = SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, "");
 
-        let requestBody: any = {
+        let message: any = {
           to: cleanPhone,
           from: cleanSender,
-          text: messageContent,
-          type: sendMethod === 'kakao' ? 'ATA' : (messageContent.length > 90 ? 'LMS' : 'SMS')
+          text: messageContent
         };
 
         // 메시지 타입별 설정
         if (sendMethod === 'kakao' && kakaoTemplateId) {
           // 카카오 알림톡
-          requestBody.type = 'ATA';
-          requestBody.kakaoOptions = {
+          message.type = 'ATA';
+          message.kakaoOptions = {
             pfId: SOLAPI_PFID,
-            templateId: kakaoTemplateId,
+            templateId: kakaoTemplateId
           };
         } else if (messageContent.length > 90) {
           // LMS
-          requestBody.type = 'LMS';
-          requestBody.subject = templateData.title || '싱싱골프투어';
+          message.type = 'LMS';
+          message.subject = templateData.title || '싱싱골프투어';
         } else {
           // SMS
-          requestBody.type = 'SMS';
+          message.type = 'SMS';
         }
 
-        console.log('솔라피 API 호출:', {
-          url: 'https://api.solapi.com/messages/v4/send',
-          method: 'POST',
-          messageType: requestBody.type,
-          to: requestBody.to,
-          from: requestBody.from
-        });
-
-        const response = await fetch("https://api.solapi.com/messages/v4/send", {
-          method: "POST",
-          headers: {
-            ...getSignature(),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        });
-
-        const responseText = await response.text();
-        console.log('솔라피 응답:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: responseText
-        });
-
-        let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (e) {
-          console.error('응답 파싱 실패:', responseText);
-          result = { success: false, error: responseText };
-        }
-        
-        if (response.ok) {
-          successCount++;
-          // 메시지 로그 저장
-          await supabase.from('message_logs').insert({
-            customer_id: participant.id,
-            message_type: sendMethod === 'kakao' ? 'alimtalk' : messageContent.length > 90 ? 'lms' : 'sms',
-            template_id: templateId,
-            phone_number: cleanPhone,
-            title: templateData.title,
-            content: messageContent,
-            status: 'sent',
-            sent_at: new Date().toISOString()
-          });
-        } else {
-          failCount++;
-          console.error('솔라피 발송 실패:', {
-            participant: participant.name,
-            phone: cleanPhone,
-            result: result
-          });
-        }
-      } catch (error: any) {
-        console.error(`참가자 ${participant.name} 발송 실패:`, {
-          error: error.message,
-          stack: error.stack
-        });
-        failCount++;
+        messages.push(message);
       }
+
+      // 3. 메시지 추가
+      const addResponse = await fetch(`https://api.solapi.com/messages/v4/groups/${groupId}/messages`, {
+        method: "PUT",
+        headers: {
+          ...getSignature(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages })
+      });
+
+      if (!addResponse.ok) {
+        const errorText = await addResponse.text();
+        console.error('메시지 추가 실패:', errorText);
+        throw new Error('메시지 추가 실패');
+      }
+
+      // 4. 그룹 발송
+      const sendResponse = await fetch(`https://api.solapi.com/messages/v4/groups/${groupId}/send`, {
+        method: "POST",
+        headers: getSignature()
+      });
+
+      if (!sendResponse.ok) {
+        const errorText = await sendResponse.text();
+        console.error('그룹 발송 실패:', errorText);
+        throw new Error('그룹 발송 실패');
+      }
+
+      const sendResult = await sendResponse.json();
+      console.log('발송 결과:', sendResult);
+
+      // 성공적으로 발송된 경우
+      successCount = messages.length;
+
+      // 메시지 로그 저장
+      for (const participant of participants) {
+        const cleanPhone = participant.phone.replace(/-/g, "").replace(/\s/g, "");
+        await supabase.from('message_logs').insert({
+          customer_id: participant.id,
+          message_type: sendMethod === 'kakao' ? 'alimtalk' : messageContent.length > 90 ? 'lms' : 'sms',
+          template_id: templateId,
+          phone_number: cleanPhone,
+          title: templateData.title,
+          content: messageContent,
+          status: 'sent',
+          sent_at: new Date().toISOString()
+        });
+      }
+
+    } catch (error: any) {
+      console.error('솔라피 발송 오류:', error);
+      failCount = participants.length;
     }
 
     return NextResponse.json({

@@ -93,174 +93,158 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 솔라피 메시지 데이터
-    const messages = recipients.map((recipient: any) => {
-      // 전화번호 형식 정리
-      const cleanPhone = recipient.phone.replace(/-/g, "").replace(/\s/g, "");
-      const cleanSender = SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, "");
-      
-      // 전화번호 유효성 검증
-      if (!/^01[0-9]{8,9}$/.test(cleanPhone)) {
-        console.error("잘못된 수신번호 형식:", recipient.phone, "->", cleanPhone);
-      }
-      
-      if (!/^0[0-9]{8,10}$/.test(cleanSender)) {
-        console.error("잘못된 발신번호 형식:", SOLAPI_SENDER, "->", cleanSender);
-      }
-      
-      const message: any = {
-        to: cleanPhone,
-        from: cleanSender,
-        text: content,
-        type: type === "kakao_alimtalk" ? "ATA" : type.toUpperCase(),
-      };
-      
-      // SMS는 subject를 지원하지 않음
-      if (type !== "sms" && title) {
-        message.subject = title;
-      }
-      
-      // MMS 이미지 추가
-      if (type === "mms" && imageFileId) {
-        message.imageId = imageFileId;
-      }
-      
-      // 카카오 알림톡 옵션
-      if (type === "kakao_alimtalk") {
-        message.kakaoOptions = {
-          pfId: SOLAPI_PFID,
-          templateId: template_id,
-        };
-      }
-      
-      return message;
-    });
-
-    // 솔라피 API 호출 - 단일 메시지로 변경
-    console.log("메시지 발송 시작, 수신자 수:", messages.length);
-    
-    const results = [];
-    
-    // 각 메시지를 개별적으로 발송
-    for (const msg of messages) {
-      try {
-        const apiUrl = "https://api.solapi.com/messages/v4/send";
-        console.log("API 호출:", apiUrl, "수신자:", msg.to);
-        console.log("메시지 데이터:", JSON.stringify(msg, null, 2));
-        
-        const headers = getSignature();
-        console.log("인증 헤더:", headers.Authorization);
-        
-        // 솔라피 v4 API 정확한 형식
-        const requestBody: any = {
-          to: msg.to,
-          from: msg.from,
-          text: msg.text,
-          type: msg.type  // type 필드 추가
-        };
-        
-        // 메시지 타입에 따른 추가 설정
-        if (msg.type === "SMS") {
-          // SMS는 추가 설정 없음
-        } else if (msg.type === "LMS") {
-          requestBody.subject = msg.subject;
-        } else if (msg.type === "MMS") {
-          requestBody.subject = msg.subject;
-          if (msg.imageId) {
-            requestBody.imageId = msg.imageId;
-          }
-        } else if (msg.type === "ATA") {
-          // 카카오 알림톡
-          requestBody.kakaoOptions = msg.kakaoOptions;
-        }
-        
-        console.log("최종 요청 데이터:", JSON.stringify(requestBody, null, 2));
-        
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            ...headers,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        });
-        
-        const responseText = await response.text();
-        console.log("솔라피 응답:", { 
-          status: response.status, 
-          statusText: response.statusText,
-          body: responseText 
-        });
-        
-        let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (e) {
-          console.error("응답 파싱 실패:", responseText);
-          result = { success: false, error: "파싱 실패" };
-        }
-        
-        results.push({
-          phone: msg.to,
-          success: response.ok,
-          result: result
-        });
-        
-      } catch (err) {
-        console.error("메시지 발송 실패:", err);
-        results.push({
-          phone: msg.to,
-          success: false,
-          error: err
-        });
-      }
-    }
-    
-    // 결과 집계
-    const sent = results.filter(r => r.success).length;
-    const failed = results.length - sent;
-
-    // 비용 계산
-    const cost = calculateCost(type, recipients.length);
-
-    // 발송 로그 저장
+    // 솔라피 v4 그룹 메시지 발송
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      // 1. 메시지 그룹 생성
+      const groupResponse = await fetch("https://api.solapi.com/messages/v4/groups", {
+        method: "POST",
+        headers: {
+          ...getSignature(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({})
+      });
 
-      const logs = recipients.map((recipient: any) => ({
-        customer_id: recipient.customer_id || null,
-        message_type: type,
-        phone_number: recipient.phone.replace(/-/g, ""),
-        title: title || null,
-        content: content,
-        status: sent > 0 ? 'sent' : 'failed',
-        cost: calculateCost(type, 1),
-        sent_at: new Date().toISOString()
-      }));
-
-      await supabase.from('message_logs').insert(logs);
-    } catch (logError) {
-      console.error("로그 저장 실패:", logError);
-      // 로그 저장 실패해도 응답은 반환
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "메시지가 발송되었습니다.",
-      sent: sent,
-      failed: failed,
-      count: recipients.length,
-      cost: cost,
-      results: results,
-      details: {
-        successfulMessages: results.filter(r => r.success),
-        failedMessages: results.filter(r => !r.success)
+      if (!groupResponse.ok) {
+        const errorText = await groupResponse.text();
+        console.error('그룹 생성 실패:', errorText);
+        throw new Error('메시지 그룹 생성 실패');
       }
-    });
+
+      const groupData = await groupResponse.json();
+      const groupId = groupData.groupId;
+
+      console.log('메시지 그룹 생성됨:', groupId);
+
+      // 2. 메시지 배열 생성
+      const messages = recipients.map((recipient: any) => {
+        // 전화번호 형식 정리
+        const cleanPhone = recipient.phone.replace(/-/g, "").replace(/\s/g, "");
+        const cleanSender = SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, "");
+        
+        // 전화번호 유효성 검증
+        if (!/^01[0-9]{8,9}$/.test(cleanPhone)) {
+          console.error("잘못된 수신번호 형식:", recipient.phone, "->", cleanPhone);
+        }
+        
+        if (!/^0[0-9]{8,10}$/.test(cleanSender)) {
+          console.error("잘못된 발신번호 형식:", SOLAPI_SENDER, "->", cleanSender);
+        }
+        
+        const message: any = {
+          to: cleanPhone,
+          from: cleanSender,
+          text: content
+        };
+        
+        // 메시지 타입별 설정
+        if (type === "kakao_alimtalk") {
+          message.type = "ATA";
+          message.kakaoOptions = {
+            pfId: SOLAPI_PFID,
+            templateId: template_id,
+          };
+        } else if (type === "mms") {
+          message.type = "MMS";
+          if (title) message.subject = title;
+          if (imageFileId) message.imageId = imageFileId;
+        } else if (type === "lms") {
+          message.type = "LMS";
+          if (title) message.subject = title;
+        } else {
+          message.type = "SMS";
+        }
+        
+        return message;
+      });
+
+      // 3. 메시지 추가
+      const addResponse = await fetch(`https://api.solapi.com/messages/v4/groups/${groupId}/messages`, {
+        method: "PUT",
+        headers: {
+          ...getSignature(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages })
+      });
+
+      if (!addResponse.ok) {
+        const errorText = await addResponse.text();
+        console.error('메시지 추가 실패:', errorText);
+        throw new Error('메시지 추가 실패');
+      }
+
+      const addResult = await addResponse.json();
+      console.log('메시지 추가 결과:', addResult);
+
+      // 4. 그룹 발송
+      const sendResponse = await fetch(`https://api.solapi.com/messages/v4/groups/${groupId}/send`, {
+        method: "POST",
+        headers: getSignature()
+      });
+
+      if (!sendResponse.ok) {
+        const errorText = await sendResponse.text();
+        console.error('그룹 발송 실패:', errorText);
+        throw new Error('그룹 발송 실패');
+      }
+
+      const sendResult = await sendResponse.json();
+      console.log('발송 결과:', sendResult);
+
+      // 메시지 로그 저장
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        const logs = recipients.map((recipient: any) => ({
+          customer_id: recipient.customer_id || null,
+          message_type: type,
+          phone_number: recipient.phone.replace(/-/g, ""),
+          title: title || null,
+          content: content,
+          status: 'sent',
+          cost: calculateCost(type, 1),
+          sent_at: new Date().toISOString()
+        }));
+
+        await supabase.from('message_logs').insert(logs);
+      } catch (logError) {
+        console.error("로그 저장 실패:", logError);
+        // 로그 저장 실패해도 응답은 반환
+      }
+
+      // 비용 계산
+      const cost = calculateCost(type, recipients.length);
+
+      return NextResponse.json({
+        success: true,
+        message: "메시지가 발송되었습니다.",
+        sent: recipients.length,
+        failed: 0,
+        count: recipients.length,
+        cost: cost,
+        groupId: groupId,
+        details: {
+          successfulMessages: messages,
+          failedMessages: []
+        }
+      });
+
+    } catch (error: any) {
+      console.error("솔라피 API 오류:", error);
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: error.message || "메시지 발송 중 오류가 발생했습니다.",
+          error: error.toString()
+        },
+        { status: 500 }
+      );
+    }
 
   } catch (error: any) {
     console.error("Solapi API Error:", {
