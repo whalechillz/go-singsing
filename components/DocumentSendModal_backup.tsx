@@ -12,9 +12,9 @@ interface DocumentSendModalProps {
 
 const getDocumentTypeName = (type: string) => {
   const typeMap: Record<string, string> = {
-    'portal': '통합 포털 페이지',  // 변경: 명확하게 포털 페이지임을 표시
-    'customer_all': '고객용 통합 문서',
-    'staff_all': '스탭용 통합 문서',
+    'portal': '종합 여정 안내',
+    'customer_all': '고객용 통합',
+    'staff_all': '스탭용 통합',
     'golf_timetable': '골프장 티타임표',
     'customer_schedule': '일정표 안내',
     'staff_schedule': '스탭용 일정표',
@@ -31,7 +31,7 @@ const getDocumentTypeName = (type: string) => {
 
 // 문서 타입과 템플릿 매핑
 const documentTypeToTemplate: Record<string, string> = {
-  'portal': '종합 여정 안내',  // 카카오 알림톡 템플릿명은 유지
+  'portal': '종합 여정 안내',
   'customer_schedule': '일정표 안내',
   'staff_schedule': '스탭용 일정표',
   'customer_boarding': '탑승 안내',
@@ -184,8 +184,8 @@ export default function DocumentSendModal({
     
     const doc = documents.find(d => d.id === selectedDocs[0]); // 첫번째 문서 기준
     const url = doc?.public_url ? 
-      `https://go.singsinggolf.kr/s/${doc.public_url}` :
-      `https://go.singsinggolf.kr/s/${doc?.short_code}`;
+      doc.public_url :
+      doc?.short_code;
     
     // 템플릿 변수 치환
     let message = selectedTemplate.content;
@@ -364,12 +364,7 @@ export default function DocumentSendModal({
                         className="w-4 h-4"
                       />
                       <div className="flex-1">
-                      <div className="font-medium">
-                        {doc.title || getDocumentTypeName(doc.document_type)}
-                        {doc.document_type === 'portal' && (
-                          <span className="text-xs text-gray-500 ml-2">(모든 문서 링크 모음)</span>
-                        )}
-                      </div>
+                      <div className="font-medium">{doc.title || getDocumentTypeName(doc.document_type)}</div>
                       <div className="text-sm text-gray-500">
                         {doc.public_url ? 
                           `https://go.singsinggolf.kr/s/${doc.public_url}` :

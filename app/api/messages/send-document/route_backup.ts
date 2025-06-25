@@ -68,16 +68,14 @@ export async function POST(request: NextRequest) {
       sendMethod,
       messageTemplate,
       templateId,
-      templateData,
-      documentUrl // 추가: 실제 문서 URL
+      templateData
     } = body;
     
     console.log('문서 발송 API 요청:', { 
       tourId, 
       documentIds: documentIds.length, 
       participantIds: participantIds.length, 
-      sendMethod,
-      documentUrl 
+      sendMethod 
     });
     
     // 참가자 정보 가져오기
@@ -138,8 +136,7 @@ export async function POST(request: NextRequest) {
             templateId: templateData.kakao_template_code,
             pfId: SOLAPI_PFID,
             templateName: templateData.kakao_template_name,
-            hasButtons: !!templateData.buttons,
-            documentUrl
+            hasButtons: !!templateData.buttons
           });
           // 카카오 알림톡으로 발송
           message.type = "ATA";
@@ -149,10 +146,9 @@ export async function POST(request: NextRequest) {
             disableSms: false // 실패 시 SMS로 대체 발송
           };
           
-          // 버튼 추가 (있는 경우) - 실제 문서 URL 사용
+          // 버튼 추가 (있는 경우)
           if (templateData.buttons && templateData.buttons.length > 0) {
-            // 버튼 URL 변수 치환 - documentUrl 사용
-            const actualUrl = documentUrl || 'https://go.singsinggolf.kr';
+            // 버튼 URL 변수 치환
             const processedButtons = templateData.buttons.map((btn: any) => {
               if (typeof btn === 'string') {
                 try {
@@ -163,8 +159,8 @@ export async function POST(request: NextRequest) {
               }
               return {
                 ...btn,
-                linkMo: btn.linkMo?.replace(/#{url}/g, actualUrl),
-                linkPc: btn.linkPc?.replace(/#{url}/g, actualUrl)
+                linkMo: btn.linkMo?.replace(/#{url}/g, 'https://go.singsinggolf.kr'),
+                linkPc: btn.linkPc?.replace(/#{url}/g, 'https://go.singsinggolf.kr')
               };
             });
             message.kakaoOptions.buttons = processedButtons;
