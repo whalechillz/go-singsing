@@ -161,7 +161,10 @@ export async function POST(request: NextRequest) {
       console.log("솔라피 API 호출 준비:", {
         messageCount: messages.length,
         messageType: messages[0]?.type,
-        firstPhone: messages[0]?.to
+        firstPhone: messages[0]?.to,
+        kakaoTemplateId: templateData?.kakao_template_code,
+        hasKakaoOption: !!messages[0]?.kakaoOptions,
+        pfId: SOLAPI_PFID
       });
 
       const solapiResponse = await fetch("https://api.solapi.com/messages/v4/send-many", {
@@ -182,7 +185,18 @@ export async function POST(request: NextRequest) {
 
       // 솔라피 응답이 성공이 아니면 에러 처리
       if (!solapiResponse.ok) {
-        throw new Error(solapiResult.message || "솔라피 API 오류");
+        console.error('솔라피 API 에러 상세:', {
+          status: solapiResponse.status,
+          statusText: solapiResponse.statusText,
+          result: solapiResult,
+          templateData: {
+            templateId: templateData?.kakao_template_code,
+            templateName: templateData?.kakao_template_name,
+            buttons: templateData?.buttons
+          },
+          firstMessage: messages[0]
+        });
+        throw new Error(solapiResult.message || solapiResult.error || `솔라피 API 오류: ${solapiResponse.status}`);
       }
       
       // 메시지 로그 저장 (성공)
