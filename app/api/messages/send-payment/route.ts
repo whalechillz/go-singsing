@@ -59,6 +59,21 @@ export async function POST(request: NextRequest) {
       계좌번호: '294537-04-018035'
     };
 
+    // payment_complete인 경우 포털 링크 미리 가져오기
+    let portalUrl = tourId; // 기본값
+    if (messageType === 'payment_complete') {
+      const { data: portalLink } = await supabase
+        .from('public_document_links')
+        .select('public_url')
+        .eq('tour_id', tourId)
+        .eq('document_type', 'portal')
+        .single();
+      
+      if (portalLink?.public_url) {
+        portalUrl = portalLink.public_url;
+      }
+    }
+
     // 메시지 타입별 변수 추가
     const getMessageVariables = (messageType: string) => {
       switch (messageType) {
@@ -80,18 +95,10 @@ export async function POST(request: NextRequest) {
           return { ...baseVariables, 계약금: '100,000' };
           
         case 'payment_complete':
-          // 포털 링크 확인
-          const { data: portalLink } = await supabase
-            .from('public_document_links')
-            .select('public_url')
-            .eq('tour_id', tourId)
-            .eq('document_type', 'portal')
-            .single();
-            
           return {
             ...baseVariables,
             총금액: tourPrice.toLocaleString(),
-            url: portalLink?.public_url || tourId
+            url: portalUrl
           };
           
         default:
