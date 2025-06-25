@@ -822,7 +822,14 @@ export default function MessageManagementPage() {
                       {messageLogs.map(log => (
                         <tr key={log.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {new Date(log.created_at).toLocaleString()}
+                            {new Date(log.created_at).toLocaleString('ko-KR', { 
+                              timeZone: 'Asia/Seoul',
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm">

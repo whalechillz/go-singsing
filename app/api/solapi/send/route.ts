@@ -151,13 +151,38 @@ export async function POST(request: NextRequest) {
         const headers = getSignature();
         console.log("인증 헤더:", headers.Authorization);
         
+        // 솔라피 v4 API 정확한 형식
+        const requestBody: any = {
+          to: msg.to,
+          from: msg.from,
+          text: msg.text,
+          type: msg.type  // type 필드 추가
+        };
+        
+        // 메시지 타입에 따른 추가 설정
+        if (msg.type === "SMS") {
+          // SMS는 추가 설정 없음
+        } else if (msg.type === "LMS") {
+          requestBody.subject = msg.subject;
+        } else if (msg.type === "MMS") {
+          requestBody.subject = msg.subject;
+          if (msg.imageId) {
+            requestBody.imageId = msg.imageId;
+          }
+        } else if (msg.type === "ATA") {
+          // 카카오 알림톡
+          requestBody.kakaoOptions = msg.kakaoOptions;
+        }
+        
+        console.log("최종 요청 데이터:", JSON.stringify(requestBody, null, 2));
+        
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
             ...headers,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(msg),
+          body: JSON.stringify(requestBody),
         });
         
         const responseText = await response.text();
