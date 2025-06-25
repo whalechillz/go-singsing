@@ -87,7 +87,19 @@ export async function POST(request: NextRequest) {
     const solapiApiSecret = process.env.SOLAPI_API_SECRET;
     const solapiPfId = process.env.SOLAPI_PFID;
 
+    // 디버깅을 위한 임시 로그 (프로덕션에서는 제거 필요)
+    console.log('Solapi 환경 변수 확인:', {
+      NODE_ENV: process.env.NODE_ENV,
+      apiKeyLength: solapiApiKey?.length || 0,
+      apiSecretLength: solapiApiSecret?.length || 0,
+      apiKeyPrefix: solapiApiKey ? solapiApiKey.substring(0, 4) : 'NONE',
+      sender: process.env.SOLAPI_SENDER,
+      pfId: solapiPfId,
+      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SOLAPI')).join(', ')
+    });
+
     if (!solapiApiKey || !solapiApiSecret) {
+      console.error('Solapi 환경 변수 누락');
       throw new Error('Solapi API 키가 설정되지 않았습니다.');
     }
 
@@ -103,7 +115,7 @@ export async function POST(request: NextRequest) {
     const messageData = {
       messages: [{
         to: customerPhone.replace(/-/g, ''),
-        from: process.env.SOLAPI_SENDER || '0312153990',
+        from: process.env.SOLAPI_SENDER || process.env.NEXT_PUBLIC_SOLAPI_SENDER || '0312153990',
         text: messageContent,
         type: sendMethod === 'kakao' ? 'ATA' : 'SMS',
         ...(sendMethod === 'kakao' && templateData?.kakao_template_code && {
@@ -118,8 +130,19 @@ export async function POST(request: NextRequest) {
 
     console.log('Solapi 요청 데이터:', JSON.stringify(messageData, null, 2));
 
+    // API 키와 시크릿 검증
+    if (!solapiApiKey || solapiApiKey === 'undefined' || solapiApiKey.includes('your_')) {
+      throw new Error('Solapi API 키가 올바르게 설정되지 않았습니다.');
+    }
+    
+    if (!solapiApiSecret || solapiApiSecret === 'undefined' || solapiApiSecret.includes('your_')) {
+      throw new Error('Solapi API 시크릿이 올바르게 설정되지 않았습니다.');
+    }
+
     // Base64 인코딩
     const auth = Buffer.from(`${solapiApiKey}:${solapiApiSecret}`).toString('base64');
+    
+    console.log('Solapi Authorization 헤더 길이:', auth.length);
 
     const solapiResponse = await fetch(solapiUrl, {
       method: 'POST',
