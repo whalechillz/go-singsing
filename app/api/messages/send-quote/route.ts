@@ -1,19 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(request: NextRequest) {
-  // Supabase 클라이언트를 함수 내부에서 생성
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return NextResponse.json(
-      { success: false, error: 'Supabase 환경 변수가 설정되지 않았습니다.' },
-      { status: 500 }
-    );
-  }
-  
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
   try {
     const body = await request.json();
     const { 
