@@ -1,7 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase 클라이언트 초기화
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: NextRequest) {
+  console.log('=== 견적서 발송 API 시작 ===');
+  
+  // 환경 변수 확인
+  console.log('환경 변수 확인:', {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    SOLAPI_API_KEY: process.env.SOLAPI_API_KEY ? '설정됨' : '미설정',
+    SOLAPI_API_SECRET: process.env.SOLAPI_API_SECRET ? '설정됨' : '미설정',
+    SOLAPI_SENDER: process.env.SOLAPI_SENDER
+  });
+  
   try {
     const body = await request.json();
     const { 
@@ -22,13 +37,22 @@ export async function POST(request: NextRequest) {
     });
 
     // 견적서 정보 가져오기
+    console.log('견적서 조회 시도:', quoteId);
+    
     const { data: quote, error: quoteError } = await supabase
       .from('singsing_tours')
       .select('*')
       .eq('id', quoteId)
       .single();
 
-    if (quoteError || !quote) {
+    console.log('견적서 조회 결과:', { quote, quoteError });
+
+    if (quoteError) {
+      console.error('견적서 조회 오류:', quoteError);
+      throw new Error(`견적서 조회 실패: ${quoteError.message}`);
+    }
+    
+    if (!quote) {
       throw new Error('견적서를 찾을 수 없습니다.');
     }
 
@@ -79,7 +103,7 @@ export async function POST(request: NextRequest) {
     const messageData = {
       messages: [{
         to: customerPhone.replace(/-/g, ''),
-        from: process.env.SOLAPI_SENDER_PHONE || '0312153990',
+        from: process.env.SOLAPI_SENDER || '0312153990',
         text: messageContent,
         type: sendMethod === 'kakao' ? 'ATA' : 'SMS',
         ...(sendMethod === 'kakao' && templateData?.kakao_template_code && {
@@ -139,11 +163,19 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('견적서 발송 오류:', error);
+    console.error('=== 견적서 발송 오류 상세 ===');
+    console.error('오류 타입:', error.constructor.name);
+    console.error('오류 메시지:', error.message);
+    console.error('오류 스택:', error.stack);
     
     return NextResponse.json({
       success: false,
-      error: error.message || '견적서 발송 중 오류가 발생했습니다.'
+      error: error.message || '견적서 발송 중 오류가 발생했습니다.',
+      details: {
+        type: error.constructor.name,
+        message: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }
     }, { status: 500 });
   }
 }
