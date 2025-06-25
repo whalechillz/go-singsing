@@ -95,9 +95,22 @@ export async function POST(request: NextRequest) {
 
     // 솔라피 메시지 데이터
     const messages = recipients.map((recipient: any) => {
+      // 전화번호 형식 정리
+      const cleanPhone = recipient.phone.replace(/-/g, "").replace(/\s/g, "");
+      const cleanSender = SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, "");
+      
+      // 전화번호 유효성 검증
+      if (!/^01[0-9]{8,9}$/.test(cleanPhone)) {
+        console.error("잘못된 수신번호 형식:", recipient.phone, "->", cleanPhone);
+      }
+      
+      if (!/^0[0-9]{8,10}$/.test(cleanSender)) {
+        console.error("잘못된 발신번호 형식:", SOLAPI_SENDER, "->", cleanSender);
+      }
+      
       const message: any = {
-        to: recipient.phone.replace(/-/g, ""),
-        from: SOLAPI_SENDER.replace(/-/g, ""),
+        to: cleanPhone,
+        from: cleanSender,
         text: content,
         type: type === "kakao_alimtalk" ? "ATA" : type.toUpperCase(),
       };
