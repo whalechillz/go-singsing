@@ -12,21 +12,35 @@ interface DocumentSendModalProps {
 
 const getDocumentTypeName = (type: string) => {
   const typeMap: Record<string, string> = {
-    'portal': '통합 표지',
+    'portal': '종합 여정 안내',
     'customer_all': '고객용 통합',
     'staff_all': '스탭용 통합',
     'golf_timetable': '골프장 티타임표',
-    'customer_schedule': '고객용 일정표',
+    'customer_schedule': '일정표 안내',
     'staff_schedule': '스탭용 일정표',
-    'customer_boarding': '고객용 탑승안내',
+    'customer_boarding': '탑승 안내',
     'staff_boarding': '스탭용 탑승안내',
-    'room_assignment': '고객용 객실배정',
+    'room_assignment': '객실 배정',
     'room_assignment_staff': '스탭용 객실배정',
-    'customer_timetable': '고객용 티타임표',
+    'customer_timetable': '티타임표 안내',
     'staff_timetable': '스탭용 티타임표',
-    'simplified': '간편일정',
+    'simplified': '간편일정 안내',
   };
   return typeMap[type] || type;
+};
+
+// 문서 타입과 템플릿 매핑
+const documentTypeToTemplate: Record<string, string> = {
+  'portal': '종합 여정 안내',
+  'customer_schedule': '일정표 안내',
+  'staff_schedule': '스탭용 일정표',
+  'customer_boarding': '탑승 안내',
+  'staff_boarding': '스탭용 탑승안내',
+  'room_assignment': '객실 배정',
+  'room_assignment_staff': '스탭용 객실배정',
+  'customer_timetable': '티타임표 안내',
+  'staff_timetable': '스탭용 티타임표',
+  'simplified': '간편일정 안내',
 };
 
 export default function DocumentSendModal({ 
@@ -44,6 +58,8 @@ export default function DocumentSendModal({
   const [messageTemplate, setMessageTemplate] = useState("");
   const [sendHistory, setSendHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   
   useEffect(() => {
     if (isOpen && tourId) {
@@ -113,6 +129,18 @@ export default function DocumentSendModal({
       setParticipants(participantsData || []);
     }
     
+    // 메시지 템플릿 가져오기
+    const { data: templatesData, error: templatesError } = await supabase
+      .from("message_templates")
+      .select("*")
+      .eq("use_case", "tour_document")
+      .eq("is_active", true)
+      .order("name");
+    
+    console.log('템플릿 데이터:', templatesData);
+    console.log('템플릿 에러:', templatesError);
+    setTemplates(templatesData || []);
+    
     // 발송 이력 가져오기 (테이블이 없을 수 있으므로 에러 처리)
     try {
       const { data: historyData, error: historyError } = await supabase
@@ -139,46 +167,58 @@ export default function DocumentSendModal({
         ? prev.filter(id => id !== docId)
         : [...prev, docId]
     );
-  };
-  
-  const generateMessage = () => {
-    if (!tour || selectedDocs.length === 0) return "";
     
-    const docLinks = selectedDocs.map(docId => {
-      const doc = documents.find(d => d.id === docId);
-      const docName = doc?.title || getDocumentTypeName(doc?.document_type);
-      const url = doc?.public_url ? 
-        `https://go.singsinggolf.kr/s/${doc.public_url}` :
-        `https://go.singsinggolf.kr/s/${doc?.short_code}`;
-      return `📄 ${docName}\n${url}`;
-    }).join("\n");
-    
-    if (sendMethod === "kakao") {
-      return `[싱싱골프] ${tour.title} 안내
-
-안녕하세요 #{이름}님,
-${tour.title} 관련 문서를 안내드립니다.
-
-📄 문서 확인하기:
-${docLinks}
-
-궁금하신 점은 언제든 문의주세요.
-☎ 031-215-3990`;
-    } else {
-      return `[싱싱골프]
-${tour.title} 문서안내
-${docLinks}
-문의:031-215-3990`;
+    // 문서 선택시 해당 템플릿 자동 선택
+    const doc = documents.find(d => d.id === docId);
+    if (doc && documentTypeToTemplate[doc.document_type]) {
+      const templateName = documentTypeToTemplate[doc.document_type];
+      const template = templates.find(t => t.name === templateName);
+      if (template) {
+        setSelectedTemplate(template);
+      }
     }
   };
   
+  const generateMessage = () => {
+    if (!tour || selectedDocs.length === 0 || !selectedTemplate) return "";
+    
+    const doc = documents.find(d => d.id === selectedDocs[0]); // 첫번째 문서 기준
+    const url = doc?.public_url ? 
+      doc.public_url :
+      doc?.short_code;
+    
+    // 템플릿 변수 치환
+    let message = selectedTemplate.content;
+    message = message.replace(/#{투어명}/g, tour.title);
+    message = message.replace(/#{url}/g, url);
+    
+    // 버튼의 URL도 치환
+    if (selectedTemplate.buttons && selectedTemplate.buttons.length > 0) {
+      const updatedButtons = selectedTemplate.buttons.map((btn: any) => ({
+        ...btn,
+        linkMo: btn.linkMo?.replace(/#{url}/g, url),
+        linkPc: btn.linkPc?.replace(/#{url}/g, url)
+      }));
+      selectedTemplate.buttons = updatedButtons;
+    }
+    
+    return message;
+  };
+  
   useEffect(() => {
-    setMessageTemplate(generateMessage());
-  }, [selectedDocs, sendMethod, tour, documents]);
+    if (selectedTemplate) {
+      setMessageTemplate(generateMessage());
+    }
+  }, [selectedDocs, selectedTemplate, tour, documents]);
   
   const handleSend = async () => {
     if (selectedDocs.length === 0 || participants.length === 0) {
       alert("문서와 참가자를 선택해주세요.");
+      return;
+    }
+    
+    if (!selectedTemplate) {
+      alert("메시지 템플릿을 선택해주세요.");
       return;
     }
     
@@ -188,7 +228,8 @@ ${docLinks}
       documentIds: selectedDocs,
       participantIds: participants.map(p => p.id),
       sendMethod,
-      messageTemplate
+      messageTemplate,
+      templateId: selectedTemplate.id
     });
     
     try {
@@ -206,7 +247,9 @@ ${docLinks}
           documentIds: selectedDocs,
           participantIds: participants.map(p => p.id),
           sendMethod,
-          messageTemplate
+          messageTemplate,
+          templateId: selectedTemplate.id,
+          templateData: selectedTemplate
         }),
         signal: controller.signal
       });
@@ -227,14 +270,7 @@ ${docLinks}
         onClose();
       } else {
         console.error('API 에러:', result);
-        // 임시로 메시지 텍스트를 클립보드에 복사
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(messageTemplate).then(() => {
-            alert('발송에 실패했습니다. 메시지가 클립보드에 복사되었으니 수동으로 발송해주세요.');
-          });
-        } else {
-          alert(result.error || '발송 중 오류가 발생했습니다.');
-        }
+        alert(result.error || '발송 중 오류가 발생했습니다.');
       }
     } catch (error: any) {
       console.error('발송 오류:', error);
@@ -338,6 +374,31 @@ ${docLinks}
                 )}
               </div>
               
+              {/* 템플릿 선택 */}
+              {selectedDocs.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    메시지 템플릿 선택
+                  </h3>
+                  <select
+                    className="w-full p-2 border rounded-lg"
+                    value={selectedTemplate?.id || ''}
+                    onChange={(e) => {
+                      const template = templates.find(t => t.id === e.target.value);
+                      setSelectedTemplate(template);
+                    }}
+                  >
+                    <option value="">템플릿 선택</option>
+                    {templates.map(template => (
+                      <option key={template.id} value={template.id}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               {/* 발송 방법 */}
               <div>
                 <h3 className="font-medium mb-3 flex items-center gap-2">
@@ -369,11 +430,11 @@ ${docLinks}
               {/* 메시지 미리보기 */}
               <div>
                 <h3 className="font-medium mb-3">메시지 미리보기</h3>
-                <textarea
-                  value={messageTemplate}
-                  onChange={(e) => setMessageTemplate(e.target.value)}
-                  className="w-full p-3 border rounded-lg min-h-[150px] text-sm"
-                />
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <pre className="whitespace-pre-wrap font-sans text-sm">
+                    {messageTemplate || '템플릿을 선택하면 미리보기가 표시됩니다.'}
+                  </pre>
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
                   * #{'{이름}'} 부분은 각 참가자의 이름으로 자동 치환됩니다.
                 </p>
@@ -427,7 +488,7 @@ ${docLinks}
             </button>
             <button
               onClick={handleSend}
-              disabled={loading || selectedDocs.length === 0 || participants.length === 0}
+              disabled={loading || selectedDocs.length === 0 || participants.length === 0 || !selectedTemplate}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Send className="w-4 h-4" />

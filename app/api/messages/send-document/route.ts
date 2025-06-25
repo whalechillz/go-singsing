@@ -66,7 +66,9 @@ export async function POST(request: NextRequest) {
       documentIds,
       participantIds,
       sendMethod,
-      messageTemplate
+      messageTemplate,
+      templateId,
+      templateData
     } = body;
     
     console.log('문서 발송 API 요청:', { 
@@ -128,17 +130,20 @@ export async function POST(request: NextRequest) {
           console.error(`잘못된 전화번호 형식: ${participant.phone} -> ${message.to}`);
         }
         
-        // 카카오 알림톡 사용 시 (알리고에서 사용하던 템플릿 ID 입력)
-        const TEMPLATE_ID = ""; // 문서 발송용 템플릿 ID 필요
-        
-        if (sendMethod === "kakao" && SOLAPI_PFID && TEMPLATE_ID) {
+        // 카카오 알림톡 사용 시
+        if (sendMethod === "kakao" && SOLAPI_PFID && templateData?.kakao_template_code) {
           // 카카오 알림톡으로 발송
           message.type = "ATA";
           message.kakaoOptions = {
             pfId: SOLAPI_PFID,
-            templateId: TEMPLATE_ID,
+            templateId: templateData.kakao_template_code,
             disableSms: false // 실패 시 SMS로 대체 발송
           };
+          
+          // 버튼 추가 (있는 경우)
+          if (templateData.buttons && templateData.buttons.length > 0) {
+            message.kakaoOptions.buttons = templateData.buttons;
+          }
         } else {
           // SMS/LMS로 발송
           // SMS는 90바이트까지, LMS는 2000바이트까지
@@ -185,7 +190,7 @@ export async function POST(request: NextRequest) {
         const messageLogs = participants.map(participant => ({
           customer_id: participant.id,
           message_type: messages[0]?.type || 'SMS',
-          template_id: 'document_link',
+          template_id: templateId || 'document_link',
           phone_number: participant.phone,
           title: `[싱싱골프] 투어 문서 안내`,
           content: messageTemplate.replace('#{이름}', participant.name || '고객'),
@@ -222,7 +227,7 @@ export async function POST(request: NextRequest) {
         const failedLogs = participants.map(participant => ({
           customer_id: participant.id,
           message_type: sendMethod === 'kakao' ? 'ALIMTALK' : 'SMS',
-          template_id: 'document_link',
+          template_id: templateId || 'document_link',
           phone_number: participant.phone,
           title: `[싱싱골프] 투어 문서 안내`,
           content: messageTemplate.replace('#{이름}', participant.name || '고객'),

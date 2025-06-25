@@ -1,6 +1,7 @@
 "use client";
 import RefundModal from './RefundModal';
 import DiscountSection from './DiscountSection';
+import PaymentMessageModal from './PaymentMessageModal';
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { 
@@ -24,7 +25,8 @@ import {
   ChevronDown,
   Calculator,
   Calendar,
-  Tag
+  Tag,
+  MessageCircle
 } from 'lucide-react';
 
 interface PaymentManagerProps {
@@ -97,6 +99,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const [selectedTourId, setSelectedTourId] = useState(tourId || "");
   const [amountInputMode, setAmountInputMode] = useState<'preset' | 'custom'>('preset');
   const [customPercentage, setCustomPercentage] = useState(30);
+  const [showPaymentMessageModal, setShowPaymentMessageModal] = useState(false);
+  const [paymentMessageType, setPaymentMessageType] = useState<'deposit_request' | 'balance_request' | 'deposit_confirmation' | 'payment_complete'>('deposit_request');
   const [form, setForm] = useState({
     tour_id: tourId || "",
     participant_id: "",
@@ -685,6 +689,53 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
             </div>
             
             <div className="flex gap-2">
+              {/* 메시지 전송 드롭다운 */}
+              <div className="relative group">
+                <button className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700">
+                  <MessageCircle className="w-5 h-5" />
+                  <span>메시지 전송</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg"
+                    onClick={() => {
+                      setPaymentMessageType('deposit_request');
+                      setShowPaymentMessageModal(true);
+                    }}
+                  >
+                    계약금 요청
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={() => {
+                      setPaymentMessageType('balance_request');
+                      setShowPaymentMessageModal(true);
+                    }}
+                  >
+                    잔금 요청
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={() => {
+                      setPaymentMessageType('deposit_confirmation');
+                      setShowPaymentMessageModal(true);
+                    }}
+                  >
+                    계약금 입금 확인
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg"
+                    onClick={() => {
+                      setPaymentMessageType('payment_complete');
+                      setShowPaymentMessageModal(true);
+                    }}
+                  >
+                    결제 완료 안내
+                  </button>
+                </div>
+              </div>
+              
               {/* 엑셀 다운로드 */}
               <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-200">
                 <Download className="w-5 h-5" />
@@ -1669,6 +1720,16 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
           onSuccess={() => {
             fetchData(); // 결제 목록 새로고침
           }}
+        />
+      )}
+      
+      {/* 결제 메시지 모달 */}
+      {showPaymentMessageModal && selectedTourId && (
+        <PaymentMessageModal
+          isOpen={showPaymentMessageModal}
+          onClose={() => setShowPaymentMessageModal(false)}
+          tourId={selectedTourId}
+          messageType={paymentMessageType}
         />
       )}
     </div>

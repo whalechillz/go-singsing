@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import QuoteMessageModal from './QuoteMessageModal';
 import Link from "next/link";
 import { 
   Search, 
@@ -17,7 +18,8 @@ import {
   Mail,
   Phone,
   ArrowUpRight,
-  RefreshCw
+  RefreshCw,
+  MessageCircle
 } from 'lucide-react';
 
 interface Quote {
@@ -56,6 +58,8 @@ const QuoteListEnhanced: React.FC<QuoteListEnhancedProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
 
   // 견적 만료 상태 계산
   const getQuoteStatus = (quote: Quote) => {
@@ -369,14 +373,25 @@ const QuoteListEnhanced: React.FC<QuoteListEnhancedProps> = ({
                                 견적서 미리보기
                               </Link>
                               <button
+                              onClick={() => {
+                              setShowDropdown(null);
+                              navigator.clipboard.writeText(`${window.location.origin}/quote/${quote.id}`);
+                              alert('견적서 링크가 복사되었습니다.');
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                              링크 복사
+                              </button>
+                              <button
                                 onClick={() => {
                                   setShowDropdown(null);
-                                  navigator.clipboard.writeText(`${window.location.origin}/quote/${quote.id}`);
-                                  alert('견적서 링크가 복사되었습니다.');
+                                  setSelectedQuote(quote);
+                                  setShowMessageModal(true);
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                               >
-                                링크 복사
+                                <MessageCircle className="w-4 h-4" />
+                                메시지 발송
                               </button>
                               <button
                                 onClick={() => {
@@ -399,6 +414,18 @@ const QuoteListEnhanced: React.FC<QuoteListEnhancedProps> = ({
           </div>
         )}
       </div>
+      
+      {/* 견적서 메시지 모달 */}
+      {showMessageModal && selectedQuote && (
+        <QuoteMessageModal
+          isOpen={showMessageModal}
+          onClose={() => {
+            setShowMessageModal(false);
+            setSelectedQuote(null);
+          }}
+          quote={selectedQuote}
+        />
+      )}
     </div>
   );
 };
