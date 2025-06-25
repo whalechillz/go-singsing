@@ -47,7 +47,9 @@ export async function POST(request: NextRequest) {
       type,
       recipientCount: recipients.length,
       hasTitle: !!title,
-      hasImage: !!image_url
+      hasImage: !!image_url,
+      sender: SOLAPI_SENDER,
+      content: content?.substring(0, 50) + "..."
     });
 
     // 이미지 처리 (MMS인 경우)
@@ -131,11 +133,15 @@ export async function POST(request: NextRequest) {
       try {
         const apiUrl = "https://api.solapi.com/messages/v4/send";
         console.log("API 호출:", apiUrl, "수신자:", msg.to);
+        console.log("메시지 데이터:", JSON.stringify(msg, null, 2));
+        
+        const headers = getSignature();
+        console.log("인증 헤더:", headers.Authorization);
         
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
-            ...getSignature(),
+            ...headers,
             "Content-Type": "application/json",
           },
           body: JSON.stringify(msg),

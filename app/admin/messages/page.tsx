@@ -279,9 +279,14 @@ export default function MessageManagementPage() {
         })
       });
 
-      if (!response.ok) throw new Error("발송 실패");
-
       const result = await response.json();
+      console.log("발송 응답:", result);
+      
+      if (!response.ok) {
+        console.error("발송 실패 상세:", result);
+        alert(`메시지 발송 실패: ${result.message || "알 수 없는 오류"}`);
+        return;
+      }
 
       alert(`${result.sent}명 발송 성공, ${result.failed}명 발송 실패`);
       
