@@ -185,7 +185,9 @@ export async function POST(request: NextRequest) {
           // 버튼 추가 (있는 경우) - 실제 문서 URL 사용
           if (templateData.buttons && Array.isArray(templateData.buttons) && templateData.buttons.length > 0) {
             try {
+              console.log('템플릿 전체 데이터:', JSON.stringify(templateData, null, 2));
               console.log('템플릿 버튼 원본 데이터:', JSON.stringify(templateData.buttons, null, 2));
+              console.log('버튼 배열 타입:', Array.isArray(templateData.buttons), '길이:', templateData.buttons.length);
               
               // URL 파라미터만 추출
               let urlParam = documentUrl || 'https://go.singsinggolf.kr';
@@ -313,7 +315,7 @@ export async function POST(request: NextRequest) {
         pfId: SOLAPI_PFID
       });
 
-      const solapiResponse = await fetch("https://api.solapi.com/messages/v4/send-many", {
+      const solapiResponse = await fetch("https://api.solapi.com/messages/v4/send", {
         method: "POST",
         headers: {
           ...getSignature(),
