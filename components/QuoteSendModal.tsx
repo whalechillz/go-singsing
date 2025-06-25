@@ -63,8 +63,14 @@ export default function QuoteSendModal({
         
         // 기본 템플릿 선택
         if (templatesData && templatesData.length > 0) {
-          const defaultTemplate = templatesData.find(t => t.type === sendMethod) || templatesData[0];
-          setSelectedTemplate(defaultTemplate);
+          // SMS 템플릿을 기본으로 선택 (카카오 템플릿은 승인 필요)
+          const smsTemplate = templatesData.find(t => t.type === 'sms');
+          if (smsTemplate) {
+            setSelectedTemplate(smsTemplate);
+            setSendMethod('sms');
+          } else {
+            setSelectedTemplate(templatesData[0]);
+          }
         }
       }
     } catch (error) {
@@ -129,19 +135,24 @@ export default function QuoteSendModal({
       const expiryDate = expiresAt ? new Date(expiresAt).toLocaleDateString('ko-KR') : '미정';
       
       // API 호출
+      // 발송 데이터 준비
+      const sendData = {
+        quoteId: quoteId,
+        customerPhone: phoneNumber,
+        customerName: recipientName || '고객님',
+        templateId: selectedTemplate.id,
+        templateData: selectedTemplate, // 템플릿 전체 데이터
+        sendMethod: sendMethod
+      };
+      
+      console.log('API 호출 데이터:', sendData);
+      
       const response = await fetch('/api/messages/send-quote', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          quoteId: quoteId,
-          customerPhone: phoneNumber,
-          customerName: recipientName || '고객님',
-          templateId: selectedTemplate.id,
-          templateData: selectedTemplate, // 템플릿 전체 데이터
-          sendMethod: sendMethod
-        })
+        body: JSON.stringify(sendData)
       });
       
       // 응답 상태 확인

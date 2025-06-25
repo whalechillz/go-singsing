@@ -4,144 +4,146 @@ import { supabase } from '@/lib/supabaseClient';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('send-quote API 요청 받음:', body);
-    
     const { 
-      quoteId, 
-      customerPhone, 
-      customerName, 
-      templateId, 
-      templateData, 
-      sendMethod 
+      quoteId,
+      customerPhone,
+      customerName,
+      templateId,
+      templateData,
+      sendMethod = 'sms'
     } = body;
 
-    // 견적 정보 가져오기 (singsing_tours 테이블에서)
+    console.log('견적서 발송 요청:', {
+      quoteId,
+      customerPhone,
+      customerName,
+      templateId,
+      sendMethod
+    });
+
+    // 견적서 정보 가져오기
     const { data: quote, error: quoteError } = await supabase
       .from('singsing_tours')
       .select('*')
       .eq('id', quoteId)
       .single();
 
-    if (quoteError) {
-      throw new Error('견적 정보를 가져올 수 없습니다.');
+    if (quoteError || !quote) {
+      throw new Error('견적서를 찾을 수 없습니다.');
     }
 
-    // 템플릿 변수 치환
-    let messageContent = templateData.content || '';
-    const tourPrice = Number(quote.price);
-    const totalAmount = tourPrice * (quote.max_participants || 1);
-    
+    // 공개 링크 정보 가져오기
+    const { data: linkData } = await supabase
+      .from('public_document_links')
+      .select('*')
+      .eq('tour_id', quoteId)
+      .eq('document_type', 'quote')
+      .single();
+
     // 견적서 URL 생성
-    const quoteUrl = `https://go.singsinggolf.kr/quote/${quoteId}`;
-    
+    const quoteUrl = linkData?.public_url 
+      ? `https://go.singsinggolf.kr/q/${linkData.public_url}`
+      : `https://go.singsinggolf.kr/quote/${quoteId}`;
+
     // 만료일 포맷팅
-    const expiryDate = quote.quote_expires_at ? new Date(quote.quote_expires_at).toLocaleDateString('ko-KR') : '미정';
-    
-    messageContent = messageContent.replace(/#{이름}/g, customerName);
-    messageContent = messageContent.replace(/#{견적서명}/g, quote.title);
-    messageContent = messageContent.replace(/#{url}/g, quoteUrl);
-    messageContent = messageContent.replace(/#{만료일}/g, expiryDate);
-    messageContent = messageContent.replace(/#{총금액}/g, totalAmount.toLocaleString());
-    messageContent = messageContent.replace(/#{출발일}/g, new Date(quote.start_date).toLocaleDateString('ko-KR'));
-    messageContent = messageContent.replace(/#{인원}/g, quote.max_participants || '1');
+    const expiryDate = quote.quote_expires_at 
+      ? new Date(quote.quote_expires_at).toLocaleDateString('ko-KR')
+      : '미정';
 
-    // 버튼 URL 치환
-    let buttons = templateData.buttons;
-    if (buttons && buttons.length > 0) {
-      buttons = buttons.map((btn: any) => ({
-        ...btn,
-        linkMo: btn.linkMo?.replace(/#{url}/g, quoteUrl),
-        linkPc: btn.linkPc?.replace(/#{url}/g, quoteUrl)
-      }));
-    }
-
-    // 메시지 로그 저장
-    await supabase.from('message_logs').insert({
-      message_type: sendMethod === 'kakao' ? 'alimtalk' : 'sms',
-      template_id: templateId,
-      phone_number: customerPhone,
-      title: templateData.title,
-      content: messageContent,
-      buttons: buttons,
-      status: 'sent',
-      sent_at: new Date().toISOString()
-    });
-
-    // 실제 메시지 발송
-    if (sendMethod === 'kakao' && templateData.kakao_template_code) {
-      // 카카오 알림톡 발송
-      const kakaoResponse = await fetch('https://api.solapi.com/messages/v4/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `HMAC-SHA256 apiKey=${process.env.NEXT_PUBLIC_SOLAPI_API_KEY}, date=${new Date().toISOString()}, salt=${Math.random().toString(36).substring(2, 15)}, signature=temp`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: {
-            to: customerPhone.replace(/-/g, ''),
-            from: process.env.NEXT_PUBLIC_SOLAPI_SENDER_PHONE || '0312153990',
-            type: 'ATA',
-            kakaoOptions: {
-              pfId: process.env.NEXT_PUBLIC_KAKAO_PFID,
-              templateId: templateData.kakao_template_code,
-              variables: {
-                '이름': customerName,
-                '견적서명': quote.title,
-                'url': quoteUrl,
-                '만료일': expiryDate
-              },
-              buttons: buttons
-            }
-          }
-        })
-      });
-      
-      if (!kakaoResponse.ok) {
-        console.error('카카오 알림톡 발송 실패:', await kakaoResponse.text());
-        throw new Error('카카오 알림톡 발송에 실패했습니다.');
-      }
-    } else {
-      // SMS 발송
-      const smsResponse = await fetch('https://api.solapi.com/messages/v4/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `HMAC-SHA256 apiKey=${process.env.NEXT_PUBLIC_SOLAPI_API_KEY}, date=${new Date().toISOString()}, salt=${Math.random().toString(36).substring(2, 15)}, signature=temp`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: {
-            to: customerPhone.replace(/-/g, ''),
-            from: process.env.NEXT_PUBLIC_SOLAPI_SENDER_PHONE || '0312153990',
-            text: messageContent,
-            type: 'SMS'
-          }
-        })
-      });
-      
-      if (!smsResponse.ok) {
-        console.error('SMS 발송 실패:', await smsResponse.text());
-        throw new Error('SMS 발송에 실패했습니다.');
-      }
-    }
-    
-    const response = {
-      success: true,
-      message: '견적서가 발송되었습니다.'
+    // 메시지 템플릿 변수 치환
+    const templateVariables = {
+      이름: customerName || '고객님',
+      견적서명: quote.title,
+      url: quoteUrl,
+      만료일: expiryDate
     };
-    
-    console.log('API 응답:', response);
-    
-    return NextResponse.json(response, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json'
-      }
+
+    // Solapi API 호출
+    const solapiApiKey = process.env.SOLAPI_API_KEY;
+    const solapiApiSecret = process.env.SOLAPI_API_SECRET;
+    const solapiPfId = process.env.SOLAPI_PFID;
+
+    if (!solapiApiKey || !solapiApiSecret) {
+      throw new Error('Solapi API 키가 설정되지 않았습니다.');
+    }
+
+    // 메시지 내용 생성
+    let messageContent = templateData?.content || '';
+    Object.entries(templateVariables).forEach(([key, value]) => {
+      messageContent = messageContent.replace(new RegExp(`#{${key}}`, 'g'), value as string);
     });
+
+    // Solapi 메시지 발송
+    const solapiUrl = 'https://api.solapi.com/messages/v4/send';
+    
+    const messageData = {
+      messages: [{
+        to: customerPhone.replace(/-/g, ''),
+        from: process.env.SOLAPI_SENDER_PHONE || '0312153990',
+        text: messageContent,
+        type: sendMethod === 'kakao' ? 'ATA' : 'SMS',
+        ...(sendMethod === 'kakao' && templateData?.kakao_template_code && {
+          kakaoOptions: {
+            pfId: solapiPfId,
+            templateId: templateData.kakao_template_code,
+            variables: templateVariables
+          }
+        })
+      }]
+    };
+
+    console.log('Solapi 요청 데이터:', JSON.stringify(messageData, null, 2));
+
+    // Base64 인코딩
+    const auth = Buffer.from(`${solapiApiKey}:${solapiApiSecret}`).toString('base64');
+
+    const solapiResponse = await fetch(solapiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(messageData)
+    });
+
+    const solapiResult = await solapiResponse.json();
+    
+    console.log('Solapi 응답:', solapiResult);
+
+    if (!solapiResponse.ok) {
+      throw new Error(solapiResult.message || 'Solapi API 오류');
+    }
+
+    // 발송 이력 저장 (선택사항)
+    try {
+      await supabase
+        .from('message_send_history')
+        .insert({
+          tour_id: quoteId,
+          message_type: 'quote',
+          send_method: sendMethod,
+          recipient_count: 1,
+          template_id: templateId,
+          status: 'success',
+          sent_at: new Date().toISOString()
+        });
+    } catch (historyError) {
+      console.error('발송 이력 저장 실패:', historyError);
+      // 이력 저장 실패는 무시하고 계속 진행
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: '견적서가 성공적으로 발송되었습니다.',
+      result: solapiResult
+    });
+
   } catch (error: any) {
-    console.error('견적 메시지 발송 오류:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || '메시지 발송 중 오류가 발생했습니다.' },
-      { status: 500 }
-    );
+    console.error('견적서 발송 오류:', error);
+    
+    return NextResponse.json({
+      success: false,
+      error: error.message || '견적서 발송 중 오류가 발생했습니다.'
+    }, { status: 500 });
   }
 }
