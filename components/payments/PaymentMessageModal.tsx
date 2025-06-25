@@ -108,19 +108,19 @@ export default function PaymentMessageModal({
     // 공통 변수 치환
     message = message.replace(/#{투어명}/g, tour.title);
     message = message.replace(/#{출발일}/g, new Date(tour.start_date).toLocaleDateString());
-    message = message.replace(/#{은행명}/g, '우리은행');
-    message = message.replace(/#{계좌번호}/g, '1002-345-678901');
+    message = message.replace(/#{은행명}/g, '국민은행');
+    message = message.replace(/#{계좌번호}/g, '294537-04-018035');
     
     // 메시지 타입별 변수 치환
     switch (messageType) {
       case 'deposit_request':
-        const depositAmount = Math.floor(tourPrice * 0.3); // 30%
+        const depositAmount = 100000; // 계약금 100,000원 고정
         message = message.replace(/#{계약금}/g, depositAmount.toLocaleString());
         break;
         
       case 'balance_request':
-        // 실제 잔금 계산 (추후 개별 계산 필요)
-        const balanceAmount = Math.floor(tourPrice * 0.7); // 70%
+        // 잔금 = 투어 가격 - 계약금(100,000원)
+        const balanceAmount = tourPrice - 100000;
         const deadline = new Date();
         deadline.setDate(new Date(tour.start_date).getDate() - 7); // 출발 7일 전
         
@@ -130,7 +130,7 @@ export default function PaymentMessageModal({
         break;
         
       case 'deposit_confirmation':
-        const paidDeposit = Math.floor(tourPrice * 0.3);
+        const paidDeposit = 100000; // 계약금 100,000원 고정
         message = message.replace(/#{계약금}/g, paidDeposit.toLocaleString());
         break;
         

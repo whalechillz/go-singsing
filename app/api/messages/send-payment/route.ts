@@ -46,19 +46,19 @@ export async function POST(request: NextRequest) {
         messageContent = messageContent.replace(/#{이름}/g, participant.name);
         messageContent = messageContent.replace(/#{투어명}/g, tour.title);
         messageContent = messageContent.replace(/#{출발일}/g, new Date(tour.start_date).toLocaleDateString());
-        messageContent = messageContent.replace(/#{은행명}/g, '우리은행');
-        messageContent = messageContent.replace(/#{계좌번호}/g, '1002-345-678901');
+        messageContent = messageContent.replace(/#{은행명}/g, '국민은행');
+        messageContent = messageContent.replace(/#{계좌번호}/g, '294537-04-018035');
 
         // 메시지 타입별 추가 변수 치환
         switch (messageType) {
           case 'deposit_request':
-            const depositAmount = Math.floor(tourPrice * 0.3);
+            const depositAmount = 100000; // 계약금 100,000원 고정
             messageContent = messageContent.replace(/#{계약금}/g, depositAmount.toLocaleString());
             break;
             
           case 'balance_request':
-            // 실제로는 개별 참가자의 결제 내역을 확인해서 잔금 계산
-            const balanceAmount = Math.floor(tourPrice * 0.7);
+            // 잔금 = 투어 가격 - 계약금(100,000원)
+            const balanceAmount = tourPrice - 100000;
             const deadline = new Date(tour.start_date);
             deadline.setDate(deadline.getDate() - 7);
             messageContent = messageContent.replace(/#{잔금}/g, balanceAmount.toLocaleString());
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
             break;
             
           case 'deposit_confirmation':
-            const paidDeposit = Math.floor(tourPrice * 0.3);
+            const paidDeposit = 100000; // 계약금 100,000원 고정
             messageContent = messageContent.replace(/#{계약금}/g, paidDeposit.toLocaleString());
             break;
             
