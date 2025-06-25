@@ -305,6 +305,9 @@ export async function POST(request: NextRequest) {
         }
       });
 
+      console.log("발신 번호 확인:", SOLAPI_SENDER);
+      console.log("첫 번째 메시지 전체:", JSON.stringify(messages[0], null, 2));
+
       // 솔라피 API 호출
       console.log("솔라피 API 호출 준비:", {
         messageCount: messages.length,
@@ -328,8 +331,18 @@ export async function POST(request: NextRequest) {
       console.log("솔라피 응답:", { 
         status: solapiResponse.status, 
         result: solapiResult,
-        groupId: solapiResult.groupId 
+        groupId: solapiResult.groupId,
+        countInfo: solapiResult.countInfo,
+        accountInfo: solapiResult.accountInfo
       });
+      
+      // 상세 발송 결과 로그
+      if (solapiResult.countInfo) {
+        console.log("발송 건수 정보:", solapiResult.countInfo);
+      }
+      if (solapiResult.failedMessageList) {
+        console.log("실패 메시지 목록:", solapiResult.failedMessageList);
+      }
 
       // 솔라피 응답이 성공이 아니면 에러 처리
       if (!solapiResponse.ok) {
