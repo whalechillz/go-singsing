@@ -225,37 +225,41 @@ export async function POST(request: NextRequest) {
                     continue;
                   }
                   
-                  // #{url}만 치환 (안전하게)
-                  // 카카오 알림톡 버튼 형식에 맞게 수정
-                  // 솔라피 API 문서에 따른 필수 필드만 포함
+                  // 버튼 데이터 처리 - 에러 메시지에 따라 buttonType 사용
                   const processedButton: any = {
-                    type: 'WL', // 웹링크 타입 고정
-                    name: btn.name || btn.text || '자세히 보기',
-                    linkMo: btn.linkMo ? String(btn.linkMo).replace(/#{url}/g, urlParam) : ''
+                    buttonType: 'WL', // 에러 메시지에서 buttonType이라고 명시
+                    buttonName: btn.name || btn.buttonName || btn.text || '자세히 보기'
                   };
                   
-                  // linkPc는 선택적 - 있으면 추가
-                  if (btn.linkPc) {
-                    processedButton.linkPc = String(btn.linkPc).replace(/#{url}/g, urlParam);
+                  // linkMo는 필수 - 반드시 값이 있어야 함
+                  const linkMoValue = String(btn.linkMo || '');
+                  if (!linkMoValue) {
+                    console.error(`버튼 ${i + 1} linkMo 누락 - 기본 URL 사용`);
+                    processedButton.linkMo = documentUrl || 'https://go.singsinggolf.kr';
+                  } else {
+                    processedButton.linkMo = linkMoValue.replace(/#{url}/g, urlParam);
+                  }
+                  
+                  // linkPc는 선택적 - 없으면 linkMo와 동일하게
+                  const linkPcValue = String(btn.linkPc || '');
+                  if (linkPcValue) {
+                    processedButton.linkPc = linkPcValue.replace(/#{url}/g, urlParam);
+                  } else {
+                    processedButton.linkPc = processedButton.linkMo;
                   }
                   
                   // 필수 필드 검증
-                  if (!processedButton.name || !processedButton.linkMo) {
+                  if (!processedButton.buttonName || !processedButton.linkMo) {
                     console.log(`버튼 ${i + 1} 필수 필드 누락:`, {
-                      name: processedButton.name,
+                      buttonName: processedButton.buttonName,
                       linkMo: processedButton.linkMo
                     });
                     continue;
                   }
                   
-                  // linkPc가 없으면 linkMo와 동일하게 설정
-                  if (!processedButton.linkPc) {
-                    processedButton.linkPc = processedButton.linkMo;
-                  }
-                  
                   console.log(`버튼 ${i + 1} 처리 완료:`, {
-                    type: processedButton.type,
-                    name: processedButton.name,
+                    buttonType: processedButton.buttonType,
+                    buttonName: processedButton.buttonName,
                     linkMo: processedButton.linkMo,
                     linkPc: processedButton.linkPc
                   });
