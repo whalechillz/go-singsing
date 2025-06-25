@@ -1,57 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
-import crypto from 'crypto';
-
-// 솔라피 API 설정
-const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY || "";
-const SOLAPI_API_SECRET = process.env.SOLAPI_API_SECRET || "";
-const SOLAPI_PFID = process.env.SOLAPI_PFID || "";
-const SOLAPI_SENDER = process.env.SOLAPI_SENDER || "";
-
-// HMAC 서명 생성
-function getSignature() {
-  const date = new Date().toISOString();
-  const salt = Math.random().toString(36).substring(2, 15);
-  const data = date + salt;
-  const signature = crypto
-    .createHmac("sha256", SOLAPI_API_SECRET)
-    .update(data)
-    .digest("hex");
-  
-  return {
-    Authorization: `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
-  };
-}
-
-// SMS용 바이트 계산 함수 (한글 2바이트)
-function getByteLength(str: string): number {
-  let byteLength = 0;
-  for (let i = 0; i < str.length; i++) {
-    const charCode = str.charCodeAt(i);
-    // ASCII 문자 (0x00-0x7F)
-    if (charCode <= 0x7F) {
-      byteLength += 1;
-    } else {
-      // 한글 및 기타 유니코드 문자는 2바이트로 계산
-      byteLength += 2;
-    }
-  }
-  return byteLength;
-}
+import { smsService } from '@/lib/services/smsService';
+import { MESSAGE_TEMPLATES, getDocumentType, selectTemplate } from '@/lib/services/messageTemplates';
 
 export async function POST(request: NextRequest) {
-  // 환경 변수 확인
-  const missingEnvVars = [];
-  if (!SOLAPI_API_KEY) missingEnvVars.push('SOLAPI_API_KEY');
-  if (!SOLAPI_API_SECRET) missingEnvVars.push('SOLAPI_API_SECRET');
-  if (!SOLAPI_SENDER) missingEnvVars.push('SOLAPI_SENDER');
-  
-  if (missingEnvVars.length > 0) {
-    console.error('필수 환경 변수 누락:', missingEnvVars);
+  // 환경 변수 검증
+  const configValidation = smsService.validateConfig();
+  if (!configValidation.isValid) {
+    console.error('필수 환경 변수 누락:', configValidation.missingVars);
     return NextResponse.json(
       { 
         success: false, 
-        error: `필수 환경 변수가 설정되지 않았습니다: ${missingEnvVars.join(', ')}`,
+        error: `필수 환경 변수가 설정되지 않았습니다: ${configValidation.missingVars.join(', ')}`,
         details: 'Vercel 대시보드에서 Settings > Environment Variables에 환경 변수를 추가해주세요.'
       },
       { status: 500 }
@@ -65,11 +25,11 @@ export async function POST(request: NextRequest) {
       tourId,
       documentIds,
       participantIds,
-      sendMethod,
+      sendMethod = 'sms',
       messageTemplate,
       templateId,
       templateData,
-      documentUrl // 추가: 실제 문서 URL
+      documentUrl
     } = body;
     
     console.log('문서 발송 API 요청:', { 
@@ -83,9 +43,9 @@ export async function POST(request: NextRequest) {
     });
     
     // 필수 필드 검증
-    if (!messageTemplate) {
+    if (!messageTemplate && !documentUrl) {
       return NextResponse.json(
-        { success: false, error: '메시지 템플릿이 없습니다.' },
+        { success: false, error: '메시지 템플릿 또는 문서 URL이 필요합니다.' },
         { status: 400 }
       );
     }
@@ -115,289 +75,69 @@ export async function POST(request: NextRequest) {
     }
     
     console.log(`${participants.length}명의 참가자에게 발송 예정`);
-    console.log('참가자 정보:', participants[0]);
-    console.log('템플릿 내용:', messageTemplate?.substring(0, 100));
-    console.log('템플릿 데이터:', JSON.stringify(templateData, null, 2));
     
-    // Solapi를 통한 실제 메시지 발송
-    try {
-      // 솔라피 메시지 데이터 생성
-      const messages = participants.map((participant, index) => {
-        console.log(`메시지 생성 시작 - 참가자 ${index + 1}:`, participant.name);
-        
-        try {
-          // URL 파라미터 추출 (메시지 변환용)
-          let urlParam = documentUrl || '';
-        if (documentUrl && documentUrl.includes('/s/')) {
-          urlParam = documentUrl.split('/s/')[1];
-        } else if (documentUrl && documentUrl.includes('/portal/')) {
-          urlParam = documentUrl.split('/portal/')[1];
-        }
-        
-        // 템플릿 변수 치환
-        let personalizedContent = '';
-        try {
-          console.log('템플릿 치환 전:', {
-            template: messageTemplate,
-            name: participant.name,
-            urlParam: urlParam
-          });
-          
-          personalizedContent = (messageTemplate || '')
-            .replace(/#\{이름\}/g, participant.name || '고객님')  // 정규표현식으로 변경
-            .replace(/#\{url\}/g, urlParam);
-            
-          // URL 경로를 /s/에서 /portal/로 변경
-          personalizedContent = personalizedContent.replace(
-            /https:\/\/go\.singsinggolf\.kr\/s\//g,
-            'https://go.singsinggolf.kr/portal/'
-          );
-          
-          console.log('치환 후 메시지:', personalizedContent);
-        } catch (replaceError) {
-          console.error('템플릿 치환 오류:', replaceError);
-          personalizedContent = `[싱싱골프] ${participant.name || '고객님'}님, 투어 문서를 확인해주세요: ${documentUrl || 'https://go.singsinggolf.kr'}`;
-        }
-        
-        // 메시지 길이 확인 (SMS용 바이트 계산 - 한글 2바이트)
-        const byteLength = getByteLength(personalizedContent);
-        console.log(`메시지 길이 - 참가자: ${participant.name}, SMS바이트: ${byteLength}, 문자수: ${personalizedContent.length}`);
-        
-        // 메시지 내용 확인 (디버깅용)
-        if (byteLength > 80) {
-          console.log(`긴 메시지 내용 확인: ${personalizedContent.substring(0, 50)}...`);
-        }
-        
-        const message: any = {
-          to: participant.phone.replace(/-/g, "").replace(/\s/g, "").replace(/\+82/g, "0"), // 하이픈, 공백, 국가코드 제거
-          from: SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, ""),
-          text: personalizedContent,
-        };
-        
-        // 전화번호 형식 확인
-        if (!message.to.match(/^01[0-9]{8,9}$/)) {
-          console.error(`잘못된 전화번호 형식: ${participant.phone} -> ${message.to}`);
-        }
-        
-        // 카카오 알림톡 사용 시
-        if (sendMethod === "kakao" && SOLAPI_PFID && templateData && templateData.kakao_template_code) {
-          console.log('카카오 알림톡 설정:', {
-            templateId: templateData.kakao_template_code,
-            pfId: SOLAPI_PFID,
-            templateName: templateData.kakao_template_name,
-            hasButtons: !!templateData.buttons,
-            documentUrl
-          });
-          // 카카오 알림톡으로 발송
-          message.type = "ATA";
-          message.kakaoOptions = {
-            pfId: SOLAPI_PFID,
-            templateId: templateData.kakao_template_code,
-            disableSms: false // 실패 시 SMS로 대체 발송
-          };
-          
-          // 버튼 추가 (있는 경우) - 실제 문서 URL 사용
-          if (templateData.buttons && Array.isArray(templateData.buttons) && templateData.buttons.length > 0) {
-            try {
-              console.log('템플릿 전체 데이터:', JSON.stringify(templateData, null, 2));
-              console.log('템플릿 버튼 원본 데이터:', JSON.stringify(templateData.buttons, null, 2));
-              console.log('버튼 배열 타입:', Array.isArray(templateData.buttons), '길이:', templateData.buttons.length);
-              
-              // URL 파라미터만 추출
-              let urlParam = documentUrl || 'https://go.singsinggolf.kr';
-              
-              // 전체 URL에서 short_code만 추출
-              if (documentUrl && documentUrl.includes('/s/')) {
-                // https://go.singsinggolf.kr/s/bo6d6cre -> bo6d6cre
-                urlParam = documentUrl.split('/s/')[1];
-              } else if (documentUrl && documentUrl.includes('/portal/')) {
-                // https://go.singsinggolf.kr/portal/bo6d6cre -> bo6d6cre
-                urlParam = documentUrl.split('/portal/')[1];
-              }
-              
-              console.log('URL 파라미터 추출:', {
-                원본URL: documentUrl,
-                추출된파라미터: urlParam
-              });
-              
-              const processedButtons = [];
-              for (let i = 0; i < templateData.buttons.length; i++) {
-                try {
-                  let btn = templateData.buttons[i];
-                  console.log(`버튼 ${i + 1} 원본:`, typeof btn, btn);
-                  
-                  if (typeof btn === 'string') {
-                    try {
-                      btn = JSON.parse(btn);
-                      console.log(`버튼 ${i + 1} 파싱 후:`, btn);
-                    } catch (e) {
-                      console.error(`버튼 ${i + 1} 파싱 오류:`, e);
-                      continue;
-                    }
-                  }
-                  
-                  if (!btn || typeof btn !== 'object') {
-                    console.log(`버튼 ${i + 1} 무효:`, btn);
-                    continue;
-                  }
-                  
-                  // 버튼 데이터 처리 - 에러 메시지에 따라 buttonType 사용
-                  const processedButton: any = {
-                    buttonType: 'WL', // 에러 메시지에서 buttonType이라고 명시
-                    buttonName: btn.name || btn.buttonName || btn.text || '자세히 보기'
-                  };
-                  
-                  // linkMo는 필수 - 반드시 값이 있어야 함
-                  const linkMoValue = String(btn.linkMo || '');
-                  if (!linkMoValue) {
-                    console.error(`버튼 ${i + 1} linkMo 누락 - 기본 URL 사용`);
-                    processedButton.linkMo = documentUrl || 'https://go.singsinggolf.kr';
-                  } else {
-                    processedButton.linkMo = linkMoValue.replace(/#{url}/g, urlParam);
-                  }
-                  
-                  // linkPc는 선택적 - 없으면 linkMo와 동일하게
-                  const linkPcValue = String(btn.linkPc || '');
-                  if (linkPcValue) {
-                    processedButton.linkPc = linkPcValue.replace(/#{url}/g, urlParam);
-                  } else {
-                    processedButton.linkPc = processedButton.linkMo;
-                  }
-                  
-                  // 필수 필드 검증
-                  if (!processedButton.buttonName || !processedButton.linkMo) {
-                    console.log(`버튼 ${i + 1} 필수 필드 누락:`, {
-                      buttonName: processedButton.buttonName,
-                      linkMo: processedButton.linkMo
-                    });
-                    continue;
-                  }
-                  
-                  console.log(`버튼 ${i + 1} 처리 완료:`, {
-                    buttonType: processedButton.buttonType,
-                    buttonName: processedButton.buttonName,
-                    linkMo: processedButton.linkMo,
-                    linkPc: processedButton.linkPc
-                  });
-                  
-                  processedButtons.push(processedButton);
-                } catch (btnError) {
-                  console.error(`버튼 ${i + 1} 처리 중 오류:`, btnError);
-                  continue;
-                }
-              }
-              
-              if (processedButtons.length > 0) {
-                message.kakaoOptions.buttons = processedButtons;
-                console.log('처리된 버튼:', processedButtons);
-              }
-            } catch (buttonError) {
-              console.error('버튼 처리 중 오류:', buttonError);
-              // 버튼 오류는 무시하고 계속 진행
-            }
-          }
-        } else {
-          // SMS/LMS로 발송
-          // SMS는 90바이트까지, LMS는 2000바이트까지
-          // 한글은 UTF-8에서 3바이트이므로 정확한 바이트 계산 필요
-          message.type = byteLength > 90 ? "LMS" : "SMS";
-          if (message.type === "LMS") {
-            message.subject = "[싱싱골프] 투어 문서 안내";
-          }
-        }
-        
-        return message;
-        } catch (participantError) {
-          console.error(`참가자 ${participant.name} 메시지 생성 오류:`, participantError);
-          // 기본 메시지 반환
-          return {
-            to: participant.phone.replace(/-/g, "").replace(/\s/g, "").replace(/\+82/g, "0"),
-            from: SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, ""),
-            text: `[싱싱골프] ${participant.name || '고객님'}님, 투어 문서를 확인해주세요.`,
-            type: "SMS"
-          };
-        }
-      });
-
-      console.log("발신 번호 확인:", SOLAPI_SENDER);
-      console.log("첫 번째 메시지 전체:", JSON.stringify(messages[0], null, 2));
-
-      // 솔라피 API 호출
-      console.log("솔라피 API 호출 준비:", {
-        messageCount: messages.length,
-        messageType: messages[0]?.type,
-        firstPhone: messages[0]?.to,
-        kakaoTemplateId: templateData?.kakao_template_code,
-        hasKakaoOption: !!messages[0]?.kakaoOptions,
-        pfId: SOLAPI_PFID
-      });
-
-      const solapiResponse = await fetch("https://api.solapi.com/messages/v4/send-many/detail", {
-        method: "POST",
-        headers: {
-          ...getSignature(),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messages }),
-      });
-
-      const solapiResult = await solapiResponse.json();
-      console.log("솔라피 응답:", { 
-        status: solapiResponse.status, 
-        result: solapiResult,
-        groupId: solapiResult.groupId,
-        countInfo: solapiResult.countInfo,
-        accountInfo: solapiResult.accountInfo
-      });
+    // 메시지 템플릿 준비
+    let finalTemplate = messageTemplate;
+    let finalTemplateData = templateData;
+    
+    // 템플릿이 없으면 기본 템플릿 사용
+    if (!messageTemplate && documentUrl) {
+      const docType = getDocumentType(documentUrl);
+      const template = selectTemplate(docType, sendMethod);
       
-      // 상세 발송 결과 로그
-      if (solapiResult.countInfo) {
-        console.log("발송 건수 정보:", solapiResult.countInfo);
+      if (typeof template === 'string') {
+        finalTemplate = template;
+      } else {
+        finalTemplate = template.content;
+        finalTemplateData = template;
       }
-      if (solapiResult.failedMessageList) {
-        console.log("실패 메시지 목록:", solapiResult.failedMessageList);
-      }
+    }
+    
+    // 메시지 준비
+    const messages = participants.map((participant) => {
+      // URL 파라미터 추출
+      const urlParam = smsService.extractUrlParam(documentUrl);
+      
+      // 템플릿 변수 치환
+      const variables = {
+        이름: participant.name || '고객님',
+        url: urlParam
+      };
+      
+      const personalizedContent = smsService.replaceTemplateVariables(finalTemplate, variables);
+      
+      console.log(`참가자 ${participant.name} 메시지:`, personalizedContent);
+      
+      // 메시지 객체 생성
+      return smsService.prepareMessage({
+        to: participant.phone,
+        text: personalizedContent,
+        templateData: finalTemplateData,
+        documentUrl,
+        sendMethod
+      });
+    });
 
-      // 솔라피 응답이 성공이 아니면 에러 처리
-      if (!solapiResponse.ok) {
-        console.error('솔라피 API 에러 상세:', {
-          status: solapiResponse.status,
-          statusText: solapiResponse.statusText,
-          result: solapiResult,
-          templateData: {
-            templateId: templateData?.kakao_template_code,
-            templateName: templateData?.kakao_template_name,
-            buttons: templateData?.buttons
-          },
-          firstMessage: messages[0]
-        });
-        throw new Error(solapiResult.message || solapiResult.error || `솔라피 API 오류: ${solapiResponse.status}`);
-      }
+    console.log("첫 번째 메시지 상세:", JSON.stringify(messages[0], null, 2));
+
+    // SMS 발송
+    try {
+      const solapiResult = await smsService.send(messages);
       
       // 메시지 로그 저장 (성공)
-      try {
-        const messageLogs = participants.map(participant => ({
-          customer_id: participant.id,
-          message_type: messages[0]?.type || 'SMS',
-          template_id: templateId || 'document_link',
-          phone_number: participant.phone,
-          title: `[싱싱골프] 투어 문서 안내`,
-          content: messageTemplate.replace(/#\{이름\}/g, participant.name || '고객'),
-          status: 'sent',
-          tour_id: tourId,
-          document_link_id: documentIds[0],
-          recipient_name: participant.name,
-          solapi_group_id: solapiResult.groupId
-        }));
-        
-        await supabase.from('message_logs').insert(messageLogs);
-      } catch (logError) {
-        console.log('메시지 로그 저장 실패 (무시):', logError);
-      }
+      await smsService.saveMessageLog({
+        participants,
+        messageType: messages[0]?.type || 'SMS',
+        templateId: templateId || 'document_link',
+        title: '[싱싱골프] 투어 문서 안내',
+        content: finalTemplate,
+        status: 'sent',
+        tourId,
+        groupId: solapiResult.groupId
+      });
       
-      // 비용 계산 (현재는 SMS/LMS 기준)
-      const unitCost = messages[0]?.type === 'LMS' ? 30 : 20; // LMS 30원, SMS 20원
-      const totalCost = unitCost * participants.length;
+      // 비용 계산
+      const totalCost = smsService.calculateCost(messages);
       
       return NextResponse.json({
         success: true,
@@ -411,37 +151,23 @@ export async function POST(request: NextRequest) {
     } catch (solapiError: any) {
       console.error('Solapi 발송 오류:', solapiError);
       
-      // Solapi 오류 시에도 메시지 로그는 저장 (실패 상태로)
-      try {
-        const failedLogs = participants.map(participant => ({
-          customer_id: participant.id,
-          message_type: sendMethod === 'kakao' ? 'ALIMTALK' : 'SMS',
-          template_id: templateId || 'document_link',
-          phone_number: participant.phone,
-          title: `[싱싱골프] 투어 문서 안내`,
-          content: messageTemplate.replace(/#\{이름\}/g, participant.name || '고객'),
-          status: 'failed',
-          tour_id: tourId,
-          document_link_id: documentIds[0],
-          recipient_name: participant.name,
-          error_message: solapiError.message
-        }));
-        
-        await supabase.from('message_logs').insert(failedLogs);
-      } catch (logError) {
-        console.log('실패 로그 저장 실패:', logError);
-      }
+      // 메시지 로그 저장 (실패)
+      await smsService.saveMessageLog({
+        participants,
+        messageType: sendMethod === 'kakao' ? 'ATA' : 'SMS',
+        templateId: templateId || 'document_link',
+        title: '[싱싱골프] 투어 문서 안내',
+        content: finalTemplate,
+        status: 'failed',
+        tourId,
+        error: solapiError.message
+      });
       
       return NextResponse.json(
         { 
           success: false, 
           error: `메시지 발송 실패: ${solapiError.message}`,
-          details: {
-            message: solapiError.message,
-            hasApiKey: !!SOLAPI_API_KEY,
-            hasApiSecret: !!SOLAPI_API_SECRET,
-            hasSender: !!SOLAPI_SENDER
-          }
+          details: solapiError
         },
         { status: 500 }
       );

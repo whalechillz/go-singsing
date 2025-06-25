@@ -1,50 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
-import crypto from 'crypto';
-
-// 솔라피 API 설정
-const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY || "";
-const SOLAPI_API_SECRET = process.env.SOLAPI_API_SECRET || "";
-const SOLAPI_PFID = process.env.SOLAPI_PFID || "";
-const SOLAPI_SENDER = process.env.SOLAPI_SENDER || "";
-
-// HMAC 서명 생성
-function getSignature() {
-  const date = new Date().toISOString();
-  const salt = Math.random().toString(36).substring(2, 15);
-  const data = date + salt;
-  const signature = crypto
-    .createHmac("sha256", SOLAPI_API_SECRET)
-    .update(data)
-    .digest("hex");
-  
-  return {
-    Authorization: `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
-  };
-}
+import { smsService } from '@/lib/services/smsService';
+import { MESSAGE_TEMPLATES, selectTemplate } from '@/lib/services/messageTemplates';
 
 export async function POST(request: NextRequest) {
+  // 환경 변수 검증
+  const configValidation = smsService.validateConfig();
+  if (!configValidation.isValid) {
+    console.error('필수 환경 변수 누락:', configValidation.missingVars);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: `서버 설정 오류: 필수 환경변수가 설정되지 않았습니다.`,
+        details: configValidation.missingVars
+      },
+      { status: 500 }
+    );
+  }
+
   try {
-    // 환경변수 확인
-    if (!SOLAPI_API_KEY || !SOLAPI_API_SECRET || !SOLAPI_SENDER) {
-      console.error('필수 환경변수 누락:', {
-        hasApiKey: !!SOLAPI_API_KEY,
-        hasApiSecret: !!SOLAPI_API_SECRET,
-        hasSender: !!SOLAPI_SENDER
-      });
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: '서버 설정 오류: 필수 환경변수가 설정되지 않았습니다.',
-          details: {
-            hasApiKey: !!SOLAPI_API_KEY,
-            hasApiSecret: !!SOLAPI_API_SECRET,
-            hasSender: !!SOLAPI_SENDER
-          }
-        },
-        { status: 500 }
-      );
-    }
     const body = await request.json();
     const { 
       tourId, 
@@ -52,7 +26,7 @@ export async function POST(request: NextRequest) {
       templateId, 
       templateData, 
       messageType, 
-      sendMethod 
+      sendMethod = 'sms' 
     } = body;
 
     // 투어 정보 가져오기
@@ -62,7 +36,7 @@ export async function POST(request: NextRequest) {
       .eq('id', tourId)
       .single();
 
-    if (tourError) {
+    if (tourError || !tour) {
       throw new Error('투어 정보를 가져올 수 없습니다.');
     }
 
@@ -76,222 +50,163 @@ export async function POST(request: NextRequest) {
       throw new Error('참가자 정보를 가져올 수 없습니다.');
     }
 
-    // 메시지 발송
-    let successCount = 0;
-    let failCount = 0;
+    // 공통 변수
     const tourPrice = Number(tour.price);
+    const baseVariables = {
+      투어명: tour.title,
+      출발일: new Date(tour.start_date).toLocaleDateString('ko-KR'),
+      은행명: '국민은행',
+      계좌번호: '294537-04-018035'
+    };
 
-    // 카카오 알림톡용 템플릿 ID를 가져오기
-    const kakaoTemplateId = templateData.kakao_template_code;
-
-    // 솔라피 v4 그룹 메시지 발송
-    try {
-      // 1. 메시지 그룹 생성
-      const groupResponse = await fetch("https://api.solapi.com/messages/v4/groups", {
-        method: "POST",
-        headers: {
-          ...getSignature(),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({})
-      });
-
-      if (!groupResponse.ok) {
-        const errorText = await groupResponse.text();
-        console.error('그룹 생성 실패:', errorText);
-        throw new Error('메시지 그룹 생성 실패');
-      }
-
-      const groupData = await groupResponse.json();
-      const groupId = groupData.groupId;
-
-      console.log('메시지 그룹 생성됨:', groupId);
-
-      // 2. 그룹에 메시지 추가
-      const messages = [];
-      
-      for (const participant of participants) {
-        // 템플릿 변수 치환
-        let messageContent = templateData.content;
-        messageContent = messageContent.replace(/#{이름}/g, participant.name);
-        messageContent = messageContent.replace(/#{투어명}/g, tour.title);
-        messageContent = messageContent.replace(/#{출발일}/g, new Date(tour.start_date).toLocaleDateString());
-        messageContent = messageContent.replace(/#{은행명}/g, '국민은행');
-        messageContent = messageContent.replace(/#{계좌번호}/g, '294537-04-018035');
-
-        // 메시지 타입별 추가 변수 치환
-        switch (messageType) {
-          case 'deposit_request':
-            const depositAmount = 100000; // 계약금 100,000원 고정
-            messageContent = messageContent.replace(/#{계약금}/g, depositAmount.toLocaleString());
-            break;
-            
-          case 'balance_request':
-            // 잔금 = 투어 가격 - 계약금(100,000원)
-            const balanceAmount = tourPrice - 100000;
-            const deadline = new Date(tour.start_date);
-            deadline.setDate(deadline.getDate() - 7);
-            messageContent = messageContent.replace(/#{잔금}/g, balanceAmount.toLocaleString());
-            messageContent = messageContent.replace(/#{납부기한}/g, deadline.toLocaleDateString());
-            messageContent = messageContent.replace(/#{추가안내}/g, '');
-            break;
-            
-          case 'deposit_confirmation':
-            const paidDeposit = 100000; // 계약금 100,000원 고정
-            messageContent = messageContent.replace(/#{계약금}/g, paidDeposit.toLocaleString());
-            break;
-            
-          case 'payment_complete':
-            messageContent = messageContent.replace(/#{총금액}/g, tourPrice.toLocaleString());
-            // 실제 포털 URL로 대체 필요
-            messageContent = messageContent.replace(/#{url}/g, 'portal-url');
-            break;
-        }
-
-        const cleanPhone = participant.phone.replace(/-/g, "").replace(/\s/g, "");
-        const cleanSender = SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, "");
-
-        let message: any = {
-          to: cleanPhone,
-          from: cleanSender,
-          text: messageContent
-        };
-
-        // 메시지 타입별 설정
-        if (sendMethod === 'kakao' && kakaoTemplateId) {
-          // 카카오 알림톡
-          message.type = 'ATA';
-          message.kakaoOptions = {
-            pfId: SOLAPI_PFID,
-            templateId: kakaoTemplateId
+    // 메시지 타입별 변수 추가
+    const getMessageVariables = (messageType: string) => {
+      switch (messageType) {
+        case 'deposit_request':
+          return { ...baseVariables, 계약금: '100,000' };
+          
+        case 'balance_request':
+          const balanceAmount = tourPrice - 100000;
+          const deadline = new Date(tour.start_date);
+          deadline.setDate(deadline.getDate() - 7);
+          return {
+            ...baseVariables,
+            잔금: balanceAmount.toLocaleString(),
+            납부기한: deadline.toLocaleDateString('ko-KR'),
+            추가안내: ''
           };
-        } else if (messageContent.length > 90) {
-          // LMS
-          message.type = 'LMS';
-          message.subject = templateData.title || '싱싱골프투어';
-        } else {
-          // SMS
-          message.type = 'SMS';
-        }
-
-        messages.push(message);
-      }
-
-      // 3. 메시지 추가
-      const addResponse = await fetch(`https://api.solapi.com/messages/v4/groups/${groupId}/messages`, {
-        method: "PUT",
-        headers: {
-          ...getSignature(),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messages })
-      });
-
-      if (!addResponse.ok) {
-        const errorText = await addResponse.text();
-        console.error('메시지 추가 실패:', errorText);
-        throw new Error('메시지 추가 실패');
-      }
-
-      // 4. 그룹 발송
-      const sendResponse = await fetch(`https://api.solapi.com/messages/v4/groups/${groupId}/send`, {
-        method: "POST",
-        headers: getSignature()
-      });
-
-      if (!sendResponse.ok) {
-        const errorText = await sendResponse.text();
-        console.error('그룹 발송 실패:', errorText);
-        throw new Error('그룹 발송 실패');
-      }
-
-      const sendResult = await sendResponse.json();
-      console.log('발송 결과:', sendResult);
-
-      // 성공적으로 발송된 경우
-      successCount = messages.length;
-
-      // 메시지 로그 저장
-      for (const participant of participants) {
-        const cleanPhone = participant.phone.replace(/-/g, "").replace(/\s/g, "");
-        
-        // 템플릿 변수 치환 (로그 저장용)
-        let logMessageContent = templateData.content;
-        logMessageContent = logMessageContent.replace(/#{이름}/g, participant.name);
-        logMessageContent = logMessageContent.replace(/#{투어명}/g, tour.title);
-        logMessageContent = logMessageContent.replace(/#{출발일}/g, new Date(tour.start_date).toLocaleDateString());
-        logMessageContent = logMessageContent.replace(/#{은행명}/g, '국민은행');
-        logMessageContent = logMessageContent.replace(/#{계좌번호}/g, '294537-04-018035');
-
-        // 메시지 타입별 추가 변수 치환
-        switch (messageType) {
-          case 'deposit_request':
-            const depositAmount = 100000;
-            logMessageContent = logMessageContent.replace(/#{계약금}/g, depositAmount.toLocaleString());
-            break;
+          
+        case 'deposit_confirmation':
+          return { ...baseVariables, 계약금: '100,000' };
+          
+        case 'payment_complete':
+          // 포털 링크 확인
+          const { data: portalLink } = await supabase
+            .from('public_document_links')
+            .select('public_url')
+            .eq('tour_id', tourId)
+            .eq('document_type', 'portal')
+            .single();
             
-          case 'balance_request':
-            const balanceAmount = tourPrice - 100000;
-            const deadline = new Date(tour.start_date);
-            deadline.setDate(deadline.getDate() - 7);
-            logMessageContent = logMessageContent.replace(/#{잔금}/g, balanceAmount.toLocaleString());
-            logMessageContent = logMessageContent.replace(/#{납부기한}/g, deadline.toLocaleDateString());
-            logMessageContent = logMessageContent.replace(/#{추가안내}/g, '');
-            break;
-            
-          case 'deposit_confirmation':
-            const paidDeposit = 100000;
-            logMessageContent = logMessageContent.replace(/#{계약금}/g, paidDeposit.toLocaleString());
-            break;
-            
-          case 'payment_complete':
-            logMessageContent = logMessageContent.replace(/#{총금액}/g, tourPrice.toLocaleString());
-            logMessageContent = logMessageContent.replace(/#{url}/g, 'portal-url');
-            break;
-        }
-        
-        await supabase.from('message_logs').insert({
-          customer_id: participant.id,
-          message_type: sendMethod === 'kakao' ? 'alimtalk' : logMessageContent.length > 90 ? 'lms' : 'sms',
-          template_id: templateId,
-          phone_number: cleanPhone,
-          title: templateData.title,
-          content: logMessageContent,
-          status: 'sent',
-          sent_at: new Date().toISOString()
-        });
+          return {
+            ...baseVariables,
+            총금액: tourPrice.toLocaleString(),
+            url: portalLink?.public_url || tourId
+          };
+          
+        default:
+          return baseVariables;
       }
+    };
 
-    } catch (error: any) {
-      console.error('솔라피 발송 오류:', error);
-      failCount = participants.length;
+    const messageVariables = getMessageVariables(messageType);
+
+    // 메시지 템플릿 선택
+    let template;
+    let finalTemplateData = templateData;
+    
+    if (templateData?.content) {
+      // 사용자 정의 템플릿 사용
+      template = templateData.content;
+    } else {
+      // 기본 템플릿 사용
+      const subType = messageType.toUpperCase().replace(/-/g, '_');
+      template = selectTemplate('PAYMENT', sendMethod, subType);
+      
+      if (typeof template === 'object') {
+        finalTemplateData = { ...templateData, ...template };
+        template = template.content || template.SMS || template;
+      }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `${successCount}명 발송 성공${failCount > 0 ? `, ${failCount}명 발송 실패` : ''}`,
-      successCount,
-      failCount
+    // 메시지 준비
+    const messages = participants.map(participant => {
+      // 참가자별 변수 추가
+      const participantVariables = {
+        ...messageVariables,
+        이름: participant.name
+      };
+
+      // 템플릿 변수 치환
+      const messageContent = smsService.replaceTemplateVariables(
+        template,
+        participantVariables
+      );
+
+      // 메시지 객체 생성
+      return smsService.prepareMessage({
+        to: participant.phone,
+        text: messageContent,
+        templateData: finalTemplateData,
+        sendMethod
+      });
     });
+
+    console.log('메시지 발송 준비 완료:', {
+      참가자수: messages.length,
+      메시지타입: messages[0]?.type,
+      첫번째메시지: messages[0]?.text?.substring(0, 50) + '...'
+    });
+
+    // SMS 발송
+    try {
+      const solapiResult = await smsService.send(messages);
+      
+      console.log('발송 결과:', solapiResult);
+
+      // 메시지 로그 저장
+      await smsService.saveMessageLog({
+        participants,
+        messageType: messages[0]?.type || sendMethod.toUpperCase(),
+        templateId: templateId || messageType,
+        title: templateData?.title || `[싱싱골프] ${messageType.replace(/_/g, ' ')}`,
+        content: template,
+        status: 'sent',
+        tourId,
+        groupId: solapiResult.groupId
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${participants.length}명에게 메시지가 발송되었습니다.`,
+        successCount: participants.length,
+        failCount: 0
+      });
+
+    } catch (solapiError: any) {
+      console.error('솔라피 발송 오류:', solapiError);
+      
+      // 실패 로그 저장
+      await smsService.saveMessageLog({
+        participants,
+        messageType: sendMethod === 'kakao' ? 'ATA' : 'SMS',
+        templateId: templateId || messageType,
+        title: templateData?.title || `[싱싱골프] ${messageType.replace(/_/g, ' ')}`,
+        content: template,
+        status: 'failed',
+        tourId,
+        error: solapiError.message
+      });
+
+      return NextResponse.json({
+        success: false,
+        message: `메시지 발송 실패: ${solapiError.message}`,
+        successCount: 0,
+        failCount: participants.length
+      });
+    }
+
   } catch (error: any) {
     console.error('결제 메시지 발송 오류:', {
       message: error.message,
-      stack: error.stack,
-      hasApiKey: !!SOLAPI_API_KEY,
-      hasApiSecret: !!SOLAPI_API_SECRET,
-      hasSender: !!SOLAPI_SENDER,
-      sender: SOLAPI_SENDER
+      stack: error.stack
     });
+    
     return NextResponse.json(
       { 
         success: false, 
         error: error.message || '메시지 발송 중 오류가 발생했습니다.',
-        details: {
-          hasApiKey: !!SOLAPI_API_KEY,
-          hasApiSecret: !!SOLAPI_API_SECRET,
-          hasSender: !!SOLAPI_SENDER,
-          sender: SOLAPI_SENDER
-        }
+        details: error
       },
       { status: 500 }
     );
