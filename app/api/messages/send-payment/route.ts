@@ -214,13 +214,49 @@ export async function POST(request: NextRequest) {
       // 메시지 로그 저장
       for (const participant of participants) {
         const cleanPhone = participant.phone.replace(/-/g, "").replace(/\s/g, "");
+        
+        // 템플릿 변수 치환 (로그 저장용)
+        let logMessageContent = templateData.content;
+        logMessageContent = logMessageContent.replace(/#{이름}/g, participant.name);
+        logMessageContent = logMessageContent.replace(/#{투어명}/g, tour.title);
+        logMessageContent = logMessageContent.replace(/#{출발일}/g, new Date(tour.start_date).toLocaleDateString());
+        logMessageContent = logMessageContent.replace(/#{은행명}/g, '국민은행');
+        logMessageContent = logMessageContent.replace(/#{계좌번호}/g, '294537-04-018035');
+
+        // 메시지 타입별 추가 변수 치환
+        switch (messageType) {
+          case 'deposit_request':
+            const depositAmount = 100000;
+            logMessageContent = logMessageContent.replace(/#{계약금}/g, depositAmount.toLocaleString());
+            break;
+            
+          case 'balance_request':
+            const balanceAmount = tourPrice - 100000;
+            const deadline = new Date(tour.start_date);
+            deadline.setDate(deadline.getDate() - 7);
+            logMessageContent = logMessageContent.replace(/#{잔금}/g, balanceAmount.toLocaleString());
+            logMessageContent = logMessageContent.replace(/#{납부기한}/g, deadline.toLocaleDateString());
+            logMessageContent = logMessageContent.replace(/#{추가안내}/g, '');
+            break;
+            
+          case 'deposit_confirmation':
+            const paidDeposit = 100000;
+            logMessageContent = logMessageContent.replace(/#{계약금}/g, paidDeposit.toLocaleString());
+            break;
+            
+          case 'payment_complete':
+            logMessageContent = logMessageContent.replace(/#{총금액}/g, tourPrice.toLocaleString());
+            logMessageContent = logMessageContent.replace(/#{url}/g, 'portal-url');
+            break;
+        }
+        
         await supabase.from('message_logs').insert({
           customer_id: participant.id,
-          message_type: sendMethod === 'kakao' ? 'alimtalk' : messageContent.length > 90 ? 'lms' : 'sms',
+          message_type: sendMethod === 'kakao' ? 'alimtalk' : logMessageContent.length > 90 ? 'lms' : 'sms',
           template_id: templateId,
           phone_number: cleanPhone,
           title: templateData.title,
-          content: messageContent,
+          content: logMessageContent,
           status: 'sent',
           sent_at: new Date().toISOString()
         });
