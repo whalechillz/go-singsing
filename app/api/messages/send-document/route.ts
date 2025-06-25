@@ -185,6 +185,8 @@ export async function POST(request: NextRequest) {
           // 버튼 추가 (있는 경우) - 실제 문서 URL 사용
           if (templateData.buttons && Array.isArray(templateData.buttons) && templateData.buttons.length > 0) {
             try {
+              console.log('템플릿 버튼 원본 데이터:', JSON.stringify(templateData.buttons, null, 2));
+              
               // URL 파라미터만 추출
               let urlParam = documentUrl || 'https://go.singsinggolf.kr';
               
@@ -206,10 +208,12 @@ export async function POST(request: NextRequest) {
               for (let i = 0; i < templateData.buttons.length; i++) {
                 try {
                   let btn = templateData.buttons[i];
+                  console.log(`버튼 ${i + 1} 원본:`, typeof btn, btn);
                   
                   if (typeof btn === 'string') {
                     try {
                       btn = JSON.parse(btn);
+                      console.log(`버튼 ${i + 1} 파싱 후:`, btn);
                     } catch (e) {
                       console.error(`버튼 ${i + 1} 파싱 오류:`, e);
                       continue;
@@ -222,15 +226,38 @@ export async function POST(request: NextRequest) {
                   }
                   
                   // #{url}만 치환 (안전하게)
-                  const processedButton = {
-                    ...btn,
-                    linkMo: btn.linkMo ? String(btn.linkMo).replace(/#{url}/g, urlParam) : '',
-                    linkPc: btn.linkPc ? String(btn.linkPc).replace(/#{url}/g, urlParam) : ''
+                  // 카카오 알림톡 버튼 형식에 맞게 수정
+                  // 솔라피 API 문서에 따른 필수 필드만 포함
+                  const processedButton: any = {
+                    type: 'WL', // 웹링크 타입 고정
+                    name: btn.name || btn.text || '자세히 보기',
+                    linkMo: btn.linkMo ? String(btn.linkMo).replace(/#{url}/g, urlParam) : ''
                   };
                   
-                  console.log(`버튼 ${i + 1} URL 치환:`, {
-                    원본: btn.linkMo,
-                    치환후: processedButton.linkMo
+                  // linkPc는 선택적 - 있으면 추가
+                  if (btn.linkPc) {
+                    processedButton.linkPc = String(btn.linkPc).replace(/#{url}/g, urlParam);
+                  }
+                  
+                  // 필수 필드 검증
+                  if (!processedButton.name || !processedButton.linkMo) {
+                    console.log(`버튼 ${i + 1} 필수 필드 누락:`, {
+                      name: processedButton.name,
+                      linkMo: processedButton.linkMo
+                    });
+                    continue;
+                  }
+                  
+                  // linkPc가 없으면 linkMo와 동일하게 설정
+                  if (!processedButton.linkPc) {
+                    processedButton.linkPc = processedButton.linkMo;
+                  }
+                  
+                  console.log(`버튼 ${i + 1} 처리 완료:`, {
+                    type: processedButton.type,
+                    name: processedButton.name,
+                    linkMo: processedButton.linkMo,
+                    linkPc: processedButton.linkPc
                   });
                   
                   processedButtons.push(processedButton);
