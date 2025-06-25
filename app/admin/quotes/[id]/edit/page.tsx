@@ -20,11 +20,13 @@ import {
   Save,
   Share2,
   MapPin,
-  Route
+  Route,
+  Send
 } from "lucide-react";
 import Link from "next/link";
 import { generatePublicUrl, getPublicLinkUrl, getInternalQuoteUrl } from "@/utils/publicLink";
 import TourJourneyManager from "@/components/TourJourneyManager";
+import QuoteSendModal from "@/components/QuoteSendModal";
 
 interface TourProduct {
   id: string;
@@ -46,6 +48,7 @@ export default function EditQuotePage() {
   const [tourProducts, setTourProducts] = useState<TourProduct[]>([]);
   const [documentLink, setDocumentLink] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'basic' | 'schedule'>('basic');
+  const [showMessageModal, setShowMessageModal] = useState(false);
   
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -111,6 +114,8 @@ export default function EditQuotePage() {
       console.error("Error fetching tour products:", error);
     }
   };
+
+
 
   const fetchQuoteData = async () => {
     try {
@@ -439,6 +444,13 @@ export default function EditQuotePage() {
               >
                 <Eye className="w-4 h-4" />
                 미리보기
+              </button>
+              <button
+                onClick={() => setShowMessageModal(true)}
+                className="px-4 py-2 text-green-700 bg-green-50 border border-green-300 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                메시지 발송
               </button>
               {!documentLink && (
                 <button
@@ -885,6 +897,20 @@ export default function EditQuotePage() {
           </div>
         )}
       </div>
+
+      {/* 메시지 발송 모달 */}
+      {showMessageModal && (
+        <QuoteSendModal
+          isOpen={showMessageModal}
+          onClose={() => setShowMessageModal(false)}
+          quoteId={quoteId}
+          quoteName={formData.title}
+          customerName={formData.customer_name}
+          customerPhone={formData.customer_phone}
+          expiresAt={formData.quote_expires_at}
+          publicUrl={documentLink?.public_url}
+        />
+      )}
     </div>
   );
 }
