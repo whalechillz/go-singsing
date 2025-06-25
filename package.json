@@ -11,7 +11,9 @@
     "create-migration-template": "tsx scripts/create-migration-template.ts",
     "check-participants": "tsx scripts/debug/check-participant-count.ts",
     "fix-duplicates": "tsx scripts/debug/fix-duplicate-participants.ts",
-    "check-tours": "tsx scripts/check-tour-participants.ts"
+    "check-tours": "tsx scripts/check-tour-participants.ts",
+    "cleanup-mms-images": "tsx scripts/cleanup-unused-mms-images.ts",
+    "retry-messages": "tsx scripts/retry-failed-messages.ts"
   },
   "dependencies": {
     "@octokit/rest": "^21.1.1",
@@ -24,6 +26,7 @@
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "dotenv": "^16.4.5",
     "formidable": "^3.5.4",
     "lucide-react": "^0.509.0",
     "next": "15.3.1",
