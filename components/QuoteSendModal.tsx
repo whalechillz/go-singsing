@@ -116,34 +116,58 @@ export default function QuoteSendModal({
         ? `https://go.singsinggolf.kr/q/${publicUrl}`
         : `https://go.singsinggolf.kr/quote/${quoteId}`;
       
+      console.log('발송 준비:', {
+        quoteId,
+        customerPhone: phoneNumber,
+        customerName: recipientName,
+        quoteUrl,
+        sendMethod,
+        templateId: selectedTemplate.id
+      });
+      
       // 만료일 포맷팅
       const expiryDate = expiresAt ? new Date(expiresAt).toLocaleDateString('ko-KR') : '미정';
       
       // API 호출
-      const response = await fetch('/api/messages/send', {
+      const response = await fetch('/api/messages/send-quote', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          recipients: [{
-            name: recipientName || '고객님',
-            phone: phoneNumber
-          }],
-          sendMethod,
+          quoteId: quoteId,
+          customerPhone: phoneNumber,
+          customerName: recipientName || '고객님',
           templateId: selectedTemplate.id,
-          templateData: {
-            이름: recipientName || '고객님',
-            견적서명: quoteName,
-            url: quoteUrl,
-            만료일: expiryDate
-          },
-          tourId: quoteId, // 견적서 ID를 tourId로 사용
-          messageType: 'quote'
+          templateData: selectedTemplate, // 템플릿 전체 데이터
+          sendMethod: sendMethod
         })
       });
       
-      const result = await response.json();
+      // 응답 상태 확인
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers.get('content-type'));
+      
+      // 응답 텍스트 먼저 확인
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+      
+      // JSON 파싱 시도
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        // 응답이 JSON이 아닌 경우 처리
+        if (response.ok) {
+          // 성공 응답이지만 JSON이 아닌 경우
+          alert('견적서가 발송되었습니다.');
+          onClose();
+          return;
+        } else {
+          throw new Error(`서버 오류: ${response.status} - ${responseText}`);
+        }
+      }
       
       if (result.success) {
         alert('견적서가 성공적으로 발송되었습니다.');
