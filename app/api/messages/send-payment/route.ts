@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
     let failCount = 0;
     const tourPrice = Number(tour.price);
 
+    // 카카오 알림톡용 템플릿 ID를 가져오기
+    const kakaoTemplateId = templateData.kakao_template_code;
+
     for (const participant of participants) {
       try {
         // 템플릿 변수 치환
@@ -78,19 +81,81 @@ export async function POST(request: NextRequest) {
             break;
         }
 
-        // 메시지 로그 저장
-        await supabase.from('message_logs').insert({
-          customer_id: participant.id,
-          message_type: sendMethod === 'kakao' ? 'alimtalk' : 'sms',
-          template_id: templateId,
-          phone_number: participant.phone,
-          title: templateData.title,
-          content: messageContent,
-          status: 'sent',
-          sent_at: new Date().toISOString()
-        });
-
-        successCount++;
+        // 발송 방법에 따라 다른 API 호출
+        if (sendMethod === 'kakao' && kakaoTemplateId) {
+          // 카카오 알림톡 발송
+          const baseUrl = request.url.includes('localhost') ? 'http://localhost:3000' : 'https://go2.singsinggolf.kr';
+          const response = await fetch(`${baseUrl}/api/solapi/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'kakao_alimtalk',
+              recipients: [{
+                phone: participant.phone,
+                customer_id: participant.id
+              }],
+              title: templateData.title,
+              content: messageContent,
+              template_id: kakaoTemplateId
+            })
+          });
+          
+          const result = await response.json();
+          if (result.success) {
+            successCount++;
+            // 메시지 로그 저장
+            await supabase.from('message_logs').insert({
+              customer_id: participant.id,
+              message_type: 'alimtalk',
+              template_id: templateId,
+              phone_number: participant.phone,
+              title: templateData.title,
+              content: messageContent,
+              status: 'sent',
+              sent_at: new Date().toISOString()
+            });
+          } else {
+            failCount++;
+          }
+        } else {
+          // SMS 발송
+          const baseUrl = request.url.includes('localhost') ? 'http://localhost:3000' : 'https://go2.singsinggolf.kr';
+          const response = await fetch(`${baseUrl}/api/solapi/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: messageContent.length > 90 ? 'lms' : 'sms',
+              recipients: [{
+                phone: participant.phone,
+                customer_id: participant.id
+              }],
+              title: templateData.title,
+              content: messageContent
+            })
+          });
+          
+          const result = await response.json();
+          if (result.success) {
+            successCount++;
+            // 메시지 로그 저장
+            await supabase.from('message_logs').insert({
+              customer_id: participant.id,
+              message_type: messageContent.length > 90 ? 'lms' : 'sms',
+              template_id: templateId,
+              phone_number: participant.phone,
+              title: templateData.title,
+              content: messageContent,
+              status: 'sent',
+              sent_at: new Date().toISOString()
+            });
+          } else {
+            failCount++;
+          }
+        }
       } catch (error) {
         console.error(`참가자 ${participant.name} 발송 실패:`, error);
         failCount++;
