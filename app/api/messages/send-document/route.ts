@@ -137,9 +137,23 @@ export async function POST(request: NextRequest) {
         // 템플릿 변수 치환
         let personalizedContent = '';
         try {
+          console.log('템플릿 치환 전:', {
+            template: messageTemplate,
+            name: participant.name,
+            urlParam: urlParam
+          });
+          
           personalizedContent = (messageTemplate || '')
-            .replace('#{이름}', participant.name || '고객님')
-            .replace(/#{url}/g, urlParam);
+            .replace(/#\{이름\}/g, participant.name || '고객님')  // 정규표현식으로 변경
+            .replace(/#\{url\}/g, urlParam);
+            
+          // URL 경로를 /s/에서 /portal/로 변경
+          personalizedContent = personalizedContent.replace(
+            /https:\/\/go\.singsinggolf\.kr\/s\//g,
+            'https://go.singsinggolf.kr/portal/'
+          );
+          
+          console.log('치환 후 메시지:', personalizedContent);
         } catch (replaceError) {
           console.error('템플릿 치환 오류:', replaceError);
           personalizedContent = `[싱싱골프] ${participant.name || '고객님'}님, 투어 문서를 확인해주세요: ${documentUrl || 'https://go.singsinggolf.kr'}`;
@@ -368,7 +382,7 @@ export async function POST(request: NextRequest) {
           template_id: templateId || 'document_link',
           phone_number: participant.phone,
           title: `[싱싱골프] 투어 문서 안내`,
-          content: messageTemplate.replace('#{이름}', participant.name || '고객'),
+          content: messageTemplate.replace(/#\{이름\}/g, participant.name || '고객'),
           status: 'sent',
           tour_id: tourId,
           document_link_id: documentIds[0],
@@ -405,7 +419,7 @@ export async function POST(request: NextRequest) {
           template_id: templateId || 'document_link',
           phone_number: participant.phone,
           title: `[싱싱골프] 투어 문서 안내`,
-          content: messageTemplate.replace('#{이름}', participant.name || '고객'),
+          content: messageTemplate.replace(/#\{이름\}/g, participant.name || '고객'),
           status: 'failed',
           tour_id: tourId,
           document_link_id: documentIds[0],
