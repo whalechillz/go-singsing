@@ -110,7 +110,18 @@ export async function POST(request: NextRequest) {
     try {
       // 솔라피 메시지 데이터 생성
       const messages = participants.map((participant) => {
-        const personalizedContent = messageTemplate.replace('#{이름}', participant.name || '고객님');
+        // URL 파라미터 추출 (메시지 변환용)
+        let urlParam = documentUrl || '';
+        if (documentUrl && documentUrl.includes('/s/')) {
+          urlParam = documentUrl.split('/s/')[1];
+        } else if (documentUrl && documentUrl.includes('/portal/')) {
+          urlParam = documentUrl.split('/portal/')[1];
+        }
+        
+        // 템플릿 변수 치환
+        let personalizedContent = messageTemplate
+          .replace('#{이름}', participant.name || '고객님')
+          .replace(/#{url}/g, urlParam);
         
         // 메시지 길이 확인 (SMS용 바이트 계산 - 한글 2바이트)
         const byteLength = getByteLength(personalizedContent);
@@ -151,8 +162,23 @@ export async function POST(request: NextRequest) {
           
           // 버튼 추가 (있는 경우) - 실제 문서 URL 사용
           if (templateData.buttons && templateData.buttons.length > 0) {
-            // 버튼 URL 변수 치환 - documentUrl 사용
-            const actualUrl = documentUrl || 'https://go.singsinggolf.kr';
+            // URL 파라미터만 추출
+            let urlParam = documentUrl || 'https://go.singsinggolf.kr';
+            
+            // 전체 URL에서 short_code만 추출
+            if (documentUrl && documentUrl.includes('/s/')) {
+              // https://go.singsinggolf.kr/s/bo6d6cre -> bo6d6cre
+              urlParam = documentUrl.split('/s/')[1];
+            } else if (documentUrl && documentUrl.includes('/portal/')) {
+              // https://go.singsinggolf.kr/portal/bo6d6cre -> bo6d6cre
+              urlParam = documentUrl.split('/portal/')[1];
+            }
+            
+            console.log('URL 파라미터 추출:', {
+              원본URL: documentUrl,
+              추출된파라미터: urlParam
+            });
+            
             const processedButtons = templateData.buttons.map((btn: any) => {
               if (typeof btn === 'string') {
                 try {
@@ -161,11 +187,20 @@ export async function POST(request: NextRequest) {
                   console.error('버튼 파싱 오류:', e);
                 }
               }
-              return {
+              
+              // #{url}만 치환 (전체 경로가 아닌 파라미터만)
+              const processedButton = {
                 ...btn,
-                linkMo: btn.linkMo?.replace(/#{url}/g, actualUrl),
-                linkPc: btn.linkPc?.replace(/#{url}/g, actualUrl)
+                linkMo: btn.linkMo?.replace(/#{url}/g, urlParam),
+                linkPc: btn.linkPc?.replace(/#{url}/g, urlParam)
               };
+              
+              console.log('버튼 URL 치환:', {
+                원본: btn.linkMo,
+                치환후: processedButton.linkMo
+              });
+              
+              return processedButton;
             });
             message.kakaoOptions.buttons = processedButtons;
             console.log('처리된 버튼:', processedButtons);

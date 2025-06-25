@@ -12,7 +12,7 @@ interface DocumentSendModalProps {
 
 const getDocumentTypeName = (type: string) => {
   const typeMap: Record<string, string> = {
-    'portal': '통합 포털 페이지',  // 변경: 명확하게 포털 페이지임을 표시
+    'portal': '통합 표지',  // DB와 동일하게 표시
     'customer_all': '고객용 통합 문서',
     'staff_all': '스탭용 통합 문서',
     'golf_timetable': '골프장 티타임표',
@@ -180,27 +180,37 @@ export default function DocumentSendModal({
   };
   
   const generateMessage = () => {
-    if (!tour || selectedDocs.length === 0 || !selectedTemplate) return "";
+    if (!tour || selectedDocs.length === 0) return "";
     
     const doc = documents.find(d => d.id === selectedDocs[0]); // 첫번째 문서 기준
-    const url = doc?.public_url ? 
-      `https://go.singsinggolf.kr/s/${doc.public_url}` :
-      `https://go.singsinggolf.kr/s/${doc?.short_code}`;
+    
+    // URL 파라미터만 추출 (템플릿에 #{url}로 들어갈 부분)
+    let urlParam = '';
+    if (doc?.public_url) {
+      urlParam = doc.public_url;
+    } else if (doc?.short_code) {
+      urlParam = doc.short_code;
+    }
+    
+    // 템플릿이 없을 경우 기본 메시지
+    if (!selectedTemplate) {
+      const docTypeName = doc?.title || getDocumentTypeName(doc?.document_type || 'portal');
+      return `#{이름}님, 안녕하세요.
+
+${tour.title} ${docTypeName}입니다.
+
+▶ https://go.singsinggolf.kr/portal/${urlParam}
+
+문의사항은 언제든지 연락주세요.
+감사합니다.`;
+    }
     
     // 템플릿 변수 치환
-    let message = selectedTemplate.content;
+    let message = selectedTemplate.content || '';
     message = message.replace(/#{투어명}/g, tour.title);
-    message = message.replace(/#{url}/g, url);
+    message = message.replace(/#{url}/g, urlParam);  // URL 파라미터만 치환
     
-    // 버튼의 URL도 치환
-    if (selectedTemplate.buttons && selectedTemplate.buttons.length > 0) {
-      const updatedButtons = selectedTemplate.buttons.map((btn: any) => ({
-        ...btn,
-        linkMo: btn.linkMo?.replace(/#{url}/g, url),
-        linkPc: btn.linkPc?.replace(/#{url}/g, url)
-      }));
-      selectedTemplate.buttons = updatedButtons;
-    }
+    // 버튼의 URL도 치환 (서버에서 처리하므로 필요 없음)
     
     return message;
   };
@@ -217,9 +227,10 @@ export default function DocumentSendModal({
       return;
     }
     
-    if (!selectedTemplate) {
-      alert("메시지 템플릿을 선택해주세요.");
-      return;
+    // 템플릿이 없어도 SMS로 발송 가능
+    if (!selectedTemplate && sendMethod === "kakao") {
+      alert("카카오 알림톡 템플릿이 없습니다. SMS로 발송합니다.");
+      setSendMethod("sms");
     }
     
     setLoading(true);
@@ -254,8 +265,8 @@ export default function DocumentSendModal({
           participantIds: participants.map(p => p.id),
           sendMethod,
           messageTemplate,
-          templateId: selectedTemplate.id,
-          templateData: selectedTemplate,
+          templateId: selectedTemplate?.id || null,
+          templateData: selectedTemplate || null,
           documentUrl: documentUrl // 실제 문서 URL 전달
         }),
         signal: controller.signal
@@ -393,21 +404,29 @@ export default function DocumentSendModal({
                     <MessageSquare className="w-4 h-4" />
                     메시지 템플릿 선택
                   </h3>
-                  <select
-                    className="w-full p-2 border rounded-lg"
-                    value={selectedTemplate?.id || ''}
-                    onChange={(e) => {
-                      const template = templates.find(t => t.id === e.target.value);
-                      setSelectedTemplate(template);
-                    }}
-                  >
-                    <option value="">템플릿 선택</option>
-                    {templates.map(template => (
-                      <option key={template.id} value={template.id}>
-                        {template.name}
-                      </option>
-                    ))}
-                  </select>
+                  {templates.length === 0 ? (
+                    <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        사용 가능한 템플릿이 없습니다. SMS로 발송됩니다.
+                      </p>
+                    </div>
+                  ) : (
+                    <select
+                      className="w-full p-2 border rounded-lg"
+                      value={selectedTemplate?.id || ''}
+                      onChange={(e) => {
+                        const template = templates.find(t => t.id === e.target.value);
+                        setSelectedTemplate(template);
+                      }}
+                    >
+                      <option value="">템플릿 선택</option>
+                      {templates.map(template => (
+                        <option key={template.id} value={template.id}>
+                          {template.name} ({template.type === 'alimtalk' ? '카카오' : 'SMS'})
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               )}
               
