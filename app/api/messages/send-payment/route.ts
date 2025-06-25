@@ -1,8 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
+import crypto from 'crypto';
+
+// 솔라피 API 설정
+const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY || "";
+const SOLAPI_API_SECRET = process.env.SOLAPI_API_SECRET || "";
+const SOLAPI_PFID = process.env.SOLAPI_PFID || "";
+const SOLAPI_SENDER = process.env.SOLAPI_SENDER || "";
+
+// HMAC 서명 생성
+function getSignature() {
+  const date = new Date().toISOString();
+  const salt = Math.random().toString(36).substring(2, 15);
+  const data = date + salt;
+  const signature = crypto
+    .createHmac("sha256", SOLAPI_API_SECRET)
+    .update(data)
+    .digest("hex");
+  
+  return {
+    Authorization: `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // 환경변수 확인
+    if (!SOLAPI_API_KEY || !SOLAPI_API_SECRET || !SOLAPI_SENDER) {
+      console.error('필수 환경변수 누락:', {
+        hasApiKey: !!SOLAPI_API_KEY,
+        hasApiSecret: !!SOLAPI_API_SECRET,
+        hasSender: !!SOLAPI_SENDER
+      });
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: '서버 설정 오류: 필수 환경변수가 설정되지 않았습니다.',
+          details: {
+            hasApiKey: !!SOLAPI_API_KEY,
+            hasApiSecret: !!SOLAPI_API_SECRET,
+            hasSender: !!SOLAPI_SENDER
+          }
+        },
+        { status: 500 }
+      );
+    }
     const body = await request.json();
     const { 
       tourId, 
@@ -34,7 +76,7 @@ export async function POST(request: NextRequest) {
       throw new Error('참가자 정보를 가져올 수 없습니다.');
     }
 
-    // 메시지 발송 (실제 구현시 솔라피 API 연동)
+    // 메시지 발송
     let successCount = 0;
     let failCount = 0;
     const tourPrice = Number(tour.price);
@@ -81,83 +123,92 @@ export async function POST(request: NextRequest) {
             break;
         }
 
-        // 발송 방법에 따라 다른 API 호출
+        // 솔라피 API 직접 호출
+        const cleanPhone = participant.phone.replace(/-/g, "").replace(/\s/g, "");
+        const cleanSender = SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, "");
+
+        let requestBody: any = {
+          to: cleanPhone,
+          from: cleanSender,
+          text: messageContent,
+          type: sendMethod === 'kakao' ? 'ATA' : (messageContent.length > 90 ? 'LMS' : 'SMS')
+        };
+
+        // 메시지 타입별 설정
         if (sendMethod === 'kakao' && kakaoTemplateId) {
-          // 카카오 알림톡 발송
-          const baseUrl = request.url.includes('localhost') ? 'http://localhost:3000' : 'https://go2.singsinggolf.kr';
-          const response = await fetch(`${baseUrl}/api/solapi/send`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              type: 'kakao_alimtalk',
-              recipients: [{
-                phone: participant.phone,
-                customer_id: participant.id
-              }],
-              title: templateData.title,
-              content: messageContent,
-              template_id: kakaoTemplateId
-            })
-          });
-          
-          const result = await response.json();
-          if (result.success) {
-            successCount++;
-            // 메시지 로그 저장
-            await supabase.from('message_logs').insert({
-              customer_id: participant.id,
-              message_type: 'alimtalk',
-              template_id: templateId,
-              phone_number: participant.phone,
-              title: templateData.title,
-              content: messageContent,
-              status: 'sent',
-              sent_at: new Date().toISOString()
-            });
-          } else {
-            failCount++;
-          }
+          // 카카오 알림톡
+          requestBody.type = 'ATA';
+          requestBody.kakaoOptions = {
+            pfId: SOLAPI_PFID,
+            templateId: kakaoTemplateId,
+          };
+        } else if (messageContent.length > 90) {
+          // LMS
+          requestBody.type = 'LMS';
+          requestBody.subject = templateData.title || '싱싱골프투어';
         } else {
-          // SMS 발송
-          const baseUrl = request.url.includes('localhost') ? 'http://localhost:3000' : 'https://go2.singsinggolf.kr';
-          const response = await fetch(`${baseUrl}/api/solapi/send`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              type: messageContent.length > 90 ? 'lms' : 'sms',
-              recipients: [{
-                phone: participant.phone,
-                customer_id: participant.id
-              }],
-              title: templateData.title,
-              content: messageContent
-            })
-          });
-          
-          const result = await response.json();
-          if (result.success) {
-            successCount++;
-            // 메시지 로그 저장
-            await supabase.from('message_logs').insert({
-              customer_id: participant.id,
-              message_type: messageContent.length > 90 ? 'lms' : 'sms',
-              template_id: templateId,
-              phone_number: participant.phone,
-              title: templateData.title,
-              content: messageContent,
-              status: 'sent',
-              sent_at: new Date().toISOString()
-            });
-          } else {
-            failCount++;
-          }
+          // SMS
+          requestBody.type = 'SMS';
         }
-      } catch (error) {
-        console.error(`참가자 ${participant.name} 발송 실패:`, error);
+
+        console.log('솔라피 API 호출:', {
+          url: 'https://api.solapi.com/messages/v4/send',
+          method: 'POST',
+          messageType: requestBody.type,
+          to: requestBody.to,
+          from: requestBody.from
+        });
+
+        const response = await fetch("https://api.solapi.com/messages/v4/send", {
+          method: "POST",
+          headers: {
+            ...getSignature(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        const responseText = await response.text();
+        console.log('솔라피 응답:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: responseText
+        });
+
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          console.error('응답 파싱 실패:', responseText);
+          result = { success: false, error: responseText };
+        }
+        
+        if (response.ok) {
+          successCount++;
+          // 메시지 로그 저장
+          await supabase.from('message_logs').insert({
+            customer_id: participant.id,
+            message_type: sendMethod === 'kakao' ? 'alimtalk' : messageContent.length > 90 ? 'lms' : 'sms',
+            template_id: templateId,
+            phone_number: cleanPhone,
+            title: templateData.title,
+            content: messageContent,
+            status: 'sent',
+            sent_at: new Date().toISOString()
+          });
+        } else {
+          failCount++;
+          console.error('솔라피 발송 실패:', {
+            participant: participant.name,
+            phone: cleanPhone,
+            result: result
+          });
+        }
+      } catch (error: any) {
+        console.error(`참가자 ${participant.name} 발송 실패:`, {
+          error: error.message,
+          stack: error.stack
+        });
         failCount++;
       }
     }
@@ -169,9 +220,25 @@ export async function POST(request: NextRequest) {
       failCount
     });
   } catch (error: any) {
-    console.error('결제 메시지 발송 오류:', error);
+    console.error('결제 메시지 발송 오류:', {
+      message: error.message,
+      stack: error.stack,
+      hasApiKey: !!SOLAPI_API_KEY,
+      hasApiSecret: !!SOLAPI_API_SECRET,
+      hasSender: !!SOLAPI_SENDER,
+      sender: SOLAPI_SENDER
+    });
     return NextResponse.json(
-      { success: false, error: error.message || '메시지 발송 중 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: error.message || '메시지 발송 중 오류가 발생했습니다.',
+        details: {
+          hasApiKey: !!SOLAPI_API_KEY,
+          hasApiSecret: !!SOLAPI_API_SECRET,
+          hasSender: !!SOLAPI_SENDER,
+          sender: SOLAPI_SENDER
+        }
+      },
       { status: 500 }
     );
   }
