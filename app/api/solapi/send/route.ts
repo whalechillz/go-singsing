@@ -202,11 +202,29 @@ export async function POST(request: NextRequest) {
       stack: error.stack,
       error: error
     });
+    
+    // 더 자세한 에러 메시지
+    let errorMessage = "메시지 발송 중 오류가 발생했습니다.";
+    let errorDetails = {};
+    
+    if (!process.env.SOLAPI_API_KEY || !process.env.SOLAPI_API_SECRET) {
+      errorMessage = "솔라피 API 키가 설정되지 않았습니다. Vercel 환경변수를 확인하세요.";
+      errorDetails = {
+        hasApiKey: !!process.env.SOLAPI_API_KEY,
+        hasApiSecret: !!process.env.SOLAPI_API_SECRET,
+        hasSender: !!process.env.SOLAPI_SENDER
+      };
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
       { 
         success: false, 
-        message: error.message || "메시지 발송 중 오류가 발생했습니다.",
-        error: error.toString()
+        message: errorMessage,
+        error: error.toString(),
+        details: errorDetails,
+        env: process.env.NODE_ENV
       },
       { status: 500 }
     );
