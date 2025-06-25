@@ -74,11 +74,21 @@ export async function POST(request: NextRequest) {
     
     console.log('문서 발송 API 요청:', { 
       tourId, 
-      documentIds: documentIds.length, 
-      participantIds: participantIds.length, 
+      documentIds: Array.isArray(documentIds) ? documentIds.length : documentIds, 
+      participantIds: Array.isArray(participantIds) ? participantIds.length : participantIds, 
       sendMethod,
-      documentUrl 
+      documentUrl,
+      hasMessageTemplate: !!messageTemplate,
+      hasTemplateData: !!templateData 
     });
+    
+    // 필수 필드 검증
+    if (!messageTemplate) {
+      return NextResponse.json(
+        { success: false, error: '메시지 템플릿이 없습니다.' },
+        { status: 400 }
+      );
+    }
     
     // 참가자 정보 가져오기
     let participants: Array<{id: string, name: string, phone: string}> = [];
@@ -119,9 +129,15 @@ export async function POST(request: NextRequest) {
         }
         
         // 템플릿 변수 치환
-        let personalizedContent = messageTemplate
-          .replace('#{이름}', participant.name || '고객님')
-          .replace(/#{url}/g, urlParam);
+        let personalizedContent = '';
+        try {
+          personalizedContent = (messageTemplate || '')
+            .replace('#{이름}', participant.name || '고객님')
+            .replace(/#{url}/g, urlParam);
+        } catch (replaceError) {
+          console.error('템플릿 치환 오류:', replaceError);
+          personalizedContent = `[싱싱골프] ${participant.name || '고객님'}님, 투어 문서를 확인해주세요: ${documentUrl || 'https://go.singsinggolf.kr'}`;
+        }
         
         // 메시지 길이 확인 (SMS용 바이트 계산 - 한글 2바이트)
         const byteLength = getByteLength(personalizedContent);
@@ -144,7 +160,7 @@ export async function POST(request: NextRequest) {
         }
         
         // 카카오 알림톡 사용 시
-        if (sendMethod === "kakao" && SOLAPI_PFID && templateData?.kakao_template_code) {
+        if (sendMethod === "kakao" && SOLAPI_PFID && templateData && templateData.kakao_template_code) {
           console.log('카카오 알림톡 설정:', {
             templateId: templateData.kakao_template_code,
             pfId: SOLAPI_PFID,
@@ -335,11 +351,16 @@ export async function POST(request: NextRequest) {
     
   } catch (error: any) {
     console.error('문서 발송 오류:', error);
+    console.error('Error stack:', error.stack);
     return NextResponse.json(
       { 
         success: false, 
         error: error.message || '발송 중 오류가 발생했습니다.',
-        details: error.toString()
+        details: {
+          message: error.toString(),
+          stack: error.stack,
+          name: error.name
+        }
       },
       { status: 500 }
     );
