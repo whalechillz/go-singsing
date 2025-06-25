@@ -115,13 +115,19 @@ export async function POST(request: NextRequest) {
     }
     
     console.log(`${participants.length}명의 참가자에게 발송 예정`);
+    console.log('참가자 정보:', participants[0]);
+    console.log('템플릿 내용:', messageTemplate?.substring(0, 100));
+    console.log('템플릿 데이터:', JSON.stringify(templateData, null, 2));
     
     // Solapi를 통한 실제 메시지 발송
     try {
       // 솔라피 메시지 데이터 생성
-      const messages = participants.map((participant) => {
-        // URL 파라미터 추출 (메시지 변환용)
-        let urlParam = documentUrl || '';
+      const messages = participants.map((participant, index) => {
+        console.log(`메시지 생성 시작 - 참가자 ${index + 1}:`, participant.name);
+        
+        try {
+          // URL 파라미터 추출 (메시지 변환용)
+          let urlParam = documentUrl || '';
         if (documentUrl && documentUrl.includes('/s/')) {
           urlParam = documentUrl.split('/s/')[1];
         } else if (documentUrl && documentUrl.includes('/portal/')) {
@@ -177,49 +183,71 @@ export async function POST(request: NextRequest) {
           };
           
           // 버튼 추가 (있는 경우) - 실제 문서 URL 사용
-          if (templateData.buttons && templateData.buttons.length > 0) {
-            // URL 파라미터만 추출
-            let urlParam = documentUrl || 'https://go.singsinggolf.kr';
-            
-            // 전체 URL에서 short_code만 추출
-            if (documentUrl && documentUrl.includes('/s/')) {
-              // https://go.singsinggolf.kr/s/bo6d6cre -> bo6d6cre
-              urlParam = documentUrl.split('/s/')[1];
-            } else if (documentUrl && documentUrl.includes('/portal/')) {
-              // https://go.singsinggolf.kr/portal/bo6d6cre -> bo6d6cre
-              urlParam = documentUrl.split('/portal/')[1];
-            }
-            
-            console.log('URL 파라미터 추출:', {
-              원본URL: documentUrl,
-              추출된파라미터: urlParam
-            });
-            
-            const processedButtons = templateData.buttons.map((btn: any) => {
-              if (typeof btn === 'string') {
+          if (templateData.buttons && Array.isArray(templateData.buttons) && templateData.buttons.length > 0) {
+            try {
+              // URL 파라미터만 추출
+              let urlParam = documentUrl || 'https://go.singsinggolf.kr';
+              
+              // 전체 URL에서 short_code만 추출
+              if (documentUrl && documentUrl.includes('/s/')) {
+                // https://go.singsinggolf.kr/s/bo6d6cre -> bo6d6cre
+                urlParam = documentUrl.split('/s/')[1];
+              } else if (documentUrl && documentUrl.includes('/portal/')) {
+                // https://go.singsinggolf.kr/portal/bo6d6cre -> bo6d6cre
+                urlParam = documentUrl.split('/portal/')[1];
+              }
+              
+              console.log('URL 파라미터 추출:', {
+                원본URL: documentUrl,
+                추출된파라미터: urlParam
+              });
+              
+              const processedButtons = [];
+              for (let i = 0; i < templateData.buttons.length; i++) {
                 try {
-                  btn = JSON.parse(btn);
-                } catch (e) {
-                  console.error('버튼 파싱 오류:', e);
+                  let btn = templateData.buttons[i];
+                  
+                  if (typeof btn === 'string') {
+                    try {
+                      btn = JSON.parse(btn);
+                    } catch (e) {
+                      console.error(`버튼 ${i + 1} 파싱 오류:`, e);
+                      continue;
+                    }
+                  }
+                  
+                  if (!btn || typeof btn !== 'object') {
+                    console.log(`버튼 ${i + 1} 무효:`, btn);
+                    continue;
+                  }
+                  
+                  // #{url}만 치환 (안전하게)
+                  const processedButton = {
+                    ...btn,
+                    linkMo: btn.linkMo ? String(btn.linkMo).replace(/#{url}/g, urlParam) : '',
+                    linkPc: btn.linkPc ? String(btn.linkPc).replace(/#{url}/g, urlParam) : ''
+                  };
+                  
+                  console.log(`버튼 ${i + 1} URL 치환:`, {
+                    원본: btn.linkMo,
+                    치환후: processedButton.linkMo
+                  });
+                  
+                  processedButtons.push(processedButton);
+                } catch (btnError) {
+                  console.error(`버튼 ${i + 1} 처리 중 오류:`, btnError);
+                  continue;
                 }
               }
               
-              // #{url}만 치환 (전체 경로가 아닌 파라미터만)
-              const processedButton = {
-                ...btn,
-                linkMo: btn.linkMo?.replace(/#{url}/g, urlParam),
-                linkPc: btn.linkPc?.replace(/#{url}/g, urlParam)
-              };
-              
-              console.log('버튼 URL 치환:', {
-                원본: btn.linkMo,
-                치환후: processedButton.linkMo
-              });
-              
-              return processedButton;
-            });
-            message.kakaoOptions.buttons = processedButtons;
-            console.log('처리된 버튼:', processedButtons);
+              if (processedButtons.length > 0) {
+                message.kakaoOptions.buttons = processedButtons;
+                console.log('처리된 버튼:', processedButtons);
+              }
+            } catch (buttonError) {
+              console.error('버튼 처리 중 오류:', buttonError);
+              // 버튼 오류는 무시하고 계속 진행
+            }
           }
         } else {
           // SMS/LMS로 발송
@@ -232,6 +260,16 @@ export async function POST(request: NextRequest) {
         }
         
         return message;
+        } catch (participantError) {
+          console.error(`참가자 ${participant.name} 메시지 생성 오류:`, participantError);
+          // 기본 메시지 반환
+          return {
+            to: participant.phone.replace(/-/g, "").replace(/\s/g, "").replace(/\+82/g, "0"),
+            from: SOLAPI_SENDER.replace(/-/g, "").replace(/\s/g, ""),
+            text: `[싱싱골프] ${participant.name || '고객님'}님, 투어 문서를 확인해주세요.`,
+            type: "SMS"
+          };
+        }
       });
 
       // 솔라피 API 호출
