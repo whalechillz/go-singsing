@@ -315,7 +315,7 @@ export async function POST(request: NextRequest) {
         pfId: SOLAPI_PFID
       });
 
-      const solapiResponse = await fetch("https://api.solapi.com/messages/v4/send", {
+      const solapiResponse = await fetch("https://api.solapi.com/messages/v4/send-many", {
         method: "POST",
         headers: {
           ...getSignature(),
