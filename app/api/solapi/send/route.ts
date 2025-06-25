@@ -121,44 +121,63 @@ export async function POST(request: NextRequest) {
       return message;
     });
 
-    // 솔라피 API 호출
-    const apiUrl = "https://api.solapi.com/messages/v4/send-many";
-    console.log("API 호출:", apiUrl);
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        ...getSignature(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ messages }),
-    });
-
-    const responseText = await response.text();
-    console.log("솔라피 응답:", { 
-      status: response.status, 
-      statusText: response.statusText,
-      body: responseText 
-    });
-
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (e) {
-      console.error("응답 파싱 실패:", responseText);
-      throw new Error("솔라피 API 응답을 파싱할 수 없습니다.");
+    // 솔라피 API 호출 - 단일 메시지로 변경
+    console.log("메시지 발송 시작, 수신자 수:", messages.length);
+    
+    const results = [];
+    
+    // 각 메시지를 개별적으로 발송
+    for (const msg of messages) {
+      try {
+        const apiUrl = "https://api.solapi.com/messages/v4/send";
+        console.log("API 호출:", apiUrl, "수신자:", msg.to);
+        
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            ...getSignature(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(msg),
+        });
+        
+        const responseText = await response.text();
+        console.log("솔라피 응답:", { 
+          status: response.status, 
+          statusText: response.statusText,
+          body: responseText 
+        });
+        
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          console.error("응답 파싱 실패:", responseText);
+          result = { success: false, error: "파싱 실패" };
+        }
+        
+        results.push({
+          phone: msg.to,
+          success: response.ok,
+          result: result
+        });
+        
+      } catch (err) {
+        console.error("메시지 발송 실패:", err);
+        results.push({
+          phone: msg.to,
+          success: false,
+          error: err
+        });
+      }
     }
-
-    if (!response.ok) {
-      throw new Error(result.message || `솔라피 API 오류 (${response.status})`);
-    }
+    
+    // 결과 집계
+    const sent = results.filter(r => r.success).length;
+    const failed = results.length - sent;
 
     // 비용 계산
     const cost = calculateCost(type, recipients.length);
-
-    // 발송 결과 처리
-    const sent = result.results ? result.results.filter((r: any) => r.status === 'success').length : recipients.length;
-    const failed = recipients.length - sent;
 
     // 발송 로그 저장
     try {
@@ -174,7 +193,7 @@ export async function POST(request: NextRequest) {
         phone_number: recipient.phone.replace(/-/g, ""),
         title: title || null,
         content: content,
-        status: result.results ? 'sent' : 'pending',
+        status: sent > 0 ? 'sent' : 'failed',
         cost: calculateCost(type, 1),
         sent_at: new Date().toISOString()
       }));
@@ -192,8 +211,11 @@ export async function POST(request: NextRequest) {
       failed: failed,
       count: recipients.length,
       cost: cost,
-      groupId: result.groupId,
-      result: result
+      results: results,
+      details: {
+        successfulMessages: results.filter(r => r.success),
+        failedMessages: results.filter(r => !r.success)
+      }
     });
 
   } catch (error: any) {
