@@ -1,0 +1,21 @@
+// DB에 저장될 견적서 템플릿 예제
+// 이 내용을 Supabase message_templates 테이블에 추가하세요
+
+{
+  "id": "quote_basic",
+  "type": "quote",
+  "name": "견적서 기본 템플릿",
+  "content": "[싱싱골프] 견적서\n#{이름}님, 요청하신 견적서입니다.\n\n#{견적서명}\n\n유효기간: #{만료일}\n문의: 031-215-3990",
+  "variables": ["이름", "견적서명", "만료일"],
+  "is_active": true
+}
+
+// 개선된 템플릿 (URL 포함)
+{
+  "id": "quote_with_link", 
+  "type": "quote",
+  "name": "견적서 링크 포함 템플릿",
+  "content": "[싱싱골프] 견적서\n#{이름}님, 요청하신 견적서입니다.\n\n#{견적서명}\n\n견적서 확인: #{전체url}\n\n유효기간: #{만료일}\n문의: 031-215-3990",
+  "variables": ["이름", "견적서명", "전체url", "만료일"],
+  "is_active": true
+}

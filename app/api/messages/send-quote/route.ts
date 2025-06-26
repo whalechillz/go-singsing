@@ -77,9 +77,12 @@ export async function POST(request: NextRequest) {
     const templateVariables = {
       이름: customerName || '고객님',
       견적서명: quote.title,
-      url: smsService.extractUrlParam(quoteUrl),
+      url: linkData?.public_url || quoteId,  // 짧은 코드만 (예: iaa7cfd6)
+      전체url: quoteUrl,  // 전체 URL (예: https://go.singsinggolf.kr/s/iaa7cfd6)
       만료일: expiryDate
     };
+
+    console.log('템플릿 변수:', templateVariables);
 
     // 메시지 템플릿 결정
     let messageContent = '';
@@ -88,6 +91,11 @@ export async function POST(request: NextRequest) {
     if (templateData?.content) {
       // 사용자 정의 템플릿 사용
       messageContent = smsService.replaceTemplateVariables(templateData.content, templateVariables);
+      
+      // URL이 포함되어 있지 않으면 추가
+      if (!messageContent.includes('http')) {
+        messageContent += `\n\n견적서 확인: ${quoteUrl}`;
+      }
     } else {
       // 기본 템플릿 사용
       const template = selectTemplate('QUOTE', sendMethod);
