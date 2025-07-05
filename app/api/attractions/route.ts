@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { supabaseServer } from '@/utils/supabaseServer';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = supabaseServer;
     
     const data = await request.json();
     const {
@@ -107,7 +106,7 @@ export async function POST(request: NextRequest) {
 // GET: 관광지 목록 조회
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = supabaseServer;
     const { searchParams } = new URL(request.url);
     
     const category = searchParams.get('category');
