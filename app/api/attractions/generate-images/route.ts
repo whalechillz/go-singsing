@@ -14,11 +14,17 @@ export async function POST(request: NextRequest) {
       ? `${mainPrompt}, featuring ${keywords.slice(0, 3).join(', ')}`
       : mainPrompt;
 
+    // API 키 확인
+    const falApiKey = process.env.FAL_API_KEY;
+    if (!falApiKey) {
+      return NextResponse.json({ error: 'FAL API 키가 설정되지 않았습니다' }, { status: 500 });
+    }
+
     // FAL.ai API 호출
     const response = await fetch('https://fal.run/fal-ai/flux/schnell', {
       method: 'POST',
       headers: {
-        'Authorization': `Key ${process.env.FAL_API_KEY}`,
+        'Authorization': `Key ${falApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

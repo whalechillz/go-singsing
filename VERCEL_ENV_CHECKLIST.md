@@ -2,12 +2,22 @@
 
 ### 필수 환경 변수 체크리스트
 
+#### Supabase 관련
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` - Supabase URL
-- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase Anon Key  
+- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase Anon Key
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` - Supabase Service Role Key (선택)
+
+#### SMS/카카오 관련
 - [ ] `SOLAPI_API_KEY` - Solapi API Key (예: NCS...)
 - [ ] `SOLAPI_API_SECRET` - Solapi API Secret
 - [ ] `SOLAPI_SENDER` - 발신번호 (0312153990)
 - [ ] `SOLAPI_PFID` - 카카오 채널 ID (선택)
+
+#### AI 관광지 등록 관련 (NEW)
+- [ ] `SERPAPI_KEY` - Google 검색 API 키
+- [ ] `ANTHROPIC_API_KEY` - Claude API 키
+- [ ] `FAL_API_KEY` - FAL.ai 이미지 생성 API 키
+- [ ] `OPENAI_API_KEY` - OpenAI API 키 (선택)
 
 ### 확인 방법
 

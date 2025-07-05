@@ -8,9 +8,15 @@ export async function POST(request: NextRequest) {
     if (!query) {
       return NextResponse.json({ error: '검색어를 입력해주세요' }, { status: 400 });
     }
+    
+    // API 키 확인
+    const serpapiKey = process.env.SERPAPI_KEY;
+    if (!serpapiKey) {
+      return NextResponse.json({ error: 'SERPAPI 키가 설정되지 않았습니다' }, { status: 500 });
+    }
 
     const searchParams = {
-      api_key: process.env.SERPAPI_KEY,
+      api_key: serpapiKey,
       engine: 'google',
       q: query,
       location: 'South Korea',
