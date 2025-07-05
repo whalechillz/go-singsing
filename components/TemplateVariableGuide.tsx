@@ -88,8 +88,8 @@ export default function TemplateVariableGuide({ templateType }: TemplateVariable
           <strong>💡 팁:</strong> URL 관련 변수
         </p>
         <ul className="text-sm text-yellow-700 mt-2 space-y-1">
-          <li>• <code className="font-mono">#{url}</code> - 짧은 코드만 (URL에 이미 도메인이 있을 때)</li>
-          <li>• <code className="font-mono">#{전체url}</code> - 전체 URL (도메인 포함)</li>
+          <li>• <code className="font-mono">{'#{url}'}</code> - 짧은 코드만 (URL에 이미 도메인이 있을 때)</li>
+          <li>• <code className="font-mono">{'#{전체url}'}</code> - 전체 URL (도메인 포함)</li>
         </ul>
       </div>
     </div>
