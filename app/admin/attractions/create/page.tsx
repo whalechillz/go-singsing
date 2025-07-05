@@ -44,17 +44,23 @@ export default function CreateAttractionPage() {
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
 
   // 1단계: 검색
-  const handleSearch = async () => {
+  const handleSearch = async (customQuery?: string) => {
     setLoading(true);
     try {
       const response = await fetch('/api/attractions/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: formData.name }),
+        body: JSON.stringify({ query: customQuery || formData.name }),
       });
       const data = await response.json();
-      setSearchResults(data.results || []);
-      setStep(2);
+      
+      // 추가 검색인 경우 기존 결과에 추가
+      if (customQuery) {
+        setSearchResults(prev => [...prev, ...(data.results || [])]);
+      } else {
+        setSearchResults(data.results || []);
+        setStep(2);
+      }
     } catch (error) {
       console.error('검색 오류:', error);
     } finally {
@@ -233,7 +239,34 @@ export default function CreateAttractionPage() {
         >
           <h2 className="text-xl font-semibold mb-4">2단계: 관련 정보 선택</h2>
           
-          <div className="space-y-3">
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              💡 <strong>팁:</strong> 여러 개의 검색 결과를 선택할수록 더 풍부한 설명이 생성됩니다.
+              최소 3개 이상 선택하는 것을 권장합니다.
+            </p>
+          </div>
+
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm text-gray-600">
+              {searchResults.length}개의 검색 결과 중 {selectedResults.length}개 선택됨
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedResults(searchResults.map((_, i) => i))}
+                className="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+              >
+                전체 선택
+              </button>
+              <button
+                onClick={() => setSelectedResults([])}
+                className="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+              >
+                선택 해제
+              </button>
+            </div>
+          </div>
+          
+          <div className="space-y-3 max-h-96 overflow-y-auto">
             {searchResults.map((result, index) => (
               <div
                 key={index}
@@ -263,6 +296,40 @@ export default function CreateAttractionPage() {
                 </a>
               </div>
             ))}
+          </div>
+          
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-700 mb-2">
+              <strong>🔍 더 많은 정보가 필요하신가요?</strong>
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="추가 검색어 입력 (예: 경복궁 입장료, 경복궁 역사)"
+                className="flex-1 px-3 py-2 border rounded text-sm"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.currentTarget;
+                    if (input.value) {
+                      handleSearch(formData.name + ' ' + input.value);
+                      input.value = '';
+                    }
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  const input = document.querySelector('input[placeholder*="추가 검색어"]') as HTMLInputElement;
+                  if (input?.value) {
+                    handleSearch(formData.name + ' ' + input.value);
+                    input.value = '';
+                  }
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+              >
+                추가 검색
+              </button>
+            </div>
           </div>
 
           <button

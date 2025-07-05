@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       location: 'South Korea',
       hl: 'ko',
       gl: 'kr',
-      num: 10,
+      num: 20,  // 검색 결과를 20개로 증가
     };
 
     const results = await getJson(searchParams);

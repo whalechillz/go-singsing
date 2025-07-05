@@ -9,7 +9,7 @@ import {
   Phone, Upload, X as XIcon, Search, Coffee, ShoppingBag, Activity,
   Camera, Utensils, ShoppingCart, Home, Award, MoreHorizontal,
   ChevronLeft, ChevronRight, Grid3X3, List, Filter, ChevronDown,
-  Copy, Eye, EyeOff, Bookmark, Download, SortAsc, SortDesc
+  Copy, Eye, EyeOff, Bookmark, Download, SortAsc, SortDesc, Sparkles
 } from 'lucide-react';
 
 // 확장된 카테고리 타입
@@ -650,13 +650,22 @@ export default function SpotManagementPage() {
               <h1 className="text-3xl font-bold text-gray-900">스팟 관리</h1>
               <p className="text-sm text-gray-500 mt-1">투어 중 방문할 모든 장소를 통합 관리합니다</p>
             </div>
-            <button
-              onClick={() => { resetForm(); setIsModalOpen(true); }}
-              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 flex items-center gap-2 transition-all shadow-md hover:shadow-lg"
-            >
-              <Plus className="w-5 h-5" />
-              새 스팟 추가
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => window.location.href = '/admin/attractions/create'}
+                className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 flex items-center gap-2 transition-all shadow-md hover:shadow-lg"
+              >
+                <Sparkles className="w-5 h-5" />
+                AI 스팟 생성
+              </button>
+              <button
+                onClick={() => { resetForm(); setIsModalOpen(true); }}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 flex items-center gap-2 transition-all shadow-md hover:shadow-lg"
+              >
+                <Plus className="w-5 h-5" />
+                수동 스팟 추가
+              </button>
+            </div>
           </div>
         </div>
 
