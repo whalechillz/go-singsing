@@ -215,7 +215,7 @@ export default function CreateAttractionPage() {
           </div>
 
           <button
-            onClick={handleSearch}
+            onClick={() => handleSearch()}
             disabled={!formData.name || loading}
             className="w-full py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-300 flex items-center justify-center"
           >
