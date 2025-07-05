@@ -16,6 +16,7 @@
     "retry-messages": "tsx scripts/retry-failed-messages.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.56.0",
     "@octokit/rest": "^21.1.1",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-popover": "^1.1.14",
@@ -28,6 +29,7 @@
     "cmdk": "^1.1.1",
     "dotenv": "^16.4.5",
     "formidable": "^3.5.4",
+    "framer-motion": "^12.23.0",
     "lucide-react": "^0.509.0",
     "next": "15.3.1",
     "postcss": "^8.5.3",
@@ -37,6 +39,7 @@
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
     "recharts": "^2.12.7",
+    "serpapi": "^2.1.0",
     "tailwind-merge": "^3.3.0",
     "vaul": "^1.1.2",
     "xlsx": "^0.18.5"

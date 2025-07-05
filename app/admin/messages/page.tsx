@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import TemplatePicker from '@/components/TemplatePicker';
 import MmsImageUpload from '@/components/MmsImageUpload';
+import TemplateVariableGuide from '@/components/TemplateVariableGuide';
 
 type Customer = {
   id: string;
@@ -959,10 +960,12 @@ export default function MessageManagementPage() {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="메시지 내용을 입력하세요. 변수는 #{변수명} 형식으로 입력하세요."
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  사용 가능한 변수: {"#{이름}, #{투어명}, #{출발일}, #{결제금액}"}
-                </p>
               </div>
+
+              {/* 템플릿 변수 가이드 */}
+              <TemplateVariableGuide 
+                templateType={templateForm.type === 'kakao_alimtalk' ? 'quote' : 'quote'} 
+              />
 
               <div>
                 <label className="flex items-center">
