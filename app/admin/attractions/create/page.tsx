@@ -62,8 +62,8 @@ export default function CreateAttractionPage() {
         setSearchResults(prev => {
           console.log('Previous results:', prev.length); // 디버깅용
           // 중복 제거: URL이 같은 결과는 제외
-          const existingUrls = new Set(prev.map(r => r.link));
-          const uniqueNewResults = newResults.filter(r => !existingUrls.has(r.link));
+          const existingUrls = new Set(prev.map((r: SearchResult) => r.link));
+          const uniqueNewResults = newResults.filter((r: SearchResult) => !existingUrls.has(r.link));
           console.log('Unique new results:', uniqueNewResults.length); // 디버깅용
           return [...prev, ...uniqueNewResults];
         });
