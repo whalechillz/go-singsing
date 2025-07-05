@@ -2,17 +2,42 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, keywords, description } = await request.json();
+    const { name, keywords, description, category } = await request.json();
     
     if (!name) {
       return NextResponse.json({ error: '관광지명이 필요합니다' }, { status: 400 });
     }
 
-    // 이미지 생성 프롬프트 구성
-    const mainPrompt = `Beautiful tourist attraction photo of ${name}, professional photography, high quality, scenic view`;
+    // 카테고리별 프롬프트 설정
+    let basePrompt = '';
+    
+    // 설명에 기반한 프롬프트 생성
+    if (description && description.toLowerCase().includes('golf') || 
+        description && description.includes('골프') || 
+        name.toLowerCase().includes('golf') || 
+        name.includes('골프')) {
+      // 골프 관련 시설
+      if (description && (description.includes('드라이버') || description.includes('driver'))) {
+        basePrompt = `Modern golf shop interior, golf drivers on display wall, professional golf equipment store, ${name}, retail photography, clean and organized`;
+      } else {
+        basePrompt = `Golf facility, golf course or golf shop ${name}, professional photography`;
+      }
+    } else if (category === 'restaurant' || category === '맛집') {
+      basePrompt = `Restaurant interior showing dining area, Korean restaurant ${name}, clean interior, professional photography`;
+    } else if (category === 'shopping' || category === '쇼핑') {
+      basePrompt = `Retail store interior, shopping mall or store ${name}, product displays, bright lighting, professional photography`;
+    } else if (category === 'activity' || category === '액티비티') {
+      basePrompt = `Activity center, recreational facility ${name}, modern interior, professional photography`;
+    } else if (category === 'tourist_spot' || category === '명소') {
+      basePrompt = `Tourist attraction ${name}, landmark or scenic spot, beautiful view, professional photography`;
+    } else {
+      basePrompt = `${name} establishment exterior or interior, ${category || 'commercial space'}, professional photography, high quality`;
+    }
+    
+    // 키워드 추가
     const detailPrompt = keywords?.length > 0 
-      ? `${mainPrompt}, featuring ${keywords.slice(0, 3).join(', ')}`
-      : mainPrompt;
+      ? `${basePrompt}, ${keywords.slice(0, 3).join(', ')}`
+      : basePrompt;
 
     // API 키 확인
     const falApiKey = process.env.FAL_API_KEY;

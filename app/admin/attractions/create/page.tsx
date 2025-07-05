@@ -107,6 +107,7 @@ export default function CreateAttractionPage() {
           name: formData.name,
           keywords: generatedContent?.keywords || [],
           description: formData.description,
+          category: formData.category,
         }),
       });
       const data = await response.json();
