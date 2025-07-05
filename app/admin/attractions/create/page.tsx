@@ -53,10 +53,20 @@ export default function CreateAttractionPage() {
         body: JSON.stringify({ query: customQuery || formData.name }),
       });
       const data = await response.json();
+      console.log('Search API response:', data); // 디버깅용
       
       // 추가 검색인 경우 기존 결과에 추가
       if (customQuery) {
-        setSearchResults(prev => [...prev, ...(data.results || [])]);
+        const newResults = data.results || [];
+        console.log('Adding new results:', newResults.length); // 디버깅용
+        setSearchResults(prev => {
+          console.log('Previous results:', prev.length); // 디버깅용
+          // 중복 제거: URL이 같은 결과는 제외
+          const existingUrls = new Set(prev.map(r => r.link));
+          const uniqueNewResults = newResults.filter(r => !existingUrls.has(r.link));
+          console.log('Unique new results:', uniqueNewResults.length); // 디버깅용
+          return [...prev, ...uniqueNewResults];
+        });
       } else {
         setSearchResults(data.results || []);
         setStep(2);
@@ -305,14 +315,15 @@ export default function CreateAttractionPage() {
             </p>
             <div className="flex gap-2">
               <input
+                id="additionalSearchInput"
                 type="text"
                 placeholder="추가 검색어 입력 (예: 경복궁 입장료, 경복궁 역사)"
                 className="flex-1 px-3 py-2 border rounded text-sm"
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && !loading) {
                     const input = e.currentTarget;
-                    if (input.value) {
-                      handleSearch(formData.name + ' ' + input.value);
+                    if (input.value.trim()) {
+                      handleSearch(formData.name + ' ' + input.value.trim());
                       input.value = '';
                     }
                   }
@@ -320,15 +331,20 @@ export default function CreateAttractionPage() {
               />
               <button
                 onClick={() => {
-                  const input = document.querySelector('input[placeholder*="추가 검색어"]') as HTMLInputElement;
-                  if (input?.value) {
-                    handleSearch(formData.name + ' ' + input.value);
+                  const input = document.getElementById('additionalSearchInput') as HTMLInputElement;
+                  if (input?.value.trim() && !loading) {
+                    handleSearch(formData.name + ' ' + input.value.trim());
                     input.value = '';
                   }
                 }}
-                className="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                disabled={loading}
+                className="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                추가 검색
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  '추가 검색'
+                )}
               </button>
             </div>
           </div>
