@@ -79,9 +79,13 @@ export default function CreateAttractionPage() {
             coordinates: info.coordinates,
           });
         }
+        
+        return result.data; // 데이터 반환
       }
+      return null;
     } catch (error) {
       console.error('네이버 검색 오류:', error);
+      return null;
     }
   };
   
@@ -116,9 +120,22 @@ export default function CreateAttractionPage() {
   const handleSearch = async (customQuery?: string) => {
     setLoading(true);
     try {
+      let allResults: SearchResult[] = [];
+      
       // 네이버 + Google 통합 검색
       if (searchSource === 'naver' || searchSource === 'both') {
-        await handleNaverSearch(customQuery || formData.name);
+        const naverData = await handleNaverSearch(customQuery || formData.name);
+        
+        // 네이버 검색 결과를 searchResults 형식으로 변환
+        if (naverData?.blogs?.length > 0) {
+          const naverResults: SearchResult[] = naverData.blogs.map((blog: any) => ({
+            title: blog.title,
+            snippet: blog.description,
+            link: blog.link,
+            displayLink: `네이버 블로그 - ${blog.blogger}`,
+          }));
+          allResults = [...allResults, ...naverResults];
+        }
       }
       
       if (searchSource === 'google' || searchSource === 'both') {
@@ -129,16 +146,19 @@ export default function CreateAttractionPage() {
         });
         const data = await response.json();
         
-        if (customQuery) {
-          const newResults = data.results || [];
-          setSearchResults(prev => {
-            const existingUrls = new Set(prev.map((r: SearchResult) => r.link));
-            const uniqueNewResults = newResults.filter((r: SearchResult) => !existingUrls.has(r.link));
-            return [...prev, ...uniqueNewResults];
-          });
-        } else {
-          setSearchResults(data.results || []);
+        if (data.results) {
+          allResults = [...allResults, ...data.results];
         }
+      }
+      
+      if (customQuery) {
+        setSearchResults(prev => {
+          const existingUrls = new Set(prev.map((r: SearchResult) => r.link));
+          const uniqueNewResults = allResults.filter((r: SearchResult) => !existingUrls.has(r.link));
+          return [...prev, ...uniqueNewResults];
+        });
+      } else {
+        setSearchResults(allResults);
       }
       
       setStep(2);
