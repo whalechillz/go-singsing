@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Sparkles, ImageIcon, Save, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Sparkles, ImageIcon, Save, Loader2, CheckCircle, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface SearchResult {
@@ -46,35 +46,98 @@ export default function CreateAttractionPage() {
   const [selectedResults, setSelectedResults] = useState<number[]>([]);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
+  
+  // 네이버 검색 결과 저장
+  const [naverSearchData, setNaverSearchData] = useState<any>(null);
+  const [suggestions, setSuggestions] = useState<any>({});
+  const [searchSource, setSearchSource] = useState<'google' | 'naver' | 'both'>('naver');
 
-  // 1단계: 검색
+  // 네이버 검색으로 자동 정보 채우기
+  const handleNaverSearch = async (query: string) => {
+    try {
+      const response = await fetch('/api/attractions/search-naver', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setNaverSearchData(result.data);
+        
+        // 추출된 정보로 제안 설정
+        if (result.data.extractedInfo) {
+          const info = result.data.extractedInfo;
+          setSuggestions({
+            address: info.address || '',
+            phone: info.phone || '',
+            category: mapNaverCategory(info.category),
+            coordinates: info.coordinates,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('네이버 검색 오류:', error);
+    }
+  };
+  
+  // 네이버 카테고리를 우리 시스템 카테고리로 매핑
+  const mapNaverCategory = (naverCategory: string): string => {
+    if (!naverCategory) return formData.category;
+    
+    if (naverCategory.includes('맛집') || naverCategory.includes('음식')) {
+      return 'restaurant';
+    } else if (naverCategory.includes('숙박') || naverCategory.includes('호텔')) {
+      return 'boarding';
+    } else if (naverCategory.includes('쇼핑')) {
+      return 'shopping';
+    } else if (naverCategory.includes('액티비티') || naverCategory.includes('체험')) {
+      return 'activity';
+    }
+    return 'tourist_spot';
+  };
+  
+  // 이름 입력 시 자동 검색
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.name.length > 2 && searchSource !== 'google') {
+        handleNaverSearch(formData.name);
+      }
+    }, 500); // 0.5초 디바운스
+    
+    return () => clearTimeout(timer);
+  }, [formData.name]);
+
+  // 1단계: 검색 (기존 Google 검색 유지)
   const handleSearch = async (customQuery?: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/attractions/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: customQuery || formData.name }),
-      });
-      const data = await response.json();
-      console.log('Search API response:', data); // 디버깅용
-      
-      // 추가 검색인 경우 기존 결과에 추가
-      if (customQuery) {
-        const newResults = data.results || [];
-        console.log('Adding new results:', newResults.length); // 디버깅용
-        setSearchResults(prev => {
-          console.log('Previous results:', prev.length); // 디버깅용
-          // 중복 제거: URL이 같은 결과는 제외
-          const existingUrls = new Set(prev.map((r: SearchResult) => r.link));
-          const uniqueNewResults = newResults.filter((r: SearchResult) => !existingUrls.has(r.link));
-          console.log('Unique new results:', uniqueNewResults.length); // 디버깅용
-          return [...prev, ...uniqueNewResults];
-        });
-      } else {
-        setSearchResults(data.results || []);
-        setStep(2);
+      // 네이버 + Google 통합 검색
+      if (searchSource === 'naver' || searchSource === 'both') {
+        await handleNaverSearch(customQuery || formData.name);
       }
+      
+      if (searchSource === 'google' || searchSource === 'both') {
+        const response = await fetch('/api/attractions/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: customQuery || formData.name }),
+        });
+        const data = await response.json();
+        
+        if (customQuery) {
+          const newResults = data.results || [];
+          setSearchResults(prev => {
+            const existingUrls = new Set(prev.map((r: SearchResult) => r.link));
+            const uniqueNewResults = newResults.filter((r: SearchResult) => !existingUrls.has(r.link));
+            return [...prev, ...uniqueNewResults];
+          });
+        } else {
+          setSearchResults(data.results || []);
+        }
+      }
+      
+      setStep(2);
     } catch (error) {
       console.error('검색 오류:', error);
     } finally {
@@ -94,6 +157,7 @@ export default function CreateAttractionPage() {
           name: formData.name,
           searchResults: selectedData,
           category: formData.category,
+          naverData: naverSearchData, // 네이버 데이터 추가
         }),
       });
       const data = await response.json();
@@ -158,7 +222,12 @@ export default function CreateAttractionPage() {
           description_model: generatedContent?.model,
           search_keywords: generatedContent?.keywords,
           images: generatedImages,
-          is_active: true, // 기본값으로 활성 상태로 설정
+          is_active: true,
+          // 네이버 관련 데이터
+          data_sources: ['naver', ...(searchResults.length > 0 ? ['google'] : [])],
+          naver_category: suggestions.category,
+          coordinates: suggestions.coordinates,
+          raw_search_data: naverSearchData,
           // 추가 필드들
           contact_info: formData.contact_info,
           operating_hours: formData.operating_hours,
@@ -215,6 +284,43 @@ export default function CreateAttractionPage() {
         >
           <h2 className="text-xl font-semibold mb-4">1단계: 기본 정보 입력</h2>
           
+          {/* 검색 소스 선택 */}
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <label className="block text-sm font-medium mb-2">정보 검색 소스</label>
+            <div className="flex gap-3">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="naver"
+                  checked={searchSource === 'naver'}
+                  onChange={(e) => setSearchSource(e.target.value as any)}
+                  className="mr-2"
+                />
+                <span>네이버 (권장)</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="google"
+                  checked={searchSource === 'google'}
+                  onChange={(e) => setSearchSource(e.target.value as any)}
+                  className="mr-2"
+                />
+                <span>Google</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="both"
+                  checked={searchSource === 'both'}
+                  onChange={(e) => setSearchSource(e.target.value as any)}
+                  className="mr-2"
+                />
+                <span>모두 사용</span>
+              </label>
+            </div>
+          </div>
+          
           <div>
             <label className="block text-sm font-medium mb-2">관광지명</label>
             <input
@@ -243,14 +349,91 @@ export default function CreateAttractionPage() {
 
           <div>
             <label className="block text-sm font-medium mb-2">주소</label>
-            <input
-              type="text"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="예: 서울특별시 종로구 사직로 161"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                placeholder="예: 서울특별시 종로구 사직로 161"
+              />
+              {suggestions.address && suggestions.address !== formData.address && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, address: suggestions.address })}
+                  className="absolute right-2 top-2 text-green-500 hover:text-green-600"
+                  title="네이버 검색 결과 사용"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            {suggestions.address && suggestions.address !== formData.address && (
+              <p className="mt-1 text-sm text-blue-600">
+                네이버 제안: {suggestions.address}
+              </p>
+            )}
           </div>
+          
+          {/* 전화번호 필드 추가 */}
+          <div>
+            <label className="block text-sm font-medium mb-2">전화번호</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.contact_info}
+                onChange={(e) => setFormData({ ...formData, contact_info: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                placeholder="예: 02-1234-5678"
+              />
+              {suggestions.phone && suggestions.phone !== formData.contact_info && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, contact_info: suggestions.phone })}
+                  className="absolute right-2 top-2 text-green-500 hover:text-green-600"
+                  title="네이버 검색 결과 사용"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            {suggestions.phone && suggestions.phone !== formData.contact_info && (
+              <p className="mt-1 text-sm text-blue-600">
+                네이버 제안: {suggestions.phone}
+              </p>
+            )}
+          </div>
+          
+          {/* 네이버 검색 결과 요약 */}
+          {naverSearchData && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium flex items-center">
+                  <Info className="w-4 h-4 mr-2" />
+                  네이버 검색 결과
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (suggestions.address) setFormData({ ...formData, address: suggestions.address });
+                    if (suggestions.phone) setFormData({ ...formData, contact_info: suggestions.phone });
+                    if (suggestions.category) setFormData({ ...formData, category: suggestions.category });
+                  }}
+                  className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                >
+                  모두 적용
+                </button>
+              </div>
+              <div className="text-sm space-y-1">
+                {naverSearchData.local?.length > 0 && (
+                  <p>지역 검색: {naverSearchData.local.length}개 결과</p>
+                )}
+                {naverSearchData.images?.length > 0 && (
+                  <p>이미지: {naverSearchData.images.length}개 발견</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <button
             onClick={() => handleSearch()}
@@ -277,6 +460,26 @@ export default function CreateAttractionPage() {
           className="space-y-4"
         >
           <h2 className="text-xl font-semibold mb-4">2단계: 관련 정보 선택</h2>
+          
+          {/* 네이버 검색 결과 표시 */}
+          {naverSearchData && naverSearchData.local?.length > 0 && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h3 className="font-semibold mb-3 flex items-center">
+                <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                네이버 지역 정보
+              </h3>
+              <div className="space-y-2">
+                {naverSearchData.local.slice(0, 3).map((item: any, idx: number) => (
+                  <div key={idx} className="p-3 bg-white rounded border">
+                    <h4 className="font-medium">{item.name}</h4>
+                    <p className="text-sm text-gray-600">{item.address || item.roadAddress}</p>
+                    {item.phone && <p className="text-sm text-gray-600">📞 {item.phone}</p>}
+                    {item.category && <p className="text-sm text-gray-500">🏷️ {item.category}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
