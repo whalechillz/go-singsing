@@ -29,7 +29,7 @@ export default function CreateAttractionPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    category: 'tourist_spot' as 'tourist_spot' | 'restaurant' | 'shopping' | 'activity' | 'boarding',
+    category: 'tourist_spot' as 'tourist_spot' | 'restaurant' | 'shopping' | 'activity' | 'rest_area',
     address: '',
     description: '',
     features: [] as string[],
@@ -95,8 +95,8 @@ export default function CreateAttractionPage() {
     
     if (naverCategory.includes('맛집') || naverCategory.includes('음식')) {
       return 'restaurant';
-    } else if (naverCategory.includes('숙박') || naverCategory.includes('호텔')) {
-      return 'boarding';
+    } else if (naverCategory.includes('휴게소') || naverCategory.includes('휴게')) {
+      return 'rest_area';
     } else if (naverCategory.includes('쇼핑')) {
       return 'shopping';
     } else if (naverCategory.includes('액티비티') || naverCategory.includes('체험')) {
@@ -360,12 +360,12 @@ export default function CreateAttractionPage() {
             <label className="block text-sm font-medium mb-2">카테고리</label>
             <select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as 'tourist_spot' | 'restaurant' | 'shopping' | 'activity' | 'boarding' })}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value as 'tourist_spot' | 'restaurant' | 'shopping' | 'activity' | 'rest_area' })}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="tourist_spot">명소</option>
               <option value="restaurant">맛집</option>
-              <option value="boarding">숙박</option>
+              <option value="rest_area">휴게소</option>
               <option value="activity">액티비티</option>
               <option value="shopping">쇼핑</option>
             </select>
