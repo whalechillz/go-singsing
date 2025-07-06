@@ -125,17 +125,31 @@ export default function CreateAttractionPage() {
       // 네이버 + Google 통합 검색
       if (searchSource === 'naver' || searchSource === 'both') {
         const naverData = await handleNaverSearch(customQuery || formData.name);
+        console.log('handleSearch - naverData:', naverData);
         
         // 네이버 검색 결과를 searchResults 형식으로 변환
+        // 로컬 검색 결과 (5개까지)
+        if (naverData?.local?.length > 0) {
+          const localResults: SearchResult[] = naverData.local.slice(0, 5).map((item: any) => ({
+            title: item.name,
+            snippet: `${item.category || ''} ${item.address || item.roadAddress || ''} ${item.phone ? '📞 ' + item.phone : ''}`.trim(),
+            link: item.link || '#',
+            displayLink: `네이버 지역 - ${item.category || '지역정보'}`,
+          }));
+          allResults = [...allResults, ...localResults];
+        }
+        
+        // 블로그 검색 결과 (10개까지)
         if (naverData?.blogs?.length > 0) {
-          const naverResults: SearchResult[] = naverData.blogs.map((blog: any) => ({
+          const blogResults: SearchResult[] = naverData.blogs.slice(0, 10).map((blog: any) => ({
             title: blog.title,
             snippet: blog.description,
             link: blog.link,
             displayLink: `네이버 블로그 - ${blog.blogger}`,
           }));
-          allResults = [...allResults, ...naverResults];
+          allResults = [...allResults, ...blogResults];
         }
+        console.log('handleSearch - allResults after naver:', allResults);
       }
       
       if (searchSource === 'google' || searchSource === 'both') {
@@ -155,13 +169,21 @@ export default function CreateAttractionPage() {
         setSearchResults(prev => {
           const existingUrls = new Set(prev.map((r: SearchResult) => r.link));
           const uniqueNewResults = allResults.filter((r: SearchResult) => !existingUrls.has(r.link));
-          return [...prev, ...uniqueNewResults];
+          const newResults = [...prev, ...uniqueNewResults];
+          console.log('setSearchResults (custom) - newResults:', newResults);
+          return newResults;
         });
       } else {
+        console.log('setSearchResults - allResults:', allResults);
         setSearchResults(allResults);
       }
       
-      setStep(2);
+      // 검색 결과가 있을 때만 2단계로 이동
+      if (allResults.length > 0 || searchResults.length > 0) {
+        setStep(2);
+      } else {
+        alert('검색 결과가 없습니다. 다른 검색어로 시도해보세요.');
+      }
     } catch (error) {
       console.error('검색 오류:', error);
     } finally {
