@@ -34,8 +34,12 @@ export default function CreateAttractionPage() {
     description: '',
     features: [] as string[],
     tags: [] as string[],
-    operating_hours: {},
-    contact_info: {},
+    operating_hours: '',
+    contact_info: '',
+    parking_info: '',
+    entrance_fee: '',
+    region: '',
+    recommended_duration: 60,
   });
 
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
