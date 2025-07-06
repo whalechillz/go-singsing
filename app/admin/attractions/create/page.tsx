@@ -207,7 +207,7 @@ export default function CreateAttractionPage() {
             <label className="block text-sm font-medium mb-2">카테고리</label>
             <select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value as 'tourist_spot' | 'restaurant' | 'shopping' | 'activity' | 'boarding' })}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="tourist_spot">명소</option>
