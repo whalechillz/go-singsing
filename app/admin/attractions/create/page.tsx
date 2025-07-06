@@ -50,7 +50,7 @@ export default function CreateAttractionPage() {
   // 네이버 검색 결과 저장
   const [naverSearchData, setNaverSearchData] = useState<any>(null);
   const [suggestions, setSuggestions] = useState<any>({});
-  const [searchSource, setSearchSource] = useState<'google' | 'naver' | 'both'>('naver');
+  const [searchSource, setSearchSource] = useState<'google' | 'naver' | 'both'>('google'); // 임시로 Google로 설정
 
   // 네이버 검색으로 자동 정보 채우기
   const handleNaverSearch = async (query: string) => {
@@ -64,10 +64,15 @@ export default function CreateAttractionPage() {
       
       console.log('네이버 API 응답 상태:', response.status);
       const result = await response.json();
-      console.log('네이버 API 결과:', result);
+      console.log('네이버 API 전체 결과:', JSON.stringify(result, null, 2));
       
       if (result.success && result.data) {
         setNaverSearchData(result.data);
+        
+        // 데이터 구조 상세 로그
+        console.log('네이버 data.local:', result.data.local);
+        console.log('네이버 data.blogs:', result.data.blogs);
+        console.log('네이버 data.images:', result.data.images);
         
         // 추출된 정보로 제안 설정
         if (result.data.extractedInfo) {
@@ -127,27 +132,38 @@ export default function CreateAttractionPage() {
         const naverData = await handleNaverSearch(customQuery || formData.name);
         console.log('handleSearch - naverData:', naverData);
         
-        // 네이버 검색 결과를 searchResults 형식으로 변환
-        // 로컬 검색 결과 (5개까지)
-        if (naverData?.local?.length > 0) {
-          const localResults: SearchResult[] = naverData.local.slice(0, 5).map((item: any) => ({
-            title: item.name,
-            snippet: `${item.category || ''} ${item.address || item.roadAddress || ''} ${item.phone ? '📞 ' + item.phone : ''}`.trim(),
-            link: item.link || '#',
-            displayLink: `네이버 지역 - ${item.category || '지역정보'}`,
-          }));
-          allResults = [...allResults, ...localResults];
-        }
-        
-        // 블로그 검색 결과 (10개까지)
-        if (naverData?.blogs?.length > 0) {
-          const blogResults: SearchResult[] = naverData.blogs.slice(0, 10).map((blog: any) => ({
-            title: blog.title,
-            snippet: blog.description,
-            link: blog.link,
-            displayLink: `네이버 블로그 - ${blog.blogger}`,
-          }));
-          allResults = [...allResults, ...blogResults];
+        // 네이버 API가 설정되지 않은 경우 처리
+        if (naverData === null) {
+          console.warn('네이버 API 키가 설정되지 않았습니다.');
+          // Google로 대체하거나 사용자에게 알림
+          if (searchSource === 'naver') {
+            alert('네이버 API 키가 설정되지 않았습니다. Google 검색을 사용해주세요.');
+            setSearchSource('google');
+            return;
+          }
+        } else {
+          // 네이버 검색 결과를 searchResults 형식으로 변환
+          // 로컬 검색 결과 (5개까지)
+          if (naverData?.local?.length > 0) {
+            const localResults: SearchResult[] = naverData.local.slice(0, 5).map((item: any) => ({
+              title: item.name,
+              snippet: `${item.category || ''} ${item.address || item.roadAddress || ''} ${item.phone ? '📞 ' + item.phone : ''}`.trim(),
+              link: item.link || '#',
+              displayLink: `네이버 지역 - ${item.category || '지역정보'}`,
+            }));
+            allResults = [...allResults, ...localResults];
+          }
+          
+          // 블로그 검색 결과 (10개까지)
+          if (naverData?.blogs?.length > 0) {
+            const blogResults: SearchResult[] = naverData.blogs.slice(0, 10).map((blog: any) => ({
+              title: blog.title,
+              snippet: blog.description,
+              link: blog.link,
+              displayLink: `네이버 블로그 - ${blog.blogger}`,
+            }));
+            allResults = [...allResults, ...blogResults];
+          }
         }
         console.log('handleSearch - allResults after naver:', allResults);
       }

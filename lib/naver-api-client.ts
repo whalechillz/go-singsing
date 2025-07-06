@@ -39,7 +39,9 @@ export class NaverApiClient {
     console.log('Naver API initialized:', {
       hasClientId: !!this.clientId,
       hasClientSecret: !!this.clientSecret,
-      clientIdLength: this.clientId.length
+      clientIdLength: this.clientId.length,
+      clientIdPrefix: this.clientId.substring(0, 5) + '...',
+      env: process.env.NODE_ENV
     });
     
     if (!this.clientId || !this.clientSecret) {
@@ -65,10 +67,24 @@ export class NaverApiClient {
         query
       )}&display=${display}&sort=random`;
 
+      console.log('Naver API Request:', {
+        url,
+        headers: {
+          'X-Naver-Client-Id': this.clientId.substring(0, 5) + '...',
+          'X-Naver-Client-Secret': '***'
+        }
+      });
+
       const response = await fetch(url, { headers: this.headers });
       
       if (!response.ok) {
-        throw new Error(`Naver API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Naver API Response Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Naver API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
