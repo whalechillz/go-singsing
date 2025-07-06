@@ -29,7 +29,7 @@ export default function CreateAttractionPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    category: '명소',
+    category: 'tourist_spot' as 'tourist_spot' | 'restaurant' | 'shopping' | 'activity' | 'boarding',
     address: '',
     description: '',
     features: [] as string[],
@@ -146,10 +146,15 @@ export default function CreateAttractionPage() {
         }),
       });
       
-      if (response.ok) {
+      const result = await response.json();
+      console.log('Save response:', result);
+      
+      if (response.ok && result.success) {
         alert('관광지가 성공적으로 등록되었습니다!');
         // 리스트 페이지로 이동
         window.location.href = '/admin/attractions';
+      } else {
+        alert(`저장 실패: ${result.error || '알 수 없는 오류'}`);
       }
     } catch (error) {
       console.error('저장 오류:', error);
@@ -205,11 +210,11 @@ export default function CreateAttractionPage() {
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="명소">명소</option>
-              <option value="맛집">맛집</option>
-              <option value="숙박">숙박</option>
-              <option value="액티비티">액티비티</option>
-              <option value="쇼핑">쇼핑</option>
+              <option value="tourist_spot">명소</option>
+              <option value="restaurant">맛집</option>
+              <option value="boarding">숙박</option>
+              <option value="activity">액티비티</option>
+              <option value="shopping">쇼핑</option>
             </select>
           </div>
 

@@ -22,13 +22,13 @@ export async function POST(request: NextRequest) {
       } else {
         basePrompt = `Golf facility, golf course or golf shop ${name}, professional photography`;
       }
-    } else if (category === 'restaurant' || category === '맛집') {
+    } else if (category === 'restaurant') {
       basePrompt = `Restaurant interior showing dining area, Korean restaurant ${name}, clean interior, professional photography`;
-    } else if (category === 'shopping' || category === '쇼핑') {
+    } else if (category === 'shopping') {
       basePrompt = `Retail store interior, shopping mall or store ${name}, product displays, bright lighting, professional photography`;
-    } else if (category === 'activity' || category === '액티비티') {
+    } else if (category === 'activity') {
       basePrompt = `Activity center, recreational facility ${name}, modern interior, professional photography`;
-    } else if (category === 'tourist_spot' || category === '명소') {
+    } else if (category === 'tourist_spot') {
       basePrompt = `Tourist attraction ${name}, landmark or scenic spot, beautiful view, professional photography`;
     } else {
       basePrompt = `${name} establishment exterior or interior, ${category || 'commercial space'}, professional photography, high quality`;
