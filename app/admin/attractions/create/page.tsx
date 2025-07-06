@@ -83,20 +83,31 @@ export default function CreateAttractionPage() {
     setLoading(true);
     try {
       const selectedData = selectedResults.map(i => searchResults[i]);
-      const response = await fetch('/api/attractions/generate-content', {
+      const response = await fetch('/api/attractions/generate-content-enhanced', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
           searchResults: selectedData,
+          category: formData.category,
         }),
       });
       const data = await response.json();
       setGeneratedContent(data);
+      
+      // 폼 데이터에 모든 정보 채우기
       setFormData({
         ...formData,
-        description: data.description,
-        tags: data.keywords,
+        description: data.description || formData.description,
+        tags: data.keywords || [],
+        address: data.address || formData.address,
+        contact_info: data.phone || formData.contact_info,
+        operating_hours: data.operating_hours || formData.operating_hours,
+        parking_info: data.parking_info || '',
+        entrance_fee: data.entrance_fee || '',
+        features: data.features || [],
+        region: data.region || '',
+        recommended_duration: data.recommended_duration || 60,
       });
       setStep(3);
     } catch (error) {
@@ -144,6 +155,13 @@ export default function CreateAttractionPage() {
           search_keywords: generatedContent?.keywords,
           images: generatedImages,
           is_active: true, // 기본값으로 활성 상태로 설정
+          // 추가 필드들
+          contact_info: formData.contact_info,
+          operating_hours: formData.operating_hours,
+          parking_info: formData.parking_info,
+          entrance_fee: formData.entrance_fee,
+          region: formData.region,
+          recommended_duration: formData.recommended_duration,
         }),
       });
       

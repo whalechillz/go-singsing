@@ -28,6 +28,10 @@ export async function POST(request: NextRequest) {
       search_keywords,
       images,
       is_active = true, // 기본값
+      parking_info,
+      entrance_fee,
+      region,
+      recommended_duration,
     } = data;
 
     // AI 이미지 URL을 main_image_url과 image_urls에 설정
@@ -56,6 +60,10 @@ export async function POST(request: NextRequest) {
         main_image_url: mainImageUrl,  // AI 생성 이미지 중 첫 번째를 대표 이미지로
         image_urls: additionalImageUrls, // 나머지 이미지들
         is_active,
+        parking_info,
+        entrance_fee,
+        region,
+        recommended_duration,
       })
       .select()
       .single();
