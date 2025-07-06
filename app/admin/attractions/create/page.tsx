@@ -143,6 +143,7 @@ export default function CreateAttractionPage() {
           description_model: generatedContent?.model,
           search_keywords: generatedContent?.keywords,
           images: generatedImages,
+          is_active: true, // 기본값으로 활성 상태로 설정
         }),
       });
       

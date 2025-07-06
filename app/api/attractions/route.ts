@@ -27,7 +27,14 @@ export async function POST(request: NextRequest) {
       description_model,
       search_keywords,
       images,
+      is_active = true, // 기본값
     } = data;
+
+    // AI 이미지 URL을 main_image_url과 image_urls에 설정
+    const mainImageUrl = images && images.length > 0 ? images[0].url : '';
+    const additionalImageUrls = images && images.length > 1 
+      ? images.slice(1).map((img: any) => img.url) 
+      : [];
 
     // 1. tourist_attractions 테이블에 기본 정보 저장
     const { data: attraction, error: attractionError } = await supabase
@@ -46,6 +53,9 @@ export async function POST(request: NextRequest) {
         description_generated_at: new Date().toISOString(),
         meta_description: description?.substring(0, 160),
         search_keywords,
+        main_image_url: mainImageUrl,  // AI 생성 이미지 중 첫 번째를 대표 이미지로
+        image_urls: additionalImageUrls, // 나머지 이미지들
+        is_active,
       })
       .select()
       .single();
