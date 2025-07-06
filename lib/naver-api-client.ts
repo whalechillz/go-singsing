@@ -36,8 +36,17 @@ export class NaverApiClient {
     this.clientId = process.env.NAVER_CLIENT_ID || process.env.NEXT_PUBLIC_NAVER_CLIENT_ID || '';
     this.clientSecret = process.env.NAVER_CLIENT_SECRET || '';
     
+    console.log('Naver API initialized:', {
+      hasClientId: !!this.clientId,
+      hasClientSecret: !!this.clientSecret,
+      clientIdLength: this.clientId.length
+    });
+    
     if (!this.clientId || !this.clientSecret) {
-      console.error('Naver API credentials missing');
+      console.error('Naver API credentials missing:', {
+        clientId: this.clientId ? 'exists' : 'missing',
+        clientSecret: this.clientSecret ? 'exists' : 'missing'
+      });
       throw new Error('네이버 API 인증 정보가 없습니다.');
     }
   }

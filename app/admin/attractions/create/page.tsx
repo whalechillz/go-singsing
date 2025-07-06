@@ -54,13 +54,17 @@ export default function CreateAttractionPage() {
 
   // 네이버 검색으로 자동 정보 채우기
   const handleNaverSearch = async (query: string) => {
+    console.log('네이버 검색 시작:', query);
     try {
       const response = await fetch('/api/attractions/search-naver', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       });
+      
+      console.log('네이버 API 응답 상태:', response.status);
       const result = await response.json();
+      console.log('네이버 API 결과:', result);
       
       if (result.success && result.data) {
         setNaverSearchData(result.data);
