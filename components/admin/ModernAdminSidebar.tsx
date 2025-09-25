@@ -23,7 +23,8 @@ import {
   Shield,
   Phone,
   Calculator,
-  Type
+  Type,
+  Bug
 } from 'lucide-react';
 
 interface NavSubItem {
@@ -94,6 +95,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/schedule-templates')) return 'schedule-templates';
     if (pathname.startsWith('/admin/notice-templates')) return 'notice-templates';
     if (pathname.startsWith('/admin/statistics')) return 'statistics';
+    if (pathname.startsWith('/admin/naver-debug')) return 'naver-debug';
     if (pathname.startsWith('/admin/settings')) return 'settings';
     return 'dashboard';
   };
@@ -199,6 +201,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       ]
     },
     { id: 'statistics', label: '통계', icon: <BarChart2 className="w-5 h-5" />, href: '/admin/statistics' },
+    { id: 'naver-debug', label: '네이버 API 디버깅', icon: <Bug className="w-5 h-5" />, href: '/admin/naver-debug' },
     { id: 'settings', label: '설정', icon: <Settings className="w-5 h-5" />, href: '/admin/settings' },
   ];
 

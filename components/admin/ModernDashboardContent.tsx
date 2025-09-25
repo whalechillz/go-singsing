@@ -27,8 +27,9 @@ interface DashboardData {
   stats: {
     monthlyTours: number;
     monthlyParticipants: number;
-    monthlyRevenue: number;
-    unpaidAmount: number;
+    totalExpectedRevenue: number;  // 총 계약 견적 매출
+    totalCollected: number;        // 이번달 수금액
+    unpaidAmount: number;          // 미수금
   };
   urgentTasks: UrgentTask[];
   recentActivities: Activity[];
@@ -110,9 +111,9 @@ export default function ModernDashboardContentV2() {
         .order('start_date', { ascending: true })
         .limit(5);
 
-      // 이번 달 참가자 수
+      // 이번 달 참가자 수 및 매출 계산
       let monthlyParticipants = 0;
-      let monthlyRevenue = 0;
+      let totalExpectedRevenue = 0;  // 총 계약 견적 매출
       
       if (monthlyTours) {
         for (const tour of monthlyTours) {
@@ -122,21 +123,22 @@ export default function ModernDashboardContentV2() {
             .eq('tour_id', tour.id);
           
           monthlyParticipants += count || 0;
-          monthlyRevenue += (tour.price || 0) * (count || 0);
+          totalExpectedRevenue += (tour.price || 0) * (count || 0);
         }
       }
 
-      // 미수금 계산
+      // 실제 수금액 계산 (완료된 결제만)
       const { data: payments } = await supabase
         .from('singsing_payments')
         .select('amount, payment_status')
         .in('tour_id', monthlyTours?.map(t => t.id) || []);
 
-      const totalPaid = payments?.reduce((sum, p) => 
+      const totalCollected = payments?.reduce((sum, p) => 
         p.payment_status === 'completed' ? sum + p.amount : sum, 0
       ) || 0;
       
-      const unpaidAmount = monthlyRevenue - totalPaid;
+      // 미수금 계산
+      const unpaidAmount = totalExpectedRevenue - totalCollected;
 
       // 긴급 작업 생성
       const urgentTasks: UrgentTask[] = [];
@@ -181,7 +183,8 @@ export default function ModernDashboardContentV2() {
         stats: {
           monthlyTours: monthlyTours?.length || 0,
           monthlyParticipants,
-          monthlyRevenue,
+          totalExpectedRevenue,
+          totalCollected,
           unpaidAmount
         },
         urgentTasks,
@@ -354,9 +357,9 @@ export default function ModernDashboardContentV2() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">이번 달 매출</p>
+              <p className="text-sm font-medium text-gray-600">총 계약 견적 매출</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {dashboardData.stats.monthlyRevenue.toLocaleString()}원
+                {dashboardData.stats.totalExpectedRevenue.toLocaleString()}원
               </p>
             </div>
             <div className="p-3 bg-yellow-100 rounded-full">
@@ -368,6 +371,26 @@ export default function ModernDashboardContentV2() {
           </div>
         </div>
         
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">이번달 수금액</p>
+              <p className="text-2xl font-bold text-green-600 mt-1">
+                {dashboardData.stats.totalCollected.toLocaleString()}원
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <CreditCard className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500">
+            실제 수금액
+          </div>
+        </div>
+      </div>
+
+      {/* 미수금 및 수금률 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -387,6 +410,25 @@ export default function ModernDashboardContentV2() {
             >
               결제 관리 →
             </Link>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">수금률</p>
+              <p className="text-2xl font-bold text-blue-600 mt-1">
+                {dashboardData.stats.totalExpectedRevenue > 0 
+                  ? Math.round((dashboardData.stats.totalCollected / dashboardData.stats.totalExpectedRevenue) * 100)
+                  : 0}%
+              </p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <TrendingUp className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500">
+            수금 진행률
           </div>
         </div>
       </div>

@@ -58,7 +58,9 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     if (pathname.startsWith('/admin/design-templates')) return '디자인 템플릿';
     if (pathname.startsWith('/admin/font-styles')) return '폰트 스타일';
     if (pathname.startsWith('/admin/schedule-templates')) return '일정표 템플릿';
+    if (pathname.startsWith('/admin/notice-templates')) return '공지사항 템플릿';
     if (pathname.startsWith('/admin/statistics')) return '통계';
+    if (pathname.startsWith('/admin/naver-debug')) return '네이버 API 디버깅';
     if (pathname.startsWith('/admin/settings')) return '설정';
     return '대시보드';
   };

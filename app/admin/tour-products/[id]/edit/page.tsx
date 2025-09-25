@@ -112,15 +112,15 @@ const TourProductEditPage = () => {
 
       if (data) {
         setForm({
-          name: data.name || "",
-          golf_course: data.golf_course || "",
-          hotel: data.hotel || "",
-          usage_round: data.usage_round || "",
-          usage_hotel: data.usage_hotel || "",
-          usage_meal: data.usage_meal || "",
-          usage_locker: data.usage_locker || "",
-          usage_bus: data.usage_bus || "",
-          usage_tour: data.usage_tour || "",
+        name: data.name || "",
+        golf_course: data.golf_course || "",
+        hotel: data.hotel || "",
+        usage_round: data.usage_round || "",
+        usage_hotel: data.usage_hotel || "",
+        usage_meal: data.usage_meal || "",
+        usage_locker: data.usage_locker || "",
+        usage_bus: data.usage_bus || "",
+        usage_tour: data.usage_tour || "",
           courses: data.courses || [],
           golf_courses: data.golf_courses || [],
           included_items: data.included_items || initialForm.included_items,
@@ -357,7 +357,7 @@ const TourProductEditPage = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 코스명(여러 개)
-              </label>
+        </label>
               <div className="flex gap-2">
                 <input
                   value={courseInput}
@@ -400,7 +400,7 @@ const TourProductEditPage = () => {
             <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
             포함 사항
-            </label>
+        </label>
             <textarea
             name="included_items"
             value={form.included_items}
@@ -421,7 +421,7 @@ const TourProductEditPage = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 불포함 사항
-              </label>
+        </label>
               <textarea
                 name="excluded_items"
                 value={form.excluded_items}
@@ -480,7 +480,7 @@ const TourProductEditPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   라운딩 규정
-                </label>
+        </label>
                 <textarea
                   name="usage_round"
                   value={form.usage_round}
@@ -496,7 +496,7 @@ const TourProductEditPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   숙소 이용
-                </label>
+        </label>
                 <textarea
                   name="usage_hotel"
                   value={form.usage_hotel}
@@ -511,7 +511,7 @@ const TourProductEditPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   식사 안내
-                </label>
+        </label>
                 <textarea
                   name="usage_meal"
                   value={form.usage_meal}
@@ -526,7 +526,7 @@ const TourProductEditPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   락카 이용
-                </label>
+        </label>
                 <textarea
                   name="usage_locker"
                   value={form.usage_locker}
@@ -541,7 +541,7 @@ const TourProductEditPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   버스 이용
-                </label>
+        </label>
                 <textarea
                   name="usage_bus"
                   value={form.usage_bus}
@@ -556,7 +556,7 @@ const TourProductEditPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   관광지 투어
-                </label>
+        </label>
                 <textarea
                   name="usage_tour"
                   value={form.usage_tour}
@@ -592,10 +592,10 @@ const TourProductEditPage = () => {
               {loading ? "저장 중..." : "수정"}
             </button>
           </div>
-        </form>
+      </form>
       </div>
     </div>
   );
 };
 
-export default TourProductEditPage;
+export default TourProductEditPage; 

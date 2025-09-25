@@ -301,7 +301,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     
     if (error) {
       setError(error.message);
-      setLoading(false);
+    setLoading(false);
       return;
     }
     
@@ -447,7 +447,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     if (e.target.type === "checkbox") {
       setForm({ ...form, [name]: (e.target as HTMLInputElement).checked });
     } else {
-      setForm({ ...form, [name]: value });
+    setForm({ ...form, [name]: value });
     }
   };
 
@@ -565,7 +565,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                   }
                   
                   alert(successMessage);
-                } else {
+    } else {
                   console.error('동반자 탑승지 업데이트 오류:', updateError);
                   alert('동반자 탑승지 업데이트 중 오류가 발생했습니다.');
                 }
@@ -967,7 +967,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
         companions: row["동반자"] ? row["동반자"].split(",").map((c: string) => c.trim()) : [],
         is_paying_for_group: row["일괄겳제"] === "O",
         emergency_contact: normalizePhone(row["비상연락처"] || ""),
-        status: row["상태"] || "확정",
+            status: row["상태"] || "확정",
         note: row["참고사항"] || "",
         tour_id: uploadTourId,
         validation: {
@@ -1145,12 +1145,12 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   const renderTourSpecificHeader = () => {
     const currentTour = tours.find(t => t.id === tourId);
     if (!currentTour) return null;
-    
-    return (
+
+  return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
         <h2 className="text-lg font-semibold text-gray-900">{currentTour.title}</h2>
         <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
-          <div>
+    <div>
             <span className="font-medium">날짜:</span> {currentTour.date}
           </div>
           <div>
@@ -1859,10 +1859,10 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                     value={form.status || '확정'}
                     onChange={handleChange}
                   >
-                    <option value="확정">확정</option>
+          <option value="확정">확정</option>
                     <option value="미확정">미확정</option>
-                    <option value="취소">취소</option>
-                  </select>
+          <option value="취소">취소</option>
+        </select>
                 </div>
 
                 <div>
@@ -1943,12 +1943,12 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                     value={form.role || ''}
                     onChange={handleChange}
                   >
-                    <option value="">직책 선택</option>
+          <option value="">직책 선택</option>
                     {roleOptions.map(opt => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
-                  </select>
-                  {form.role === "기타" && (
+        </select>
+        {form.role === "기타" && (
                     <input
                       type="text"
                       className="w-full border rounded-lg px-3 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -1962,7 +1962,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     동반자 정보
-                  </label>
+        </label>
                   {(form.group_size || 0) > 1 ? (
                     <div className="border rounded-lg p-4 bg-gray-50">
                       {/* 일괄 결제 옵션 */}
@@ -1978,7 +1978,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                         <label htmlFor="is_paying_for_group" className="ml-2 block text-sm font-medium text-gray-900">
                           그룹 일괄 결제 (예약자가 그룹 전체 결제)
                         </label>
-                      </div>
+      </div>
 
                       {/* 동반자 입력 필드 */}
                       <div className="mb-3">
@@ -1986,7 +1986,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                         <div className="grid grid-cols-1 gap-2">
                           {Array.from({ length: (form.group_size || 1) - 1 }).map((_, index) => (
                             <div key={index} className="flex items-center gap-2">
-                              <input
+        <input
                                 type="text"
                                 placeholder={`동반자 ${index + 1} 이름`}
                                 className="flex-1 border border-gray-300 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -2005,7 +2005,7 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                               >
                                 <X className="w-4 h-4" />
                               </button>
-                            </div>
+      </div>
                           ))}
                         </div>
                       </div>
@@ -2130,15 +2130,15 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                 <h4 className="text-lg font-semibold text-red-600 mb-2">오류 데이터</h4>
                 <div className="bg-red-50 rounded-lg p-4 max-h-60 overflow-y-auto">
                   <table className="min-w-full text-sm">
-                    <thead>
+          <thead>
                       <tr className="border-b">
                         <th className="text-left p-2">행</th>
                         <th className="text-left p-2">이름</th>
                         <th className="text-left p-2">전화번호</th>
                         <th className="text-left p-2">오류 내용</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+            </tr>
+          </thead>
+          <tbody>
                       {uploadPreview.filter(d => !d.validation.isValid).map((data, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-2">{data.row}</td>
@@ -2186,12 +2186,12 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                                 : 'bg-orange-100 text-orange-800'
                             }`}>
                               {data.status}
-                            </span>
+                  </span>
                           </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              </tr>
+            ))}
+          </tbody>
+        </table>
                 </div>
               </div>
             )}
@@ -2353,4 +2353,4 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   );
 };
 
-export default ParticipantsManager;
+export default ParticipantsManager; 
