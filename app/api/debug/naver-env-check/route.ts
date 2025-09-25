@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
           status: response.status,
           statusText: response.statusText,
           headers: Object.fromEntries(response.headers.entries()),
+          success: false,
+          error: '',
+          data: null
         };
         
         if (!response.ok) {
