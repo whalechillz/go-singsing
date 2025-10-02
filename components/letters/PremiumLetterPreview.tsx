@@ -47,7 +47,6 @@ export default function PremiumLetterPreview({
                   @page { 
                     size: A4; 
                     margin: 2cm;
-                    @top-center { content: "싱싱골프투어"; }
                   }
                   body { 
                     font-family: 'Noto Serif KR', serif; 
@@ -63,12 +62,6 @@ export default function PremiumLetterPreview({
                     border-bottom: 2px solid #2563eb;
                     padding-bottom: 20px;
                   }
-                  .letter-title {
-                    font-size: 24px;
-                    font-weight: bold;
-                    color: #2563eb;
-                    margin-bottom: 10px;
-                  }
                   .letter-subtitle {
                     font-size: 16px;
                     color: #666;
@@ -83,13 +76,7 @@ export default function PremiumLetterPreview({
                     margin-top: 50px;
                     text-align: right;
                   }
-                  .signature {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2563eb;
-                  }
                   .date {
-                    margin-top: 20px;
                     color: #666;
                   }
                 </style>
@@ -143,9 +130,6 @@ export default function PremiumLetterPreview({
       <div id="letter-content" className="p-8 bg-gradient-to-b from-blue-50 to-white">
         {/* 편지 헤더 */}
         <div className="letter-header text-center mb-8 border-b-2 border-blue-200 pb-6">
-          <div className="letter-title text-2xl font-bold text-blue-600 mb-2">
-            싱싱골프투어
-          </div>
           <div className="letter-subtitle text-gray-600">
             {occasion} 인사편지
           </div>
@@ -165,9 +149,6 @@ export default function PremiumLetterPreview({
 
         {/* 편지 푸터 */}
         <div className="letter-footer text-right">
-          <div className="signature text-blue-600 font-bold text-lg mb-2">
-            싱싱골프투어 드림
-          </div>
           <div className="date text-gray-500">
             {new Date().toLocaleDateString('ko-KR', {
               year: 'numeric',
