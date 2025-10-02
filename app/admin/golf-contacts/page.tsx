@@ -71,6 +71,8 @@ export default function GolfContactsPage() {
   const [aiImprovementRequest, setAiImprovementRequest] = useState('');
   const [isAiImproving, setIsAiImproving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [letterHistory, setLetterHistory] = useState<any[]>([]);
 
   useEffect(() => {
     fetchContacts();
@@ -221,6 +223,10 @@ export default function GolfContactsPage() {
   const openLetterModal = (contact: GolfCourseContact) => {
     setSelectedContact(contact);
     setShowLetterModal(true);
+    // 편지 이력 조회
+    setTimeout(() => {
+      fetchLetterHistory();
+    }, 100);
   };
 
   // AI 개선 기능
@@ -277,6 +283,79 @@ export default function GolfContactsPage() {
       alert('AI 개선 중 오류가 발생했습니다: ' + error);
     } finally {
       setIsAiImproving(false);
+    }
+  };
+
+  // 편지 저장 기능
+  const saveLetter = async (status: 'draft' | 'sent' | 'printed' = 'draft') => {
+    if (!selectedContact || !letterForm.custom_content.trim()) {
+      alert('편지 내용을 입력해주세요.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      console.log('💾 편지 저장 시작...', status);
+      
+      const response = await fetch('/api/save-letter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          golfCourseContactId: selectedContact.id,
+          occasion: letterForm.occasion,
+          letterContent: letterForm.custom_content,
+          aiImprovementRequest: aiImprovementRequest || null,
+          aiImprovedContent: letterForm.custom_content, // AI 개선된 내용이 있다면 여기에
+          sentDate: new Date().toISOString().split('T')[0],
+          sentBy: '관리자', // 실제로는 로그인한 사용자 정보
+          status,
+          notes: `발송 사유: ${letterForm.occasion}`
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ 편지 저장 완료:', data.letterId);
+        
+        const statusText = status === 'draft' ? '임시저장' : 
+                          status === 'sent' ? '발송완료' : '인쇄완료';
+        
+        alert(`편지가 ${statusText}되었습니다!`);
+        
+        // 편지 이력 새로고침
+        fetchLetterHistory();
+        
+        // 임시저장이 아닌 경우 모달 닫기
+        if (status !== 'draft') {
+          setShowLetterModal(false);
+          setLetterForm({ template: '', custom_content: '', occasion: '' });
+          setAiImprovementRequest('');
+        }
+      } else {
+        const error = await response.json();
+        console.error('편지 저장 실패:', error);
+        alert('편지 저장에 실패했습니다: ' + error.message);
+      }
+    } catch (error) {
+      console.error('편지 저장 에러:', error);
+      alert('편지 저장 중 오류가 발생했습니다: ' + error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 편지 이력 조회
+  const fetchLetterHistory = async () => {
+    if (!selectedContact) return;
+    
+    try {
+      const response = await fetch(`/api/save-letter?contactId=${selectedContact.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setLetterHistory(data.letters || []);
+      }
+    } catch (error) {
+      console.error('편지 이력 조회 실패:', error);
     }
   };
 
@@ -709,29 +788,44 @@ export default function GolfContactsPage() {
                   </div>
 
                   {/* 액션 버튼들 */}
-                  <div className="flex gap-2 pt-4">
-                    <button
-                      onClick={() => setShowPreview(!showPreview)}
-                      className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-                    >
-                      {showPreview ? '편집하기' : '미리보기'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        // 실제 발송 로직 구현
-                        alert('손편지 발송 기능은 추후 구현 예정입니다.');
-                        setShowLetterModal(false);
-                      }}
-                      className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700"
-                    >
-                      발송하기
-                    </button>
-                    <button
-                      onClick={() => setShowLetterModal(false)}
-                      className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
-                    >
-                      취소
-                    </button>
+                  <div className="space-y-3 pt-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowPreview(!showPreview)}
+                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                      >
+                        {showPreview ? '편집하기' : '미리보기'}
+                      </button>
+                      <button
+                        onClick={() => saveLetter('draft')}
+                        disabled={isSaving || !letterForm.custom_content.trim()}
+                        className="flex-1 bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 disabled:opacity-50"
+                      >
+                        {isSaving ? '저장 중...' : '💾 임시저장'}
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => saveLetter('printed')}
+                        disabled={isSaving || !letterForm.custom_content.trim()}
+                        className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {isSaving ? '저장 중...' : '🖨️ 인쇄완료'}
+                      </button>
+                      <button
+                        onClick={() => saveLetter('sent')}
+                        disabled={isSaving || !letterForm.custom_content.trim()}
+                        className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50"
+                      >
+                        {isSaving ? '저장 중...' : '📤 발송완료'}
+                      </button>
+                      <button
+                        onClick={() => setShowLetterModal(false)}
+                        className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+                      >
+                        취소
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -758,6 +852,45 @@ export default function GolfContactsPage() {
                   )}
                 </div>
               </div>
+
+              {/* 편지 이력 섹션 */}
+              {letterHistory.length > 0 && (
+                <div className="mt-6 border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">📝 편지 발송 이력</h3>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {letterHistory.map((letter) => (
+                      <div key={letter.id} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="font-medium text-gray-900">
+                              {letter.occasion} 편지
+                            </span>
+                            <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                              letter.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                              letter.status === 'sent' ? 'bg-green-100 text-green-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {letter.status === 'draft' ? '임시저장' :
+                               letter.status === 'sent' ? '발송완료' : '인쇄완료'}
+                            </span>
+                          </div>
+                          <span className="text-sm text-gray-500">
+                            {new Date(letter.created_at).toLocaleDateString('ko-KR')}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-700 line-clamp-2">
+                          {letter.letter_content}
+                        </div>
+                        {letter.ai_improvement_request && (
+                          <div className="text-xs text-purple-600 mt-1">
+                            AI 개선: {letter.ai_improvement_request}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
