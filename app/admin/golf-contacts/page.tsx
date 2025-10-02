@@ -690,14 +690,14 @@ export default function GolfContactsPage() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">📝 메시지 발송 이력</h2>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
+            <table className="w-full min-w-[900px]">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">골프장</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">담당자</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송 사유</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
                 </tr>
               </thead>
@@ -711,6 +711,9 @@ export default function GolfContactsPage() {
                 ) : (
                   letterHistory.map((letter) => (
                     <tr key={letter.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(letter.created_at).toLocaleDateString('ko-KR')}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-gray-900">{letter.golf_course_contacts?.golf_course_name || '-'}</div>
                       </td>
@@ -735,9 +738,6 @@ export default function GolfContactsPage() {
                           {letter.status === 'draft' ? '임시저장' :
                            letter.status === 'sent' ? '발송완료' : '인쇄완료'}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(letter.created_at).toLocaleDateString('ko-KR')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
@@ -798,17 +798,20 @@ export default function GolfContactsPage() {
             <table className="w-full min-w-[900px]">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">골프장</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">담당자</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">사유</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">선물</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {giftHistory.map((gift) => (
                   <tr key={gift.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(gift.sent_date).toLocaleDateString('ko-KR')}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-gray-900">{gift.golf_course_contacts?.golf_course_name || '-'}</div>
                     </td>
@@ -819,7 +822,7 @@ export default function GolfContactsPage() {
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         gift.occasion === '추석' ? 'bg-orange-100 text-orange-800' :
                         gift.occasion === '설날' ? 'bg-red-100 text-red-800' :
-                        'bg-blue-100 text-blue-800'
+                        'bg-gray-100 text-gray-800'
                       }`}>
                         {gift.occasion}
                       </span>
@@ -831,9 +834,6 @@ export default function GolfContactsPage() {
                       <div className="text-sm text-gray-500">
                         {gift.gift_amount.toLocaleString()}원
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(gift.sent_date).toLocaleDateString('ko-KR')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex gap-2">
