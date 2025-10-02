@@ -62,9 +62,11 @@ export default function PremiumLetterPreview({
                     border-bottom: 2px solid #2563eb;
                     padding-bottom: 20px;
                   }
-                  .letter-subtitle {
-                    font-size: 16px;
-                    color: #666;
+                  .letter-title {
+                    font-size: 28px;
+                    font-weight: bold;
+                    color: #2563eb;
+                    margin-bottom: 10px;
                   }
                   .letter-content {
                     font-size: 16px;
@@ -77,6 +79,7 @@ export default function PremiumLetterPreview({
                     text-align: right;
                   }
                   .date {
+                    font-size: 18px;
                     color: #666;
                   }
                 </style>
@@ -130,7 +133,7 @@ export default function PremiumLetterPreview({
       <div id="letter-content" className="p-8 bg-gradient-to-b from-blue-50 to-white">
         {/* 편지 헤더 */}
         <div className="letter-header text-center mb-8 border-b-2 border-blue-200 pb-6">
-          <div className="letter-subtitle text-gray-600">
+          <div className="letter-title text-3xl font-bold text-blue-600 mb-2">
             {occasion} 인사편지
           </div>
         </div>
@@ -149,12 +152,8 @@ export default function PremiumLetterPreview({
 
         {/* 편지 푸터 */}
         <div className="letter-footer text-right">
-          <div className="date text-gray-500">
-            {new Date().toLocaleDateString('ko-KR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
+          <div className="date text-gray-500 text-lg">
+            2025년 9월 2일
           </div>
         </div>
       </div>
