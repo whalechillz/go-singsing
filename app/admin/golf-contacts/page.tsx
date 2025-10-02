@@ -72,6 +72,24 @@ export default function GolfContactsPage() {
   const [isAiImproving, setIsAiImproving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [letterHistory, setLetterHistory] = useState<any[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [letterToDelete, setLetterToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showGiftEditModal, setShowGiftEditModal] = useState(false);
+  const [showGiftDeleteModal, setShowGiftDeleteModal] = useState(false);
+  const [giftToEdit, setGiftToEdit] = useState<any>(null);
+  const [giftToDelete, setGiftToDelete] = useState<any>(null);
+  const [isGiftSaving, setIsGiftSaving] = useState(false);
+  const [isGiftDeleting, setIsGiftDeleting] = useState(false);
+  const [giftForm, setGiftForm] = useState({
+    occasion: '',
+    gift_type: '',
+    gift_amount: '',
+    quantity: '',
+    sent_date: '',
+    sent_by: '',
+    notes: ''
+  });
 
   useEffect(() => {
     fetchContacts();
@@ -423,6 +441,167 @@ export default function GolfContactsPage() {
     }
   };
 
+  // 편지 삭제 함수
+  const handleDeleteLetter = async () => {
+    if (!letterToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      console.log('🗑️ 편지 삭제 시작...', letterToDelete.id);
+      
+      const response = await fetch('/api/delete-letter', {
+        method: 'DELETE',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ letterId: letterToDelete.id })
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        console.log('✅ 편지 삭제 완료:', responseData);
+        alert('편지가 삭제되었습니다!');
+        
+        // 이력 새로고침
+        await fetchAllLetterHistory();
+        
+        // 모달 닫기
+        setShowDeleteModal(false);
+        setLetterToDelete(null);
+      } else {
+        console.error('편지 삭제 실패:', responseData);
+        const errorMessage = responseData?.error || responseData?.message || '알 수 없는 오류가 발생했습니다.';
+        alert(`편지 삭제에 실패했습니다: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('편지 삭제 에러:', error);
+      const errorMessage = error instanceof Error ? error.message : '네트워크 오류가 발생했습니다.';
+      alert(`편지 삭제 중 오류가 발생했습니다: ${errorMessage}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // 선물 이력 수정 함수
+  const handleEditGift = (gift: any) => {
+    setGiftToEdit(gift);
+    setGiftForm({
+      occasion: gift.occasion || '',
+      gift_type: gift.gift_type || '',
+      gift_amount: gift.gift_amount?.toString() || '',
+      quantity: gift.quantity?.toString() || '',
+      sent_date: gift.sent_date || '',
+      sent_by: gift.sent_by || '',
+      notes: gift.notes || ''
+    });
+    setShowGiftEditModal(true);
+  };
+
+  const handleSaveGift = async () => {
+    if (!giftToEdit) return;
+
+    setIsGiftSaving(true);
+    try {
+      console.log('✏️ 선물 이력 수정 시작...', giftToEdit.id);
+      
+      const response = await fetch('/api/gift-history', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          giftId: giftToEdit.id,
+          occasion: giftForm.occasion,
+          giftType: giftForm.gift_type,
+          giftAmount: parseInt(giftForm.gift_amount),
+          quantity: parseInt(giftForm.quantity),
+          sentDate: giftForm.sent_date,
+          sentBy: giftForm.sent_by,
+          notes: giftForm.notes
+        })
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        console.log('✅ 선물 이력 수정 완료:', responseData);
+        alert('선물 이력이 수정되었습니다!');
+        
+        // 이력 새로고침
+        await fetchGiftHistory();
+        
+        // 모달 닫기
+        setShowGiftEditModal(false);
+        setGiftToEdit(null);
+        setGiftForm({
+          occasion: '',
+          gift_type: '',
+          gift_amount: '',
+          quantity: '',
+          sent_date: '',
+          sent_by: '',
+          notes: ''
+        });
+      } else {
+        console.error('선물 이력 수정 실패:', responseData);
+        const errorMessage = responseData?.error || responseData?.message || '알 수 없는 오류가 발생했습니다.';
+        alert(`선물 이력 수정에 실패했습니다: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('선물 이력 수정 에러:', error);
+      const errorMessage = error instanceof Error ? error.message : '네트워크 오류가 발생했습니다.';
+      alert(`선물 이력 수정 중 오류가 발생했습니다: ${errorMessage}`);
+    } finally {
+      setIsGiftSaving(false);
+    }
+  };
+
+  // 선물 이력 삭제 함수
+  const handleDeleteGift = async () => {
+    if (!giftToDelete) return;
+
+    setIsGiftDeleting(true);
+    try {
+      console.log('🗑️ 선물 이력 삭제 시작...', giftToDelete.id);
+      
+      const response = await fetch('/api/gift-history', {
+        method: 'DELETE',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ giftId: giftToDelete.id })
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        console.log('✅ 선물 이력 삭제 완료:', responseData);
+        alert('선물 이력이 삭제되었습니다!');
+        
+        // 이력 새로고침
+        await fetchGiftHistory();
+        
+        // 모달 닫기
+        setShowGiftDeleteModal(false);
+        setGiftToDelete(null);
+      } else {
+        console.error('선물 이력 삭제 실패:', responseData);
+        const errorMessage = responseData?.error || responseData?.message || '알 수 없는 오류가 발생했습니다.';
+        alert(`선물 이력 삭제에 실패했습니다: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('선물 이력 삭제 에러:', error);
+      const errorMessage = error instanceof Error ? error.message : '네트워크 오류가 발생했습니다.';
+      alert(`선물 이력 삭제 중 오류가 발생했습니다: ${errorMessage}`);
+    } finally {
+      setIsGiftDeleting(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -566,34 +745,46 @@ export default function GolfContactsPage() {
                         {new Date(letter.created_at).toLocaleDateString('ko-KR')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => {
-                            // 편지 내용 미리보기 모달 열기
-                            setSelectedContact({
-                              id: letter.golf_course_contact_id,
-                              golf_course_name: letter.golf_course_contacts?.golf_course_name || '',
-                              contact_name: letter.golf_course_contacts?.contact_name || '',
-                              position: '',
-                              phone: '',
-                              mobile: '',
-                              email: '',
-                              address: '',
-                              notes: '',
-                              is_active: true,
-                              created_at: '',
-                              updated_at: ''
-                            });
-                            setLetterForm({
-                              template: '',
-                              custom_content: letter.letter_content,
-                              occasion: letter.occasion
-                            });
-                            setShowLetterModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          보기
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              // 편지 내용 미리보기 모달 열기
+                              setSelectedContact({
+                                id: letter.golf_course_contact_id,
+                                golf_course_name: letter.golf_course_contacts?.golf_course_name || '',
+                                contact_name: letter.golf_course_contacts?.contact_name || '',
+                                position: '',
+                                phone: '',
+                                mobile: '',
+                                email: '',
+                                address: '',
+                                notes: '',
+                                is_active: true,
+                                created_at: '',
+                                updated_at: ''
+                              });
+                              setLetterForm({
+                                template: '',
+                                custom_content: letter.letter_content,
+                                occasion: letter.occasion
+                              });
+                              setShowLetterModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            보기
+                          </button>
+                          <button
+                            onClick={() => {
+                              setLetterToDelete(letter);
+                              setShowDeleteModal(true);
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                            title="편지 삭제"
+                          >
+                            삭제
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -617,6 +808,7 @@ export default function GolfContactsPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">사유</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">선물</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송일</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -643,6 +835,27 @@ export default function GolfContactsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(gift.sent_date).toLocaleDateString('ko-KR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditGift(gift)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="선물 이력 수정"
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={() => {
+                            setGiftToDelete(gift);
+                            setShowGiftDeleteModal(true);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                          title="선물 이력 삭제"
+                        >
+                          삭제
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1040,6 +1253,259 @@ export default function GolfContactsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && letterToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0 w-10 h-10 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                편지 삭제 확인
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                정말로 이 편지를 삭제하시겠습니까?
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-3 mb-4 text-left">
+                <div className="text-sm">
+                  <div className="font-medium text-gray-900">
+                    {letterToDelete.golf_course_contacts?.golf_course_name} - {letterToDelete.golf_course_contacts?.contact_name}
+                  </div>
+                  <div className="text-gray-500 mt-1">
+                    발송 사유: {letterToDelete.occasion}
+                  </div>
+                  <div className="text-gray-500">
+                    발송일: {new Date(letterToDelete.created_at).toLocaleDateString('ko-KR')}
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-xs text-red-600 mb-6">
+                ⚠️ 삭제된 편지는 복구할 수 없습니다.
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setLetterToDelete(null);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                disabled={isDeleting}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteLetter}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? '삭제 중...' : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 선물 이력 편집 모달 */}
+      {showGiftEditModal && giftToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0 w-10 h-10 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
+                <Edit className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+            
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                선물 이력 수정
+              </h3>
+              <p className="text-sm text-gray-500">
+                {giftToEdit.golf_course_contacts?.golf_course_name} - {giftToEdit.golf_course_contacts?.contact_name}
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">발송 사유</label>
+                <select
+                  value={giftForm.occasion}
+                  onChange={(e) => setGiftForm({ ...giftForm, occasion: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">선택하세요</option>
+                  <option value="추석">추석</option>
+                  <option value="설날">설날</option>
+                  <option value="일반">일반</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">선물 종류</label>
+                <input
+                  type="text"
+                  value={giftForm.gift_type}
+                  onChange={(e) => setGiftForm({ ...giftForm, gift_type: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="예: 스타벅스 상품권"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">금액 (원)</label>
+                  <input
+                    type="number"
+                    value={giftForm.gift_amount}
+                    onChange={(e) => setGiftForm({ ...giftForm, gift_amount: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="30000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">수량</label>
+                  <input
+                    type="number"
+                    value={giftForm.quantity}
+                    onChange={(e) => setGiftForm({ ...giftForm, quantity: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="1"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">발송일</label>
+                <input
+                  type="date"
+                  value={giftForm.sent_date}
+                  onChange={(e) => setGiftForm({ ...giftForm, sent_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">발송자</label>
+                <input
+                  type="text"
+                  value={giftForm.sent_by}
+                  onChange={(e) => setGiftForm({ ...giftForm, sent_by: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="관리자"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">메모</label>
+                <textarea
+                  value={giftForm.notes}
+                  onChange={(e) => setGiftForm({ ...giftForm, notes: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                  placeholder="특이사항"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowGiftEditModal(false);
+                  setGiftToEdit(null);
+                  setGiftForm({
+                    occasion: '',
+                    gift_type: '',
+                    gift_amount: '',
+                    quantity: '',
+                    sent_date: '',
+                    sent_by: '',
+                    notes: ''
+                  });
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                disabled={isGiftSaving}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSaveGift}
+                disabled={isGiftSaving || !giftForm.occasion || !giftForm.gift_type || !giftForm.gift_amount || !giftForm.quantity || !giftForm.sent_date}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGiftSaving ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 선물 이력 삭제 확인 모달 */}
+      {showGiftDeleteModal && giftToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0 w-10 h-10 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                선물 이력 삭제 확인
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                정말로 이 선물 이력을 삭제하시겠습니까?
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-3 mb-4 text-left">
+                <div className="text-sm">
+                  <div className="font-medium text-gray-900">
+                    {giftToDelete.golf_course_contacts?.golf_course_name} - {giftToDelete.golf_course_contacts?.contact_name}
+                  </div>
+                  <div className="text-gray-500 mt-1">
+                    {giftToDelete.gift_type} {giftToDelete.quantity}장 ({giftToDelete.gift_amount.toLocaleString()}원)
+                  </div>
+                  <div className="text-gray-500">
+                    발송일: {new Date(giftToDelete.sent_date).toLocaleDateString('ko-KR')}
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-xs text-red-600 mb-6">
+                ⚠️ 삭제된 선물 이력은 복구할 수 없습니다.
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowGiftDeleteModal(false);
+                  setGiftToDelete(null);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                disabled={isGiftDeleting}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteGift}
+                disabled={isGiftDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGiftDeleting ? '삭제 중...' : '삭제'}
+              </button>
             </div>
           </div>
         </div>

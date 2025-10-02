@@ -136,7 +136,7 @@ export default function PremiumLetterPreview({
         <h3 className="text-white font-semibold text-lg">📝 고급 손편지 미리보기</h3>
         <div className="flex gap-2">
           <button
-            onClick={handleDownload}
+             onClick={handleDownload}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors"
             title="PDF 파일로 다운로드합니다"
           >
