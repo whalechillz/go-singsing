@@ -711,7 +711,7 @@ export default function GolfContactsPage() {
                 ) : (
                   letterHistory.map((letter) => (
                     <tr key={letter.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-base text-gray-700">
                         {new Date(letter.created_at).toLocaleDateString('ko-KR')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -809,7 +809,7 @@ export default function GolfContactsPage() {
               <tbody className="divide-y divide-gray-200">
                 {giftHistory.map((gift) => (
                   <tr key={gift.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-base text-gray-700">
                       {new Date(gift.sent_date).toLocaleDateString('ko-KR')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

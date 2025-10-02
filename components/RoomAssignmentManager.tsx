@@ -121,11 +121,11 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
     }
     
     try {
-      setAssigning(participantId);
-      const { error } = await supabase
-        .from("singsing_participants")
+    setAssigning(participantId);
+    const { error } = await supabase
+      .from("singsing_participants")
         .update({ room_id: roomId === "" ? null : roomId })
-        .eq("id", participantId);
+      .eq("id", participantId);
       
       if (error) throw error;
       
@@ -289,13 +289,13 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                         <div className="flex flex-col items-start min-w-0">
                           <span className="font-medium text-gray-900 truncate">{p.name}</span>
                         </div>
-                        <select
+                      <select
                           className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500 ml-2"
                           value={p.room_id || ""}
-                          onChange={e => handleAssignRoom(p.id, e.target.value)}
-                          disabled={!!assigning}
-                        >
-                          <option value="">미배정</option>
+                        onChange={e => handleAssignRoom(p.id, e.target.value)}
+                        disabled={!!assigning}
+                      >
+                        <option value="">미배정</option>
                           {rooms.map(r => {
                             const assignedCount = participants.filter(pp => pp.room_id === r.id).length;
                             const isFull = assignedCount >= r.capacity;
@@ -306,12 +306,12 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                               </option>
                             );
                           })}
-                        </select>
-                      </li>
+                      </select>
+                    </li>
                     ))
                   )}
                 </ul>
-              </div>
+            </div>
             );
           })}
 
@@ -340,8 +340,8 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
                     <select
                     className="ml-2 border border-gray-300 rounded px-2 py-1 bg-white text-gray-900 focus:outline-blue-500"
                     value={p.room_id || ""}
-                    onChange={e => handleAssignRoom(p.id, e.target.value)}
-                    disabled={!!assigning}
+                      onChange={e => handleAssignRoom(p.id, e.target.value)}
+                      disabled={!!assigning}
                     >
                       <option value="">미배정</option>
                       {rooms.map(r => {
@@ -369,4 +369,4 @@ const RoomAssignmentManager: React.FC<Props> = ({ tourId, refreshKey }) => {
   );
 };
 
-export default RoomAssignmentManager;
+export default RoomAssignmentManager; 
