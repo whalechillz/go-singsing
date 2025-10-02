@@ -1053,6 +1053,7 @@ export default function GolfContactsPage() {
                         onClick={() => saveLetter('draft')}
                         disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
                         className="flex-1 bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="편지를 임시로 저장합니다 (나중에 수정 가능)"
                       >
                         {isSaving ? '저장 중...' : '💾 임시저장'}
                       </button>
@@ -1062,6 +1063,7 @@ export default function GolfContactsPage() {
                         onClick={() => saveLetter('printed')}
                         disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
                         className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="인쇄 완료 상태로 저장합니다 (인쇄 이력 기록)"
                       >
                         {isSaving ? '저장 중...' : '🖨️ 인쇄완료'}
                       </button>
@@ -1069,6 +1071,7 @@ export default function GolfContactsPage() {
                         onClick={() => saveLetter('sent')}
                         disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
                         className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="발송 완료 상태로 저장합니다 (발송 이력 기록)"
                       >
                         {isSaving ? '저장 중...' : '📤 발송완료'}
                       </button>
@@ -1090,6 +1093,15 @@ export default function GolfContactsPage() {
                       occasion={letterForm.occasion}
                       golfCourseName={selectedContact.golf_course_name}
                       contactName={selectedContact.contact_name}
+                      onDownload={() => {
+                        // PDF 다운로드 로직은 컴포넌트 내부에서 처리
+                      }}
+                      onKakaoSend={() => {
+                        // 카카오톡 전송 로직은 컴포넌트 내부에서 처리
+                      }}
+                      onSmsSend={() => {
+                        // SMS 전송 로직은 컴포넌트 내부에서 처리
+                      }}
                     />
                   ) : (
                     <div className="bg-gray-50 rounded-lg p-8 text-center">

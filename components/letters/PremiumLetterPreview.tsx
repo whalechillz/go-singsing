@@ -1,16 +1,16 @@
 "use client";
 
 import React from 'react';
-import { Printer, Download, Share2 } from 'lucide-react';
+import { Download, MessageSquare, Smartphone } from 'lucide-react';
 
 interface PremiumLetterPreviewProps {
   content: string;
   occasion: string;
   golfCourseName: string;
   contactName: string;
-  onPrint?: () => void;
   onDownload?: () => void;
-  onShare?: () => void;
+  onKakaoSend?: () => void;
+  onSmsSend?: () => void;
 }
 
 export default function PremiumLetterPreview({
@@ -18,15 +18,47 @@ export default function PremiumLetterPreview({
   occasion,
   golfCourseName,
   contactName,
-  onPrint,
   onDownload,
-  onShare
+  onKakaoSend,
+  onSmsSend
 }: PremiumLetterPreviewProps) {
-  const handlePrint = () => {
-    if (onPrint) {
-      onPrint();
+  const handleKakaoSend = () => {
+    if (onKakaoSend) {
+      onKakaoSend();
     } else {
-      window.print();
+      // 카카오톡 전송 로직
+      const kakaoMessage = `[싱싱골프투어 ${occasion} 인사편지]\n\n${content}\n\n- ${golfCourseName} ${contactName}님께`;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: `싱싱골프투어 ${occasion} 인사편지`,
+          text: kakaoMessage
+        });
+      } else {
+        navigator.clipboard.writeText(kakaoMessage).then(() => {
+          alert('카카오톡 전송용 메시지가 클립보드에 복사되었습니다.\n카카오톡에서 붙여넣기하여 전송하세요.');
+        });
+      }
+    }
+  };
+
+  const handleSmsSend = () => {
+    if (onSmsSend) {
+      onSmsSend();
+    } else {
+      // SMS 전송 로직
+      const smsMessage = `[싱싱골프투어 ${occasion} 인사편지]\n\n${content}\n\n- ${golfCourseName} ${contactName}님께`;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: `싱싱골프투어 ${occasion} 인사편지`,
+          text: smsMessage
+        });
+      } else {
+        navigator.clipboard.writeText(smsMessage).then(() => {
+          alert('SMS 전송용 메시지가 클립보드에 복사되었습니다.\n문자 앱에서 붙여넣기하여 전송하세요.');
+        });
+      }
     }
   };
 
@@ -104,28 +136,28 @@ export default function PremiumLetterPreview({
         <h3 className="text-white font-semibold text-lg">📝 고급 손편지 미리보기</h3>
         <div className="flex gap-2">
           <button
-            onClick={handlePrint}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors"
-            title="인쇄"
-          >
-            <Printer className="w-4 h-4" />
-            인쇄
-          </button>
-          <button
             onClick={handleDownload}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors"
-            title="PDF 다운로드"
+            title="PDF 파일로 다운로드합니다"
           >
             <Download className="w-4 h-4" />
-            PDF
+            PDF 다운로드
           </button>
           <button
-            onClick={onShare}
+            onClick={handleKakaoSend}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors"
-            title="공유"
+            title="카카오톡으로 전송합니다"
           >
-            <Share2 className="w-4 h-4" />
-            공유
+            <MessageSquare className="w-4 h-4" />
+            카톡 전송
+          </button>
+          <button
+            onClick={handleSmsSend}
+            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors"
+            title="SMS로 전송합니다"
+          >
+            <Smartphone className="w-4 h-4" />
+            문자 전송
           </button>
         </div>
       </div>
