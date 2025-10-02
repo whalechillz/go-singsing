@@ -320,73 +320,81 @@ export default function ModernDashboardContentV2() {
 
       {/* 이번 달 통계 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">이번 달 투어</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {dashboardData.stats.monthlyTours}개
-              </p>
+        <Link href="/admin/tours" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">이번 달 투어</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {dashboardData.stats.monthlyTours}개
+                </p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-full">
+                <Briefcase className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Briefcase className="w-6 h-6 text-blue-600" />
+            <div className="mt-4 text-sm text-blue-600 hover:text-blue-800">
+              투어 목록 보기 →
             </div>
           </div>
-          <div className="mt-4 text-sm text-gray-500">
-            진행 예정
-          </div>
-        </div>
+        </Link>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">이번 달 참가자</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {dashboardData.stats.monthlyParticipants}명
-              </p>
+        <Link href="/admin/participants" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">이번 달 참가자</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {dashboardData.stats.monthlyParticipants}명
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <Users className="w-6 h-6 text-green-600" />
+            <div className="mt-4 text-sm text-blue-600 hover:text-blue-800">
+              참가자 목록 보기 →
             </div>
           </div>
-          <div className="mt-4 text-sm text-gray-500">
-            총 예약 인원
-          </div>
-        </div>
+        </Link>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">총 계약 견적 매출</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {dashboardData.stats.totalExpectedRevenue.toLocaleString()}원
-              </p>
+        <Link href="/admin/tours" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">총 계약 견적 매출</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {dashboardData.stats.totalExpectedRevenue.toLocaleString()}원
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-full">
+                <TrendingUp className="w-6 h-6 text-yellow-600" />
+              </div>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <TrendingUp className="w-6 h-6 text-yellow-600" />
+            <div className="mt-4 text-sm text-blue-600 hover:text-blue-800">
+              투어 목록 보기 →
             </div>
           </div>
-          <div className="mt-4 text-sm text-gray-500">
-            예상 매출액
-          </div>
-        </div>
+        </Link>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">이번달 수금액</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">
-                {dashboardData.stats.totalCollected.toLocaleString()}원
-              </p>
+        <Link href="/admin/payments" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">이번달 수금액</p>
+                <p className="text-2xl font-bold text-green-600 mt-1">
+                  {dashboardData.stats.totalCollected.toLocaleString()}원
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <CreditCard className="w-6 h-6 text-green-600" />
+              </div>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <CreditCard className="w-6 h-6 text-green-600" />
+            <div className="mt-4 text-sm text-blue-600 hover:text-blue-800">
+              결제 관리 보기 →
             </div>
           </div>
-          <div className="mt-4 text-sm text-gray-500">
-            실제 수금액
-          </div>
-        </div>
+        </Link>
       </div>
 
       {/* 미수금 및 수금률 */}
@@ -413,24 +421,26 @@ export default function ModernDashboardContentV2() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">수금률</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">
-                {dashboardData.stats.totalExpectedRevenue > 0 
-                  ? Math.round((dashboardData.stats.totalCollected / dashboardData.stats.totalExpectedRevenue) * 100)
-                  : 0}%
-              </p>
+        <Link href="/admin/payments" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">수금률</p>
+                <p className="text-2xl font-bold text-blue-600 mt-1">
+                  {dashboardData.stats.totalExpectedRevenue > 0 
+                    ? Math.round((dashboardData.stats.totalCollected / dashboardData.stats.totalExpectedRevenue) * 100)
+                    : 0}%
+                </p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-full">
+                <TrendingUp className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
+            <div className="mt-4 text-sm text-blue-600 hover:text-blue-800">
+              결제 관리 보기 →
             </div>
           </div>
-          <div className="mt-4 text-sm text-gray-500">
-            수금 진행률
-          </div>
-        </div>
+        </Link>
       </div>
       
       {/* 다가오는 투어 (7일 이내) */}
