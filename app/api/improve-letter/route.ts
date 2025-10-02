@@ -74,6 +74,14 @@ export async function POST(request: NextRequest) {
     });
 
     const improvedContent = response.choices[0].message.content;
+    
+    if (!improvedContent) {
+      return NextResponse.json(
+        { error: 'AI 응답에서 개선된 내용을 받지 못했습니다.' },
+        { status: 500 }
+      );
+    }
+    
     const originalLength = originalContent.length;
     const improvedLength = improvedContent.length;
 
