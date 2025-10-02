@@ -29,22 +29,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 편지 저장
-    const { data, error } = await supabase
+    // 기존 편지가 있는지 확인 (같은 담당자, 같은 발송 사유, 같은 날짜)
+    const { data: existingLetter, error: checkError } = await supabase
       .from('letter_sending_history')
-      .insert({
-        golf_course_contact_id: golfCourseContactId,
-        occasion,
-        letter_content: letterContent,
-        ai_improvement_request: aiImprovementRequest || null,
-        ai_improved_content: aiImprovedContent || null,
-        sent_date: sentDate || new Date().toISOString().split('T')[0],
-        sent_by: sentBy || null,
-        status,
-        notes: notes || null
-      })
-      .select()
+      .select('id, status')
+      .eq('golf_course_contact_id', golfCourseContactId)
+      .eq('occasion', occasion)
+      .eq('sent_date', sentDate || new Date().toISOString().split('T')[0])
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single();
+
+    let data, error;
+
+    if (existingLetter && !checkError) {
+      // 기존 편지가 있으면 상태만 업데이트
+      console.log('📝 기존 편지 상태 업데이트:', existingLetter.id, '→', status);
+      
+      const { data: updateData, error: updateError } = await supabase
+        .from('letter_sending_history')
+        .update({
+          status,
+          letter_content: letterContent,
+          ai_improvement_request: aiImprovementRequest || null,
+          ai_improved_content: aiImprovedContent || null,
+          notes: notes || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingLetter.id)
+        .select()
+        .single();
+      
+      data = updateData;
+      error = updateError;
+    } else {
+      // 기존 편지가 없으면 새로 생성
+      console.log('📝 새 편지 생성');
+      
+      const { data: insertData, error: insertError } = await supabase
+        .from('letter_sending_history')
+        .insert({
+          golf_course_contact_id: golfCourseContactId,
+          occasion,
+          letter_content: letterContent,
+          ai_improvement_request: aiImprovementRequest || null,
+          ai_improved_content: aiImprovedContent || null,
+          sent_date: sentDate || new Date().toISOString().split('T')[0],
+          sent_by: sentBy || null,
+          status,
+          notes: notes || null
+        })
+        .select()
+        .single();
+      
+      data = insertData;
+      error = insertError;
+    }
 
     if (error) {
       console.error('❌ 편지 저장 실패:', error);

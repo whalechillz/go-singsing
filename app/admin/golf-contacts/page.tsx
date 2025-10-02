@@ -70,7 +70,6 @@ export default function GolfContactsPage() {
   });
   const [aiImprovementRequest, setAiImprovementRequest] = useState('');
   const [isAiImproving, setIsAiImproving] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [letterHistory, setLetterHistory] = useState<any[]>([]);
 
@@ -948,26 +947,18 @@ export default function GolfContactsPage() {
                   <div className="space-y-3 pt-4">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setShowPreview(!showPreview)}
-                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-                      >
-                        {showPreview ? '편집하기' : '미리보기'}
-                      </button>
-                      <button
                         onClick={() => saveLetter('draft')}
                         disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
-                        className="flex-1 bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="편지를 임시로 저장합니다 (나중에 수정 가능)"
+                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="편지 내용을 저장합니다"
                       >
-                        {isSaving ? '저장 중...' : '💾 임시저장'}
+                        {isSaving ? '저장 중...' : '💾 저장'}
                       </button>
-                    </div>
-                    <div className="flex gap-2">
                       <button
                         onClick={() => saveLetter('printed')}
                         disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
                         className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="인쇄 완료 상태로 저장합니다 (인쇄 이력 기록)"
+                        title="인쇄 완료 상태로 업데이트합니다"
                       >
                         {isSaving ? '저장 중...' : '🖨️ 인쇄완료'}
                       </button>
@@ -975,10 +966,12 @@ export default function GolfContactsPage() {
                         onClick={() => saveLetter('sent')}
                         disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
                         className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="발송 완료 상태로 저장합니다 (발송 이력 기록)"
+                        title="발송 완료 상태로 업데이트합니다"
                       >
                         {isSaving ? '저장 중...' : '📤 발송완료'}
                       </button>
+                    </div>
+                    <div className="flex gap-2">
                       <button
                         onClick={() => setShowLetterModal(false)}
                         className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
@@ -991,34 +984,21 @@ export default function GolfContactsPage() {
 
                 {/* 프리뷰 패널 */}
                 <div className="lg:sticky lg:top-0">
-                  {showPreview ? (
-                    <PremiumLetterPreview
-                      content={letterForm.custom_content}
-                      occasion={letterForm.occasion}
-                      golfCourseName={selectedContact.golf_course_name}
-                      contactName={selectedContact.contact_name}
-                      onDownload={() => {
-                        // PDF 다운로드 로직은 컴포넌트 내부에서 처리
-                      }}
-                      onKakaoSend={() => {
-                        // 카카오톡 전송 로직은 컴포넌트 내부에서 처리
-                      }}
-                      onSmsSend={() => {
-                        // SMS 전송 로직은 컴포넌트 내부에서 처리
-                      }}
-                    />
-                  ) : (
-                    <div className="bg-gray-50 rounded-lg p-8 text-center">
-                      <div className="text-gray-400 mb-4">
-                        <Send className="w-16 h-16 mx-auto" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-600 mb-2">미리보기</h3>
-                      <p className="text-sm text-gray-500">
-                        편지 내용을 작성한 후 "미리보기" 버튼을 클릭하면<br />
-                        고급스러운 손편지 디자인을 확인할 수 있습니다.
-                      </p>
-                    </div>
-                  )}
+                  <PremiumLetterPreview
+                    content={letterForm.custom_content}
+                    occasion={letterForm.occasion}
+                    golfCourseName={selectedContact.golf_course_name}
+                    contactName={selectedContact.contact_name}
+                    onDownload={() => {
+                      // PDF 다운로드 로직은 컴포넌트 내부에서 처리
+                    }}
+                    onKakaoSend={() => {
+                      // 카카오톡 전송 로직은 컴포넌트 내부에서 처리
+                    }}
+                    onSmsSend={() => {
+                      // SMS 전송 로직은 컴포넌트 내부에서 처리
+                    }}
+                  />
                 </div>
               </div>
 
