@@ -62,6 +62,7 @@ export async function PUT(request: NextRequest) {
       giftId,
       occasion,
       giftType,
+      gift_type, // 프론트엔드에서 보내는 필드명
       giftAmount,
       quantity,
       sentDate,
@@ -84,7 +85,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (!occasion || !giftType || !giftAmount || !quantity || !sentDate) {
+    const finalGiftType = giftType || gift_type;
+    
+    if (!occasion || !finalGiftType || !giftAmount || !quantity || !sentDate) {
       return NextResponse.json(
         { error: '발송 사유, 선물 종류, 금액, 수량, 발송일이 필요합니다.' },
         { status: 400 }
@@ -95,7 +98,7 @@ export async function PUT(request: NextRequest) {
       .from('gift_sending_history')
       .update({
         occasion,
-        gift_type: giftType,
+        gift_type: finalGiftType,
         gift_amount: giftAmount,
         quantity,
         sent_date: sentDate,
