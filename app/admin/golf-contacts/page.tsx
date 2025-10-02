@@ -113,7 +113,7 @@ export default function GolfContactsPage() {
           *,
           golf_course_contacts!inner(golf_course_name, contact_name)
         `)
-        .order('sent_date', { ascending: false });
+        .order('sent_date', { ascending: true });
 
       if (error) throw error;
       setGiftHistory(data || []);
@@ -690,7 +690,7 @@ export default function GolfContactsPage() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">📝 메시지 발송 이력</h2>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[800px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">골프장</th>
@@ -718,7 +718,11 @@ export default function GolfContactsPage() {
                         <div className="text-gray-900">{letter.golf_course_contacts?.contact_name || '-'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          letter.occasion === '추석' ? 'bg-orange-100 text-orange-800' :
+                          letter.occasion === '설날' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
                           {letter.occasion}
                         </span>
                       </td>
@@ -791,7 +795,7 @@ export default function GolfContactsPage() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">🎁 선물 발송 이력</h2>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[900px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">골프장</th>
@@ -812,7 +816,11 @@ export default function GolfContactsPage() {
                       <div className="text-gray-900">{gift.golf_course_contacts?.contact_name || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        gift.occasion === '추석' ? 'bg-orange-100 text-orange-800' :
+                        gift.occasion === '설날' ? 'bg-red-100 text-red-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
                         {gift.occasion}
                       </span>
                     </td>
