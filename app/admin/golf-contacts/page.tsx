@@ -28,6 +28,10 @@ interface GiftHistory {
   sent_date: string;
   sent_by?: string;
   notes?: string;
+  golf_course_contacts?: {
+    golf_course_name: string;
+    contact_name: string;
+  };
 }
 
 export default function GolfContactsPage() {
@@ -323,10 +327,10 @@ export default function GolfContactsPage() {
                 {giftHistory.map((gift) => (
                   <tr key={gift.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{gift.golf_course_contacts.golf_course_name}</div>
+                      <div className="font-medium text-gray-900">{gift.golf_course_contacts?.golf_course_name || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-900">{gift.golf_course_contacts.contact_name}</div>
+                      <div className="text-gray-900">{gift.golf_course_contacts?.contact_name || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
