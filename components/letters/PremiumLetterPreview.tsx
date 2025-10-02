@@ -67,6 +67,7 @@ export default function PremiumLetterPreview({
                     font-weight: bold;
                     color: #2563eb;
                     margin-bottom: 10px;
+                    font-style: italic;
                   }
                   .letter-content {
                     font-size: 16px;
@@ -133,8 +134,10 @@ export default function PremiumLetterPreview({
       <div id="letter-content" className="p-8 bg-gradient-to-b from-blue-50 to-white">
         {/* 편지 헤더 */}
         <div className="letter-header text-center mb-8 border-b-2 border-blue-200 pb-6">
-          <div className="letter-title text-3xl font-bold text-blue-600 mb-2">
-            {occasion} 인사편지
+          <div className="letter-title text-3xl font-bold text-blue-600 mb-2 italic">
+            {occasion === '추석' ? '가을의 정취와 함께' : 
+             occasion === '설날' ? '새해의 희망과 함께' : 
+             '따뜻한 마음과 함께'}
           </div>
         </div>
 
