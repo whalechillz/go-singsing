@@ -81,15 +81,6 @@ export default function GolfContactsPage() {
   const [giftToDelete, setGiftToDelete] = useState<any>(null);
   const [isGiftSaving, setIsGiftSaving] = useState(false);
   const [isGiftDeleting, setIsGiftDeleting] = useState(false);
-  const [giftForm, setGiftForm] = useState({
-    occasion: '',
-    gift_type: '',
-    gift_amount: '',
-    quantity: '',
-    sent_date: '',
-    sent_by: '',
-    notes: ''
-  });
 
   useEffect(() => {
     fetchContacts();
@@ -490,8 +481,8 @@ export default function GolfContactsPage() {
     setGiftForm({
       occasion: gift.occasion || '',
       gift_type: gift.gift_type || '',
-      gift_amount: gift.gift_amount?.toString() || '',
-      quantity: gift.quantity?.toString() || '',
+      gift_amount: gift.gift_amount || 0,
+      quantity: gift.quantity || 0,
       sent_date: gift.sent_date || '',
       sent_by: gift.sent_by || '',
       notes: gift.notes || ''
@@ -516,8 +507,8 @@ export default function GolfContactsPage() {
           giftId: giftToEdit.id,
           occasion: giftForm.occasion,
           giftType: giftForm.gift_type,
-          giftAmount: parseInt(giftForm.gift_amount),
-          quantity: parseInt(giftForm.quantity),
+          giftAmount: giftForm.gift_amount,
+          quantity: giftForm.quantity,
           sentDate: giftForm.sent_date,
           sentBy: giftForm.sent_by,
           notes: giftForm.notes
@@ -538,10 +529,10 @@ export default function GolfContactsPage() {
         setGiftToEdit(null);
         setGiftForm({
           occasion: '',
-          gift_type: '',
-          gift_amount: '',
-          quantity: '',
-          sent_date: '',
+          gift_type: '스타벅스 카드',
+          gift_amount: 30000,
+          quantity: 1,
+          sent_date: new Date().toISOString().split('T')[0],
           sent_by: '',
           notes: ''
         });
@@ -1369,7 +1360,7 @@ export default function GolfContactsPage() {
                   <input
                     type="number"
                     value={giftForm.gift_amount}
-                    onChange={(e) => setGiftForm({ ...giftForm, gift_amount: e.target.value })}
+                    onChange={(e) => setGiftForm({ ...giftForm, gift_amount: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="30000"
                   />
@@ -1379,7 +1370,7 @@ export default function GolfContactsPage() {
                   <input
                     type="number"
                     value={giftForm.quantity}
-                    onChange={(e) => setGiftForm({ ...giftForm, quantity: e.target.value })}
+                    onChange={(e) => setGiftForm({ ...giftForm, quantity: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="1"
                   />
@@ -1426,10 +1417,10 @@ export default function GolfContactsPage() {
                   setGiftToEdit(null);
                   setGiftForm({
                     occasion: '',
-                    gift_type: '',
-                    gift_amount: '',
-                    quantity: '',
-                    sent_date: '',
+                    gift_type: '스타벅스 카드',
+                    gift_amount: 30000,
+                    quantity: 1,
+                    sent_date: new Date().toISOString().split('T')[0],
                     sent_by: '',
                     notes: ''
                   });
