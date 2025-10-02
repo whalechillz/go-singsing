@@ -74,6 +74,7 @@ export default function GolfContactsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [letterHistory, setLetterHistory] = useState<any[]>([]);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [showOceanBeachModal, setShowOceanBeachModal] = useState(false);
 
   useEffect(() => {
     fetchContacts();
@@ -401,6 +402,46 @@ export default function GolfContactsPage() {
     }
   };
 
+  // 영덕 오션비치 연락처 빠른 추가
+  const addOceanBeachContacts = async () => {
+    try {
+      const contacts = [
+        { contact_name: '예약실', position: '대표', phone: '054-730-9001', mobile: null, email: null, notes: '대표 예약실 - 추석, 설날 선물 발송 대상' },
+        { contact_name: '이초희', position: '회사', phone: null, mobile: '010-7324-9003', email: null, notes: '회사 핸드폰 - 추석, 설날 선물 발송 대상' },
+        { contact_name: '김상관', position: '부장', phone: null, mobile: '010-8584-0839', email: null, notes: '부장 - 추석, 설날 선물 발송 대상' }
+      ];
+
+      // 기존 영덕 오션비치 연락처 삭제
+      await supabase
+        .from('golf_course_contacts')
+        .delete()
+        .eq('golf_course_name', '영덕 오션비치');
+
+      // 새 연락처 추가
+      const newContacts = contacts.map(contact => ({
+        golf_course_name: '영덕 오션비치',
+        ...contact
+      }));
+
+      const { error } = await supabase
+        .from('golf_course_contacts')
+        .insert(newContacts);
+
+      if (error) {
+        console.error('연락처 추가 실패:', error);
+        alert('연락처 추가에 실패했습니다: ' + error.message);
+      } else {
+        console.log('✅ 영덕 오션비치 연락처 추가 완료');
+        alert('영덕 오션비치 연락처가 성공적으로 추가되었습니다!');
+        fetchContacts(); // 목록 새로고침
+        setShowOceanBeachModal(false);
+      }
+    } catch (error) {
+      console.error('연락처 추가 에러:', error);
+      alert('연락처 추가 중 오류가 발생했습니다: ' + error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -419,11 +460,18 @@ export default function GolfContactsPage() {
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            순천 파인힐스 연락처 추가
+            순천 파인힐스
+          </button>
+          <button
+            onClick={() => setShowOceanBeachModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            영덕 오션비치
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
           >
             <Plus className="w-4 h-4" />
             담당자 추가
@@ -976,6 +1024,44 @@ export default function GolfContactsPage() {
                 </button>
                 <button
                   onClick={() => setShowQuickAddModal(false)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 영덕 오션비치 연락처 빠른 추가 모달 */}
+      {showOceanBeachModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">영덕 오션비치 연락처 추가</h2>
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-medium text-blue-900 mb-2">추가될 연락처 정보:</h3>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• <strong>예약실</strong> (대표) - 054-730-9001</li>
+                  <li>• <strong>이초희</strong> (회사) - 010-7324-9003</li>
+                  <li>• <strong>김상관</strong> (부장) - 010-8584-0839</li>
+                </ul>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  ⚠️ 기존 영덕 오션비치 연락처는 모두 삭제되고 새로 추가됩니다.
+                </p>
+              </div>
+              <div className="flex gap-2 pt-4">
+                <button
+                  onClick={addOceanBeachContacts}
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                >
+                  연락처 추가하기
+                </button>
+                <button
+                  onClick={() => setShowOceanBeachModal(false)}
                   className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
                 >
                   취소
