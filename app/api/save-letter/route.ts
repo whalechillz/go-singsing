@@ -49,7 +49,11 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('❌ 편지 저장 실패:', error);
       return NextResponse.json(
-        { error: '편지 저장에 실패했습니다.', details: error.message },
+        { 
+          error: '편지 저장에 실패했습니다.', 
+          details: error.message || '데이터베이스 오류가 발생했습니다.',
+          code: error.code || 'UNKNOWN_ERROR'
+        },
         { status: 500 }
       );
     }
@@ -104,7 +108,11 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('❌ 편지 이력 조회 실패:', error);
       return NextResponse.json(
-        { error: '편지 이력을 조회할 수 없습니다.', details: error.message },
+        { 
+          error: '편지 이력을 조회할 수 없습니다.', 
+          details: error.message || '데이터베이스 조회 오류가 발생했습니다.',
+          code: error.code || 'QUERY_ERROR'
+        },
         { status: 500 }
       );
     }

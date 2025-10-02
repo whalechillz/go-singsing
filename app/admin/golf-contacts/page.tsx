@@ -290,34 +290,56 @@ export default function GolfContactsPage() {
 
   // 편지 저장 기능
   const saveLetter = async (status: 'draft' | 'sent' | 'printed' = 'draft') => {
-    if (!selectedContact || !letterForm.custom_content.trim()) {
+    // 유효성 검사 강화
+    if (!selectedContact) {
+      alert('담당자를 선택해주세요.');
+      return;
+    }
+    
+    if (!letterForm.custom_content.trim()) {
       alert('편지 내용을 입력해주세요.');
+      return;
+    }
+    
+    if (!letterForm.occasion) {
+      alert('발송 사유를 선택해주세요.');
       return;
     }
 
     setIsSaving(true);
     try {
-      console.log('💾 편지 저장 시작...', status);
+      console.log('💾 편지 저장 시작...', {
+        status,
+        contactId: selectedContact.id,
+        occasion: letterForm.occasion,
+        contentLength: letterForm.custom_content.length
+      });
       
+      const requestBody = {
+        golfCourseContactId: selectedContact.id,
+        occasion: letterForm.occasion,
+        letterContent: letterForm.custom_content.trim(),
+        aiImprovementRequest: aiImprovementRequest?.trim() || null,
+        aiImprovedContent: letterForm.custom_content.trim(),
+        sentDate: new Date().toISOString().split('T')[0],
+        sentBy: '관리자',
+        status,
+        notes: `발송 사유: ${letterForm.occasion}${aiImprovementRequest ? ` | AI 개선: ${aiImprovementRequest}` : ''}`
+      };
+
       const response = await fetch('/api/save-letter', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          golfCourseContactId: selectedContact.id,
-          occasion: letterForm.occasion,
-          letterContent: letterForm.custom_content,
-          aiImprovementRequest: aiImprovementRequest || null,
-          aiImprovedContent: letterForm.custom_content, // AI 개선된 내용이 있다면 여기에
-          sentDate: new Date().toISOString().split('T')[0],
-          sentBy: '관리자', // 실제로는 로그인한 사용자 정보
-          status,
-          notes: `발송 사유: ${letterForm.occasion}`
-        })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
       });
 
+      const responseData = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
-        console.log('✅ 편지 저장 완료:', data.letterId);
+        console.log('✅ 편지 저장 완료:', responseData);
         
         const statusText = status === 'draft' ? '임시저장' : 
                           status === 'sent' ? '발송완료' : '인쇄완료';
@@ -325,7 +347,7 @@ export default function GolfContactsPage() {
         alert(`편지가 ${statusText}되었습니다!`);
         
         // 편지 이력 새로고침
-        fetchLetterHistory();
+        await fetchLetterHistory();
         
         // 임시저장이 아닌 경우 모달 닫기
         if (status !== 'draft') {
@@ -334,13 +356,14 @@ export default function GolfContactsPage() {
           setAiImprovementRequest('');
         }
       } else {
-        const error = await response.json();
-        console.error('편지 저장 실패:', error);
-        alert('편지 저장에 실패했습니다: ' + error.message);
+        console.error('편지 저장 실패:', responseData);
+        const errorMessage = responseData?.error || responseData?.message || '알 수 없는 오류가 발생했습니다.';
+        alert(`편지 저장에 실패했습니다: ${errorMessage}`);
       }
     } catch (error) {
       console.error('편지 저장 에러:', error);
-      alert('편지 저장 중 오류가 발생했습니다: ' + error);
+      const errorMessage = error instanceof Error ? error.message : '네트워크 오류가 발생했습니다.';
+      alert(`편지 저장 중 오류가 발생했습니다: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
@@ -351,13 +374,27 @@ export default function GolfContactsPage() {
     if (!selectedContact) return;
     
     try {
-      const response = await fetch(`/api/save-letter?contactId=${selectedContact.id}`);
+      console.log('📝 편지 이력 조회 시작...', selectedContact.id);
+      
+      const response = await fetch(`/api/save-letter?contactId=${selectedContact.id}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ 편지 이력 조회 완료:', data.letters?.length || 0, '개');
         setLetterHistory(data.letters || []);
+      } else {
+        const errorData = await response.json();
+        console.error('편지 이력 조회 실패:', errorData);
+        setLetterHistory([]);
       }
     } catch (error) {
-      console.error('편지 이력 조회 실패:', error);
+      console.error('편지 이력 조회 에러:', error);
+      setLetterHistory([]);
     }
   };
 
@@ -897,8 +934,8 @@ export default function GolfContactsPage() {
                       </button>
                       <button
                         onClick={() => saveLetter('draft')}
-                        disabled={isSaving || !letterForm.custom_content.trim()}
-                        className="flex-1 bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 disabled:opacity-50"
+                        disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
+                        className="flex-1 bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSaving ? '저장 중...' : '💾 임시저장'}
                       </button>
@@ -906,15 +943,15 @@ export default function GolfContactsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => saveLetter('printed')}
-                        disabled={isSaving || !letterForm.custom_content.trim()}
-                        className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50"
+                        disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
+                        className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSaving ? '저장 중...' : '🖨️ 인쇄완료'}
                       </button>
                       <button
                         onClick={() => saveLetter('sent')}
-                        disabled={isSaving || !letterForm.custom_content.trim()}
-                        className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50"
+                        disabled={isSaving || !letterForm.custom_content.trim() || !letterForm.occasion}
+                        className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSaving ? '저장 중...' : '📤 발송완료'}
                       </button>
