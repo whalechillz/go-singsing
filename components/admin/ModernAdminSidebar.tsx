@@ -86,6 +86,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/messages')) return 'messages';
     if (pathname.startsWith('/admin/campaigns')) return 'campaigns';
     if (pathname.startsWith('/admin/promotions')) return 'promotions';
+    if (pathname.startsWith('/admin/golf-contacts')) return 'golf-contacts';
     if (pathname.startsWith('/admin/quotes')) return 'quotes';
     if (pathname.startsWith('/admin/color-test')) return 'color-test';
     if (pathname.startsWith('/admin/design-templates')) return 'design-templates';
@@ -147,6 +148,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'messages', label: '메시지 발송', href: '/admin/messages' },
         { id: 'campaigns', label: '마케팅 캠페인', href: '/admin/campaigns' },
         { id: 'promotions', label: '홍보 페이지', href: '/admin/promotions' },
+        { id: 'golf-contacts', label: '골프장 담당자', href: '/admin/golf-contacts' },
       ]
     },
     { 

@@ -239,7 +239,7 @@ export default function NaverDebugPage() {
               <li>서비스 URL 등록:
                 <ul className="list-disc list-inside ml-5 mt-1">
                   <li>https://go2.singsinggolf.kr</li>
-                  <li>https://tsx-gallery-cursor.vercel.app</li>
+                  <li>https://go-singsing.vercel.app</li>
                   <li>https://*.vercel.app (개발용)</li>
                 </ul>
               </li>

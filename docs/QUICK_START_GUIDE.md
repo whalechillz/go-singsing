@@ -146,7 +146,7 @@ npx tsc --noEmit
 - **라이브 사이트**: https://go.singsinggolf.kr
 - **관리자 페이지**: https://go.singsinggolf.kr/admin
 - **Supabase 대시보드**: https://supabase.com/dashboard/project/weciawnqjutghprtpztg
-- **GitHub 저장소**: https://github.com/whalechillz/tsx-gallery-cursor
+- **GitHub 저장소**: https://github.com/whalechillz/go-singsing
 
 ## 💡 개발 팁
 
