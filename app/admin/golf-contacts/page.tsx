@@ -79,6 +79,7 @@ export default function GolfContactsPage() {
   useEffect(() => {
     fetchContacts();
     fetchGiftHistory();
+    fetchAllLetterHistory();
   }, []);
 
   const fetchContacts = async () => {
@@ -347,7 +348,7 @@ export default function GolfContactsPage() {
         alert(`편지가 ${statusText}되었습니다!`);
         
         // 편지 이력 새로고침
-        await fetchLetterHistory();
+        await fetchAllLetterHistory();
         
         // 임시저장이 아닌 경우 모달 닫기
         if (status !== 'draft') {
@@ -394,6 +395,33 @@ export default function GolfContactsPage() {
       }
     } catch (error) {
       console.error('편지 이력 조회 에러:', error);
+      setLetterHistory([]);
+    }
+  };
+
+  // 전체 메시지 이력 조회
+  const fetchAllLetterHistory = async () => {
+    try {
+      console.log('📝 전체 메시지 이력 조회 시작...');
+      
+      const response = await fetch('/api/save-letter', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ 전체 메시지 이력 조회 완료:', data.letters?.length || 0, '개');
+        setLetterHistory(data.letters || []);
+      } else {
+        const errorData = await response.json();
+        console.error('전체 메시지 이력 조회 실패:', errorData);
+        setLetterHistory([]);
+      }
+    } catch (error) {
+      console.error('전체 메시지 이력 조회 에러:', error);
       setLetterHistory([]);
     }
   };
@@ -584,9 +612,98 @@ export default function GolfContactsPage() {
         </div>
       </div>
 
+      {/* 메시지 발송 이력 */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">📝 메시지 발송 이력</h2>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">골프장</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">담당자</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송 사유</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송일</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {letterHistory.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                      메시지 발송 이력이 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  letterHistory.map((letter) => (
+                    <tr key={letter.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-900">{letter.golf_course_contacts?.golf_course_name || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-gray-900">{letter.golf_course_contacts?.contact_name || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                          {letter.occasion}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          letter.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                          letter.status === 'sent' ? 'bg-green-100 text-green-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {letter.status === 'draft' ? '임시저장' :
+                           letter.status === 'sent' ? '발송완료' : '인쇄완료'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(letter.created_at).toLocaleDateString('ko-KR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => {
+                            // 편지 내용 미리보기 모달 열기
+                            setSelectedContact({
+                              id: letter.golf_course_contact_id,
+                              golf_course_name: letter.golf_course_contacts?.golf_course_name || '',
+                              contact_name: letter.golf_course_contacts?.contact_name || '',
+                              position: '',
+                              phone: '',
+                              mobile: '',
+                              email: '',
+                              address: '',
+                              notes: '',
+                              is_active: true,
+                              created_at: '',
+                              updated_at: ''
+                            });
+                            setLetterForm({
+                              template: '',
+                              custom_content: letter.letter_content,
+                              occasion: letter.occasion
+                            });
+                            setShowLetterModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          보기
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {/* 선물 발송 이력 */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">선물 발송 이력</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">🎁 선물 발송 이력</h2>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
