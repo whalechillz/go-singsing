@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit, Trash2, Send, Gift } from 'lucide-react';
+import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2 } from 'lucide-react';
+import PremiumLetterPreview from '@/components/letters/PremiumLetterPreview';
 
 interface GolfCourseContact {
   id: string;
@@ -67,6 +68,9 @@ export default function GolfContactsPage() {
     custom_content: '',
     occasion: ''
   });
+  const [aiImprovementRequest, setAiImprovementRequest] = useState('');
+  const [isAiImproving, setIsAiImproving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     fetchContacts();
@@ -217,6 +221,63 @@ export default function GolfContactsPage() {
   const openLetterModal = (contact: GolfCourseContact) => {
     setSelectedContact(contact);
     setShowLetterModal(true);
+  };
+
+  // AI 개선 기능
+  const applyAIImprovement = async () => {
+    if (!letterForm.custom_content || letterForm.custom_content.trim().length < 10) {
+      alert('개선할 편지 내용을 먼저 작성해주세요.');
+      return;
+    }
+    if (!aiImprovementRequest.trim()) {
+      alert('AI 개선 요청사항을 입력해주세요.');
+      return;
+    }
+
+    setIsAiImproving(true);
+    try {
+      console.log('🤖 손편지 AI 개선 시작...', aiImprovementRequest);
+      
+      const response = await fetch('/api/improve-letter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalContent: letterForm.custom_content,
+          improvementRequest: aiImprovementRequest,
+          occasion: letterForm.occasion,
+          golfCourseName: selectedContact?.golf_course_name || '',
+          contactName: selectedContact?.contact_name || ''
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.improvedContent) {
+          setLetterForm(prev => ({
+            ...prev,
+            custom_content: data.improvedContent
+          }));
+          
+          console.log('✅ 손편지 AI 개선 완료:', data.originalLength, '→', data.improvedLength, '자');
+          alert(`🤖 AI 개선이 완료되었습니다!\n\n원본: ${data.originalLength}자 → 개선: ${data.improvedLength}자\n\n요청사항: ${aiImprovementRequest}`);
+          
+          // 요청사항 초기화
+          setAiImprovementRequest('');
+        } else {
+          console.error('AI 개선 실패: 응답 데이터 없음');
+          alert('AI 개선에 실패했습니다.');
+        }
+      } else {
+        const error = await response.json();
+        console.error('AI 개선 실패:', error);
+        alert('AI 개선에 실패했습니다: ' + error.message);
+      }
+    } catch (error) {
+      console.error('AI 개선 에러:', error);
+      alert('AI 개선 중 오류가 발생했습니다: ' + error);
+    } finally {
+      setIsAiImproving(false);
+    }
   };
 
   if (loading) {
@@ -569,61 +630,133 @@ export default function GolfContactsPage() {
 
       {/* 손편지 발송 모달 */}
       {showLetterModal && selectedContact && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
-            <h2 className="text-xl font-bold mb-4">손편지 발송</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              {selectedContact.golf_course_name} - {selectedContact.contact_name}
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">발송 사유</label>
-                <select
-                  value={letterForm.occasion}
-                  onChange={(e) => setLetterForm({ ...letterForm, occasion: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">선택하세요</option>
-                  <option value="추석">추석</option>
-                  <option value="설날">설날</option>
-                  <option value="일반">일반</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">편지 내용</label>
-                <textarea
-                  value={letterForm.custom_content}
-                  onChange={(e) => setLetterForm({ ...letterForm, custom_content: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={10}
-                  placeholder="손편지 내용을 입력하세요..."
-                />
-              </div>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-900 mb-2">💡 팁</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• 손편지 느낌의 따뜻한 인사말을 작성해보세요</li>
-                  <li>• 골프장과의 좋은 관계를 강조하는 내용을 포함하세요</li>
-                  <li>• 감사 인사와 앞으로의 협력을 언급하세요</li>
-                </ul>
-              </div>
-              <div className="flex gap-2 pt-4">
-                <button
-                  onClick={() => {
-                    // 실제 발송 로직 구현
-                    alert('손편지 발송 기능은 추후 구현 예정입니다.');
-                    setShowLetterModal(false);
-                  }}
-                  className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700"
-                >
-                  발송하기
-                </button>
-                <button
-                  onClick={() => setShowLetterModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
-                >
-                  취소
-                </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">📝 고급 손편지 발송</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                {selectedContact.golf_course_name} - {selectedContact.contact_name}
+              </p>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 편집 패널 */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">발송 사유</label>
+                    <select
+                      value={letterForm.occasion}
+                      onChange={(e) => setLetterForm({ ...letterForm, occasion: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">선택하세요</option>
+                      <option value="추석">추석</option>
+                      <option value="설날">설날</option>
+                      <option value="일반">일반</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">편지 내용</label>
+                    <textarea
+                      value={letterForm.custom_content}
+                      onChange={(e) => setLetterForm({ ...letterForm, custom_content: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={8}
+                      placeholder="손편지 내용을 입력하세요..."
+                    />
+                  </div>
+
+                  {/* AI 개선 기능 */}
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+                    <h4 className="font-medium mb-2 text-purple-800 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      🤖 AI 개선 기능
+                    </h4>
+                    <textarea
+                      placeholder="예: 더 정중하게 다듬어주세요, 감사 표현을 강화해주세요, 전문성을 높여주세요, 따뜻한 톤으로 바꿔주세요..."
+                      className="w-full p-3 border border-purple-300 rounded text-sm resize-none"
+                      rows={3}
+                      value={aiImprovementRequest}
+                      onChange={(e) => setAiImprovementRequest(e.target.value)}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={applyAIImprovement}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm disabled:opacity-50"
+                        disabled={!aiImprovementRequest.trim() || isAiImproving || !letterForm.custom_content.trim()}
+                      >
+                        {isAiImproving ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            개선 중...
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="w-4 h-4" />
+                            AI 개선 적용
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAiImprovementRequest('')}
+                        className="px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+                      >
+                        지우기
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 액션 버튼들 */}
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      onClick={() => setShowPreview(!showPreview)}
+                      className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                    >
+                      {showPreview ? '편집하기' : '미리보기'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        // 실제 발송 로직 구현
+                        alert('손편지 발송 기능은 추후 구현 예정입니다.');
+                        setShowLetterModal(false);
+                      }}
+                      className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700"
+                    >
+                      발송하기
+                    </button>
+                    <button
+                      onClick={() => setShowLetterModal(false)}
+                      className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+
+                {/* 프리뷰 패널 */}
+                <div className="lg:sticky lg:top-0">
+                  {showPreview ? (
+                    <PremiumLetterPreview
+                      content={letterForm.custom_content}
+                      occasion={letterForm.occasion}
+                      golfCourseName={selectedContact.golf_course_name}
+                      contactName={selectedContact.contact_name}
+                    />
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-8 text-center">
+                      <div className="text-gray-400 mb-4">
+                        <Send className="w-16 h-16 mx-auto" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-600 mb-2">미리보기</h3>
+                      <p className="text-sm text-gray-500">
+                        편지 내용을 작성한 후 "미리보기" 버튼을 클릭하면<br />
+                        고급스러운 손편지 디자인을 확인할 수 있습니다.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
