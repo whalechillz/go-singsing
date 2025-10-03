@@ -122,6 +122,24 @@ export default function GolfContactsPage() {
     }
   };
 
+  const fetchGiftHistoryForContact = async (contactId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('gift_sending_history')
+        .select(`
+          *,
+          golf_course_contacts!inner(golf_course_name, contact_name)
+        `)
+        .eq('golf_course_contact_id', contactId)
+        .order('sent_date', { ascending: false });
+
+      if (error) throw error;
+      setGiftHistory(data || []);
+    } catch (error) {
+      console.error('Error fetching gift history for contact:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -631,63 +649,82 @@ export default function GolfContactsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {contacts.map((contact) => (
-                <tr key={contact.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{contact.golf_course_name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">{contact.contact_name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-500">{contact.position || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {contact.phone && <div>📞 {contact.phone}</div>}
-                      {contact.mobile && <div>📱 {contact.mobile}</div>}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openEditModal(contact)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => openGiftModal(contact)}
-                        className="text-green-600 hover:text-green-900"
-                        title="선물 발송 기록"
-                      >
-                        <Gift className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => openLetterModal(contact)}
-                        className="text-purple-600 hover:text-purple-900"
-                        title="손편지 발송"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(contact.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {contacts.map((contact) => {
+                const isRepresentative = contact.position === '대표' || contact.contact_name === '예약실';
+                return (
+                  <tr 
+                    key={contact.id} 
+                    className={`hover:bg-gray-50 cursor-pointer ${isRepresentative ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''}`}
+                    onClick={() => {
+                      // 담당자 클릭시 개별 이력 표시
+                      setSelectedContact(contact);
+                      fetchLetterHistory(contact.id);
+                      fetchGiftHistoryForContact(contact.id);
+                    }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900 flex items-center gap-2">
+                        {contact.golf_course_name}
+                        {isRepresentative && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            대표
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900">{contact.contact_name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-500">{contact.position || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {contact.phone && <div>📞 {contact.phone}</div>}
+                        {contact.mobile && <div>📱 {contact.mobile}</div>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => openEditModal(contact)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => openGiftModal(contact)}
+                          className="text-green-600 hover:text-green-900"
+                          title="선물 발송 기록"
+                        >
+                          <Gift className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => openLetterModal(contact)}
+                          className="text-purple-600 hover:text-purple-900"
+                          title="손편지 발송"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(contact.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* 메시지 발송 이력 */}
+      {/* 최근 메시지 발송 이력 */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">📝 메시지 발송 이력</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">📝 최근 메시지 발송 이력</h2>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px]">
@@ -790,10 +827,10 @@ export default function GolfContactsPage() {
         </div>
       </div>
 
-      {/* 선물 발송 이력 */}
+      {/* 최근 선물 발송 이력 */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">🎁 선물 발송 이력</h2>
+          <h2 className="text-xl font-bold text-gray-900">🎁 최근 선물 발송 이력</h2>
           <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-md">
             💡 같은 날 다른 금액 선물은 별도 기록
           </div>

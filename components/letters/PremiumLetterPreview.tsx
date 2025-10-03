@@ -134,30 +134,30 @@ export default function PremiumLetterPreview({
       {/* 액션 바 */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex justify-between items-center">
         <h3 className="text-white font-semibold text-lg">📝 고급 손편지 미리보기</h3>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <button
-             onClick={handleDownload}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors"
-            title="PDF 파일로 다운로드합니다"
+            onClick={handleDownload}
+            className="flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-sm transition-colors"
+            title="PDF 다운로드"
           >
-            <Download className="w-4 h-4" />
-            PDF 다운로드
+            <Download className="w-3 h-3" />
+            PDF
           </button>
           <button
             onClick={handleKakaoSend}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors"
-            title="카카오톡으로 전송합니다"
+            className="flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-sm transition-colors"
+            title="카카오톡 전송"
           >
-            <MessageSquare className="w-4 h-4" />
-            카톡 전송
+            <MessageSquare className="w-3 h-3" />
+            카톡
           </button>
           <button
             onClick={handleSmsSend}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors"
-            title="SMS로 전송합니다"
+            className="flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-sm transition-colors"
+            title="SMS 전송"
           >
-            <Smartphone className="w-4 h-4" />
-            문자 전송
+            <Smartphone className="w-3 h-3" />
+            SMS
           </button>
         </div>
       </div>
