@@ -103,8 +103,7 @@ export async function PUT(request: NextRequest) {
         quantity,
         sent_date: sentDate,
         sent_by: sentBy || null,
-        notes: notes || null,
-        updated_at: new Date().toISOString()
+        notes: notes || null
       })
       .eq('id', giftId)
       .select()

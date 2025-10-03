@@ -792,7 +792,12 @@ export default function GolfContactsPage() {
 
       {/* 선물 발송 이력 */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">🎁 선물 발송 이력</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-900">🎁 선물 발송 이력</h2>
+          <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-md">
+            💡 같은 날 다른 금액 선물은 별도 기록
+          </div>
+        </div>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px]">
@@ -1331,6 +1336,11 @@ export default function GolfContactsPage() {
               <p className="text-sm text-gray-500">
                 {giftToEdit.golf_course_contacts?.golf_course_name} - {giftToEdit.golf_course_contacts?.contact_name}
               </p>
+              <div className="mt-2 p-2 bg-blue-50 rounded-md">
+                <p className="text-xs text-blue-700">
+                  💡 <strong>팁:</strong> 같은 날에 다른 금액의 선물(3만원, 5만원 등)을 보낼 때는 각각 별도로 기록하세요.
+                </p>
+              </div>
             </div>
             
             <div className="space-y-4">
