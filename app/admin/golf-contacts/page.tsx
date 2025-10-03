@@ -562,7 +562,7 @@ export default function GolfContactsPage() {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+           'Accept': 'application/json'
         },
         body: JSON.stringify({ giftId: giftToDelete.id })
       });
@@ -800,7 +800,7 @@ export default function GolfContactsPage() {
         </div>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px]">
+            <table className="w-full min-w-[1100px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송일</th>
@@ -808,68 +808,68 @@ export default function GolfContactsPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">담당자</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">사유</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">선물</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수량</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">금액</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">발송자</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {giftHistory.map((gift) => {
-                  const unitPrice = Math.round(gift.gift_amount / gift.quantity);
-                  return (
-                    <tr key={gift.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(gift.sent_date).toLocaleDateString('ko-KR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{gift.golf_course_contacts?.golf_course_name || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-gray-900">{gift.golf_course_contacts?.contact_name || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          gift.occasion === '추석' ? 'bg-orange-100 text-orange-800' :
-                          gift.occasion === '설날' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {gift.occasion}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          <div className="font-medium">{gift.gift_type} {gift.quantity}장</div>
-                          <div className="text-gray-500">
-                            ({unitPrice.toLocaleString()}원/장) 총 {gift.gift_amount.toLocaleString()}원
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{gift.sent_by || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditGift(gift)}
-                            className="text-blue-600 hover:text-blue-900"
-                            title="선물 이력 수정"
-                          >
-                            수정
-                          </button>
-                          <button
-                            onClick={() => {
-                              setGiftToDelete(gift);
-                              setShowGiftDeleteModal(true);
-                            }}
-                            className="text-red-600 hover:text-red-900"
-                            title="선물 이력 삭제"
-                          >
-                            삭제
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {giftHistory.map((gift) => (
+                  <tr key={gift.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(gift.sent_date).toLocaleDateString('ko-KR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">{gift.golf_course_contacts?.golf_course_name || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900">{gift.golf_course_contacts?.contact_name || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        gift.occasion === '추석' ? 'bg-orange-100 text-orange-800' :
+                        gift.occasion === '설날' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {gift.occasion}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{gift.gift_type}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{gift.quantity}장</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{gift.gift_amount.toLocaleString()}원</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{gift.sent_by || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditGift(gift)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="선물 이력 수정"
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={() => {
+                            setGiftToDelete(gift);
+                            setShowGiftDeleteModal(true);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                          title="선물 이력 삭제"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
