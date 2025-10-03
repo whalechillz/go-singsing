@@ -839,7 +839,9 @@ export default function GolfContactsPage() {
                       <div className="text-sm text-gray-900">{gift.gift_type}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{gift.quantity}장</div>
+                      <div className="text-sm text-gray-900">
+                        {gift.gift_type.includes('마카롱') ? `${gift.quantity}구` : `${gift.quantity}장`}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{gift.gift_amount.toLocaleString()}원</div>
