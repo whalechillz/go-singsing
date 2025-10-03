@@ -395,13 +395,14 @@ export default function GolfContactsPage() {
   };
 
   // 편지 이력 조회
-  const fetchLetterHistory = async () => {
-    if (!selectedContact) return;
+  const fetchLetterHistory = async (contactId?: string) => {
+    const targetContactId = contactId || selectedContact?.id;
+    if (!targetContactId) return;
     
     try {
-      console.log('📝 편지 이력 조회 시작...', selectedContact.id);
+      console.log('📝 편지 이력 조회 시작...', targetContactId);
       
-      const response = await fetch(`/api/save-letter?contactId=${selectedContact.id}`, {
+      const response = await fetch(`/api/save-letter?contactId=${targetContactId}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
