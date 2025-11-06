@@ -618,12 +618,12 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 const isAvailable = (status === 'upcoming' || status === 'ongoing') && !isFull && !tour.is_closed;
                 
                 return (
-                  <tr key={tour.id} className={`hover:bg-gray-50 ${
+                  <tr key={tour.id} className={`hover:bg-gray-50 relative ${
                     tour.is_closed ? 'bg-red-50 opacity-75' : 
                     status === 'completed' ? 'bg-gray-50' :
                     status === 'ongoing' ? 'bg-blue-50' :
                     isAvailable ? 'bg-green-50' : ''
-                  }`}>
+                  }`} style={{ zIndex: showDropdown === tour.id ? 1 : 'auto' }}>
                     <td className="px-6 py-6 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                     {isAvailable && (
@@ -733,8 +733,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                     <td className="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
                       {(tour.actual_revenue || 0).toLocaleString()}원
                     </td>
-                    <td className="px-6 py-6 whitespace-nowrap text-right text-sm font-medium" style={{overflow: 'visible'}}>
-                      <div className="relative flex items-center justify-end gap-2" ref={showDropdown === tour.id ? dropdownRef : null}>
+                    <td className="px-6 py-6 whitespace-nowrap text-right text-sm font-medium" style={{overflow: 'visible', position: 'relative'}}>
+                      <div className="relative flex items-center justify-end gap-2" ref={showDropdown === tour.id ? dropdownRef : null} style={{zIndex: showDropdown === tour.id ? 10001 : 'auto'}}>
                         <button
                           onClick={() => setCopyModalTour(tour)}
                           className="text-gray-600 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-colors"
@@ -753,10 +753,12 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                           <div 
                             className="absolute right-0 top-full mt-1 w-48 rounded-lg shadow-2xl bg-white border-2 border-gray-300"
                             style={{
-                              zIndex: 10000,
+                              zIndex: 10002,
                               minWidth: '12rem',
                               backgroundColor: '#ffffff',
-                              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                              opacity: 1,
+                              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                              isolation: 'isolate'
                             }}
                           >
                             <div className="py-1" role="menu">
