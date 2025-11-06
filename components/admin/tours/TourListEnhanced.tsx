@@ -750,7 +750,13 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                         </button>
                         
                         {showDropdown === tour.id && (
-                          <div className="absolute right-0 top-full mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5" style={{zIndex: 9999}}>
+                          <div 
+                            className="absolute right-0 top-full mt-1 w-48 rounded-lg shadow-xl bg-white border border-gray-200"
+                            style={{
+                              zIndex: 10000,
+                              minWidth: '12rem'
+                            }}
+                          >
                             <div className="py-1" role="menu">
                               <Link
                                 href={`/admin/tours/${tour.id}`}

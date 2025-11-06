@@ -118,6 +118,47 @@ const TourListPage: React.FC = () => {
         }
       }
       
+      // 관련 테이블 먼저 삭제 (CASCADE가 작동하지 않는 경우 대비)
+      const relatedTables = [
+        'tour_promotion_pages',
+        'tour_attraction_options',
+        'public_document_links',
+        'document_send_history',
+        'message_history'
+      ];
+      
+      for (const table of relatedTables) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .delete()
+            .eq("tour_id", id);
+          
+          // 에러가 발생해도 계속 진행 (이미 삭제되었거나 없는 경우)
+          if (error && !error.message.includes('does not exist') && !error.message.includes('relation') && !error.message.includes('permission')) {
+            console.warn(`Failed to delete from ${table}:`, error.message);
+          }
+        } catch (tableError: any) {
+          // 테이블이 존재하지 않거나 권한이 없는 경우 무시
+          console.warn(`Error deleting from ${table}:`, tableError.message);
+        }
+      }
+      
+      // 스케줄 삭제 (투어 삭제 전)
+      try {
+        const { error: scheduleError } = await supabase
+          .from("singsing_schedules")
+          .delete()
+          .eq("tour_id", id);
+        
+        if (scheduleError && !scheduleError.message.includes('does not exist') && !scheduleError.message.includes('relation')) {
+          console.warn('Failed to delete schedules:', scheduleError.message);
+        }
+      } catch (scheduleError: any) {
+        console.warn('Error deleting schedules:', scheduleError.message);
+      }
+      
+      // 마지막으로 투어 삭제
       const { error } = await supabase
         .from("singsing_tours")
         .delete()
