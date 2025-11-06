@@ -120,6 +120,7 @@ const TourListPage: React.FC = () => {
       
       // 관련 테이블 먼저 삭제 (CASCADE가 작동하지 않는 경우 대비)
       const relatedTables = [
+        'marketing_contents',
         'tour_promotion_pages',
         'tour_attraction_options',
         'public_document_links',
