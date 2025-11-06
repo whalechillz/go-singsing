@@ -619,11 +619,14 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 
                 return (
                   <tr key={tour.id} className={`hover:bg-gray-50 relative ${
-                    tour.is_closed ? 'bg-red-50 opacity-75' : 
+                    tour.is_closed ? 'bg-red-50' : 
                     status === 'completed' ? 'bg-gray-50' :
                     status === 'ongoing' ? 'bg-blue-50' :
                     isAvailable ? 'bg-green-50' : ''
-                  }`} style={{ zIndex: showDropdown === tour.id ? 1 : 'auto' }}>
+                  }`} style={{ 
+                    zIndex: showDropdown === tour.id ? 1 : 'auto',
+                    opacity: showDropdown === tour.id && tour.is_closed ? 1 : (tour.is_closed ? 0.75 : 1)
+                  }}>
                     <td className="px-6 py-6 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                     {isAvailable && (
@@ -758,10 +761,12 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                               backgroundColor: '#ffffff',
                               opacity: 1,
                               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                              isolation: 'isolate'
+                              isolation: 'isolate',
+                              backdropFilter: 'none',
+                              WebkitBackdropFilter: 'none'
                             }}
                           >
-                            <div className="py-1" role="menu">
+                            <div className="py-1 bg-white" role="menu" style={{ backgroundColor: '#ffffff' }}>
                               <Link
                                 href={`/admin/tours/${tour.id}`}
                                 className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
@@ -788,7 +793,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                                   setShowDropdown(null);
                                   setBadgeModalTour(tour);
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                                className="block w-full px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 flex items-center gap-2 transition-colors"
                               >
                                 <Tag className="w-4 h-4" />
                                 뱃지 설정
@@ -813,7 +818,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                                   setShowDropdown(null);
                                   onDelete(tour.id);
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                                className="block w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                               >
                                 삭제
                               </button>
