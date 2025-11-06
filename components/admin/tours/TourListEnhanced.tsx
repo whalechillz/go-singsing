@@ -751,30 +751,32 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                         
                         {showDropdown === tour.id && (
                           <div 
-                            className="absolute right-0 top-full mt-1 w-48 rounded-lg shadow-xl bg-white border border-gray-200"
+                            className="absolute right-0 top-full mt-1 w-48 rounded-lg shadow-2xl bg-white border-2 border-gray-300"
                             style={{
                               zIndex: 10000,
-                              minWidth: '12rem'
+                              minWidth: '12rem',
+                              backgroundColor: '#ffffff',
+                              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                             }}
                           >
                             <div className="py-1" role="menu">
                               <Link
                                 href={`/admin/tours/${tour.id}`}
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
                                 onClick={() => setShowDropdown(null)}
                               >
                                 상세보기
                               </Link>
                               <Link
                                 href={`/admin/tours/${tour.id}/edit`}
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
                                 onClick={() => setShowDropdown(null)}
                               >
                                 수정
                               </Link>
                               <Link
                                 href={`/admin/tours/${tour.id}/participants`}
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
                                 onClick={() => setShowDropdown(null)}
                               >
                                 참가자 관리
@@ -784,21 +786,21 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                                   setShowDropdown(null);
                                   setBadgeModalTour(tour);
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                className="block w-full text-left px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 flex items-center gap-2 transition-colors"
                               >
                                 <Tag className="w-4 h-4" />
                                 뱃지 설정
                               </button>
                               <Link
                                 href={`/admin/payments?tourId=${tour.id}`}
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
                                 onClick={() => setShowDropdown(null)}
                               >
                                 결제 관리
                               </Link>
                               <Link
                                 href={`/admin/tours/${tour.id}/promotion`}
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
                                 onClick={() => setShowDropdown(null)}
                               >
                                 홍보 페이지 관리
@@ -809,7 +811,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                                   setShowDropdown(null);
                                   onDelete(tour.id);
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                               >
                                 삭제
                               </button>
