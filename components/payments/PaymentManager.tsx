@@ -593,10 +593,22 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
   // 완납 금액 계산
   const fullyPaidAmount = participantPaymentStatus.filter(p => p.isFullyPaid).reduce((sum, p) => sum + p.totalPaid, 0);
   
-  // 미납 금액 계산 수정 - 실제 예상 매출에서 총 수입을 뺀 값
+  // 부분납부 금액 계산 (부분납부 인원의 잔여 금액 합계)
+  const partiallyPaidAmount = participantPaymentStatus
+    .filter(p => p.totalPaid > 0 && !p.isFullyPaid)
+    .reduce((sum, p) => sum + p.remainingAmount, 0);
+  
+  // 미납 금액 계산 (미납 인원의 잔여 금액 합계)
+  const unpaidAmount = participantPaymentStatus
+    .filter(p => p.totalPaid === 0)
+    .reduce((sum, p) => sum + p.remainingAmount, 0);
+  
+  // 예상 매출 계산
   const totalExpectedRevenue = selectedTourId && tours.find(t => t.id === selectedTourId)
     ? Number(tours.find(t => t.id === selectedTourId)?.price || 0) * filteredParticipants.length
     : participantPaymentStatus.reduce((sum, p) => sum + p.tourPrice, 0);
+  
+  // 전체 미수금액 (참고용 - 부분납부 + 미납)
   const totalUnpaidAmount = totalExpectedRevenue - stats.totalAmount;
 
   const tabs = [
@@ -811,7 +823,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                   <p className="text-sm font-medium text-gray-600">
                     {selectedTourId ? '상품가' : '예상 매출'}
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold text-gray-900 mt-1">
                     {selectedTourId && tours.find(t => t.id === selectedTourId) 
                       ? Number(tours.find(t => t.id === selectedTourId)?.price || 0).toLocaleString() 
                       : totalExpectedRevenue.toLocaleString()}원
@@ -922,7 +934,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
             </div>
           )}
           
-          {/* 두 번째 줄: 완납 금액, 미수금, 환불, 정산 금액 */}
+          {/* 두 번째 줄: 완납 금액, 미수금, 미납, 정산 금액 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-green-50 rounded-lg p-4 border-2 border-green-200">
               <div className="flex items-center justify-between">
@@ -940,27 +952,33 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
               </div>
             </div>
             
-            <div className="bg-orange-50 rounded-lg p-4">
+            <div className="bg-orange-50 rounded-lg p-4 border-2 border-orange-200">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1 text-center">
                   <p className="text-sm font-medium text-orange-700">미수금</p>
-                  <p className="text-2xl font-bold text-orange-900">{partiallyPaidCount}명</p>
-                  <p className="text-xs text-orange-600 mt-1">
-                    {participantPaymentStatus.filter(p => p.totalPaid > 0 && !p.isFullyPaid).reduce((sum, p) => sum + p.remainingAmount, 0).toLocaleString()}원
+                  <p className="text-3xl font-bold text-orange-900 mt-1">
+                    {partiallyPaidAmount.toLocaleString()}원
+                  </p>
+                  <p className="text-xs text-orange-600 mt-2">
+                    부분납부: {partiallyPaidCount}명
                   </p>
                 </div>
-                <AlertCircle className="w-8 h-8 text-orange-600" />
+                <AlertCircle className="w-10 h-10 text-orange-600" />
               </div>
             </div>
             
-            <div className="bg-red-50 rounded-lg p-4">
+            <div className="bg-red-50 rounded-lg p-4 border-2 border-red-200">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-red-700">환불</p>
-                  <p className="text-2xl font-bold text-red-900">{stats.refundedCount}건</p>
-                  <p className="text-xs text-red-600 mt-1">{stats.refundedAmount.toLocaleString()}원</p>
+                <div className="flex-1 text-center">
+                  <p className="text-sm font-medium text-red-700">미납</p>
+                  <p className="text-3xl font-bold text-red-900 mt-1">
+                    {unpaidAmount.toLocaleString()}원
+                  </p>
+                  <p className="text-xs text-red-600 mt-2">
+                    미납 인원: {unpaidCount}명
+                  </p>
                 </div>
-                <RefreshCw className="w-8 h-8 text-red-600" />
+                <X className="w-10 h-10 text-red-600" />
               </div>
             </div>
             
@@ -981,38 +999,32 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
             </div>
           </div>
           
-          {/* 미납 카드 (별도 줄) */}
-          {unpaidCount > 0 && (
+          {/* 환불 카드 (별도 줄 - 환불이 있을 경우만) */}
+          {stats.refundedCount > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-red-50 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-700">미납</p>
-                    <p className="text-2xl font-bold text-gray-900">{unpaidCount}명</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {totalUnpaidAmount.toLocaleString()}원
-                    </p>
+                    <p className="text-sm font-medium text-red-700">환불</p>
+                    <p className="text-2xl font-bold text-red-900">{stats.refundedCount}건</p>
+                    <p className="text-xs text-red-600 mt-1">{stats.refundedAmount.toLocaleString()}원</p>
                   </div>
-                  <X className="w-8 h-8 text-gray-600" />
+                  <RefreshCw className="w-8 h-8 text-red-600" />
                 </div>
               </div>
             </div>
           )}
           
-          {/* 세 번째 줄: 참가자 요약 및 예상 매출 */}
+          {/* 세 번째 줄: 참가자 요약 */}
           <div className="border-t pt-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">부분납부</p>
-                <p className="text-lg font-bold text-orange-700">{partiallyPaidCount}명</p>
+                <p className="text-sm font-medium text-gray-600">총 참가자</p>
+                <p className="text-lg font-bold text-gray-900">{filteredParticipants.length}명</p>
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">미납</p>
-                <p className="text-lg font-bold text-red-700">{unpaidCount}명</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">예상 매출</p>
-                <p className="text-lg font-bold text-gray-900">{totalExpectedRevenue.toLocaleString()}원</p>
+                <p className="text-sm font-medium text-gray-600">완납 인원</p>
+                <p className="text-lg font-bold text-green-700">{fullyPaidCount}명</p>
               </div>
             </div>
           </div>
