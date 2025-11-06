@@ -293,6 +293,12 @@ CREATE TABLE user_roles (
 *마지막 업데이트: 2025-05-30*
 *업데이트 내용: Phase 3 완료, 데이터베이스 구조 명확화, 현재 진행 상황 추가*
 
+- **2025-10-28**
+  - 솔라피 연동 매뉴얼 신규 작성 및 공유용 가이드 정리
+    - 파일: `docs/solapi-integration-manual.md`
+    - 내용: 환경변수, HMAC 서명, 서버 라우트, 이미지 업로드, 클라이언트 호출 예시, 테스트/트러블슈팅 체크리스트
+  - 목적: 타 프로젝트에서도 즉시 재사용 가능한 표준 통합 가이드 제공
+
 - **2025-05-28**
   - 티타임 배정 페이지에서 V2 컴포넌트(`TeeTimeAssignmentManagerV2`)로 교체
     - 파일: `app/admin/tours/[tourId]/page.tsx`

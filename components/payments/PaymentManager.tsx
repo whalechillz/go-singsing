@@ -543,6 +543,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
     totalAmount: filteredPaymentsForStats.filter(p => p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + p.amount, 0),
     depositAmount: filteredPaymentsForStats.filter(p => p.payment_type === 'deposit' && p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + p.amount, 0),
     balanceAmount: filteredPaymentsForStats.filter(p => p.payment_type === 'balance' && p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + p.amount, 0),
+    fullAmount: filteredPaymentsForStats.filter(p => p.payment_type === 'full' && p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + p.amount, 0),
+    fullCount: filteredPaymentsForStats.filter(p => p.payment_type === 'full' && p.payment_status !== 'refunded' && p.amount > 0).length,
     completedCount: filteredPaymentsForStats.filter(p => p.payment_status === 'completed' && p.amount > 0).length,
     pendingCount: filteredPaymentsForStats.filter(p => p.payment_status === 'pending').length,
     refundedCount: filteredPaymentsForStats.filter(p => p.payment_status === 'refunded' || p.amount < 0).length,
@@ -552,6 +554,9 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
     originalTotalAmount: filteredPaymentsForStats.filter(p => p.payment_status !== 'refunded' && p.amount > 0).reduce((sum, p) => sum + (p.original_amount || p.amount), 0),
     discountedPaymentsCount: filteredPaymentsForStats.filter(p => p.payment_status !== 'refunded' && p.amount > 0 && p.discount_amount && p.discount_amount > 0).length
   };
+  
+  // 정산 금액 계산 (총 수입 - 환불)
+  const settlementAmount = stats.totalAmount - stats.refundedAmount;
 
   // 참가자별 결제 현황 계산 (선택된 투어로 필터링)
   const filteredParticipants = selectedTourId 
@@ -584,6 +589,9 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const unpaidCount = participantPaymentStatus.filter(p => p.totalPaid === 0).length;
   const partiallyPaidCount = participantPaymentStatus.filter(p => p.totalPaid > 0 && p.totalPaid < p.tourPrice).length;
   const fullyPaidCount = participantPaymentStatus.filter(p => p.isFullyPaid).length;
+  
+  // 완납 금액 계산
+  const fullyPaidAmount = participantPaymentStatus.filter(p => p.isFullyPaid).reduce((sum, p) => sum + p.totalPaid, 0);
   
   // 미납 금액 계산 수정 - 실제 예상 매출에서 총 수입을 뺀 값
   const totalExpectedRevenue = selectedTourId && tours.find(t => t.id === selectedTourId)
@@ -795,8 +803,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
             )}
           </div>
           
-          {/* 첫 번째 줄: 상품가, 총수입, 계약금, 잔금 */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          {/* 첫 번째 줄: 상품가, 총수입, 계약금, 잔금, 전액 입금 */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
             <div className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -863,6 +871,17 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                 <Calculator className="w-8 h-8 text-orange-500" />
               </div>
             </div>
+            
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-purple-700">전액 입금</p>
+                  <p className="text-2xl font-bold text-purple-900">{stats.fullCount}건</p>
+                  <p className="text-xs text-purple-600 mt-1">{stats.fullAmount.toLocaleString()}원</p>
+                </div>
+                <CreditCard className="w-8 h-8 text-purple-600" />
+              </div>
+            </div>
           </div>
           
           {/* 할인 통계 추가 (할인이 있을 경우만) */}
@@ -903,18 +922,21 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
             </div>
           )}
           
-          {/* 두 번째 줄: 완납, 미수금, 환불, 미납 */}
+          {/* 두 번째 줄: 완납 금액, 미수금, 환불, 정산 금액 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="bg-green-50 rounded-lg p-4">
+            <div className="bg-green-50 rounded-lg p-4 border-2 border-green-200">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-700">완납</p>
-                  <p className="text-2xl font-bold text-green-900">{fullyPaidCount}명</p>
-                  <p className="text-xs text-green-600 mt-1">
-                    {participantPaymentStatus.filter(p => p.isFullyPaid).reduce((sum, p) => sum + p.totalPaid, 0).toLocaleString()}원
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-700">완납 금액</p>
+                  <p className="text-3xl font-bold text-green-900 mt-1">
+                    {fullyPaidAmount.toLocaleString()}원
+                  </p>
+                  <p className="text-xs text-green-600 mt-2">
+                    전액: {stats.fullAmount.toLocaleString()}원 | 
+                    계약금+잔금: {(stats.depositAmount + stats.balanceAmount).toLocaleString()}원
                   </p>
                 </div>
-                <Check className="w-8 h-8 text-green-600" />
+                <Check className="w-10 h-10 text-green-600" />
               </div>
             </div>
             
@@ -942,27 +964,44 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
               </div>
             </div>
             
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-indigo-50 rounded-lg p-4 border-2 border-indigo-200">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">미납</p>
-                  <p className="text-2xl font-bold text-gray-900">{unpaidCount}명</p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {totalUnpaidAmount.toLocaleString()}원
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-indigo-700">정산 금액</p>
+                  <p className="text-3xl font-bold text-indigo-900 mt-1">
+                    {settlementAmount.toLocaleString()}원
+                  </p>
+                  <p className="text-xs text-indigo-600 mt-2">
+                    총 수입: {stats.totalAmount.toLocaleString()}원 - 
+                    환불: {stats.refundedAmount.toLocaleString()}원
                   </p>
                 </div>
-                <X className="w-8 h-8 text-gray-600" />
+                <Calculator className="w-10 h-10 text-indigo-600" />
               </div>
             </div>
           </div>
           
+          {/* 미납 카드 (별도 줄) */}
+          {unpaidCount > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">미납</p>
+                    <p className="text-2xl font-bold text-gray-900">{unpaidCount}명</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {totalUnpaidAmount.toLocaleString()}원
+                    </p>
+                  </div>
+                  <X className="w-8 h-8 text-gray-600" />
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* 세 번째 줄: 참가자 요약 및 예상 매출 */}
           <div className="border-t pt-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">완납</p>
-                <p className="text-lg font-bold text-green-700">{fullyPaidCount}명</p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <p className="text-sm font-medium text-gray-600">부분납부</p>
                 <p className="text-lg font-bold text-orange-700">{partiallyPaidCount}명</p>
