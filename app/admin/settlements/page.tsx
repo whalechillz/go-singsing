@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
-import { Calculator, TrendingUp, TrendingDown, DollarSign, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Calculator, TrendingUp, TrendingDown, DollarSign, FileText, Plus, Search } from "lucide-react";
 
 interface TourSettlement {
   tour_id: string;
@@ -17,14 +18,43 @@ interface TourSettlement {
   status: string;
 }
 
+interface Tour {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  price: number;
+}
+
 export default function SettlementsPage() {
+  const router = useRouter();
   const [settlements, setSettlements] = useState<TourSettlement[]>([]);
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [selectedTourId, setSelectedTourId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
+    fetchTours();
     fetchSettlements();
   }, [filter]);
+
+  const fetchTours = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("singsing_tours")
+        .select("id, title, start_date, end_date, price")
+        .is("quote_data", null)
+        .order("start_date", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setTours(data || []);
+    } catch (error) {
+      console.error("Error fetching tours:", error);
+    }
+  };
 
   const fetchSettlements = async () => {
     setLoading(true);
@@ -107,48 +137,101 @@ export default function SettlementsPage() {
       ? ((totalStats.margin / totalStats.settlementAmount) * 100).toFixed(2)
       : "0.00";
 
+  const handleTourSelect = (tourId: string) => {
+    if (tourId) {
+      router.push(`/admin/tours/${tourId}/settlement`);
+    }
+  };
+
+  const filteredSettlements = settlements.filter((s) => {
+    if (searchTerm) {
+      return s.tour_title.toLowerCase().includes(searchTerm.toLowerCase());
+    }
+    return true;
+  });
+
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <Calculator className="w-8 h-8" />
-          정산 관리
-        </h1>
-        <p className="mt-2 text-gray-600">투어별 정산 현황을 확인하고 관리할 수 있습니다.</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <Calculator className="w-8 h-8" />
+              정산 관리
+            </h1>
+            <p className="mt-2 text-gray-600">투어별 정산 현황을 확인하고 관리할 수 있습니다.</p>
+          </div>
+          <div className="flex gap-3">
+            {/* 투어 선택 드롭다운 */}
+            <div className="relative">
+              <select
+                value={selectedTourId}
+                onChange={(e) => {
+                  setSelectedTourId(e.target.value);
+                  if (e.target.value) {
+                    handleTourSelect(e.target.value);
+                  }
+                }}
+                className="bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm min-w-[300px]"
+              >
+                <option value="">투어 선택하여 정산 입력...</option>
+                {tours.map((tour) => (
+                  <option key={tour.id} value={tour.id}>
+                    {tour.title} ({new Date(tour.start_date).toLocaleDateString("ko-KR")})
+                  </option>
+                ))}
+              </select>
+              <Plus className="absolute right-3 top-2.5 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 필터 */}
-      <div className="mb-6 flex gap-2">
-        <button
-          onClick={() => setFilter("all")}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            filter === "all"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          전체
-        </button>
-        <button
-          onClick={() => setFilter("pending")}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            filter === "pending"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          대기
-        </button>
-        <button
-          onClick={() => setFilter("completed")}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            filter === "completed"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          완료
-        </button>
+      {/* 필터 및 검색 */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setFilter("all")}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              filter === "all"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            전체
+          </button>
+          <button
+            onClick={() => setFilter("pending")}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              filter === "pending"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            대기
+          </button>
+          <button
+            onClick={() => setFilter("completed")}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              filter === "completed"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            완료
+          </button>
+        </div>
+        {/* 검색 */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="투어명으로 검색..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
       </div>
 
       {/* 통계 카드 */}
@@ -235,7 +318,7 @@ export default function SettlementsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {settlements.map((settlement) => (
+                {filteredSettlements.map((settlement) => (
                   <tr key={settlement.tour_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {settlement.tour_title}
