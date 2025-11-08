@@ -66,6 +66,12 @@ interface TourSettlement {
   settled_at?: string;
   settled_by?: string;
   notes?: string;
+  needs_review?: boolean; // 확인 필요 여부
+  review_notes?: string; // 검토 메모
+  reviewed_at?: string; // 검토 완료일시
+  reviewed_by?: string; // 검토자 ID
+  expected_margin?: number; // 예상 마진 (이미지 정산서 기준 수익 값)
+  calculation_discrepancy?: number; // 계산 차이
 }
 
 const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
@@ -160,18 +166,27 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
 
       setPayments(paymentsData || []);
 
-      // 정산 데이터 계산
+      // 정산 데이터 계산 (결제 데이터에서 자동 계산)
       const tourPrice = tourData?.price || tour?.price || 0;
-      const contractRevenue = tourPrice * (participantCount || 0);
+      const contractRevenue = tourPrice * (participantCount || 0); // 계약 매출 (상품가 × 인원)
+      
+      // 완납 금액: 결제 완료된 금액 합계
       const totalPaidAmount = paymentsData
         ?.filter(p => p.payment_status === "completed")
         .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      
+      // 환불 금액: 환불된 금액 합계
       const refundedAmount = paymentsData
         ?.filter(p => p.payment_status === "refunded")
         .reduce((sum, p) => sum + Math.abs(p.amount || 0), 0) || 0;
       
+      // 정산 금액: 완납 금액 - 환불 금액
       const settlementAmount = totalPaidAmount - refundedAmount;
+      
+      // 총 원가: tour_expenses에서 자동 계산
       const totalCost = expensesData?.total_cost || 0;
+      
+      // 마진: 정산 금액 - 총 원가
       const margin = settlementAmount - totalCost;
       const marginRate = settlementAmount > 0 ? (margin / settlementAmount) * 100 : 0;
 
@@ -245,26 +260,53 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     }
   };
 
-  // 정산 데이터 업데이트
+  // 정산 데이터 업데이트 (결제 데이터에서 자동 계산)
   const updateSettlement = async () => {
     if (!settlement || !expenses) return;
 
-    // 정산 금액, 마진, 마진률 재계산
-    const settlementAmount = (settlement.total_paid_amount || 0) - (settlement.refunded_amount || 0);
+    // 결제 데이터 다시 가져오기 (최신 데이터 반영)
+    const { data: latestPayments } = await supabase
+      .from("singsing_payments")
+      .select("*")
+      .eq("tour_id", tourId);
+
+    // 완납 금액: 결제 완료된 금액 합계
+    const totalPaidAmount = latestPayments
+      ?.filter(p => p.payment_status === "completed")
+      .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    
+    // 환불 금액: 환불된 금액 합계
+    const refundedAmount = latestPayments
+      ?.filter(p => p.payment_status === "refunded")
+      .reduce((sum, p) => sum + Math.abs(p.amount || 0), 0) || 0;
+    
+    // 정산 금액: 완납 금액 - 환불 금액
+    const settlementAmount = totalPaidAmount - refundedAmount;
+    
+    // 총 원가: tour_expenses에서 자동 계산
     const totalCost = expenses.total_cost || 0;
+    
     // 마진 계산: 정산 금액 - 총 원가
-    // 단, 이미지의 정산서에서 수익 값이 명시적으로 제공된 경우 해당 값을 우선 사용
-    let margin = settlementAmount - totalCost;
-    // 이미지의 정산서에서 수익 값이 명시적으로 제공된 경우 (예: 494,500원)
-    // 해당 값을 우선 사용하도록 할 수 있지만, 기본적으로는 계산된 값을 사용
-    const marginRate = settlementAmount > 0 ? (margin / settlementAmount) * 100 : 0;
+    const calculatedMargin = settlementAmount - totalCost;
+    const marginRate = settlementAmount > 0 ? (calculatedMargin / settlementAmount) * 100 : 0;
+
+    // 예상 마진이 있으면 계산 차이 확인
+    const expectedMargin = settlement.expected_margin;
+    const discrepancy = expectedMargin !== undefined && expectedMargin !== null
+      ? calculatedMargin - expectedMargin
+      : null;
+    
+    // 계산 차이가 1,000원 이상이면 확인 필요로 표시
+    const needsReview = discrepancy !== null && Math.abs(discrepancy) > 1000;
 
     const updatedSettlement = {
       ...settlement,
       settlement_amount: settlementAmount,
       total_cost: totalCost,
-      margin: margin,
-      margin_rate: marginRate
+      margin: calculatedMargin,
+      margin_rate: marginRate,
+      calculation_discrepancy: discrepancy,
+      needs_review: needsReview || settlement.needs_review || false
     };
 
     try {
@@ -423,13 +465,128 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     );
   }
 
+  // 계산 차이 확인 (예상 마진과 실제 계산 마진 비교)
+  const hasDiscrepancy = settlement?.expected_margin !== undefined && 
+                         settlement?.expected_margin !== null &&
+                         settlement?.margin !== undefined &&
+                         Math.abs((settlement.margin || 0) - (settlement.expected_margin || 0)) > 1000; // 1,000원 이상 차이
+
   return (
     <div className="space-y-6">
+      {/* 확인 필요 알림 */}
+      {(settlement?.needs_review || hasDiscrepancy) && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-sm">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-yellow-900 mb-2">
+                ⚠️ 정산 계산 확인 필요
+              </h3>
+              {hasDiscrepancy && (
+                <div className="mb-3">
+                  <p className="text-sm text-yellow-800 mb-2">
+                    계산된 마진과 예상 마진이 다릅니다. 이미지 정산서와 비교하여 확인해주세요.
+                  </p>
+                  <div className="bg-white rounded p-3 text-sm">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-gray-600">계산된 마진:</span>
+                        <span className="ml-2 font-semibold text-gray-900">
+                          {formatCurrency(settlement?.margin || 0)}원
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">예상 마진:</span>
+                        <span className="ml-2 font-semibold text-blue-600">
+                          {formatCurrency(settlement?.expected_margin || 0)}원
+                        </span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-gray-600">차이:</span>
+                        <span className={`ml-2 font-semibold ${
+                          (settlement?.calculation_discrepancy || 0) > 0 ? 'text-red-600' : 'text-blue-600'
+                        }`}>
+                          {formatCurrency(settlement?.calculation_discrepancy || 0)}원
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {settlement?.review_notes && (
+                <div className="mb-3">
+                  <p className="text-sm font-medium text-yellow-900 mb-1">검토 메모:</p>
+                  <p className="text-sm text-yellow-800 bg-white rounded p-2">
+                    {settlement.review_notes}
+                  </p>
+                </div>
+              )}
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={async () => {
+                    const notes = prompt('검토 메모를 입력하세요 (직원 확인 사항 기록):', settlement?.review_notes || '');
+                    if (notes !== null) {
+                      try {
+                        const { error } = await supabase
+                          .from('tour_settlements')
+                          .update({ 
+                            review_notes: notes,
+                            needs_review: true
+                          })
+                          .eq('tour_id', tourId);
+                        if (error) throw error;
+                        await fetchData();
+                        alert('검토 메모가 저장되었습니다.');
+                      } catch (error: any) {
+                        alert(`검토 메모 저장 실패: ${error.message}`);
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm font-medium"
+                >
+                  검토 메모 작성
+                </button>
+                <button
+                  onClick={async () => {
+                    if (confirm('정산 계산을 확인 완료 처리하시겠습니까?')) {
+                      try {
+                        const { data: { user } } = await supabase.auth.getUser();
+                        const { error } = await supabase
+                          .from('tour_settlements')
+                          .update({ 
+                            needs_review: false,
+                            reviewed_at: new Date().toISOString(),
+                            reviewed_by: user?.id || null
+                          })
+                          .eq('tour_id', tourId);
+                        if (error) throw error;
+                        await fetchData();
+                        alert('확인 완료 처리되었습니다.');
+                      } catch (error: any) {
+                        alert(`확인 완료 처리 실패: ${error.message}`);
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                >
+                  확인 완료
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 정산 요약 카드 */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Calculator className="w-5 h-5" />
           정산 요약
+          {settlement?.needs_review && (
+            <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+              확인 필요
+            </span>
+          )}
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1187,13 +1344,81 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900">정산 상세</h3>
-                <button
-                  onClick={generateSettlementPDF}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <Download className="w-4 h-4" />
-                  정산서 PDF 다운로드
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={generateSettlementPDF}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <Download className="w-4 h-4" />
+                    정산서 PDF 다운로드
+                  </button>
+                </div>
+              </div>
+
+              {/* 예상 마진 입력 (이미지 정산서 기준 수익 값) */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-yellow-900 mb-3 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  예상 마진 입력 (이미지 정산서 기준 수익 값)
+                </h4>
+                <p className="text-xs text-yellow-800 mb-3">
+                  이미지 정산서의 수익 값을 입력하면, 계산된 마진과 비교하여 차이를 확인할 수 있습니다.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      예상 마진 (이미지 정산서 기준 수익 값)
+                    </label>
+                    <input
+                      type="number"
+                      value={settlement.expected_margin || ""}
+                      onChange={async (e) => {
+                        const expectedMargin = parseInt(e.target.value) || null;
+                        const calculatedMargin = settlement.margin || 0;
+                        const discrepancy = expectedMargin !== null
+                          ? calculatedMargin - expectedMargin
+                          : null;
+                        const needsReview = discrepancy !== null && Math.abs(discrepancy) > 1000;
+
+                        try {
+                          const { error } = await supabase
+                            .from('tour_settlements')
+                            .update({
+                              expected_margin: expectedMargin,
+                              calculation_discrepancy: discrepancy,
+                              needs_review: needsReview || settlement.needs_review || false
+                            })
+                            .eq('tour_id', tourId);
+                          if (error) throw error;
+                          await fetchData();
+                        } catch (error: any) {
+                          alert(`예상 마진 저장 실패: ${error.message}`);
+                        }
+                      }}
+                      className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      placeholder="이미지 정산서의 수익 값을 입력하세요"
+                    />
+                  </div>
+                  {settlement.expected_margin !== undefined && settlement.expected_margin !== null && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        계산 차이
+                      </label>
+                      <div className={`w-full border rounded-lg px-3 py-2 ${
+                        (settlement.calculation_discrepancy || 0) > 1000 
+                          ? 'bg-red-50 border-red-300 text-red-700' 
+                          : (settlement.calculation_discrepancy || 0) < -1000
+                          ? 'bg-blue-50 border-blue-300 text-blue-700'
+                          : 'bg-green-50 border-green-300 text-green-700'
+                      }`}>
+                        {formatCurrency(settlement.calculation_discrepancy || 0)}원
+                        {(settlement.calculation_discrepancy || 0) > 1000 && (
+                          <span className="ml-2 text-xs">⚠️ 확인 필요</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* 매출 정보 */}

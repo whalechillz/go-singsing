@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Calculator, TrendingUp, TrendingDown, DollarSign, FileText, Plus, Search } from "lucide-react";
+import { Calculator, TrendingUp, TrendingDown, DollarSign, FileText, Plus, Search, AlertCircle, CheckCircle, RefreshCw, Clock } from "lucide-react";
 
 interface TourSettlement {
   tour_id: string;
@@ -16,6 +16,10 @@ interface TourSettlement {
   margin: number;
   margin_rate: number;
   status: string;
+  needs_review?: boolean;
+  review_notes?: string;
+  has_expenses?: boolean; // 원가 데이터 존재 여부
+  settlement_status?: 'not_started' | 'in_progress' | 'completed'; // 정산 상태
 }
 
 interface Tour {
@@ -32,7 +36,7 @@ export default function SettlementsPage() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [selectedTourId, setSelectedTourId] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "pending" | "completed">("all");
+  const [filter, setFilter] = useState<"all" | "not_started" | "in_progress" | "completed">("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
@@ -69,6 +73,8 @@ export default function SettlementsPage() {
           margin,
           margin_rate,
           status,
+          needs_review,
+          review_notes,
           tour:tour_id (
             id,
             title,
@@ -78,29 +84,69 @@ export default function SettlementsPage() {
         .order("created_at", { ascending: false });
 
       if (filter !== "all") {
-        query = query.eq("status", filter);
+        if (filter === "completed") {
+          query = query.eq("status", "completed");
+        }
+        // not_started와 in_progress는 나중에 필터링
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      const formattedSettlements: TourSettlement[] = (data || []).map((item: any) => {
-        const tour = Array.isArray(item.tour) ? item.tour[0] : item.tour;
-        return {
-          tour_id: item.tour_id,
-          tour_title: tour?.title || "투어명 없음",
-          tour_start_date: tour?.start_date || "",
-          contract_revenue: item.contract_revenue || 0,
-          settlement_amount: item.settlement_amount || 0,
-          total_cost: item.total_cost || 0,
-          margin: item.margin || 0,
-          margin_rate: item.margin_rate || 0,
-          status: item.status || "pending",
-        };
-      });
+      // 각 정산에 대해 tour_expenses 존재 여부 확인
+      const settlementsWithExpenses = await Promise.all(
+        (data || []).map(async (item: any) => {
+          const tour = Array.isArray(item.tour) ? item.tour[0] : item.tour;
+          
+          // tour_expenses 존재 여부 확인
+          const { data: expenses } = await supabase
+            .from("tour_expenses")
+            .select("id")
+            .eq("tour_id", item.tour_id)
+            .single();
+          
+          const hasExpenses = !!expenses;
+          
+          // 정산 상태 결정
+          let settlementStatus: 'not_started' | 'in_progress' | 'completed';
+          if (item.status === "completed") {
+            settlementStatus = "completed";
+          } else if (hasExpenses) {
+            settlementStatus = "in_progress";
+          } else {
+            settlementStatus = "not_started";
+          }
+          
+          return {
+            tour_id: item.tour_id,
+            tour_title: tour?.title || "투어명 없음",
+            tour_start_date: tour?.start_date || "",
+            contract_revenue: item.contract_revenue || 0,
+            settlement_amount: item.settlement_amount || 0,
+            total_cost: item.total_cost || 0,
+            margin: item.margin || 0,
+            margin_rate: item.margin_rate || 0,
+            status: item.status || "pending",
+            needs_review: item.needs_review || false,
+            review_notes: item.review_notes || "",
+            has_expenses: hasExpenses,
+            settlement_status: settlementStatus,
+          };
+        })
+      );
 
-      setSettlements(formattedSettlements);
+      // 필터 적용
+      let filtered = settlementsWithExpenses;
+      if (filter === "not_started") {
+        filtered = settlementsWithExpenses.filter(s => s.settlement_status === "not_started");
+      } else if (filter === "in_progress") {
+        filtered = settlementsWithExpenses.filter(s => s.settlement_status === "in_progress");
+      } else if (filter === "completed") {
+        filtered = settlementsWithExpenses.filter(s => s.settlement_status === "completed");
+      }
+
+      setSettlements(filtered);
     } catch (error) {
       console.error("Error fetching settlements:", error);
     } finally {
@@ -189,38 +235,48 @@ export default function SettlementsPage() {
 
       {/* 필터 및 검색 */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilter("all")}
-            className={`px-4 py-2 rounded-lg font-medium ${
-              filter === "all"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            전체
-          </button>
-          <button
-            onClick={() => setFilter("pending")}
-            className={`px-4 py-2 rounded-lg font-medium ${
-              filter === "pending"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            대기
-          </button>
-          <button
-            onClick={() => setFilter("completed")}
-            className={`px-4 py-2 rounded-lg font-medium ${
-              filter === "completed"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            완료
-          </button>
-        </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilter("all")}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  filter === "all"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                전체
+              </button>
+              <button
+                onClick={() => setFilter("not_started")}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  filter === "not_started"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                정산 미시작
+              </button>
+              <button
+                onClick={() => setFilter("in_progress")}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  filter === "in_progress"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                정산 진행중
+              </button>
+              <button
+                onClick={() => setFilter("completed")}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  filter === "completed"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                정산 완료
+              </button>
+            </div>
         {/* 검색 */}
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
@@ -309,10 +365,13 @@ export default function SettlementsPage() {
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     마진률
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     상태
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    확인
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     작업
                   </th>
                 </tr>
@@ -350,23 +409,36 @@ export default function SettlementsPage() {
                       {settlement.margin_rate.toFixed(2)}%
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          settlement.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : settlement.status === "cancelled"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {settlement.status === "completed"
-                          ? "완료"
-                          : settlement.status === "cancelled"
-                          ? "취소"
-                          : "대기"}
-                      </span>
+                      {settlement.settlement_status === "completed" ? (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          정산 완료
+                        </span>
+                      ) : settlement.settlement_status === "in_progress" ? (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex items-center gap-1">
+                          <RefreshCw className="w-3 h-3" />
+                          정산 진행중
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          정산 미시작
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      {settlement.needs_review ? (
+                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full flex items-center gap-1 justify-center">
+                          <AlertCircle className="w-3 h-3" />
+                          확인 필요
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                          확인 완료
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                       <Link
                         href={`/admin/tours/${settlement.tour_id}/settlement`}
                         className="text-blue-600 hover:text-blue-800 font-medium"
