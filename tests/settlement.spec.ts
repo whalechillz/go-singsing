@@ -50,7 +50,7 @@ test.describe('정산 관리 테스트', () => {
     // 테이블 헤더 확인
     await expect(page.locator('th:has-text("투어명")')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('th:has-text("정산 금액")')).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('th:has-text("마진")')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('th:has-text("마진")').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('정산 통계 카드 확인', async ({ page }) => {
