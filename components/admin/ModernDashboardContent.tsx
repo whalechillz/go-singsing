@@ -226,7 +226,7 @@ export default function ModernDashboardContentV2() {
       const totalRevenueMonthly = monthlyPayments?.reduce((sum, p) => 
         p.payment_status === 'completed' ? sum + p.amount : sum, 0
       ) || 0;
-
+      
       const depositAmount = allPayments?.filter(p => 
         p.payment_type === 'deposit' && p.payment_status === 'completed'
       ).reduce((sum, p) => sum + p.amount, 0) || 0;
@@ -324,14 +324,14 @@ export default function ModernDashboardContentV2() {
       }
 
       // 월별 매출 데이터 가져오기 (올해 1월부터 현재까지)
-      const startOfYear = new Date(today.getFullYear(), 0, 1);
+      const yearStartDate = new Date(today.getFullYear(), 0, 1);
       const endOfCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
       
       // 올해 1월부터 현재까지의 모든 결제 내역
       const { data: yearPayments } = await supabase
         .from('singsing_payments')
         .select('amount, payment_type, payment_status, payment_date')
-        .gte('payment_date', startOfYear.toISOString())
+        .gte('payment_date', yearStartDate.toISOString())
         .lte('payment_date', endOfCurrentMonth.toISOString())
         .eq('payment_status', 'completed');
 
@@ -339,7 +339,7 @@ export default function ModernDashboardContentV2() {
       const { data: yearTours } = await supabase
         .from('singsing_tours')
         .select('id, price, start_date')
-        .gte('start_date', startOfYear.toISOString())
+        .gte('start_date', yearStartDate.toISOString())
         .lte('start_date', endOfCurrentMonth.toISOString());
 
       // 올해 1월부터 현재까지의 모든 참가자
@@ -394,7 +394,7 @@ export default function ModernDashboardContentV2() {
       const { data: yearRefunds } = await supabase
         .from('singsing_payments')
         .select('amount, payment_date')
-        .gte('payment_date', startOfYear.toISOString())
+        .gte('payment_date', yearStartDate.toISOString())
         .lte('payment_date', endOfCurrentMonth.toISOString())
         .eq('payment_status', 'refunded');
 
@@ -540,14 +540,14 @@ export default function ModernDashboardContentV2() {
             >
               {period === 'monthly' ? '월간' : '연간'}
             </button>
-            <button 
-              onClick={fetchDashboardData}
+          <button 
+            onClick={fetchDashboardData}
               disabled={isRefreshing}
               className="text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-            >
+          >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              새로고침
-            </button>
+            새로고침
+          </button>
           </div>
         </div>
       </div>
