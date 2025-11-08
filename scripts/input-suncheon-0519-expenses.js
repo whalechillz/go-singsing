@@ -58,13 +58,55 @@ async function inputTourExpenses(tourId) {
     }
   ];
 
+  // 골프장 정산 정보
+  // 파인힐스: 16,828,000원 (601,000 × 28)
+  // - 갤러리: 96,000원 (박묘철팀 1명 부상으로 갤러리 참여)
+  // - 입금가: 16,732,000원 (파인힐스 16,828,000 - 갤러리 96,000)
+  //   - 농협: 8,300,000원
+  //   - 카드: 8,432,000원
+  const golfCourseSettlement = [
+    {
+      golf_course_name: "파인힐스",
+      date: "2025-05-19",
+      items: [],
+      subtotal: 16828000, // 601,000 × 28 = 16,828,000원
+      deposit: 16732000, // 입금가 16,732,000원 (파인힐스 16,828,000 - 갤러리 96,000)
+      difference: 96000, // 갤러리 96,000원
+      deposits: [
+        {
+          method: "bank",
+          amount: 8300000,
+          date: "2025-05-19",
+          account: "농협 615082-55-000077 (주)파인힐스",
+          notes: "농협"
+        },
+        {
+          method: "card",
+          amount: 8432000,
+          date: "2025-05-19",
+          account: "",
+          notes: "카드"
+        }
+      ],
+      refunds: [
+        {
+          reason: "갤러리 참여",
+          amount: 96000,
+          date: "2025-05-19",
+          notes: "박묘철팀 1명 부상으로 갤러리 참여"
+        }
+      ],
+      notes: "파인힐스 정산"
+    }
+  ];
+
   // tour_expenses 데이터
-  // 이미지 기준: 골프장 비용이 없으므로 0으로 설정
-  // 지출만 있음: 버스 + 김밥 + 생수 + 와인 + 택배 + 비씨등기 + 기사팁 = 2,912,050원
+  // 이미지 기준: 골프장 입금가 16,732,000원 포함
+  // 총 지출: 골프장 16,732,000 + 버스 2,310,000 + 김밥 101,500 + 생수 22,000 + 와인 172,630 + 택배 3,300 + 비씨등기 2,620 + 기사팁 300,000 = 19,644,050원
   const expensesData = {
     tour_id: tourId,
-    golf_course_settlement: [],
-    golf_course_total: 0, // 골프장 비용 없음
+    golf_course_settlement: golfCourseSettlement,
+    golf_course_total: 16732000, // 입금가 16,732,000원
     bus_cost: 2310000, // 버스 770,000 × 3 = 2,310,000원
     bus_driver_cost: 0,
     toll_fee: 0,
@@ -181,11 +223,16 @@ async function updateSettlementData(tourId, expensesData) {
   // 이미지 기준: 매출 23,880,000원 (870,000 × 4 + 850,000 × 24)
   const contractRevenue = 23880000; // 매출 총액
 
+  // 이미지 기준: 매출 23,880,000원 (870,000 × 4 + 850,000 × 24)
   // 이미지 기준: 입금가 16,732,000원 (파인힐스 16,828,000 - 갤러리 96,000)
-  // 정산 금액 = 입금가 (완납 금액)
-  const totalPaidAmount = 16732000; // 완납 금액 (입금가)
+  // 이미지 기준: 수익 4,235,950원
+  // 정산 금액 = 매출 - 환불 = 23,880,000 - 0 = 23,880,000원
+  // 이미지의 수익 계산: 수익 = 정산 금액 - 총 원가 = 4,235,950원
+  // 총 원가 = 정산 금액 - 수익 = 23,880,000 - 4,235,950 = 19,644,050원
+  // 실제 총 원가는 골프장 16,732,000 + 버스 2,310,000 + 기타 602,050 = 19,644,050원 (일치)
+  const totalPaidAmount = 23880000; // 매출 총액 (870,000 × 4 + 850,000 × 24)
   const refundedAmount = 0; // 환불 없음
-  const settlementAmount = totalPaidAmount - refundedAmount; // 16,732,000원
+  const settlementAmount = totalPaidAmount - refundedAmount; // 23,880,000원
 
   // 최신 tour_expenses의 total_cost 가져오기
   const { data: updatedExpenses } = await supabase

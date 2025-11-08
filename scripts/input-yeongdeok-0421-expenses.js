@@ -14,24 +14,59 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function inputTourExpenses(tourId) {
   if (!tourId) {
-    console.error('사용법: node scripts/input-yeongdeok-1013-expenses.js [tourId]');
+    console.error('사용법: node scripts/input-yeongdeok-0421-expenses.js [tourId]');
     return;
   }
 
-  console.log(`\n=== 영덕 10/13~15 투어 비용 입력: ${tourId} ===\n`);
+  console.log(`\n=== 영덕 4/21~23 투어 비용 입력: ${tourId} ===\n`);
 
   // 이미지에서 추출한 데이터
+  // 정산서 기준:
+  // - 매출: 12,800,000원 (800,000 × 16명)
+  // - 오션비치: 9,336,000원 (583,500 × 16)
+  //   - 현금: 4,600,000원
+  //   - 카드: 4,736,000원
+  // - 지출: 2,543,140원
+  //   - 버스: 2,310,000원 (770,000 × 3)
+  //   - 김밥: 59,500원 (3,500 × 17)
+  //   - 생수: 33,000원 (11,000 × 3)
+  //   - 와인: 120,000원 (30,000 × 4)
+  //   - 와인오프너: 9,300원 (10개)
+  //   - 와인잔: 11,340원 (30개)
+  //   - 택배: 11,340원 (3,300 × 3)
+  // - 수익: 920,860원
+  // - COM (1인당): 57,554원 (920,860 / 16)
+
+  // 골프장 정산 정보
+  // 오션비치: 9,336,000원 (583,500 × 16)
+  // - 현금: 4,600,000원
+  // - 카드: 4,736,000원
   const golfCourseSettlement = [
     {
       golf_course_name: "오션비치",
-      date: "2025-10-13",
-      items: [
-        { type: "green_fee", description: "그린피", unit_price: 547500, quantity: 12, total: 6570000 }
-      ],
-      subtotal: 6570000,
-      deposit: 0,
+      date: "2025-04-21",
+      items: [],
+      subtotal: 9336000, // 583,500 × 16 = 9,336,000원
+      deposit: 9336000, // 입금가 9,336,000원
       difference: 0,
-      notes: "2일차 석식 25,000 차감"
+      deposits: [
+        {
+          method: "cash",
+          amount: 4600000,
+          date: "2025-04-21",
+          account: "",
+          notes: "현금"
+        },
+        {
+          method: "card",
+          amount: 4736000,
+          date: "2025-04-21",
+          account: "",
+          notes: "카드"
+        }
+      ],
+      refunds: [],
+      notes: "오션비치 정산"
     }
   ];
 
@@ -40,49 +75,56 @@ async function inputTourExpenses(tourId) {
       type: "gimbap",
       description: "김밥",
       unit_price: 3500,
-      quantity: 13,
-      total: 45500
+      quantity: 17,
+      total: 59500
     },
     {
       type: "water",
       description: "생수",
       unit_price: 11000,
-      quantity: 1,
-      total: 11000
+      quantity: 3,
+      total: 33000
+    }
+  ];
+
+  const otherExpenses = [
+    {
+      type: "wine",
+      description: "와인",
+      unit_price: 30000,
+      quantity: 4,
+      total: 120000
+    },
+    {
+      type: "wine_opener",
+      description: "와인오프너",
+      unit_price: 930,
+      quantity: 10,
+      total: 9300
+    },
+    {
+      type: "wine_glass",
+      description: "와인잔",
+      unit_price: 378,
+      quantity: 30,
+      total: 11340
+    },
+    {
+      type: "delivery",
+      description: "택배",
+      unit_price: 3300,
+      quantity: 3,
+      total: 9900
     }
   ];
 
   // tour_expenses 데이터
-  // 이미지 기준 정산서 확인:
-  // - 오션비치: 6,570,000원
-  // - 기사님객실: 120,000원
-  // - 버스: 2,310,000원
-  // - 회정식: 300,000원
-  // - 김밥: 45,500원
-  // - 생수: 11,000원
-  // - 택배: 3,300원
-  // - 총 지출: 2,655,500원
-  // - 총 원가: 6,570,000 + 120,000 + 2,655,500 = 9,345,500원
-  // - 정산 금액: 8,190,000원
-  // - 수익: 494,500원 (8,190,000 - 9,345,500 = -1,155,500원이지만 이미지에서는 494,500원)
-  // 이미지의 수익을 기준으로 역산하면: 총 원가 = 정산 금액 - 수익 = 8,190,000 - 494,500 = 7,695,500원
-  // 하지만 이미지의 지출 합계는 2,655,500원이므로, 오션비치 + 기사님객실 = 7,695,500 - 2,655,500 = 5,040,000원
-  // 이미지 기준으로 정확히 계산:
-  // - 오션비치: 6,570,000원
-  // - 기사님객실: 120,000원
-  // - 버스: 2,310,000원
-  // - 회정식: 300,000원
-  // - 김밥: 45,500원
-  // - 생수: 11,000원
-  // - 택배: 3,300원
-  // - 총 원가: 9,345,500원
-  // - 정산 금액: 8,190,000원
-  // - 마진: 8,190,000 - 9,345,500 = -1,155,500원
-  // 하지만 이미지에서는 수익이 494,500원으로 나와 있으므로, 이미지의 수익 값을 기준으로 마진을 설정
+  // 이미지 기준: 골프장 입금가 9,336,000원 포함
+  // 총 지출: 골프장 9,336,000 + 버스 2,310,000 + 김밥 59,500 + 생수 33,000 + 와인 120,000 + 와인오프너 9,300 + 와인잔 11,340 + 택배 9,900 = 11,889,040원
   const expensesData = {
     tour_id: tourId,
     golf_course_settlement: golfCourseSettlement,
-    golf_course_total: 6570000, // 오션비치
+    golf_course_total: 9336000, // 입금가 9,336,000원
     bus_cost: 2310000, // 버스 770,000 × 3 = 2,310,000원
     bus_driver_cost: 0,
     toll_fee: 0,
@@ -94,26 +136,16 @@ async function inputTourExpenses(tourId) {
     guide_other_cost: 0,
     guide_notes: "",
     meal_expenses: mealExpenses,
-    meal_expenses_total: 56500, // 김밥 45,500 + 생수 11,000 = 56,500원
-    accommodation_cost: 120000, // 기사님객실 60,000 × 2 = 120,000원
-    restaurant_cost: 300000, // 회정식 100,000 × 3 = 300,000원
+    meal_expenses_total: 92500, // 김밥 59,500 + 생수 33,000 = 92,500원
+    accommodation_cost: 0,
+    restaurant_cost: 0,
     attraction_fee: 0,
     insurance_cost: 0,
-    other_expenses: [
-      {
-        type: "delivery",
-        description: "택배",
-        unit_price: 3300,
-        quantity: 1,
-        total: 3300
-      }
-    ],
-    other_expenses_total: 3300, // 택배
-    notes: "영덕 10/13~15 투어 정산",
+    other_expenses: otherExpenses,
+    other_expenses_total: 150540, // 와인 120,000 + 와인오프너 9,300 + 와인잔 11,340 + 택배 9,900 = 150,540원
+    notes: "영덕 4/21~23 투어 정산",
     // 총 원가는 데이터베이스 트리거가 자동 계산
-    // 이미지 기준: 오션비치 6,570,000 + 기사님객실 120,000 + 지출 2,655,500 = 9,345,500원
-    // 하지만 실제 계산: 오션비치 6,570,000 + 기사님객실 120,000 + 버스 2,310,000 + 회정식 300,000 + 김밥 45,500 + 생수 11,000 + 택배 3,300 = 9,359,800원
-    // 이미지의 수익(494,500원)을 기준으로 마진을 설정하므로, total_cost는 트리거가 자동 계산
+    // 이미지 기준: 골프장 9,336,000 + 버스 2,310,000 + 김밥 59,500 + 생수 33,000 + 와인 120,000 + 와인오프너 9,300 + 와인잔 11,340 + 택배 9,900 = 11,889,040원
   };
 
   try {
@@ -184,23 +216,23 @@ async function updateSettlementData(tourId, expensesData) {
     .eq('tour_id', tourId);
 
   const tourPrice = tour?.price || 0;
-  // 이미지 기준: 매출 820,000 × 12 = 9,840,000원
-  const contractRevenue = 9840000; // 매출 총액
+  // 이미지 기준: 매출 12,800,000원 (800,000 × 16명)
+  const contractRevenue = 12800000; // 매출 총액
 
-  // 이미지 기준: 매출 9,840,000원 (820,000 × 12명)
-  // 이미지 기준: 수익 494,500원
-  // 정산 금액 = 매출 - 환불 = 9,840,000 - 1,650,000 = 8,190,000원
-  // 하지만 이미지의 수익을 보면: 수익 = 정산 금액 - 총 원가 = 494,500원
-  // 총 원가 = 정산 금액 - 수익 = 8,190,000 - 494,500 = 7,695,500원
-  // 하지만 실제 총 원가는 골프장 6,570,000 + 기사님객실 120,000 + 버스 2,310,000 + 회정식 300,000 + 김밥 45,500 + 생수 11,000 + 택배 3,300 = 9,359,800원
-  // 이미지의 수익 계산: 수익 = 정산 금액 - 총 원가 = 8,190,000 - 9,359,800 = -1,169,800원
-  // 하지만 이미지에서는 수익이 494,500원으로 나와 있으므로, 정산 금액은 매출에서 환불을 뺀 금액으로 설정
-  // 정산 금액 = 매출 - 환불 = 9,840,000 - 1,650,000 = 8,190,000원
-  // 실제 마진 = 정산 금액 - 총 원가 = 8,190,000 - 9,359,800 = -1,169,800원
-  // 이미지의 수익 값(494,500원)과 실제 계산 마진(-1,169,800원)이 다르므로, 실제 계산 마진을 사용
-  const totalPaidAmount = 9840000; // 완납 금액 (매출 총액)
-  const refundedAmount = 1650000; // 환불 금액 (우천환불)
-  const settlementAmount = totalPaidAmount - refundedAmount; // 8,190,000원
+  // 이미지 기준: 매출 12,800,000원 (800,000 × 16명)
+  // 이미지 기준: 수익 920,860원
+  // 정산 금액 = 매출 - 환불 = 12,800,000 - 0 = 12,800,000원
+  // 이미지의 수익 계산: 수익 = 정산 금액 - 총 원가 = 920,860원
+  // 총 원가 = 정산 금액 - 수익 = 12,800,000 - 920,860 = 11,879,140원
+  // 실제 총 원가는 골프장 9,336,000 + 버스 2,310,000 + 김밥 59,500 + 생수 33,000 + 와인 120,000 + 와인오프너 9,300 + 와인잔 11,340 + 택배 9,900 = 11,889,040원
+  // 이미지의 수익 계산: 수익 = 정산 금액 - 총 원가 = 12,800,000 - 11,889,040 = 910,960원
+  // 하지만 이미지에서는 수익이 920,860원으로 나와 있으므로, 정산 금액은 매출에서 환불을 뺀 금액으로 설정
+  // 정산 금액 = 매출 - 환불 = 12,800,000 - 0 = 12,800,000원
+  // 실제 마진 = 정산 금액 - 총 원가 = 12,800,000 - 11,889,040 = 910,960원
+  // 이미지의 수익 값(920,860원)과 실제 계산 마진(910,960원)이 다르므로, 실제 계산 마진을 사용
+  const totalPaidAmount = 12800000; // 완납 금액 (매출 총액)
+  const refundedAmount = 0; // 환불 없음
+  const settlementAmount = totalPaidAmount - refundedAmount; // 12,800,000원
 
   // 최신 tour_expenses의 total_cost 가져오기
   const { data: updatedExpenses } = await supabase
@@ -209,18 +241,25 @@ async function updateSettlementData(tourId, expensesData) {
     .eq('tour_id', tourId)
     .single();
   const totalCost = updatedExpenses?.total_cost || expensesData.total_cost;
-  // 실제 계산 마진: 정산 금액 - 총 원가
-  const calculatedMargin = settlementAmount - totalCost; // 8,190,000 - 9,359,800 = -1,169,800원
-  const marginRate = settlementAmount > 0 ? (calculatedMargin / settlementAmount) * 100 : 0; // -14.28%
   
-  // 이미지의 수익 값(494,500원)과 실제 계산 마진(-1,169,800원) 비교
-  const expectedMargin = 494500; // 이미지 기준 수익(마진)
+  // 실제 계산 마진: 정산 금액 - 총 원가
+  const calculatedMargin = settlementAmount - totalCost; // 12,800,000 - 11,889,040 = 910,960원
+  const marginRate = settlementAmount > 0 ? (calculatedMargin / settlementAmount) * 100 : 0; // 7.11%
+  
+  // 이미지의 수익 값(920,860원)과 실제 계산 마진(910,960원) 비교
+  const expectedMargin = 920860; // 이미지 기준 수익(마진)
   const discrepancy = calculatedMargin - expectedMargin; // 계산 차이
   const needsReview = Math.abs(discrepancy) > 1000; // 1,000원 이상 차이면 확인 필요
+  
+  // 1인당 COM 계산
+  const comPerPerson = participantCount && participantCount > 0
+    ? Math.floor(calculatedMargin / participantCount)
+    : 0;
   
   console.log(`\n⚠️  주의: 이미지의 수익(${expectedMargin.toLocaleString()}원)과 실제 계산 마진(${calculatedMargin.toLocaleString()}원)이 다릅니다.`);
   console.log(`   차이: ${discrepancy.toLocaleString()}원`);
   console.log(`   확인 필요: ${needsReview ? '예' : '아니오'}`);
+  console.log(`   1인당 COM: ${comPerPerson.toLocaleString()}원 (참가자 ${participantCount}명)`);
 
   const settlementData = {
     tour_id: tourId,
@@ -269,6 +308,7 @@ async function updateSettlementData(tourId, expensesData) {
     console.log(`예상 마진: ${expectedMargin.toLocaleString()}원`);
     console.log(`계산 차이: ${discrepancy.toLocaleString()}원`);
     console.log(`마진률: ${marginRate.toFixed(2)}%`);
+    console.log(`1인당 COM: ${comPerPerson.toLocaleString()}원 (참가자 ${participantCount}명)`);
     console.log(`확인 필요: ${needsReview ? '예' : '아니오'}`);
 
   } catch (error) {
@@ -276,6 +316,6 @@ async function updateSettlementData(tourId, expensesData) {
   }
 }
 
-const tourId = process.argv[2] || '951e9f8d-a2a9-4504-a33d-86321b09b359'; // 영덕 10/13~15 투어 ID (이전에 찾은 ID)
+const tourId = process.argv[2] || '42ec1758-08da-4372-a55c-efc57e9dd351'; // 영덕 4/21~23 투어 ID
 inputTourExpenses(tourId);
 

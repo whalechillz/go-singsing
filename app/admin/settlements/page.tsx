@@ -20,6 +20,8 @@ interface TourSettlement {
   review_notes?: string;
   has_expenses?: boolean; // 원가 데이터 존재 여부
   settlement_status?: 'not_started' | 'in_progress' | 'completed'; // 정산 상태
+  participant_count?: number; // 참가자 수
+  com_per_person?: number; // 1인당 COM
 }
 
 interface Tour {
@@ -94,7 +96,7 @@ export default function SettlementsPage() {
 
       if (error) throw error;
 
-      // 각 정산에 대해 tour_expenses 존재 여부 확인
+      // 각 정산에 대해 tour_expenses 존재 여부 및 참가자 수 확인
       const settlementsWithExpenses = await Promise.all(
         (data || []).map(async (item: any) => {
           const tour = Array.isArray(item.tour) ? item.tour[0] : item.tour;
@@ -108,6 +110,12 @@ export default function SettlementsPage() {
           
           const hasExpenses = !!expenses;
           
+          // 참가자 수 확인
+          const { count: participantCount } = await supabase
+            .from("singsing_participants")
+            .select("*", { count: "exact", head: true })
+            .eq("tour_id", item.tour_id);
+          
           // 정산 상태 결정
           let settlementStatus: 'not_started' | 'in_progress' | 'completed';
           if (item.status === "completed") {
@@ -117,6 +125,11 @@ export default function SettlementsPage() {
           } else {
             settlementStatus = "not_started";
           }
+          
+          // 1인당 COM 계산
+          const comPerPerson = participantCount && participantCount > 0
+            ? Math.floor((item.margin || 0) / participantCount)
+            : 0;
           
           return {
             tour_id: item.tour_id,
@@ -132,6 +145,8 @@ export default function SettlementsPage() {
             review_notes: item.review_notes || "",
             has_expenses: hasExpenses,
             settlement_status: settlementStatus,
+            participant_count: participantCount || 0,
+            com_per_person: comPerPerson,
           };
         })
       );
@@ -365,6 +380,9 @@ export default function SettlementsPage() {
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     마진률
                   </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    1인당 COM
+                  </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     상태
                   </th>
@@ -407,6 +425,11 @@ export default function SettlementsPage() {
                       }`}
                     >
                       {settlement.margin_rate.toFixed(2)}%
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-700">
+                      {settlement.participant_count && settlement.participant_count > 0
+                        ? `${formatCurrency(settlement.com_per_person || 0)}원`
+                        : "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {settlement.settlement_status === "completed" ? (

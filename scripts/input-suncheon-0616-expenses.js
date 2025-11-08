@@ -48,13 +48,38 @@ async function inputTourExpenses(tourId) {
     }
   ];
 
+  // 골프장 정산 정보
+  // 파인힐스: 9,616,000원 (601,000 × 16)
+  // 입금가: 9,616,000원
+  const golfCourseSettlement = [
+    {
+      golf_course_name: "파인힐스",
+      date: "2025-06-16",
+      items: [],
+      subtotal: 9616000, // 601,000 × 16 = 9,616,000원
+      deposit: 9616000, // 입금가 9,616,000원
+      difference: 0,
+      deposits: [
+        {
+          method: "bank",
+          amount: 9616000,
+          date: "2025-06-16",
+          account: "",
+          notes: ""
+        }
+      ],
+      refunds: [],
+      notes: "파인힐스 정산"
+    }
+  ];
+
   // tour_expenses 데이터
-  // 이미지 기준: 골프장 비용이 없으므로 0으로 설정
-  // 지출만 있음: 버스 + 김밥 + 생수 + 택배 = 2,405,800원
+  // 이미지 기준: 골프장 입금가 9,616,000원 포함
+  // 총 지출: 골프장 9,616,000 + 버스 2,310,000 + 김밥 59,500 + 생수 33,000 + 택배 3,300 = 12,021,800원
   const expensesData = {
     tour_id: tourId,
-    golf_course_settlement: [],
-    golf_course_total: 0, // 골프장 비용 없음
+    golf_course_settlement: golfCourseSettlement,
+    golf_course_total: 9616000, // 입금가 9,616,000원
     bus_cost: 2310000, // 버스 770,000 × 3 = 2,310,000원
     bus_driver_cost: 0,
     toll_fee: 0,
@@ -157,11 +182,16 @@ async function updateSettlementData(tourId, expensesData) {
   // 이미지 기준: 매출 13,600,000원 (850,000 × 16명)
   const contractRevenue = 13600000; // 매출 총액
 
+  // 이미지 기준: 매출 13,600,000원 (850,000 × 16명)
   // 이미지 기준: 입금가 9,616,000원 (601,000 × 16명)
-  // 정산 금액 = 입금가 (완납 금액)
-  const totalPaidAmount = 9616000; // 완납 금액 (입금가)
+  // 이미지 기준: 수익 1,578,200원
+  // 정산 금액 = 매출 - 환불 = 13,600,000 - 0 = 13,600,000원
+  // 이미지의 수익 계산: 수익 = 정산 금액 - 총 원가 = 1,578,200원
+  // 총 원가 = 정산 금액 - 수익 = 13,600,000 - 1,578,200 = 12,021,800원
+  // 실제 총 원가는 골프장 9,616,000 + 버스 2,310,000 + 기타 95,800 = 12,021,800원 (일치)
+  const totalPaidAmount = 13600000; // 매출 총액 (850,000 × 16명)
   const refundedAmount = 0; // 환불 없음
-  const settlementAmount = totalPaidAmount - refundedAmount; // 9,616,000원
+  const settlementAmount = totalPaidAmount - refundedAmount; // 13,600,000원
 
   // 최신 tour_expenses의 total_cost 가져오기
   const { data: updatedExpenses } = await supabase

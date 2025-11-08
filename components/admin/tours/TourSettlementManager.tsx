@@ -84,6 +84,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
   const [saving, setSaving] = useState<boolean>(false);
   const [participants, setParticipants] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [participantCount, setParticipantCount] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>("expenses");
 
   // 데이터 가져오기
@@ -157,6 +158,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
         .from("singsing_participants")
         .select("*", { count: "exact", head: true })
         .eq("tour_id", tourId);
+
+      setParticipantCount(participantCount || 0);
 
       // 결제 내역 가져오기
       const { data: paymentsData } = await supabase
@@ -641,6 +644,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
             <div className="text-xs text-gray-500 mt-1">
               마진률: {settlement?.margin_rate?.toFixed(2) || "0.00"}%
             </div>
+            {participantCount > 0 && (
+              <div className="text-xs text-gray-500 mt-1">
+                1인당 COM: {formatCurrency(Math.floor((settlement?.margin || 0) / participantCount))}원
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1827,7 +1835,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                 (settlement.margin || 0) >= 0 ? "bg-green-50" : "bg-red-50"
               }`}>
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">마진 정보</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       마진
@@ -1859,6 +1867,21 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       (마진 / 정산 금액) × 100
                     </div>
                   </div>
+                  {participantCount > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        1인당 COM
+                      </label>
+                      <div className={`text-2xl font-bold ${
+                        (settlement.margin || 0) >= 0 ? "text-green-700" : "text-red-700"
+                      }`}>
+                        {formatCurrency(Math.floor((settlement.margin || 0) / participantCount))}원
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        마진 ÷ 참가자 수 ({participantCount}명)
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

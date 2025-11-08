@@ -52,13 +52,55 @@ async function inputTourExpenses(tourId) {
     }
   ];
 
+  // 골프장 정산 정보
+  // 파인힐스: 16,128,000원 (576,000 × 28)
+  // - 현금 4/11: 8,000,000원
+  // - 카드 4/16: 6,614,000원
+  // - 홀정산 환불: 1,514,000원
+  // - 실사용금액: 14,614,000원
+  const golfCourseSettlement = [
+    {
+      golf_course_name: "파인힐스",
+      date: "2025-04-14",
+      items: [],
+      subtotal: 16128000, // 576,000 × 28 = 16,128,000원
+      deposit: 14614000, // 실사용금액 14,614,000원
+      difference: 1514000, // 홀정산 환불 1,514,000원
+      deposits: [
+        {
+          method: "cash",
+          amount: 8000000,
+          date: "2025-04-11",
+          account: "",
+          notes: "현금 4/11"
+        },
+        {
+          method: "card",
+          amount: 6614000,
+          date: "2025-04-16",
+          account: "",
+          notes: "카드 4/16"
+        }
+      ],
+      refunds: [
+        {
+          reason: "홀정산 환불",
+          amount: 1514000,
+          date: "2025-04-16",
+          notes: ""
+        }
+      ],
+      notes: "파인힐스 정산"
+    }
+  ];
+
   // tour_expenses 데이터
-  // 이미지 기준: 골프장 비용이 없으므로 0으로 설정
-  // 지출만 있음: 버스 + 김밥 + 생수 + 택배 = 2,480,800원
+  // 이미지 기준: 골프장 실사용금액 14,614,000원 포함
+  // 총 지출: 골프장 14,614,000 + 버스 2,310,000 + 김밥 101,500 + 생수 66,000 + 택배 3,300 = 17,094,800원
   const expensesData = {
     tour_id: tourId,
-    golf_course_settlement: [],
-    golf_course_total: 0, // 골프장 비용 없음
+    golf_course_settlement: golfCourseSettlement,
+    golf_course_total: 14614000, // 실사용금액 14,614,000원
     bus_cost: 2310000, // 버스 770,000 × 3 = 2,310,000원
     bus_driver_cost: 0,
     toll_fee: 0,
@@ -87,7 +129,7 @@ async function inputTourExpenses(tourId) {
     other_expenses_total: 3300, // 택배
     notes: "순천 4/14~16 투어 정산",
     // 총 원가는 데이터베이스 트리거가 자동 계산
-    // 이미지 기준: 버스 2,310,000 + 김밥 101,500 + 생수 66,000 + 택배 3,300 = 2,480,800원
+    // 이미지 기준: 골프장 14,614,000 + 버스 2,310,000 + 김밥 101,500 + 생수 66,000 + 택배 3,300 = 17,094,800원
   };
 
   try {
@@ -161,13 +203,19 @@ async function updateSettlementData(tourId, expensesData) {
   // 이미지 기준: 매출 22,400,000원 (800,000 × 28명)
   const contractRevenue = 22400000; // 매출 총액
 
+  // 이미지 기준: 매출 22,400,000원 (800,000 × 28명)
   // 이미지 기준: 실사용금액 14,614,000원 (파인힐스 16,128,000 - 홀정산 환불 1,514,000)
-  // 정산 금액 = 실사용금액 (완납 금액)
-  const totalPaidAmount = 14614000; // 완납 금액 (실사용금액)
+  // 이미지 기준: 수익 3,791,200원
+  // 정산 금액 = 매출 - 환불 = 22,400,000 - 1,514,000 = 20,886,000원
+  // 또는 정산 금액 = 실사용금액 + (매출 - 실사용금액) = 14,614,000 + (22,400,000 - 14,614,000) = 22,400,000원
+  // 하지만 이미지의 수익을 보면: 수익 = 정산 금액 - 총 원가 = 3,791,200원
+  // 총 원가 = 정산 금액 - 수익 = 22,400,000 - 3,791,200 = 18,608,800원
+  // 하지만 실제 총 원가는 골프장 14,614,000 + 버스 2,310,000 + 기타 170,800 = 17,094,800원
+  // 이미지의 수익 계산: 수익 = 매출 - 지출 = 22,400,000 - (골프장 14,614,000 + 버스 2,310,000 + 기타 170,800) = 5,305,200원
+  // 하지만 이미지에서는 수익이 3,791,200원으로 나와 있으므로, 정산 금액은 매출에서 환불을 뺀 금액으로 설정
+  const totalPaidAmount = 22400000; // 매출 총액 (800,000 × 28명)
   const refundedAmount = 1514000; // 홀정산 환불
-  const settlementAmount = totalPaidAmount - refundedAmount; // 14,614,000 - 1,514,000 = 13,100,000원
-  // 하지만 이미지에서는 실사용금액이 14,614,000원이므로, 정산 금액은 14,614,000원으로 설정
-  const settlementAmountFinal = 14614000; // 실사용금액
+  const settlementAmountFinal = totalPaidAmount - refundedAmount; // 22,400,000 - 1,514,000 = 20,886,000원
 
   // 최신 tour_expenses의 total_cost 가져오기
   const { data: updatedExpenses } = await supabase
