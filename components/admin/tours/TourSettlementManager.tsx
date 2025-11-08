@@ -705,6 +705,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                         subtotal: 0,
                         deposit: 0,
                         difference: 0,
+                        deposits: [], // 입금 내역 배열 추가
+                        refunds: [], // 환불 내역 배열 추가
                         notes: ""
                       };
                       setExpenses({
@@ -860,6 +862,336 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           placeholder="메모를 입력하세요"
                         />
                       </div>
+                    </div>
+                    
+                    {/* 입금 내역 */}
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                      <div className="flex justify-between items-center mb-3">
+                        <h6 className="font-semibold text-gray-900">입금 내역</h6>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...(expenses.golf_course_settlement || [])];
+                            const deposits = updated[idx].deposits || [];
+                            deposits.push({
+                              method: "cash", // cash, card
+                              amount: 0,
+                              date: new Date().toISOString().split("T")[0],
+                              account: "", // 계좌 정보 (선택)
+                              notes: ""
+                            });
+                            updated[idx] = { ...updated[idx], deposits };
+                            // 입금액 자동 계산
+                            const totalDeposit = deposits.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+                            const totalRefund = (updated[idx].refunds || []).reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                            updated[idx].deposit = totalDeposit - totalRefund;
+                            updated[idx].difference = (updated[idx].subtotal || 0) - updated[idx].deposit;
+                            setExpenses({
+                              ...expenses,
+                              golf_course_settlement: updated
+                            });
+                          }}
+                          className="flex items-center gap-1 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          <Plus className="w-3 h-3" />
+                          입금 추가
+                        </button>
+                      </div>
+                      {(settlement.deposits || []).map((deposit: any, depositIdx: number) => (
+                        <div key={depositIdx} className="bg-white rounded-lg p-3 mb-2 border border-gray-200">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                입금 방법
+                              </label>
+                              <select
+                                value={deposit.method || "cash"}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const deposits = [...(updated[idx].deposits || [])];
+                                  deposits[depositIdx] = { ...deposits[depositIdx], method: e.target.value };
+                                  updated[idx] = { ...updated[idx], deposits };
+                                  // 입금액 자동 계산
+                                  const totalDeposit = deposits.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+                                  const totalRefund = (updated[idx].refunds || []).reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                                  updated[idx].deposit = totalDeposit - totalRefund;
+                                  updated[idx].difference = (updated[idx].subtotal || 0) - updated[idx].deposit;
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="w-full border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              >
+                                <option value="cash">현금</option>
+                                <option value="card">카드</option>
+                                <option value="bank">계좌이체</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                입금 금액
+                              </label>
+                              <input
+                                type="number"
+                                value={deposit.amount || 0}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const deposits = [...(updated[idx].deposits || [])];
+                                  deposits[depositIdx] = { ...deposits[depositIdx], amount: parseInt(e.target.value) || 0 };
+                                  updated[idx] = { ...updated[idx], deposits };
+                                  // 입금액 자동 계산
+                                  const totalDeposit = deposits.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+                                  const totalRefund = (updated[idx].refunds || []).reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                                  updated[idx].deposit = totalDeposit - totalRefund;
+                                  updated[idx].difference = (updated[idx].subtotal || 0) - updated[idx].deposit;
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="w-full border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                placeholder="0"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                입금 날짜
+                              </label>
+                              <input
+                                type="date"
+                                value={deposit.date || ""}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const deposits = [...(updated[idx].deposits || [])];
+                                  deposits[depositIdx] = { ...deposits[depositIdx], date: e.target.value };
+                                  updated[idx] = { ...updated[idx], deposits };
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="w-full border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              />
+                            </div>
+                            <div className="flex items-end gap-2">
+                              <input
+                                type="text"
+                                value={deposit.account || ""}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const deposits = [...(updated[idx].deposits || [])];
+                                  deposits[depositIdx] = { ...deposits[depositIdx], account: e.target.value };
+                                  updated[idx] = { ...updated[idx], deposits };
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="flex-1 border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                placeholder="계좌 정보 (선택)"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const deposits = [...(updated[idx].deposits || [])];
+                                  deposits.splice(depositIdx, 1);
+                                  updated[idx] = { ...updated[idx], deposits };
+                                  // 입금액 자동 계산
+                                  const totalDeposit = deposits.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+                                  const totalRefund = (updated[idx].refunds || []).reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                                  updated[idx].deposit = totalDeposit - totalRefund;
+                                  updated[idx].difference = (updated[idx].subtotal || 0) - updated[idx].deposit;
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          {deposit.notes && (
+                            <div className="mt-2">
+                              <input
+                                type="text"
+                                value={deposit.notes || ""}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const deposits = [...(updated[idx].deposits || [])];
+                                  deposits[depositIdx] = { ...deposits[depositIdx], notes: e.target.value };
+                                  updated[idx] = { ...updated[idx], deposits };
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="w-full border rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                placeholder="비고 (예: 농협 615082-55-000077)"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {(!settlement.deposits || settlement.deposits.length === 0) && (
+                        <p className="text-xs text-gray-500 text-center py-2">입금 내역이 없습니다. "입금 추가" 버튼을 클릭하여 추가하세요.</p>
+                      )}
+                    </div>
+                    
+                    {/* 환불 내역 */}
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                      <div className="flex justify-between items-center mb-3">
+                        <h6 className="font-semibold text-gray-900">환불 내역</h6>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...(expenses.golf_course_settlement || [])];
+                            const refunds = updated[idx].refunds || [];
+                            refunds.push({
+                              reason: "", // 환불 사유
+                              amount: 0,
+                              date: new Date().toISOString().split("T")[0],
+                              notes: ""
+                            });
+                            updated[idx] = { ...updated[idx], refunds };
+                            // 입금액 자동 계산
+                            const totalDeposit = (updated[idx].deposits || []).reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+                            const totalRefund = refunds.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                            updated[idx].deposit = totalDeposit - totalRefund;
+                            updated[idx].difference = (updated[idx].subtotal || 0) - updated[idx].deposit;
+                            setExpenses({
+                              ...expenses,
+                              golf_course_settlement: updated
+                            });
+                          }}
+                          className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                        >
+                          <Plus className="w-3 h-3" />
+                          환불 추가
+                        </button>
+                      </div>
+                      {(settlement.refunds || []).map((refund: any, refundIdx: number) => (
+                        <div key={refundIdx} className="bg-red-50 rounded-lg p-3 mb-2 border border-red-200">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                환불 사유
+                              </label>
+                              <input
+                                type="text"
+                                value={refund.reason || ""}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const refunds = [...(updated[idx].refunds || [])];
+                                  refunds[refundIdx] = { ...refunds[refundIdx], reason: e.target.value };
+                                  updated[idx] = { ...updated[idx], refunds };
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="w-full border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                placeholder="홀정산 환불 등"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                환불 금액
+                              </label>
+                              <input
+                                type="number"
+                                value={refund.amount || 0}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const refunds = [...(updated[idx].refunds || [])];
+                                  refunds[refundIdx] = { ...refunds[refundIdx], amount: parseInt(e.target.value) || 0 };
+                                  updated[idx] = { ...updated[idx], refunds };
+                                  // 입금액 자동 계산
+                                  const totalDeposit = (updated[idx].deposits || []).reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+                                  const totalRefund = refunds.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                                  updated[idx].deposit = totalDeposit - totalRefund;
+                                  updated[idx].difference = (updated[idx].subtotal || 0) - updated[idx].deposit;
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="w-full border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                placeholder="0"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                환불 날짜
+                              </label>
+                              <input
+                                type="date"
+                                value={refund.date || ""}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const refunds = [...(updated[idx].refunds || [])];
+                                  refunds[refundIdx] = { ...refunds[refundIdx], date: e.target.value };
+                                  updated[idx] = { ...updated[idx], refunds };
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="w-full border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              />
+                            </div>
+                            <div className="flex items-end">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const refunds = [...(updated[idx].refunds || [])];
+                                  refunds.splice(refundIdx, 1);
+                                  updated[idx] = { ...updated[idx], refunds };
+                                  // 입금액 자동 계산
+                                  const totalDeposit = (updated[idx].deposits || []).reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+                                  const totalRefund = refunds.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                                  updated[idx].deposit = totalDeposit - totalRefund;
+                                  updated[idx].difference = (updated[idx].subtotal || 0) - updated[idx].deposit;
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          {refund.notes && (
+                            <div className="mt-2">
+                              <input
+                                type="text"
+                                value={refund.notes || ""}
+                                onChange={(e) => {
+                                  const updated = [...(expenses.golf_course_settlement || [])];
+                                  const refunds = [...(updated[idx].refunds || [])];
+                                  refunds[refundIdx] = { ...refunds[refundIdx], notes: e.target.value };
+                                  updated[idx] = { ...updated[idx], refunds };
+                                  setExpenses({
+                                    ...expenses,
+                                    golf_course_settlement: updated
+                                  });
+                                }}
+                                className="w-full border rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                placeholder="비고"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {(!settlement.refunds || settlement.refunds.length === 0) && (
+                        <p className="text-xs text-gray-500 text-center py-2">환불 내역이 없습니다.</p>
+                      )}
                     </div>
                   </div>
                 ))}
