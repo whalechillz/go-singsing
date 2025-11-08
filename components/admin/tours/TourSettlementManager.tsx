@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import jsPDF from "jspdf";
 import {
   Calculator,
   DollarSign,
@@ -292,6 +293,119 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
   const formatCurrency = (value: number | undefined) => {
     if (value === undefined || value === null) return "0";
     return value.toLocaleString("ko-KR");
+  };
+
+  // 정산서 PDF 생성
+  const generateSettlementPDF = () => {
+    if (!settlement || !expenses || !tour) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPos = 20;
+
+    // 제목
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("정산서", pageWidth / 2, yPos, { align: "center" });
+    yPos += 10;
+
+    // 투어 정보
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`투어명: ${tour.title || ""}`, 20, yPos);
+    yPos += 7;
+    doc.text(`시작일: ${tour.start_date ? new Date(tour.start_date).toLocaleDateString("ko-KR") : ""}`, 20, yPos);
+    yPos += 7;
+    doc.text(`종료일: ${tour.end_date ? new Date(tour.end_date).toLocaleDateString("ko-KR") : ""}`, 20, yPos);
+    yPos += 10;
+
+    // 매출 정보
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("매출 정보", 20, yPos);
+    yPos += 7;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`계약 매출: ${formatCurrency(settlement.contract_revenue)}원`, 20, yPos);
+    yPos += 6;
+    doc.text(`완납 금액: ${formatCurrency(settlement.total_paid_amount)}원`, 20, yPos);
+    yPos += 6;
+    doc.text(`환불 금액: ${formatCurrency(settlement.refunded_amount)}원`, 20, yPos);
+    yPos += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text(`정산 금액: ${formatCurrency(settlement.settlement_amount)}원`, 20, yPos);
+    yPos += 10;
+
+    // 원가 정보
+    if (yPos > pageHeight - 50) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("원가 정보", 20, yPos);
+    yPos += 7;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`골프장 총 비용: ${formatCurrency(expenses.golf_course_total || 0)}원`, 20, yPos);
+    yPos += 6;
+    doc.text(`버스 비용: ${formatCurrency((expenses.bus_cost || 0) + (expenses.bus_driver_cost || 0) + (expenses.toll_fee || 0) + (expenses.parking_fee || 0))}원`, 20, yPos);
+    yPos += 6;
+    doc.text(`가이드 비용: ${formatCurrency((expenses.guide_fee || 0) + (expenses.guide_meal_cost || 0) + (expenses.guide_accommodation_cost || 0) + (expenses.guide_other_cost || 0))}원`, 20, yPos);
+    yPos += 6;
+    doc.text(`경비 지출: ${formatCurrency(expenses.meal_expenses_total || 0)}원`, 20, yPos);
+    yPos += 6;
+    doc.text(`기타 비용: ${formatCurrency((expenses.accommodation_cost || 0) + (expenses.restaurant_cost || 0) + (expenses.attraction_fee || 0) + (expenses.insurance_cost || 0) + (expenses.other_expenses_total || 0))}원`, 20, yPos);
+    yPos += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text(`총 원가: ${formatCurrency(settlement.total_cost)}원`, 20, yPos);
+    yPos += 10;
+
+    // 마진 정보
+    if (yPos > pageHeight - 50) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("마진 정보", 20, yPos);
+    yPos += 7;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    const marginColor = settlement.margin >= 0 ? [0, 150, 0] : [200, 0, 0];
+    doc.setTextColor(marginColor[0], marginColor[1], marginColor[2]);
+    doc.text(`마진: ${formatCurrency(settlement.margin)}원`, 20, yPos);
+    yPos += 7;
+    doc.text(`마진률: ${settlement.margin_rate?.toFixed(2) || 0}%`, 20, yPos);
+    doc.setTextColor(0, 0, 0);
+    yPos += 10;
+
+    // 메모
+    if (expenses.notes) {
+      if (yPos > pageHeight - 50) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("메모", 20, yPos);
+      yPos += 7;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const notesLines = doc.splitTextToSize(expenses.notes, pageWidth - 40);
+      doc.text(notesLines, 20, yPos);
+    }
+
+    // 생성일
+    yPos = pageHeight - 20;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(`생성일: ${new Date().toLocaleDateString("ko-KR")}`, pageWidth / 2, yPos, { align: "center" });
+
+    // PDF 다운로드
+    const fileName = `정산서_${tour.title || "투어"}_${new Date().toISOString().split("T")[0]}.pdf`;
+    doc.save(fileName);
   };
 
   if (loading) {
@@ -1065,7 +1179,16 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
 
           {activeTab === "summary" && settlement && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">정산 상세</h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">정산 상세</h3>
+                <button
+                  onClick={generateSettlementPDF}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Download className="w-4 h-4" />
+                  정산서 PDF 다운로드
+                </button>
+              </div>
               
               {/* 매출 정보 */}
               <div className="bg-blue-50 rounded-lg p-6">
