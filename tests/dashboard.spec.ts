@@ -8,16 +8,14 @@ test.describe('대시보드 테스트', () => {
     // 로그인이 필요한 경우 로그인 처리
     // 로그인 페이지로 리다이렉트되는지 확인
     if (page.url().includes('/login')) {
-      // 로그인 정보 입력 (환경 변수에서 가져오기)
-      const email = process.env.ADMIN_EMAIL || '';
-      const password = process.env.ADMIN_PASSWORD || '';
+      // 로그인 정보 입력
+      const email = 'taksoo.kim@gmail.com';
+      const password = '112077';
       
-      if (email && password) {
-        await page.fill('input[type="email"]', email);
-        await page.fill('input[type="password"]', password);
-        await page.click('button:has-text("로그인")');
-        await page.waitForURL('**/admin**', { timeout: 10000 });
-      }
+      await page.fill('input[type="email"]', email);
+      await page.fill('input[type="password"]', password);
+      await page.click('button:has-text("로그인")');
+      await page.waitForURL('**/admin**', { timeout: 10000 });
     }
   });
 
@@ -35,17 +33,28 @@ test.describe('대시보드 테스트', () => {
   test('이번 달 통계 카드 확인', async ({ page }) => {
     await page.goto('https://go.singsinggolf.kr/admin');
     
+    // 로그인 대기
+    if (page.url().includes('/login')) {
+      await page.fill('input[type="email"]', 'taksoo.kim@gmail.com');
+      await page.fill('input[type="password"]', '112077');
+      await page.click('button:has-text("로그인")');
+      await page.waitForURL('**/admin**', { timeout: 15000 });
+    }
+    
+    // 페이지 로딩 대기
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    
     // 이번 달 투어 카드
-    await expect(page.locator('text=이번 달 투어')).toBeVisible();
+    await expect(page.locator('text=이번 달 투어')).toBeVisible({ timeout: 10000 });
     
     // 이번 달 참가자 카드
-    await expect(page.locator('text=이번 달 참가자')).toBeVisible();
+    await expect(page.locator('text=이번 달 참가자')).toBeVisible({ timeout: 10000 });
     
     // 예상 매출 카드
-    await expect(page.locator('text=예상 매출')).toBeVisible();
+    await expect(page.locator('text=예상 매출')).toBeVisible({ timeout: 10000 });
     
     // 이번달 수금액 카드
-    await expect(page.locator('text=이번달 수금액')).toBeVisible();
+    await expect(page.locator('text=이번달 수금액')).toBeVisible({ timeout: 10000 });
   });
 
   test('투어 통계 카드 확인', async ({ page }) => {
@@ -64,8 +73,19 @@ test.describe('대시보드 테스트', () => {
   test('결제 통계 카드 확인', async ({ page }) => {
     await page.goto('https://go.singsinggolf.kr/admin');
     
+    // 로그인 대기
+    if (page.url().includes('/login')) {
+      await page.fill('input[type="email"]', 'taksoo.kim@gmail.com');
+      await page.fill('input[type="password"]', '112077');
+      await page.click('button:has-text("로그인")');
+      await page.waitForURL('**/admin**', { timeout: 15000 });
+    }
+    
+    // 페이지 로딩 대기
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    
     // 결제 통계 섹션 확인
-    await expect(page.locator('text=결제 통계')).toBeVisible();
+    await expect(page.locator('text=결제 통계')).toBeVisible({ timeout: 10000 });
     
     // 총 수입 카드
     await expect(page.locator('text=총 수입')).toBeVisible();
