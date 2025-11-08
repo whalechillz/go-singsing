@@ -373,11 +373,13 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     yPos += 7;
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    const marginColor = settlement.margin >= 0 ? [0, 150, 0] : [200, 0, 0];
+    const margin = settlement.margin || 0;
+    const marginRate = settlement.margin_rate || 0;
+    const marginColor = margin >= 0 ? [0, 150, 0] : [200, 0, 0];
     doc.setTextColor(marginColor[0], marginColor[1], marginColor[2]);
-    doc.text(`마진: ${formatCurrency(settlement.margin)}원`, 20, yPos);
+    doc.text(`마진: ${formatCurrency(margin)}원`, 20, yPos);
     yPos += 7;
-    doc.text(`마진률: ${settlement.margin_rate?.toFixed(2) || 0}%`, 20, yPos);
+    doc.text(`마진률: ${marginRate.toFixed(2)}%`, 20, yPos);
     doc.setTextColor(0, 0, 0);
     yPos += 10;
 
