@@ -349,11 +349,20 @@ export default function ModernDashboardContentV2() {
           margin_rate,
           total_paid_amount,
           refunded_amount,
-          tour:tour_id (
-            id,
-            start_date
-          )
+          tour_id
         `);
+
+      // 정산 데이터와 연결된 투어 정보 가져오기
+      const settlementTourIds = yearSettlements?.map(s => s.tour_id).filter(Boolean) || [];
+      const { data: settlementTours } = settlementTourIds.length > 0 ? await supabase
+        .from('singsing_tours')
+        .select('id, start_date')
+        .in('id', settlementTourIds) : { data: null };
+
+      // 올해 1월부터 현재까지의 모든 원가 데이터 (tour_expenses)
+      const { data: yearExpenses } = await supabase
+        .from('tour_expenses')
+        .select('tour_id, total_cost');
 
       // 올해 1월부터 현재까지의 모든 결제 내역 (정산 데이터가 없는 경우 대비)
       const { data: yearPayments } = await supabase
@@ -387,11 +396,11 @@ export default function ModernDashboardContentV2() {
       }
 
       // 월별 정산 데이터 집계 (tour_settlements 기반)
-      if (yearSettlements && yearTours) {
+      if (yearSettlements && settlementTours) {
         yearSettlements.forEach(settlement => {
-          if (!settlement.tour || typeof settlement.tour === 'string') return;
+          if (!settlement.tour_id) return;
           
-          const tour = Array.isArray(settlement.tour) ? settlement.tour[0] : settlement.tour;
+          const tour = settlementTours.find(t => t.id === settlement.tour_id);
           if (!tour || !tour.start_date) return;
           
           const tourDate = new Date(tour.start_date);
@@ -466,10 +475,17 @@ export default function ModernDashboardContentV2() {
             const tourParticipants = yearParticipants.filter(p => p.tour_id === tour.id);
             monthlyDataMap[monthKey].participantCount += tourParticipants.length;
             
-            // 정산 데이터가 없는 경우에만 투어 비용 계산 (투어 가격 * 참가자 수)
+            // 정산 데이터가 없는 경우, tour_expenses에서 실제 원가 가져오기
             if (monthlyDataMap[monthKey].totalCost === 0) {
-              const tourCost = (tour.price || 0) * tourParticipants.length;
-              monthlyDataMap[monthKey].totalCost += tourCost;
+              const tourExpense = yearExpenses?.find(e => e.tour_id === tour.id);
+              if (tourExpense && tourExpense.total_cost) {
+                // 실제 원가 사용
+                monthlyDataMap[monthKey].totalCost += tourExpense.total_cost;
+              } else {
+                // 원가 데이터도 없으면 투어 가격 * 참가자 수 (임시)
+                const tourCost = (tour.price || 0) * tourParticipants.length;
+                monthlyDataMap[monthKey].totalCost += tourCost;
+              }
             }
           }
         });

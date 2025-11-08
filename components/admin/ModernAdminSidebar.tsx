@@ -119,6 +119,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'tour-products', label: '여행상품 관리', href: '/admin/tour-products' },
         { id: 'marketing-content', label: '마케팅 콘텐츠', href: '/admin/marketing-content' },
         { id: 'attractions', label: '스팟 관리', href: '/admin/attractions' },
+        { id: 'settlements', label: '정산 관리', href: '/admin/settlements' },
       ]
     },
     { 
