@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import jsPDF from "jspdf";
 import {
   Calculator,
   DollarSign,
@@ -345,118 +344,412 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
   };
 
   // 정산서 PDF 생성
+  const generateSettlementHTML = (): string => {
+    if (!settlement || !expenses || !tour) return "";
+
+    const margin = settlement.margin || 0;
+    const marginRate = settlement.margin_rate || 0;
+    const marginColor = margin >= 0 ? "#10b981" : "#ef4444";
+    
+    const busTotal = (expenses.bus_cost || 0) + (expenses.bus_driver_cost || 0) + (expenses.toll_fee || 0) + (expenses.parking_fee || 0);
+    const guideTotal = (expenses.guide_fee || 0) + (expenses.guide_meal_cost || 0) + (expenses.guide_accommodation_cost || 0) + (expenses.guide_other_cost || 0);
+    const otherTotal = (expenses.accommodation_cost || 0) + (expenses.restaurant_cost || 0) + (expenses.attraction_fee || 0) + (expenses.insurance_cost || 0) + (expenses.other_expenses_total || 0);
+    
+    const comPerPerson = participantCount > 0 ? Math.floor(margin / participantCount) : 0;
+
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>정산서 - ${tour.title || "투어"}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkSystemFont, 'Malgun Gothic', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #2c5282 0%, #4a6fa5 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    .header .subtitle {
+      font-size: 18px;
+      opacity: 0.95;
+      margin-bottom: 20px;
+    }
+    
+    .header .company-info {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.8;
+    }
+    
+    .content {
+      padding: 40px;
+    }
+    
+    .section {
+      margin-bottom: 40px;
+    }
+    
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #2c5282;
+      padding: 15px 20px;
+      background: #e7f3ff;
+      margin-bottom: 20px;
+      border-left: 5px solid #2c5282;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 15px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+    
+    .info-label {
+      font-weight: 500;
+      color: #666;
+    }
+    
+    .info-value {
+      font-weight: 700;
+      color: #333;
+    }
+    
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: white;
+    }
+    
+    .table th {
+      background: #2c5282;
+      color: white;
+      padding: 12px 15px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    
+    .table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .text-right {
+      text-align: right;
+    }
+    
+    .text-bold {
+      font-weight: 700;
+    }
+    
+    .highlight-box {
+      background: ${margin >= 0 ? '#ecfdf5' : '#fef2f2'};
+      border: 2px solid ${marginColor};
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .highlight-box h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: ${marginColor};
+      margin-bottom: 15px;
+    }
+    
+    .highlight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    
+    .highlight-item {
+      text-align: center;
+    }
+    
+    .highlight-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    
+    .highlight-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: ${marginColor};
+    }
+    
+    .notes {
+      background: #fff9e6;
+      border-left: 4px solid #f59e0b;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    
+    .notes-title {
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 10px;
+    }
+    
+    .notes-content {
+      color: #78350f;
+      white-space: pre-line;
+      line-height: 1.8;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 30px;
+      border-top: 2px solid #e5e7eb;
+      color: #666;
+      font-size: 13px;
+    }
+    
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      
+      .container {
+        box-shadow: none;
+      }
+      
+      .section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>정산서</h1>
+      <div class="subtitle">${tour.title || "투어"}</div>
+      <div class="company-info">
+        수원시 영통구 법조로149번길 200<br>
+        고객센터 TEL 031-215-3990
+      </div>
+    </div>
+    
+    <div class="content">
+      <!-- 투어 정보 -->
+      <div class="section">
+        <div class="section-title">투어 정보</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">투어명</span>
+            <span class="info-value">${tour.title || "-"}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">시작일</span>
+            <span class="info-value">${tour.start_date ? new Date(tour.start_date).toLocaleDateString("ko-KR") : "-"}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">종료일</span>
+            <span class="info-value">${tour.end_date ? new Date(tour.end_date).toLocaleDateString("ko-KR") : "-"}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">참가자 수</span>
+            <span class="info-value">${participantCount}명</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 매출 정보 -->
+      <div class="section">
+        <div class="section-title">매출 정보</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th class="text-right">금액</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>계약 매출</td>
+              <td class="text-right">${formatCurrency(settlement.contract_revenue)}원</td>
+            </tr>
+            <tr>
+              <td>완납 금액</td>
+              <td class="text-right">${formatCurrency(settlement.total_paid_amount)}원</td>
+            </tr>
+            <tr>
+              <td>환불 금액</td>
+              <td class="text-right">${formatCurrency(settlement.refunded_amount)}원</td>
+            </tr>
+            <tr class="text-bold" style="background: #e7f3ff;">
+              <td>정산 금액</td>
+              <td class="text-right" style="color: #2563eb; font-size: 16px;">${formatCurrency(settlement.settlement_amount)}원</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- 원가 정보 -->
+      <div class="section">
+        <div class="section-title">원가 정보</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th class="text-right">금액</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>골프장 총 비용</td>
+              <td class="text-right">${formatCurrency(expenses.golf_course_total || 0)}원</td>
+            </tr>
+            <tr>
+              <td>버스 비용</td>
+              <td class="text-right">${formatCurrency(busTotal)}원</td>
+            </tr>
+            <tr>
+              <td>가이드 비용</td>
+              <td class="text-right">${formatCurrency(guideTotal)}원</td>
+            </tr>
+            <tr>
+              <td>경비 지출</td>
+              <td class="text-right">${formatCurrency(expenses.meal_expenses_total || 0)}원</td>
+            </tr>
+            <tr>
+              <td>기타 비용</td>
+              <td class="text-right">${formatCurrency(otherTotal)}원</td>
+            </tr>
+            <tr class="text-bold" style="background: #fff7ed;">
+              <td>총 원가</td>
+              <td class="text-right" style="color: #ea580c; font-size: 16px;">${formatCurrency(settlement.total_cost)}원</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- 마진 정보 -->
+      <div class="section">
+        <div class="highlight-box">
+          <h3>마진 정보</h3>
+          <div class="highlight-grid">
+            <div class="highlight-item">
+              <div class="highlight-label">마진</div>
+              <div class="highlight-value">${formatCurrency(margin)}원</div>
+            </div>
+            <div class="highlight-item">
+              <div class="highlight-label">마진률</div>
+              <div class="highlight-value">${marginRate.toFixed(2)}%</div>
+            </div>
+            <div class="highlight-item">
+              <div class="highlight-label">1인당 COM</div>
+              <div class="highlight-value">${formatCurrency(comPerPerson)}원</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      ${expenses.notes ? `
+      <!-- 메모 -->
+      <div class="section">
+        <div class="notes">
+          <div class="notes-title">메모</div>
+          <div class="notes-content">${expenses.notes.replace(/\n/g, '<br>')}</div>
+        </div>
+      </div>
+      ` : ''}
+    </div>
+    
+    <div class="footer">
+      생성일: ${new Date().toLocaleDateString("ko-KR")} ${new Date().toLocaleTimeString("ko-KR")}
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
   const generateSettlementPDF = () => {
     if (!settlement || !expenses || !tour) return;
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    let yPos = 20;
-
-    // 제목
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("정산서", pageWidth / 2, yPos, { align: "center" });
-    yPos += 10;
-
-    // 투어 정보
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`투어명: ${tour.title || ""}`, 20, yPos);
-    yPos += 7;
-    doc.text(`시작일: ${tour.start_date ? new Date(tour.start_date).toLocaleDateString("ko-KR") : ""}`, 20, yPos);
-    yPos += 7;
-    doc.text(`종료일: ${tour.end_date ? new Date(tour.end_date).toLocaleDateString("ko-KR") : ""}`, 20, yPos);
-    yPos += 10;
-
-    // 매출 정보
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("매출 정보", 20, yPos);
-    yPos += 7;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`계약 매출: ${formatCurrency(settlement.contract_revenue)}원`, 20, yPos);
-    yPos += 6;
-    doc.text(`완납 금액: ${formatCurrency(settlement.total_paid_amount)}원`, 20, yPos);
-    yPos += 6;
-    doc.text(`환불 금액: ${formatCurrency(settlement.refunded_amount)}원`, 20, yPos);
-    yPos += 6;
-    doc.setFont("helvetica", "bold");
-    doc.text(`정산 금액: ${formatCurrency(settlement.settlement_amount)}원`, 20, yPos);
-    yPos += 10;
-
-    // 원가 정보
-    if (yPos > pageHeight - 50) {
-      doc.addPage();
-      yPos = 20;
+    const html = generateSettlementHTML();
+    
+    // 새 창에서 HTML 열기
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      
+      // 로드 후 인쇄 대화상자 열기
+      printWindow.onload = () => {
+        printWindow.print();
+      };
     }
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("원가 정보", 20, yPos);
-    yPos += 7;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`골프장 총 비용: ${formatCurrency(expenses.golf_course_total || 0)}원`, 20, yPos);
-    yPos += 6;
-    doc.text(`버스 비용: ${formatCurrency((expenses.bus_cost || 0) + (expenses.bus_driver_cost || 0) + (expenses.toll_fee || 0) + (expenses.parking_fee || 0))}원`, 20, yPos);
-    yPos += 6;
-    doc.text(`가이드 비용: ${formatCurrency((expenses.guide_fee || 0) + (expenses.guide_meal_cost || 0) + (expenses.guide_accommodation_cost || 0) + (expenses.guide_other_cost || 0))}원`, 20, yPos);
-    yPos += 6;
-    doc.text(`경비 지출: ${formatCurrency(expenses.meal_expenses_total || 0)}원`, 20, yPos);
-    yPos += 6;
-    doc.text(`기타 비용: ${formatCurrency((expenses.accommodation_cost || 0) + (expenses.restaurant_cost || 0) + (expenses.attraction_fee || 0) + (expenses.insurance_cost || 0) + (expenses.other_expenses_total || 0))}원`, 20, yPos);
-    yPos += 6;
-    doc.setFont("helvetica", "bold");
-    doc.text(`총 원가: ${formatCurrency(settlement.total_cost)}원`, 20, yPos);
-    yPos += 10;
+  };
+  
+  const downloadSettlementHTML = () => {
+    if (!settlement || !expenses || !tour) return;
 
-    // 마진 정보
-    if (yPos > pageHeight - 50) {
-      doc.addPage();
-      yPos = 20;
-    }
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("마진 정보", 20, yPos);
-    yPos += 7;
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    const margin = settlement.margin || 0;
-    const marginRate = settlement.margin_rate || 0;
-    const marginColor = margin >= 0 ? [0, 150, 0] : [200, 0, 0];
-    doc.setTextColor(marginColor[0], marginColor[1], marginColor[2]);
-    doc.text(`마진: ${formatCurrency(margin)}원`, 20, yPos);
-    yPos += 7;
-    doc.text(`마진률: ${marginRate.toFixed(2)}%`, 20, yPos);
-    doc.setTextColor(0, 0, 0);
-    yPos += 10;
-
-    // 메모
-    if (expenses.notes) {
-      if (yPos > pageHeight - 50) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("메모", 20, yPos);
-      yPos += 7;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      const notesLines = doc.splitTextToSize(expenses.notes, pageWidth - 40);
-      doc.text(notesLines, 20, yPos);
-    }
-
-    // 생성일
-    yPos = pageHeight - 20;
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text(`생성일: ${new Date().toLocaleDateString("ko-KR")}`, pageWidth / 2, yPos, { align: "center" });
-
-    // PDF 다운로드
-    const fileName = `정산서_${tour.title || "투어"}_${new Date().toISOString().split("T")[0]}.pdf`;
-    doc.save(fileName);
+    const html = generateSettlementHTML();
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `정산서_${tour.title || "투어"}_${new Date().toISOString().split("T")[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -1690,7 +1983,14 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
                     <Download className="w-4 h-4" />
-                    정산서 PDF 다운로드
+                    정산서 인쇄
+                  </button>
+                  <button
+                    onClick={downloadSettlementHTML}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    <Download className="w-4 h-4" />
+                    정산서 HTML 다운로드
                   </button>
                 </div>
               </div>
