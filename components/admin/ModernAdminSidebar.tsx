@@ -66,6 +66,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     // 구체적인 경로를 먼저 체크
     if (pathname.includes('/room-assignment')) return 'room-assignment';
     if (pathname.includes('/tee-time')) return 'tee-time';
+    if (pathname.startsWith('/admin/settlements')) return 'settlements';
     if (pathname.startsWith('/admin/tours')) return 'tours';
     if (pathname.startsWith('/admin/tour-products')) return 'tour-products';
     if (pathname.startsWith('/admin/marketing-content')) return 'marketing-content';
