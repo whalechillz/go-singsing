@@ -321,10 +321,12 @@ interface MonthlySettlement {
 
 ## 구현 단계
 
-### Phase 1: 데이터베이스 설계 및 마이그레이션
-- [ ] `tour_expenses` 테이블 생성
-- [ ] `tour_settlements` 테이블 생성
-- [ ] 인덱스 및 제약조건 설정
+### Phase 1: 데이터베이스 설계 및 마이그레이션 ✅ (완료)
+- [x] `tour_expenses` 테이블 구조 개선
+- [x] `tour_settlements` 테이블 생성
+- [x] 인덱스 및 제약조건 설정
+- [x] 컬럼 설명 추가
+- [x] 자동 계산 트리거 생성
 - [ ] 기존 데이터 마이그레이션 (선택사항)
 
 ### Phase 2: 투어별 정산 관리 UI

@@ -358,11 +358,20 @@ CREATE TABLE user_roles (
   - `tour_expenses` 테이블: 투어별 원가 상세 관리
   - `tour_settlements` 테이블: 투어별 정산 요약
 - **구현 단계**:
-  1. 데이터베이스 설계 및 마이그레이션
-  2. 투어별 정산 관리 UI
-  3. 정산 계산 로직
+  1. 데이터베이스 설계 및 마이그레이션 ✅ (완료)
+  2. 투어별 정산 관리 UI ✅ (완료)
+     - 정산 관리 페이지 생성 ✅
+     - 정산 관리 컴포넌트 생성 ✅
+     - 원가 입력 폼 구현 ✅ (골프장, 버스, 가이드, 경비, 기타)
+     - 정산 요약 표시 ✅ (매출, 원가, 마진, 마진률)
+     - 정산 상세 탭 ✅
+  3. 정산 계산 로직 (진행 중)
   4. 월별 정산 리포트 개선
   5. 정산서 생성
   6. 통계 및 리포트
 - **예상 작업 시간**: 21-28시간
 - **상세 문서**: `docs/SETTLEMENT_SYSTEM_PLAN.md`
+- **변경 파일**:
+  - `app/admin/tours/[tourId]/settlement/page.tsx`: 정산 관리 페이지
+  - `components/admin/tours/TourSettlementManager.tsx`: 정산 관리 컴포넌트
+  - `app/admin/tours/[tourId]/page.tsx`: 정산 관리 탭 추가

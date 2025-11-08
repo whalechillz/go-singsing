@@ -44,8 +44,9 @@ test.describe('대시보드 테스트', () => {
     await expect(title.first()).toBeVisible({ timeout: 15000 });
     await expect(title.first()).toContainText(/대시보드|싱싱골프투어/, { timeout: 10000 });
     
-    // 현재 시간 표시 확인 (더 유연한 패턴)
-    await expect(page.locator('text=/\\d{4}년|\\d{1,2}월|\\d{1,2}일|오후|오전/')).toBeVisible({ timeout: 10000 });
+    // 현재 시간 표시 확인 (더 유연한 패턴, 첫 번째 요소만)
+    const timeLocator = page.locator('text=/\\d{4}년|\\d{1,2}월|\\d{1,2}일|오후|오전/').first();
+    await expect(timeLocator).toBeVisible({ timeout: 10000 });
   });
 
   test('이번 달 통계 카드 확인', async ({ page }) => {
@@ -86,40 +87,40 @@ test.describe('대시보드 테스트', () => {
     // 결제 통계 섹션 확인
     await expect(page.locator('text=결제 통계')).toBeVisible({ timeout: 15000 });
     
-    // 총 수입 카드
-    await expect(page.locator('text=총 수입')).toBeVisible({ timeout: 15000 });
+    // 총 수입 카드 (첫 번째 요소만)
+    await expect(page.locator('text=총 수입').first()).toBeVisible({ timeout: 15000 });
     
     // 계약금 카드
-    await expect(page.locator('text=계약금')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=계약금').first()).toBeVisible({ timeout: 15000 });
     
     // 잔금 카드
-    await expect(page.locator('text=잔금')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=잔금').first()).toBeVisible({ timeout: 15000 });
     
     // 전액 입금 카드
-    await expect(page.locator('text=전액 입금')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=전액 입금').first()).toBeVisible({ timeout: 15000 });
     
     // 완납 금액 카드
-    await expect(page.locator('text=완납 금액')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=완납 금액').first()).toBeVisible({ timeout: 15000 });
     
-    // 미수금 카드
-    await expect(page.locator('text=미수금')).toBeVisible({ timeout: 15000 });
+    // 미수금 카드 (결제 통계 섹션의 미수금만)
+    await expect(page.locator('text=결제 통계').locator('..').locator('text=미수금').first()).toBeVisible({ timeout: 15000 });
     
     // 미납 카드
-    await expect(page.locator('text=미납')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=미납').first()).toBeVisible({ timeout: 15000 });
     
     // 정산 금액 카드
-    await expect(page.locator('text=정산 금액')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=정산 금액').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('미수금 및 수금률 카드 확인', async ({ page }) => {
     // 로딩 완료 대기
     await page.waitForLoadState('networkidle', { timeout: 20000 });
     
-    // 미수금 카드
-    await expect(page.locator('text=미수금')).toBeVisible({ timeout: 15000 });
+    // 미수금 카드 (미수금 및 수금률 섹션의 미수금만)
+    await expect(page.locator('text=미수금').filter({ hasText: /^미수금$/ }).first()).toBeVisible({ timeout: 15000 });
     
     // 수금률 카드
-    await expect(page.locator('text=수금률')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=수금률').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('월간/연간 전환 기능 확인', async ({ page }) => {
@@ -174,7 +175,7 @@ test.describe('대시보드 테스트', () => {
     
     // 주요 카드의 값이 숫자 형식인지 확인
     const monthlyToursText = await page.locator('text=/\\d+개/').first().textContent();
-    expect(monthlyToursText).toMatch(/\\d+개/);
+    expect(monthlyToursText).toMatch(/\d+개/);
   });
   
   test('결제 통계 값 확인', async ({ page }) => {

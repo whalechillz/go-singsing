@@ -1,0 +1,146 @@
+
+> singsinggolf@0.1.0 test:e2e
+> playwright test tests/dashboard.spec.ts
+
+
+Running 11 tests using 4 workers
+
+[1A[2K[1/11] [chromium] › tests/dashboard.spec.ts:38:7 › 대시보드 테스트 › 대시보드 주요 내용 표시 확인
+[1A[2K[2/11] [chromium] › tests/dashboard.spec.ts:68:7 › 대시보드 테스트 › 투어 통계 카드 확인
+[1A[2K[3/11] [chromium] › tests/dashboard.spec.ts:82:7 › 대시보드 테스트 › 결제 통계 카드 확인
+[1A[2K[4/11] [chromium] › tests/dashboard.spec.ts:51:7 › 대시보드 테스트 › 이번 달 통계 카드 확인
+[1A[2K[5/11] [chromium] › tests/dashboard.spec.ts:114:7 › 대시보드 테스트 › 미수금 및 수금률 카드 확인
+[1A[2K  1) [chromium] › tests/dashboard.spec.ts:82:7 › 대시보드 테스트 › 결제 통계 카드 확인 ────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=총 수입')
+    Expected: visible
+    Error: strict mode violation: locator('text=총 수입') resolved to 2 elements:
+        1) <p class="text-sm font-medium text-gray-600">총 수입</p> aka getByRole('link', { name: '총 수입 127,420,000원 이번달: 0원' })
+        2) <p class="text-xs text-indigo-600 mt-2">총 수입: 127,420,000원 - 환불: 4,064,000원</p> aka getByRole('link', { name: '정산 금액 123,356,000원 총 수입: 127,' })
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for locator('text=총 수입')[22m
+
+
+      88 |     
+      89 |     // 총 수입 카드
+    > 90 |     await expect(page.locator('text=총 수입')).toBeVisible({ timeout: 15000 });
+         |                                             ^
+      91 |     
+      92 |     // 계약금 카드
+      93 |     await expect(page.locator('text=계약금')).toBeVisible({ timeout: 15000 });
+        at /Users/prowhale/MASLABS/go2.singsinggolf.kr/tests/dashboard.spec.ts:90:45
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dashboard-대시보드-테스트-결제-통계-카드-확인-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dashboard-대시보드-테스트-결제-통계-카드-확인-chromium/error-context.md
+
+
+[1A[2K  2) [chromium] › tests/dashboard.spec.ts:38:7 › 대시보드 테스트 › 대시보드 주요 내용 표시 확인 ───────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=/\\d{4}년|\\d{1,2}월|\\d{1,2}일|오후|오전/')
+    Expected: visible
+    Error: strict mode violation: locator('text=/\\d{4}년|\\d{1,2}월|\\d{1,2}일|오후|오전/') resolved to 4 elements:
+        1) <p class="text-gray-500 mt-1">2025년 11월 8일 토요일 오후 08:44</p> aka getByText('년 11월 8일 토요일 오후 08:44')
+        2) <h2 class="font-bold text-gray-900">다가오는 투어 (7일 이내)</h2> aka getByRole('heading', { name: '다가오는 투어 (7일 이내)' })
+        3) <div class="font-medium text-gray-900">[파인비치+솔라시도] 골프+식도락 럭셔리 2박3일 해남버스핑</div> aka getByText('[파인비치+솔라시도] 골프+식도락 럭셔리 2박3')
+        4) <div class="font-medium text-gray-900">[고창] 2박3일 고창버스핑</div> aka getByText('[고창] 2박3일 고창버스핑')
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('text=/\\d{4}년|\\d{1,2}월|\\d{1,2}일|오후|오전/')[22m
+
+
+      46 |     
+      47 |     // 현재 시간 표시 확인 (더 유연한 패턴)
+    > 48 |     await expect(page.locator('text=/\\d{4}년|\\d{1,2}월|\\d{1,2}일|오후|오전/')).toBeVisible({ timeout: 10000 });
+         |                                                                            ^
+      49 |   });
+      50 |
+      51 |   test('이번 달 통계 카드 확인', async ({ page }) => {
+        at /Users/prowhale/MASLABS/go2.singsinggolf.kr/tests/dashboard.spec.ts:48:76
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dashboard-대시보드-테스트-대시보드-주요-내용-표시-확인-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dashboard-대시보드-테스트-대시보드-주요-내용-표시-확인-chromium/error-context.md
+
+
+[1A[2K[6/11] [chromium] › tests/dashboard.spec.ts:153:7 › 대시보드 테스트 › 카드 값이 숫자로 표시되는지 확인
+[1A[2K[7/11] [chromium] › tests/dashboard.spec.ts:125:7 › 대시보드 테스트 › 월간/연간 전환 기능 확인
+[1A[2K[8/11] [chromium] › tests/dashboard.spec.ts:138:7 › 대시보드 테스트 › 새로고침 버튼 확인
+[1A[2K[9/11] [chromium] › tests/dashboard.spec.ts:180:7 › 대시보드 테스트 › 결제 통계 값 확인
+[1A[2K  3) [chromium] › tests/dashboard.spec.ts:153:7 › 대시보드 테스트 › 카드 값이 숫자로 표시되는지 확인 ────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoMatch[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected pattern: [32m/\\d+개/[39m
+    Received string:  [31m"8개"[39m
+
+      175 |     // 주요 카드의 값이 숫자 형식인지 확인
+      176 |     const monthlyToursText = await page.locator('text=/\\d+개/').first().textContent();
+    > 177 |     expect(monthlyToursText).toMatch(/\\d+개/);
+          |                              ^
+      178 |   });
+      179 |   
+      180 |   test('결제 통계 값 확인', async ({ page }) => {
+        at /Users/prowhale/MASLABS/go2.singsinggolf.kr/tests/dashboard.spec.ts:177:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dashboard-대시보드-테스트-카드-값이-숫자로-표시되는지-확인-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dashboard-대시보드-테스트-카드-값이-숫자로-표시되는지-확인-chromium/error-context.md
+
+
+[1A[2K  4) [chromium] › tests/dashboard.spec.ts:114:7 › 대시보드 테스트 › 미수금 및 수금률 카드 확인 ───────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=미수금')
+    Expected: visible
+    Error: strict mode violation: locator('text=미수금') resolved to 4 elements:
+        1) <div class="font-medium text-gray-900">미수금 확인 필요</div> aka getByText('미수금 확인 필요')
+        2) <div class="text-sm text-gray-600">이번 달 미수금: 3,280,000원</div> aka getByText('이번 달 미수금: 3,280,000원')
+        3) <p class="text-sm font-medium text-orange-700">미수금</p> aka getByRole('link', { name: '미수금 19,210,000원 결제 관리 보기 →' })
+        4) <p class="text-sm font-medium text-gray-600">미수금</p> aka getByText('미수금').nth(3)
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for locator('text=미수금')[22m
+
+
+      117 |     
+      118 |     // 미수금 카드
+    > 119 |     await expect(page.locator('text=미수금')).toBeVisible({ timeout: 15000 });
+          |                                            ^
+      120 |     
+      121 |     // 수금률 카드
+      122 |     await expect(page.locator('text=수금률')).toBeVisible({ timeout: 15000 });
+        at /Users/prowhale/MASLABS/go2.singsinggolf.kr/tests/dashboard.spec.ts:119:44
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dashboard-대시보드-테스트-미수금-및-수금률-카드-확인-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dashboard-대시보드-테스트-미수금-및-수금률-카드-확인-chromium/error-context.md
+
+
+[1A[2K[10/11] [chromium] › tests/dashboard.spec.ts:216:7 › 대시보드 테스트 › 빠른 작업 섹션 확인
+[1A[2K[11/11] [chromium] › tests/dashboard.spec.ts:208:7 › 대시보드 테스트 › 다가오는 투어 섹션 확인
+[1A[2K  4 failed
+    [chromium] › tests/dashboard.spec.ts:38:7 › 대시보드 테스트 › 대시보드 주요 내용 표시 확인 ────────────────────────
+    [chromium] › tests/dashboard.spec.ts:82:7 › 대시보드 테스트 › 결제 통계 카드 확인 ─────────────────────────────
+    [chromium] › tests/dashboard.spec.ts:114:7 › 대시보드 테스트 › 미수금 및 수금률 카드 확인 ────────────────────────
+    [chromium] › tests/dashboard.spec.ts:153:7 › 대시보드 테스트 › 카드 값이 숫자로 표시되는지 확인 ─────────────────────
+  7 passed (1.3m)
+
+  Serving HTML report at http://localhost:51565. Press Ctrl+C to quit.

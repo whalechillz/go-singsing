@@ -10,6 +10,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
+    "deploy": "bash scripts/deploy-and-check.sh",
     "migrate": "tsx scripts/migrate-participants.ts",
     "create-migration-template": "tsx scripts/create-migration-template.ts",
     "check-participants": "tsx scripts/debug/check-participant-count.ts",
@@ -50,7 +51,6 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.7",
     "@types/node": "^20",
     "@types/react": "^19",

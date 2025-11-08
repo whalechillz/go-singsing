@@ -12,7 +12,7 @@ import TeeTimeAssignmentManager from "@/components/TeeTimeAssignmentManager";
 import TourSchedulePreview from "@/components/TourSchedulePreview";
 
 
-import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock, Link } from 'lucide-react';
+import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock, Link, Calculator } from 'lucide-react';
 import { useRouter } from "next/navigation";
 
 const TABS = [
@@ -21,6 +21,7 @@ const TABS = [
   { key: "schedules", label: "일정 관리", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티타임 관리", icon: <Flag className="w-4 h-4" /> },
   { key: "schedule-preview", label: "문서 미리보기", icon: <FileText className="w-4 h-4" /> },
+  { key: "settlement", label: "정산 관리", icon: <Calculator className="w-4 h-4" /> },
 ];
 
 type Tour = {
@@ -116,6 +117,17 @@ const TourDetailPage: React.FC = () => {
         )}
 
         {activeTab === "schedule-preview" && <TourSchedulePreview tourId={tourId} />}
+        {activeTab === "settlement" && (
+          <div className="p-6">
+            <a
+              href={`/admin/tours/${tourId}/settlement`}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Calculator className="w-4 h-4" />
+              정산 관리 페이지로 이동
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
