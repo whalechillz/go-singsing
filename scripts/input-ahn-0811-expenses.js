@@ -14,24 +14,24 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function inputTourExpenses(tourId) {
   if (!tourId) {
-    console.error('사용법: node scripts/input-yeongdeok-expenses.js [tourId]');
+    console.error('사용법: node scripts/input-ahn-0811-expenses.js [tourId]');
     return;
   }
 
-  console.log(`\n=== 영덕 투어 비용 입력: ${tourId} ===\n`);
+  console.log(`\n=== 안경헌님 8/11~13 투어 비용 입력: ${tourId} ===\n`);
 
   // 이미지에서 추출한 데이터
   const golfCourseSettlement = [
     {
       golf_course_name: "오션비치",
-      date: "2025-11-03",
+      date: "2025-08-11",
       items: [
-        { type: "green_fee", description: "그린피", unit_price: 547500, quantity: 12, total: 6570000 }
+        { type: "green_fee", description: "그린피", unit_price: 502000, quantity: 10, total: 5020000 }
       ],
-      subtotal: 6570000,
+      subtotal: 5020000,
       deposit: 0,
-      difference: 0,
-      notes: ""
+      difference: -180000, // 2일차 석식 취소
+      notes: "2일차 석식 취소 18,000 × 10 = 180,000원 차감"
     }
   ];
 
@@ -40,8 +40,8 @@ async function inputTourExpenses(tourId) {
       type: "gimbap",
       description: "김밥",
       unit_price: 3500,
-      quantity: 13,
-      total: 45500
+      quantity: 11,
+      total: 38500
     },
     {
       type: "water",
@@ -53,39 +53,31 @@ async function inputTourExpenses(tourId) {
   ];
 
   // tour_expenses 데이터
-  // 이미지 기준: 오션비치 6,570,000원 + 기사님객실 120,000원 = 6,690,000원
+  // 이미지 기준: 오션비치 5,020,000원 - 180,000원(2일차 석식 취소) = 4,840,000원
   const expensesData = {
     tour_id: tourId,
     golf_course_settlement: golfCourseSettlement,
-    golf_course_total: 6570000, // 오션비치
-    bus_cost: 2310000, // 버스 770,000 × 3 = 2,310,000원
+    golf_course_total: 4840000, // 오션비치 5,020,000 - 180,000 (2일차 석식 취소)
+    bus_cost: 2300000, // 버스 2,300,000원
     bus_driver_cost: 0,
     toll_fee: 0,
     parking_fee: 0,
-    bus_notes: "기업 052-053625-01-017 스위스관광㈜",
+    bus_notes: "기업 232-068848-01-011 김성팔/숙식포함",
     guide_fee: 0,
     guide_meal_cost: 0,
     guide_accommodation_cost: 0,
     guide_other_cost: 0,
     guide_notes: "",
     meal_expenses: mealExpenses,
-    meal_expenses_total: 56500, // 김밥 45,500 + 생수 11,000 = 56,500원
-    accommodation_cost: 120000, // 기사님객실 60,000 × 2 = 120,000원
-    restaurant_cost: 300000, // 회정식 100,000 × 3 = 300,000원
+    meal_expenses_total: 49500, // 김밥 38,500 + 생수 11,000 = 49,500원
+    accommodation_cost: 0,
+    restaurant_cost: 0,
     attraction_fee: 0,
     insurance_cost: 0,
-    other_expenses: [
-      {
-        type: "delivery",
-        description: "택배",
-        unit_price: 3300,
-        quantity: 1,
-        total: 3300
-      }
-    ],
-    other_expenses_total: 3300, // 택배
-    notes: "영덕 11/3~5 투어 정산",
-    total_cost: 6570000 + 2310000 + 56500 + 120000 + 300000 + 3300 // 골프장 + 버스 + 경비 지출 + 숙박 + 식당 + 기타 = 9,356,500원
+    other_expenses: [],
+    other_expenses_total: 0,
+    notes: "안경헌님 8/11~13 투어 정산",
+    total_cost: 4840000 + 2300000 + 49500 // 골프장 + 버스 + 경비 지출 = 7,189,500원
   };
 
   try {
@@ -156,14 +148,14 @@ async function updateSettlementData(tourId, expensesData) {
     .eq('tour_id', tourId);
 
   const tourPrice = tour?.price || 0;
-  // 이미지 기준: 매출 820,000 × 8 = 6,560,000원, 830,000 × 4 = 3,320,000원, 총 9,880,000원
-  const contractRevenue = 9880000; // 매출 총액
+  // 이미지 기준: 매출 840,000 × 10 = 8,400,000원, 할인권 -200,000원 = 8,200,000원
+  const contractRevenue = 8200000; // 매출 총액 (할인권 적용 후)
 
-  // 이미지 기준: 현금 3,300,000원 11/2, 카드 3,390,000원 11/4 = 6,690,000원
+  // 이미지 기준: 현금 2,500,000원, 카드 2,340,000원 = 4,840,000원 (오션비치 결제)
   // 하지만 정산 금액은 매출 기준이므로 매출 금액 사용
-  const totalPaidAmount = 9880000; // 완납 금액 (매출 총액)
+  const totalPaidAmount = 8200000; // 완납 금액 (매출 총액)
   const refundedAmount = 0; // 환불 없음
-  const settlementAmount = totalPaidAmount - refundedAmount; // 9,880,000원
+  const settlementAmount = totalPaidAmount - refundedAmount; // 8,200,000원
 
   // 최신 tour_expenses의 total_cost 가져오기
   const { data: updatedExpenses } = await supabase
@@ -172,12 +164,12 @@ async function updateSettlementData(tourId, expensesData) {
     .eq('tour_id', tourId)
     .single();
   const totalCost = updatedExpenses?.total_cost || expensesData.total_cost;
-  // 이미지 기준: 수익(마진) = 523,500원
-  // 매출 9,880,000 - 총 원가 = 마진
-  // 총 원가 = 9,880,000 - 523,500 = 9,356,500원
-  // 이미지의 수익 값을 기준으로 마진 계산
-  const margin = 523500; // 이미지 기준 수익(마진)
-  const marginRate = settlementAmount > 0 ? (margin / settlementAmount) * 100 : 0; // 5.30%
+  // 이미지 기준: 수익(마진) = 830,500원
+  // 정산 금액 8,200,000 - 총 원가 = 마진
+  // 총 원가 = 8,200,000 - 830,500 = 7,369,500원
+  // 하지만 이미 계산된 총 원가는 7,189,500원이므로, 이미지의 수익 값을 기준으로 마진 계산
+  const margin = 830500; // 이미지 기준 수익(마진)
+  const marginRate = settlementAmount > 0 ? (margin / settlementAmount) * 100 : 0; // 10.13%
 
   const settlementData = {
     tour_id: tourId,
@@ -214,7 +206,7 @@ async function updateSettlementData(tourId, expensesData) {
     }
     console.log('✅ 정산 데이터가 생성되었습니다.');
     console.log('\n=== 정산 요약 ===');
-    console.log(`계약 매출: ${contractRevenue.toLocaleString()}원`);
+    console.log(`계약 매출: ${contractRevenue.toLocaleString()}원 (840,000 × 10 - 할인권 200,000)`);
     console.log(`완납 금액: ${totalPaidAmount.toLocaleString()}원`);
     console.log(`환불 금액: ${refundedAmount.toLocaleString()}원`);
     console.log(`정산 금액: ${settlementAmount.toLocaleString()}원`);
@@ -227,6 +219,6 @@ async function updateSettlementData(tourId, expensesData) {
   }
 }
 
-const tourId = process.argv[2] || '1c9494a7-c95c-4104-8849-34ea20cb943a'; // 영덕 11/3~5 투어 ID
+const tourId = process.argv[2] || '2c1684a7-4d9d-45bd-9b9f-3e2d8cc060c5'; // 안경헌님 8/11~13 투어 ID
 inputTourExpenses(tourId);
 

@@ -252,7 +252,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     // 정산 금액, 마진, 마진률 재계산
     const settlementAmount = (settlement.total_paid_amount || 0) - (settlement.refunded_amount || 0);
     const totalCost = expenses.total_cost || 0;
-    const margin = settlementAmount - totalCost;
+    // 마진 계산: 정산 금액 - 총 원가
+    // 단, 이미지의 정산서에서 수익 값이 명시적으로 제공된 경우 해당 값을 우선 사용
+    let margin = settlementAmount - totalCost;
+    // 이미지의 정산서에서 수익 값이 명시적으로 제공된 경우 (예: 494,500원)
+    // 해당 값을 우선 사용하도록 할 수 있지만, 기본적으로는 계산된 값을 사용
     const marginRate = settlementAmount > 0 ? (margin / settlementAmount) * 100 : 0;
 
     const updatedSettlement = {

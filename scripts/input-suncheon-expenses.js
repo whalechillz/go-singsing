@@ -14,50 +14,57 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function inputTourExpenses(tourId) {
   if (!tourId) {
-    console.error('사용법: node scripts/input-yeongdeok-expenses.js [tourId]');
+    console.error('사용법: node scripts/input-suncheon-expenses.js [tourId]');
     return;
   }
 
-  console.log(`\n=== 영덕 투어 비용 입력: ${tourId} ===\n`);
+  console.log(`\n=== 순천 투어 비용 입력: ${tourId} ===\n`);
 
   // 이미지에서 추출한 데이터
   const golfCourseSettlement = [
     {
-      golf_course_name: "오션비치",
-      date: "2025-11-03",
+      golf_course_name: "파인힐스",
+      date: "2025-09-08",
       items: [
-        { type: "green_fee", description: "그린피", unit_price: 547500, quantity: 12, total: 6570000 }
+        { type: "green_fee", description: "그린피", unit_price: 489000, quantity: 20, total: 9780000 }
       ],
-      subtotal: 6570000,
+      subtotal: 9780000,
       deposit: 0,
       difference: 0,
-      notes: ""
+      notes: "576,000(기존)에서 할인됨, 1일차 골프 중식 공제 110,000원"
     }
   ];
 
   const mealExpenses = [
     {
+      type: "external_meal",
+      description: "외부식",
+      unit_price: 28000,
+      quantity: 20,
+      total: 560000
+    },
+    {
       type: "gimbap",
       description: "김밥",
       unit_price: 3500,
-      quantity: 13,
-      total: 45500
+      quantity: 20,
+      total: 70000
     },
     {
       type: "water",
       description: "생수",
       unit_price: 11000,
-      quantity: 1,
-      total: 11000
+      quantity: 2,
+      total: 22000
     }
   ];
 
   // tour_expenses 데이터
-  // 이미지 기준: 오션비치 6,570,000원 + 기사님객실 120,000원 = 6,690,000원
+  // 파인힐스: 9,780,000원 - 110,000원(1일차 골프 중식 공제) = 9,670,000원
   const expensesData = {
     tour_id: tourId,
     golf_course_settlement: golfCourseSettlement,
-    golf_course_total: 6570000, // 오션비치
+    golf_course_total: 9670000, // 9,780,000 - 110,000 (1일차 골프 중식 공제)
     bus_cost: 2310000, // 버스 770,000 × 3 = 2,310,000원
     bus_driver_cost: 0,
     toll_fee: 0,
@@ -69,9 +76,9 @@ async function inputTourExpenses(tourId) {
     guide_other_cost: 0,
     guide_notes: "",
     meal_expenses: mealExpenses,
-    meal_expenses_total: 56500, // 김밥 45,500 + 생수 11,000 = 56,500원
-    accommodation_cost: 120000, // 기사님객실 60,000 × 2 = 120,000원
-    restaurant_cost: 300000, // 회정식 100,000 × 3 = 300,000원
+    meal_expenses_total: 652000, // 외부식 560,000 + 김밥 70,000 + 생수 22,000 = 652,000원
+    accommodation_cost: 0,
+    restaurant_cost: 0,
     attraction_fee: 0,
     insurance_cost: 0,
     other_expenses: [
@@ -84,8 +91,8 @@ async function inputTourExpenses(tourId) {
       }
     ],
     other_expenses_total: 3300, // 택배
-    notes: "영덕 11/3~5 투어 정산",
-    total_cost: 6570000 + 2310000 + 56500 + 120000 + 300000 + 3300 // 골프장 + 버스 + 경비 지출 + 숙박 + 식당 + 기타 = 9,356,500원
+    notes: "순천 9/8~10 투어 정산",
+    total_cost: 9670000 + 2310000 + 652000 + 3300 // 골프장 + 버스 + 경비 지출 + 기타 = 12,635,300원
   };
 
   try {
@@ -156,14 +163,14 @@ async function updateSettlementData(tourId, expensesData) {
     .eq('tour_id', tourId);
 
   const tourPrice = tour?.price || 0;
-  // 이미지 기준: 매출 820,000 × 8 = 6,560,000원, 830,000 × 4 = 3,320,000원, 총 9,880,000원
-  const contractRevenue = 9880000; // 매출 총액
+  // 이미지 기준: 매출 16,250,000원 (820,000 × 17 + 770,000 × 3, 자차이동 할인)
+  const contractRevenue = 16250000; // 매출 총액
 
-  // 이미지 기준: 현금 3,300,000원 11/2, 카드 3,390,000원 11/4 = 6,690,000원
+  // 이미지 기준: 파인힐스 결제 4,900,000원 현금 9/5, 4,767,000원 카드 9/10 = 9,667,000원
   // 하지만 정산 금액은 매출 기준이므로 매출 금액 사용
-  const totalPaidAmount = 9880000; // 완납 금액 (매출 총액)
+  const totalPaidAmount = 16250000; // 완납 금액 (매출 총액)
   const refundedAmount = 0; // 환불 없음
-  const settlementAmount = totalPaidAmount - refundedAmount; // 9,880,000원
+  const settlementAmount = totalPaidAmount - refundedAmount; // 16,250,000원
 
   // 최신 tour_expenses의 total_cost 가져오기
   const { data: updatedExpenses } = await supabase
@@ -172,12 +179,12 @@ async function updateSettlementData(tourId, expensesData) {
     .eq('tour_id', tourId)
     .single();
   const totalCost = updatedExpenses?.total_cost || expensesData.total_cost;
-  // 이미지 기준: 수익(마진) = 523,500원
-  // 매출 9,880,000 - 총 원가 = 마진
-  // 총 원가 = 9,880,000 - 523,500 = 9,356,500원
-  // 이미지의 수익 값을 기준으로 마진 계산
-  const margin = 523500; // 이미지 기준 수익(마진)
-  const marginRate = settlementAmount > 0 ? (margin / settlementAmount) * 100 : 0; // 5.30%
+  // 이미지 기준: 수익(마진) = 3,617,700원
+  // 매출 16,250,000 - 총 원가 = 마진
+  // 총 원가 = 16,250,000 - 3,617,700 = 12,632,300원
+  // 하지만 이미 계산된 총 원가는 12,635,300원이므로, 이미지의 수익 값을 기준으로 마진 계산
+  const margin = 3617700; // 이미지 기준 수익(마진)
+  const marginRate = settlementAmount > 0 ? (margin / settlementAmount) * 100 : 0; // 22.26%
 
   const settlementData = {
     tour_id: tourId,
@@ -227,6 +234,6 @@ async function updateSettlementData(tourId, expensesData) {
   }
 }
 
-const tourId = process.argv[2] || '1c9494a7-c95c-4104-8849-34ea20cb943a'; // 영덕 11/3~5 투어 ID
+const tourId = process.argv[2] || 'e75fdea1-eb22-4134-9334-523028b04e1e'; // 순천 9/8~10 투어 ID
 inputTourExpenses(tourId);
 
