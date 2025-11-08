@@ -323,18 +323,10 @@ export default function ModernDashboardContentV2() {
         });
       }
 
-      // 월별 매출 데이터 가져오기 (올해 1월부터 현재까지)
+      // 월별 정산 데이터 가져오기 (올해 1월부터 현재까지)
       const yearStartDate = new Date(today.getFullYear(), 0, 1);
       const endOfCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
       
-      // 올해 1월부터 현재까지의 모든 결제 내역
-      const { data: yearPayments } = await supabase
-        .from('singsing_payments')
-        .select('amount, payment_type, payment_status, payment_date')
-        .gte('payment_date', yearStartDate.toISOString())
-        .lte('payment_date', endOfCurrentMonth.toISOString())
-        .eq('payment_status', 'completed');
-
       // 올해 1월부터 현재까지의 모든 투어
       const { data: yearTours } = await supabase
         .from('singsing_tours')
@@ -346,6 +338,30 @@ export default function ModernDashboardContentV2() {
       const { data: yearParticipants } = await supabase
         .from('singsing_participants')
         .select('id, tour_id');
+
+      // 올해 1월부터 현재까지의 모든 정산 데이터 (tour_settlements)
+      const { data: yearSettlements } = await supabase
+        .from('tour_settlements')
+        .select(`
+          settlement_amount,
+          total_cost,
+          margin,
+          margin_rate,
+          total_paid_amount,
+          refunded_amount,
+          tour:tour_id (
+            id,
+            start_date
+          )
+        `);
+
+      // 올해 1월부터 현재까지의 모든 결제 내역 (정산 데이터가 없는 경우 대비)
+      const { data: yearPayments } = await supabase
+        .from('singsing_payments')
+        .select('amount, payment_type, payment_status, payment_date, tour_id')
+        .gte('payment_date', yearStartDate.toISOString())
+        .lte('payment_date', endOfCurrentMonth.toISOString())
+        .eq('payment_status', 'completed');
 
       // 월별 데이터 그룹화
       const monthlyDataMap: { [key: string]: MonthlyRevenue } = {};
@@ -370,14 +386,38 @@ export default function ModernDashboardContentV2() {
         };
       }
 
-      // 월별 결제 데이터 집계
+      // 월별 정산 데이터 집계 (tour_settlements 기반)
+      if (yearSettlements && yearTours) {
+        yearSettlements.forEach(settlement => {
+          if (!settlement.tour || typeof settlement.tour === 'string') return;
+          
+          const tour = Array.isArray(settlement.tour) ? settlement.tour[0] : settlement.tour;
+          if (!tour || !tour.start_date) return;
+          
+          const tourDate = new Date(tour.start_date);
+          const monthKey = `${tourDate.getFullYear()}-${String(tourDate.getMonth() + 1).padStart(2, '0')}`;
+          
+          if (monthlyDataMap[monthKey]) {
+            // 정산 금액을 총 수입으로 사용 (실제 정산 금액)
+            monthlyDataMap[monthKey].totalRevenue += settlement.settlement_amount || 0;
+            monthlyDataMap[monthKey].totalCost += settlement.total_cost || 0;
+            monthlyDataMap[monthKey].margin += settlement.margin || 0;
+            monthlyDataMap[monthKey].refundedAmount += settlement.refunded_amount || 0;
+          }
+        });
+      }
+
+      // 월별 결제 데이터 집계 (정산 데이터가 없는 경우 대비)
       if (yearPayments) {
         yearPayments.forEach(payment => {
           const paymentDate = new Date(payment.payment_date);
           const monthKey = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
           
           if (monthlyDataMap[monthKey]) {
-            monthlyDataMap[monthKey].totalRevenue += payment.amount || 0;
+            // 정산 데이터가 없는 경우에만 결제 데이터 사용
+            if (monthlyDataMap[monthKey].totalRevenue === 0) {
+              monthlyDataMap[monthKey].totalRevenue += payment.amount || 0;
+            }
             
             if (payment.payment_type === 'deposit') {
               monthlyDataMap[monthKey].depositAmount += payment.amount || 0;
@@ -404,12 +444,15 @@ export default function ModernDashboardContentV2() {
           const monthKey = `${refundDate.getFullYear()}-${String(refundDate.getMonth() + 1).padStart(2, '0')}`;
           
           if (monthlyDataMap[monthKey]) {
-            monthlyDataMap[monthKey].refundedAmount += Math.abs(refund.amount || 0);
+            // 정산 데이터에 환불이 없는 경우에만 추가
+            if (monthlyDataMap[monthKey].refundedAmount === 0) {
+              monthlyDataMap[monthKey].refundedAmount += Math.abs(refund.amount || 0);
+            }
           }
         });
       }
 
-      // 월별 투어 비용 및 참가자 수 계산
+      // 월별 투어 비용 및 참가자 수 계산 (정산 데이터가 없는 경우 대비)
       if (yearTours && yearParticipants) {
         yearTours.forEach(tour => {
           const tourDate = new Date(tour.start_date);
@@ -423,25 +466,29 @@ export default function ModernDashboardContentV2() {
             const tourParticipants = yearParticipants.filter(p => p.tour_id === tour.id);
             monthlyDataMap[monthKey].participantCount += tourParticipants.length;
             
-            // 투어 비용 계산 (투어 가격 * 참가자 수)
-            const tourCost = (tour.price || 0) * tourParticipants.length;
-            monthlyDataMap[monthKey].totalCost += tourCost;
+            // 정산 데이터가 없는 경우에만 투어 비용 계산 (투어 가격 * 참가자 수)
+            if (monthlyDataMap[monthKey].totalCost === 0) {
+              const tourCost = (tour.price || 0) * tourParticipants.length;
+              monthlyDataMap[monthKey].totalCost += tourCost;
+            }
           }
         });
       }
 
-      // 마진 및 마진률 계산
+      // 마진 및 마진률 계산 (정산 데이터가 없는 경우)
       const monthlyRevenue: MonthlyRevenue[] = Object.values(monthlyDataMap).map(month => {
-        const margin = month.totalRevenue - month.totalCost;
-        const marginRate = month.totalRevenue > 0 
-          ? (margin / month.totalRevenue) * 100 
-          : 0;
+        // 정산 데이터가 없는 경우에만 마진 계산
+        if (month.margin === 0 && month.totalRevenue > 0) {
+          month.margin = month.totalRevenue - month.totalCost;
+          month.marginRate = month.totalRevenue > 0 
+            ? (month.margin / month.totalRevenue) * 100 
+            : 0;
+        } else if (month.margin !== 0 && month.totalRevenue > 0) {
+          // 정산 데이터가 있는 경우 마진률 재계산
+          month.marginRate = (month.margin / month.totalRevenue) * 100;
+        }
         
-        return {
-          ...month,
-          margin,
-          marginRate
-        };
+        return month;
       }).sort((a, b) => a.month.localeCompare(b.month));
 
       setDashboardData({

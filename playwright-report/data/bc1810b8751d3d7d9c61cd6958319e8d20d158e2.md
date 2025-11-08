@@ -172,7 +172,7 @@
           - generic [ref=e245]:
             - generic [ref=e246]:
               - heading "싱싱골프투어 대시보드" [level=1] [ref=e247]
-              - paragraph [ref=e248]: 2025년 11월 8일 토요일 오후 10:48
+              - paragraph [ref=e248]: 2025년 11월 8일 토요일 오후 10:51
             - generic [ref=e249]:
               - button "월간" [ref=e250] [cursor=pointer]
               - button "새로고침" [ref=e251] [cursor=pointer]:
