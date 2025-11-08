@@ -4,6 +4,8 @@ import DiscountSection from './DiscountSection';
 import PaymentMessageModal from './PaymentMessageModal';
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import MonthlyRevenueChart, { MonthlyRevenue } from '@/components/admin/MonthlyRevenueChart';
+import MonthlyRevenueTable from '@/components/admin/MonthlyRevenueTable';
 import { 
   CreditCard, 
   Users, 
@@ -91,6 +93,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
@@ -198,6 +201,130 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
       
       setPayments(enrichedPayments);
     }
+    
+    // 월별 매출 데이터 가져오기 (올해 1월부터 현재까지)
+    const today = new Date();
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+    const endOfCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+    
+    // 올해 1월부터 현재까지의 모든 결제 내역
+    const { data: yearPayments } = await supabase
+      .from('singsing_payments')
+      .select('amount, payment_type, payment_status, payment_date')
+      .gte('payment_date', startOfYear.toISOString())
+      .lte('payment_date', endOfCurrentMonth.toISOString())
+      .eq('payment_status', 'completed');
+
+    // 올해 1월부터 현재까지의 모든 투어
+    const { data: yearTours } = await supabase
+      .from('singsing_tours')
+      .select('id, price, start_date')
+      .gte('start_date', startOfYear.toISOString())
+      .lte('start_date', endOfCurrentMonth.toISOString());
+
+    // 올해 1월부터 현재까지의 모든 참가자
+    const { data: yearParticipants } = await supabase
+      .from('singsing_participants')
+      .select('id, tour_id');
+
+    // 월별 데이터 그룹화
+    const monthlyDataMap: { [key: string]: MonthlyRevenue } = {};
+    
+    // 현재 월까지의 모든 월 초기화
+    for (let month = 0; month <= today.getMonth(); month++) {
+      const monthKey = `${today.getFullYear()}-${String(month + 1).padStart(2, '0')}`;
+      const monthLabel = `${month + 1}월`;
+      monthlyDataMap[monthKey] = {
+        month: monthKey,
+        monthLabel,
+        totalRevenue: 0,
+        totalCost: 0,
+        margin: 0,
+        marginRate: 0,
+        depositAmount: 0,
+        balanceAmount: 0,
+        fullPaymentAmount: 0,
+        refundedAmount: 0,
+        participantCount: 0,
+        tourCount: 0
+      };
+    }
+
+    // 월별 결제 데이터 집계
+    if (yearPayments) {
+      yearPayments.forEach(payment => {
+        const paymentDate = new Date(payment.payment_date);
+        const monthKey = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (monthlyDataMap[monthKey]) {
+          monthlyDataMap[monthKey].totalRevenue += payment.amount || 0;
+          
+          if (payment.payment_type === 'deposit') {
+            monthlyDataMap[monthKey].depositAmount += payment.amount || 0;
+          } else if (payment.payment_type === 'balance') {
+            monthlyDataMap[monthKey].balanceAmount += payment.amount || 0;
+          } else if (payment.payment_type === 'full') {
+            monthlyDataMap[monthKey].fullPaymentAmount += payment.amount || 0;
+          }
+        }
+      });
+    }
+
+    // 월별 환불 데이터 집계
+    const { data: yearRefunds } = await supabase
+      .from('singsing_payments')
+      .select('amount, payment_date')
+      .gte('payment_date', startOfYear.toISOString())
+      .lte('payment_date', endOfCurrentMonth.toISOString())
+      .eq('payment_status', 'refunded');
+
+    if (yearRefunds) {
+      yearRefunds.forEach(refund => {
+        const refundDate = new Date(refund.payment_date);
+        const monthKey = `${refundDate.getFullYear()}-${String(refundDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (monthlyDataMap[monthKey]) {
+          monthlyDataMap[monthKey].refundedAmount += Math.abs(refund.amount || 0);
+        }
+      });
+    }
+
+    // 월별 투어 비용 및 참가자 수 계산
+    if (yearTours && yearParticipants) {
+      yearTours.forEach(tour => {
+        const tourDate = new Date(tour.start_date);
+        const monthKey = `${tourDate.getFullYear()}-${String(tourDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (monthlyDataMap[monthKey]) {
+          // 해당 월의 투어 수 증가
+          monthlyDataMap[monthKey].tourCount += 1;
+          
+          // 해당 투어의 참가자 수 계산
+          const tourParticipants = yearParticipants.filter(p => p.tour_id === tour.id);
+          monthlyDataMap[monthKey].participantCount += tourParticipants.length;
+          
+          // 투어 비용 계산 (투어 가격 * 참가자 수)
+          const tourCost = (tour.price || 0) * tourParticipants.length;
+          monthlyDataMap[monthKey].totalCost += tourCost;
+        }
+      });
+    }
+
+    // 마진 및 마진률 계산
+    const monthlyRevenueData: MonthlyRevenue[] = Object.values(monthlyDataMap).map(month => {
+      const margin = month.totalRevenue - month.totalCost;
+      const marginRate = month.totalRevenue > 0 
+        ? (margin / month.totalRevenue) * 100 
+        : 0;
+      
+      return {
+        ...month,
+        margin,
+        marginRate
+      };
+    }).sort((a, b) => a.month.localeCompare(b.month));
+
+    setMonthlyRevenue(monthlyRevenueData);
     
     setLoading(false);
     
@@ -1030,6 +1157,36 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
           </div>
         </div>
       </div>
+
+      {/* 월별 매출 상세 */}
+      {monthlyRevenue && monthlyRevenue.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">월별 매출 상세</h2>
+            <span className="text-sm text-gray-500">
+              {new Date().getFullYear()}년 1월 ~ {new Date().getMonth() + 1}월
+            </span>
+          </div>
+          
+          {/* 차트 */}
+          <div className="mb-6">
+            <MonthlyRevenueChart 
+              data={monthlyRevenue} 
+              chartType="bar"
+              showCost={true}
+            />
+          </div>
+
+          {/* 상세 테이블 */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">월별 매출 상세</h3>
+            <MonthlyRevenueTable 
+              data={monthlyRevenue}
+              showDetails={true}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 결제 목록 */}
       <div className="bg-white rounded-lg shadow-sm mb-6">
