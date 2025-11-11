@@ -230,16 +230,20 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     setSaving(true);
     try {
       if (expenses.id) {
+        // 업데이트: id를 제외하고 업데이트
+        const { id, ...updateData } = expenses;
         const { error } = await supabase
           .from("tour_expenses")
-          .update(expenses)
-          .eq("id", expenses.id);
+          .update(updateData)
+          .eq("id", id);
 
         if (error) throw error;
       } else {
+        // 새로 생성: id 필드를 제외하고 insert (데이터베이스가 자동 생성)
+        const { id, ...insertData } = expenses;
         const { data, error } = await supabase
           .from("tour_expenses")
-          .insert([expenses])
+          .insert([insertData])
           .select()
           .single();
 
