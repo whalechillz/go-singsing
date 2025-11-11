@@ -239,8 +239,10 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
 
         if (error) throw error;
       } else {
-        // 새로 생성: id 필드를 제외하고 insert (데이터베이스가 자동 생성)
-        const { id, ...insertData } = expenses;
+        // 새로 생성: id 필드를 명시적으로 제거 (null이어도 제거)
+        const insertData = { ...expenses };
+        delete insertData.id;  // id 필드를 명시적으로 제거
+        
         const { data, error } = await supabase
           .from("tour_expenses")
           .insert([insertData])
