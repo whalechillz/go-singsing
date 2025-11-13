@@ -349,6 +349,46 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     return value.toLocaleString("ko-KR");
   };
 
+  // 숫자를 천단위 콤마가 포함된 문자열로 변환
+  const formatNumberWithCommas = (value: number | undefined | null): string => {
+    if (value === undefined || value === null || value === 0) return "";
+    return value.toLocaleString("ko-KR");
+  };
+
+  // 천단위 콤마가 포함된 문자열을 숫자로 변환
+  const parseNumberFromString = (str: string): number => {
+    if (!str || str.trim() === "") return 0;
+    const cleaned = str.replace(/,/g, "");
+    const parsed = parseInt(cleaned, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  // 숫자 입력 핸들러 (천단위 콤마 표시 및 0 초기화)
+  const handleNumberInput = (
+    value: number | undefined,
+    onChange: (num: number) => void
+  ) => {
+    return {
+      value: formatNumberWithCommas(value),
+      onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
+        // 0이면 빈 문자열로 초기화
+        if (value === 0 || value === undefined || value === null) {
+          e.target.value = "";
+        }
+      },
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+        const num = parseNumberFromString(e.target.value);
+        onChange(num);
+      },
+      onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+        // 빈 값이면 0으로 설정
+        if (e.target.value.trim() === "") {
+          onChange(0);
+        }
+      }
+    };
+  };
+
   // 정산서 PDF 생성
   const generateSettlementHTML = (): string => {
     if (!settlement || !expenses || !tour) return "";
@@ -1095,11 +1135,9 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           소계
                         </label>
                         <input
-                          type="number"
-                          value={settlement.subtotal || 0}
-                          onChange={(e) => {
+                          type="text"
+                          {...handleNumberInput(settlement.subtotal, (subtotal) => {
                             const updated = [...(expenses.golf_course_settlement || [])];
-                            const subtotal = parseInt(e.target.value) || 0;
                             updated[idx] = {
                               ...updated[idx],
                               subtotal,
@@ -1109,7 +1147,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                               ...expenses,
                               golf_course_settlement: updated
                             });
-                          }}
+                          })}
                           className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                           placeholder="0"
                         />
@@ -1119,11 +1157,9 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           입금액
                         </label>
                         <input
-                          type="number"
-                          value={settlement.deposit || 0}
-                          onChange={(e) => {
+                          type="text"
+                          {...handleNumberInput(settlement.deposit, (deposit) => {
                             const updated = [...(expenses.golf_course_settlement || [])];
-                            const deposit = parseInt(e.target.value) || 0;
                             updated[idx] = {
                               ...updated[idx],
                               deposit,
@@ -1133,7 +1169,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                               ...expenses,
                               golf_course_settlement: updated
                             });
-                          }}
+                          })}
                           className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                           placeholder="0"
                         />
@@ -1143,8 +1179,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           차액
                         </label>
                         <input
-                          type="number"
-                          value={settlement.difference || 0}
+                          type="text"
+                          value={formatNumberWithCommas(settlement.difference)}
                           readOnly
                           className="w-full border rounded-lg px-3 py-2 bg-gray-100"
                           placeholder="0"
@@ -1240,12 +1276,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                 입금 금액
                               </label>
                               <input
-                                type="number"
-                                value={deposit.amount || 0}
-                                onChange={(e) => {
+                                type="text"
+                                {...handleNumberInput(deposit.amount, (amount) => {
                                   const updated = [...(expenses.golf_course_settlement || [])];
                                   const deposits = [...(updated[idx].deposits || [])];
-                                  deposits[depositIdx] = { ...deposits[depositIdx], amount: parseInt(e.target.value) || 0 };
+                                  deposits[depositIdx] = { ...deposits[depositIdx], amount };
                                   updated[idx] = { ...updated[idx], deposits };
                                   // 입금액 자동 계산
                                   const totalDeposit = deposits.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
@@ -1409,12 +1444,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                 환불 금액
                               </label>
                               <input
-                                type="number"
-                                value={refund.amount || 0}
-                                onChange={(e) => {
+                                type="text"
+                                {...handleNumberInput(refund.amount, (amount) => {
                                   const updated = [...(expenses.golf_course_settlement || [])];
                                   const refunds = [...(updated[idx].refunds || [])];
-                                  refunds[refundIdx] = { ...refunds[refundIdx], amount: parseInt(e.target.value) || 0 };
+                                  refunds[refundIdx] = { ...refunds[refundIdx], amount };
                                   updated[idx] = { ...updated[idx], refunds };
                                   // 입금액 자동 계산
                                   const totalDeposit = (updated[idx].deposits || []).reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
@@ -1425,7 +1459,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                     ...expenses,
                                     golf_course_settlement: updated
                                   });
-                                }}
+                                })}
                                 className="w-full border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                                 placeholder="0"
                               />
@@ -1511,12 +1545,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                         골프장 총 비용
                       </label>
                       <input
-                        type="number"
-                        value={expenses.golf_course_total || 0}
-                        onChange={(e) => setExpenses({
+                        type="text"
+                        {...handleNumberInput(expenses.golf_course_total, (num) => setExpenses({
                           ...expenses,
-                          golf_course_total: parseInt(e.target.value) || 0
-                        })}
+                          golf_course_total: num
+                        }))}
                         className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                         placeholder="0"
                       />
@@ -1537,12 +1570,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       버스 비용
                     </label>
                     <input
-                      type="number"
-                      value={expenses.bus_cost || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.bus_cost, (num) => setExpenses({
                         ...expenses,
-                        bus_cost: parseInt(e.target.value) || 0
-                      })}
+                        bus_cost: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1552,12 +1584,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       기사 비용
                     </label>
                     <input
-                      type="number"
-                      value={expenses.bus_driver_cost || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.bus_driver_cost, (num) => setExpenses({
                         ...expenses,
-                        bus_driver_cost: parseInt(e.target.value) || 0
-                      })}
+                        bus_driver_cost: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1567,12 +1598,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       톨게이트 비용
                     </label>
                     <input
-                      type="number"
-                      value={expenses.toll_fee || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.toll_fee, (num) => setExpenses({
                         ...expenses,
-                        toll_fee: parseInt(e.target.value) || 0
-                      })}
+                        toll_fee: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1582,12 +1612,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       주차비
                     </label>
                     <input
-                      type="number"
-                      value={expenses.parking_fee || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.parking_fee, (num) => setExpenses({
                         ...expenses,
-                        parking_fee: parseInt(e.target.value) || 0
-                      })}
+                        parking_fee: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1619,12 +1648,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       가이드 인건비
                     </label>
                     <input
-                      type="number"
-                      value={expenses.guide_fee || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.guide_fee, (num) => setExpenses({
                         ...expenses,
-                        guide_fee: parseInt(e.target.value) || 0
-                      })}
+                        guide_fee: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1634,12 +1662,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       가이드 식사비
                     </label>
                     <input
-                      type="number"
-                      value={expenses.guide_meal_cost || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.guide_meal_cost, (num) => setExpenses({
                         ...expenses,
-                        guide_meal_cost: parseInt(e.target.value) || 0
-                      })}
+                        guide_meal_cost: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1649,12 +1676,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       가이드 숙박비
                     </label>
                     <input
-                      type="number"
-                      value={expenses.guide_accommodation_cost || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.guide_accommodation_cost, (num) => setExpenses({
                         ...expenses,
-                        guide_accommodation_cost: parseInt(e.target.value) || 0
-                      })}
+                        guide_accommodation_cost: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1664,12 +1690,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       가이드 기타 비용
                     </label>
                     <input
-                      type="number"
-                      value={expenses.guide_other_cost || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.guide_other_cost, (num) => setExpenses({
                         ...expenses,
-                        guide_other_cost: parseInt(e.target.value) || 0
-                      })}
+                        guide_other_cost: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1792,11 +1817,9 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           단가
                         </label>
                         <input
-                          type="number"
-                          value={expense.unit_price || 0}
-                          onChange={(e) => {
+                          type="text"
+                          {...handleNumberInput(expense.unit_price, (unitPrice) => {
                             const updated = [...(expenses.meal_expenses || [])];
-                            const unitPrice = parseInt(e.target.value) || 0;
                             const quantity = updated[idx].quantity || 1;
                             updated[idx] = {
                               ...updated[idx],
@@ -1809,7 +1832,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                               meal_expenses: updated,
                               meal_expenses_total: total
                             });
-                          }}
+                          })}
                           className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                           placeholder="0"
                         />
@@ -1819,11 +1842,16 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           수량
                         </label>
                         <input
-                          type="number"
+                          type="text"
                           value={expense.quantity || 1}
+                          onFocus={(e) => {
+                            if (expense.quantity === 1 || expense.quantity === 0 || expense.quantity === undefined) {
+                              e.target.value = "";
+                            }
+                          }}
                           onChange={(e) => {
                             const updated = [...(expenses.meal_expenses || [])];
-                            const quantity = parseInt(e.target.value) || 1;
+                            const quantity = parseNumberFromString(e.target.value) || 1;
                             const unitPrice = updated[idx].unit_price || 0;
                             updated[idx] = {
                               ...updated[idx],
@@ -1837,9 +1865,15 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                               meal_expenses_total: total
                             });
                           }}
+                          onBlur={(e) => {
+                            if (e.target.value.trim() === "") {
+                              const updated = [...(expenses.meal_expenses || [])];
+                              updated[idx] = { ...updated[idx], quantity: 1 };
+                              setExpenses({ ...expenses, meal_expenses: updated });
+                            }
+                          }}
                           className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                           placeholder="1"
-                          min="1"
                         />
                       </div>
                       <div>
@@ -1847,8 +1881,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           총액
                         </label>
                         <input
-                          type="number"
-                          value={expense.total || 0}
+                          type="text"
+                          value={formatNumberWithCommas(expense.total)}
                           readOnly
                           className="w-full border rounded-lg px-3 py-2 bg-gray-100"
                           placeholder="0"
@@ -1866,8 +1900,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                         경비 지출 총합
                       </label>
                       <input
-                        type="number"
-                        value={expenses.meal_expenses_total || 0}
+                        type="text"
+                        value={formatNumberWithCommas(expenses.meal_expenses_total)}
                         readOnly
                         className="w-full border rounded-lg px-3 py-2 bg-gray-100"
                         placeholder="0"
@@ -1889,12 +1923,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       숙박비
                     </label>
                     <input
-                      type="number"
-                      value={expenses.accommodation_cost || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.accommodation_cost, (num) => setExpenses({
                         ...expenses,
-                        accommodation_cost: parseInt(e.target.value) || 0
-                      })}
+                        accommodation_cost: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1904,12 +1937,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       식당 비용
                     </label>
                     <input
-                      type="number"
-                      value={expenses.restaurant_cost || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.restaurant_cost, (num) => setExpenses({
                         ...expenses,
-                        restaurant_cost: parseInt(e.target.value) || 0
-                      })}
+                        restaurant_cost: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1919,12 +1951,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       관광지 입장료
                     </label>
                     <input
-                      type="number"
-                      value={expenses.attraction_fee || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.attraction_fee, (num) => setExpenses({
                         ...expenses,
-                        attraction_fee: parseInt(e.target.value) || 0
-                      })}
+                        attraction_fee: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1934,12 +1965,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       보험료
                     </label>
                     <input
-                      type="number"
-                      value={expenses.insurance_cost || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.insurance_cost, (num) => setExpenses({
                         ...expenses,
-                        insurance_cost: parseInt(e.target.value) || 0
-                      })}
+                        insurance_cost: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -1949,12 +1979,11 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       기타 비용 총합
                     </label>
                     <input
-                      type="number"
-                      value={expenses.other_expenses_total || 0}
-                      onChange={(e) => setExpenses({
+                      type="text"
+                      {...handleNumberInput(expenses.other_expenses_total, (num) => setExpenses({
                         ...expenses,
-                        other_expenses_total: parseInt(e.target.value) || 0
-                      })}
+                        other_expenses_total: num
+                      }))}
                       className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="0"
                     />
@@ -2016,10 +2045,15 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       예상 마진 (이미지 정산서 기준 수익 값)
                     </label>
                     <input
-                      type="number"
-                      value={settlement.expected_margin || ""}
+                      type="text"
+                      value={settlement.expected_margin ? formatNumberWithCommas(settlement.expected_margin) : ""}
+                      onFocus={(e) => {
+                        if (settlement.expected_margin === 0 || settlement.expected_margin === null || settlement.expected_margin === undefined) {
+                          e.target.value = "";
+                        }
+                      }}
                       onChange={async (e) => {
-                        const expectedMargin = parseInt(e.target.value) || null;
+                        const expectedMargin = parseNumberFromString(e.target.value) || null;
                         const calculatedMargin = settlement.margin || 0;
                         const discrepancy = expectedMargin !== null
                           ? calculatedMargin - expectedMargin
