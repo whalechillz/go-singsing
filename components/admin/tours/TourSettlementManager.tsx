@@ -917,6 +917,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     const refundAmount = 0; // 환불은 별도로 관리
     const issuanceAmount = contractAmount - refundAmount;
     const today = new Date();
+    // 로고 URL - 절대 경로 사용
+    const logoUrl = 'https://go.singsinggolf.kr/favicon/singsing_logo_192x192.png';
 
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -935,108 +937,276 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     
     body {
       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.8;
-      color: #333;
-      background: #f5f5f5;
-      padding: 40px 20px;
+      color: #1a202c;
+      background: #f8f9fa;
+      padding: 0;
+    }
+    
+    .letterhead {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      color: white;
+      padding: 40px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .letterhead-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    .company-header {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .company-name {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .company-subtitle {
+      font-size: 14px;
+      opacity: 0.95;
+      font-weight: 400;
+    }
+    
+    .letterhead-right {
+      text-align: right;
+      font-size: 13px;
+      opacity: 0.95;
+      line-height: 1.8;
     }
     
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       background: white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .content {
       padding: 60px;
+      line-height: 2.2;
     }
     
     .title {
       text-align: center;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
-      color: #1a202c;
+      color: #1e3a8a;
       margin-bottom: 50px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 25px;
+      border-bottom: 3px solid #3b82f6;
+      letter-spacing: -0.5px;
     }
     
-    .content {
-      line-height: 2.2;
+    .document-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+      padding: 25px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
     }
     
-    .recipient {
-      margin-bottom: 30px;
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     
-    .sender {
-      margin-bottom: 30px;
+    .info-label {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .info-value {
+      font-size: 16px;
+      color: #1e293b;
+      font-weight: 600;
     }
     
     .greeting {
       margin: 40px 0;
       text-align: justify;
-      font-size: 15px;
+      font-size: 16px;
+      line-height: 2;
+      color: #334155;
+      padding: 25px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
     }
     
     .payment-section {
-      margin: 40px 0;
+      margin: 50px 0;
+    }
+    
+    .payment-header {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 25px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .payment-list {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 25px;
+      border: 1px solid #e2e8f0;
     }
     
     .payment-item {
-      margin: 15px 0;
-      padding-left: 20px;
+      margin: 20px 0;
+      padding: 18px 20px;
+      background: white;
+      border-radius: 6px;
+      border-left: 4px solid #3b82f6;
       font-size: 15px;
+      line-height: 1.8;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .payment-item:first-child {
+      margin-top: 0;
+    }
+    
+    .payment-item:last-child {
+      margin-bottom: 0;
     }
     
     .payment-amount {
       font-weight: 700;
-      color: #2c5282;
+      color: #1e3a8a;
+      font-size: 16px;
     }
     
     .signature-section {
-      margin-top: 80px;
+      margin-top: 100px;
+      padding-top: 40px;
+      border-top: 2px solid #e2e8f0;
       text-align: right;
     }
     
-    .date {
-      margin-bottom: 20px;
-    }
-    
-    .company-name {
-      font-weight: 700;
-      font-size: 16px;
+    .signature-date {
+      font-size: 15px;
+      color: #64748b;
       margin-bottom: 30px;
     }
     
-    .company-info {
+    .signature-company {
+      font-weight: 700;
+      font-size: 20px;
+      color: #1e3a8a;
+      margin-bottom: 40px;
+      letter-spacing: -0.5px;
+    }
+    
+    .company-details {
       margin-top: 30px;
-      font-size: 13px;
-      line-height: 1.8;
+      font-size: 14px;
+      line-height: 2;
+      color: #475569;
+      text-align: right;
+    }
+    
+    .company-details div {
+      margin: 5px 0;
+    }
+    
+    .company-details strong {
+      color: #1e293b;
+      font-weight: 600;
     }
     
     @media print {
       body {
-        padding: 0;
         background: white;
+        padding: 0;
+      }
+      .letterhead {
+        background: #1e3a8a !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
       .container {
         box-shadow: none;
+      }
+      .content {
         padding: 40px;
+      }
+      .payment-item {
+        break-inside: avoid;
       }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 class="title">세금계산서 발행 요청</h1>
-    
-    <div class="content">
-      <div class="recipient">
-        <strong>수신 :</strong> ${golfCourseName}
+    <!-- 레터헤드 -->
+    <div class="letterhead">
+      <div class="letterhead-left">
+        <div class="logo">
+          <img src="${logoUrl}" alt="싱싱골프투어 로고" />
+        </div>
+        <div class="company-header">
+          <div class="company-name">싱싱골프투어</div>
+          <div class="company-subtitle">Singsing Golf Tour</div>
+        </div>
       </div>
+      <div class="letterhead-right">
+        <div>경기도 수원시 영통구 법조로149번길 200</div>
+        <div>대표: 김탁수</div>
+        <div>031-215-3990 / 010-3332-9020</div>
+      </div>
+    </div>
+    
+    <!-- 본문 -->
+    <div class="content">
+      <h1 class="title">세금계산서 발행 요청</h1>
       
-      <div class="sender">
-        <strong>발신 :</strong> 싱싱투어
+      <div class="document-info">
+        <div class="info-item">
+          <div class="info-label">수신</div>
+          <div class="info-value">${golfCourseName}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">발신</div>
+          <div class="info-value">싱싱골프투어</div>
+        </div>
       </div>
       
       <div class="greeting">
@@ -1044,25 +1214,27 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
       </div>
       
       <div class="payment-section">
-        입금내역은 다음과 같습니다.
+        <div class="payment-header">입금내역은 다음과 같습니다.</div>
         
-        <div class="payment-item">
-          1. ${formatDateRange(tour.start_date, tour.end_date)} 계약금 : <span class="payment-amount">${contractAmount.toLocaleString()}원</span>${deposit.date ? ` (${formatDate(deposit.date)} 출금)` : ''}
-        </div>
-        
-        <div class="payment-item">
-          2. 세금계산서 발행금액 <span class="payment-amount">${issuanceAmount.toLocaleString()}원</span> (계약금-환불금)
+        <div class="payment-list">
+          <div class="payment-item">
+            1. ${formatDateRange(tour.start_date, tour.end_date)} 계약금 : <span class="payment-amount">${contractAmount.toLocaleString()}원</span>${deposit.date ? ` (${formatDate(deposit.date)} 출금)` : ''}
+          </div>
+          
+          <div class="payment-item">
+            2. 세금계산서 발행금액 <span class="payment-amount">${issuanceAmount.toLocaleString()}원</span> (계약금-환불금)
+          </div>
         </div>
       </div>
       
       <div class="signature-section">
-        <div class="date">${formatDate(today.toISOString())}</div>
-        <div class="company-name">싱싱투어</div>
+        <div class="signature-date">${formatDate(today.toISOString())}</div>
+        <div class="signature-company">싱싱골프투어</div>
         
-        <div class="company-info">
-          <div>주소 : 경기도 수원시 영통구 법조로149번길 200</div>
-          <div style="text-align: right; margin-top: 10px;">대표: 김탁수</div>
-          <div style="margin-top: 10px;">전화: 031-215-3990 / 010-3332-9020</div>
+        <div class="company-details">
+          <div><strong>주소:</strong> 경기도 수원시 영통구 법조로149번길 200</div>
+          <div><strong>대표:</strong> 김탁수</div>
+          <div><strong>전화:</strong> 031-215-3990 / 010-3332-9020</div>
         </div>
       </div>
     </div>
