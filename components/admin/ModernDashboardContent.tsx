@@ -396,6 +396,7 @@ export default function ModernDashboardContentV2() {
       }
 
       // 월별 정산 데이터 집계 (tour_settlements 기반)
+      // 정산 관리 페이지와 동일한 실시간 계산 로직 사용
       if (yearSettlements && settlementTours) {
         yearSettlements.forEach(settlement => {
           if (!settlement.tour_id) return;
@@ -408,9 +409,22 @@ export default function ModernDashboardContentV2() {
           
           if (monthlyDataMap[monthKey]) {
             // 정산 금액을 총 수입으로 사용 (실제 정산 금액)
-            monthlyDataMap[monthKey].totalRevenue += settlement.settlement_amount || 0;
-            monthlyDataMap[monthKey].totalCost += settlement.total_cost || 0;
-            monthlyDataMap[monthKey].margin += settlement.margin || 0;
+            const settlementAmount = settlement.settlement_amount || 0;
+            monthlyDataMap[monthKey].totalRevenue += settlementAmount;
+            
+            // total_cost 실시간 확인: tour_settlements의 total_cost가 0이거나 없으면 tour_expenses에서 가져오기
+            let totalCost = settlement.total_cost || 0;
+            if (!totalCost || totalCost === 0) {
+              const expense = yearExpenses?.find(e => e.tour_id === settlement.tour_id);
+              totalCost = expense?.total_cost || 0;
+            }
+            
+            monthlyDataMap[monthKey].totalCost += totalCost;
+            
+            // 마진 실시간 계산: 정산 금액 - 총 원가 (정산 관리 페이지와 동일한 로직)
+            const calculatedMargin = settlementAmount - totalCost;
+            monthlyDataMap[monthKey].margin += calculatedMargin;
+            
             monthlyDataMap[monthKey].refundedAmount += settlement.refunded_amount || 0;
           }
         });

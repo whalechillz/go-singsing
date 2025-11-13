@@ -140,5 +140,68 @@ test.describe('정산 관리 테스트', () => {
     const pdfButton = page.locator('button:has-text("정산서 PDF 다운로드")');
     await expect(pdfButton).toBeVisible({ timeout: 10000 });
   });
+
+  test('정산 계산 차이 확인 - 유인수 투어', async ({ page }) => {
+    // 유인수님 투어 정산 페이지 접근
+    const tourId = '42ec1758-08da-4372-a55c-efc57e9dd351';
+    const consoleMessages: string[] = [];
+    
+    // 콘솔 메시지 수집
+    page.on('console', msg => {
+      const text = msg.text();
+      if (text.includes('정산 계산 디버깅') || text.includes('원가 계산 디버깅')) {
+        consoleMessages.push(text);
+      }
+    });
+
+    await page.goto(`https://go.singsinggolf.kr/admin/tours/${tourId}/settlement`, { waitUntil: 'networkidle' });
+    await page.waitForLoadState('networkidle', { timeout: 20000 });
+
+    // 정산 요약 카드 확인
+    await expect(page.locator('text=계약 매출')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=정산 금액')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=총 원가')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=마진')).toBeVisible({ timeout: 5000 });
+
+    // 계산된 마진 값 확인
+    const marginText = await page.locator('text=마진').locator('..').locator('text=/\\d+원/').first().textContent();
+    console.log('계산된 마진:', marginText);
+
+    // 예상 마진과 차이 확인 (확인 필요 알림이 있는 경우)
+    const hasDiscrepancy = await page.locator('text=계산된 마진과 예상 마진이 다릅니다').isVisible({ timeout: 5000 }).catch(() => false);
+    
+    if (hasDiscrepancy) {
+      // 계산된 마진 값 추출
+      const calculatedMarginText = await page.locator('text=계산된 마진:').locator('..').locator('text=/\\d+원/').first().textContent();
+      const expectedMarginText = await page.locator('text=예상 마진:').locator('..').locator('text=/\\d+원/').first().textContent();
+      const discrepancyText = await page.locator('text=차이:').locator('..').locator('text=/[-]?\\d+원/').first().textContent();
+      
+      console.log('=== 정산 계산 차이 확인 ===');
+      console.log('계산된 마진:', calculatedMarginText);
+      console.log('예상 마진:', expectedMarginText);
+      console.log('차이:', discrepancyText);
+      
+      // 콘솔 로그 확인
+      await page.waitForTimeout(2000); // 콘솔 로그 수집 대기
+      
+      console.log('\n=== 콘솔 디버깅 로그 ===');
+      consoleMessages.forEach(msg => console.log(msg));
+    }
+
+    // 원가 입력 탭으로 이동하여 원가 정보 확인
+    await page.click('button:has-text("원가 입력")');
+    await page.waitForTimeout(1000);
+
+    // 원가 저장 버튼 클릭하여 계산 로그 확인
+    const saveButton = page.locator('button:has-text("저장")');
+    if (await saveButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await saveButton.click();
+      await page.waitForTimeout(2000); // 계산 로그 수집 대기
+    }
+
+    // 콘솔 로그 출력
+    console.log('\n=== 최종 콘솔 디버깅 로그 ===');
+    consoleMessages.forEach(msg => console.log(msg));
+  });
 });
 
