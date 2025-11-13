@@ -1534,6 +1534,200 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                               />
                             </div>
                           )}
+                          
+                          {/* 입금 방법별 세금계산서/영수증 정보 */}
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="text-xs font-semibold text-gray-700 mb-2">세금계산서/영수증 정보</div>
+                            
+                            {/* 현금: 세금계산서 종류, 번호, 발행 확인 */}
+                            {deposit.method === 'cash' && (
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    세금계산서/영수증 종류
+                                  </label>
+                                  <select
+                                    value={deposit.receipt_type || ""}
+                                    onChange={(e) => {
+                                      const updated = [...(expenses.golf_course_settlement || [])];
+                                      const deposits = [...(updated[idx].deposits || [])];
+                                      deposits[depositIdx] = { ...deposits[depositIdx], receipt_type: e.target.value };
+                                      updated[idx] = { ...updated[idx], deposits };
+                                      setExpenses({ ...expenses, golf_course_settlement: updated });
+                                    }}
+                                    className="w-full border rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                  >
+                                    <option value="">선택 안함</option>
+                                    <option value="tax_invoice">매입세금계산서</option>
+                                    <option value="cash_receipt">현금영수증</option>
+                                    <option value="none">없음</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    세금계산서/영수증 번호
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={deposit.receipt_number || ""}
+                                    onChange={(e) => {
+                                      const updated = [...(expenses.golf_course_settlement || [])];
+                                      const deposits = [...(updated[idx].deposits || [])];
+                                      deposits[depositIdx] = { ...deposits[depositIdx], receipt_number: e.target.value };
+                                      updated[idx] = { ...updated[idx], deposits };
+                                      setExpenses({ ...expenses, golf_course_settlement: updated });
+                                    }}
+                                    placeholder="세금계산서 번호 또는 현금영수증 번호"
+                                    className="w-full border rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                  />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id={`deposit-issued-${idx}-${depositIdx}`}
+                                    checked={deposit.is_issued || false}
+                                    onChange={(e) => {
+                                      const updated = [...(expenses.golf_course_settlement || [])];
+                                      const deposits = [...(updated[idx].deposits || [])];
+                                      deposits[depositIdx] = { 
+                                        ...deposits[depositIdx], 
+                                        is_issued: e.target.checked,
+                                        verified_at: e.target.checked ? new Date().toISOString() : undefined
+                                      };
+                                      updated[idx] = { ...updated[idx], deposits };
+                                      setExpenses({ ...expenses, golf_course_settlement: updated });
+                                    }}
+                                    className="w-4 h-4"
+                                  />
+                                  <label htmlFor={`deposit-issued-${idx}-${depositIdx}`} className="text-xs text-gray-700">
+                                    발행 확인 (국세청 검증 완료)
+                                  </label>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* 카드: 발행 확인만 */}
+                            {deposit.method === 'card' && (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  id={`deposit-card-issued-${idx}-${depositIdx}`}
+                                  checked={deposit.is_issued || false}
+                                  onChange={(e) => {
+                                    const updated = [...(expenses.golf_course_settlement || [])];
+                                    const deposits = [...(updated[idx].deposits || [])];
+                                    deposits[depositIdx] = { 
+                                      ...deposits[depositIdx], 
+                                      is_issued: e.target.checked,
+                                      verified_at: e.target.checked ? new Date().toISOString() : undefined
+                                    };
+                                    updated[idx] = { ...updated[idx], deposits };
+                                    setExpenses({ ...expenses, golf_course_settlement: updated });
+                                  }}
+                                  className="w-4 h-4"
+                                />
+                                <label htmlFor={`deposit-card-issued-${idx}-${depositIdx}`} className="text-xs text-gray-700">
+                                  카드 처리 확인 (카드를 긁은 담당자가 체크)
+                                </label>
+                              </div>
+                            )}
+                            
+                            {/* 계좌이체: 발행 요청 상태 및 발행 요청서 생성 */}
+                            {deposit.method === 'bank' && (
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                      발행 요청 상태
+                                    </label>
+                                    <select
+                                      value={deposit.request_status || "pending"}
+                                      onChange={(e) => {
+                                        const updated = [...(expenses.golf_course_settlement || [])];
+                                        const deposits = [...(updated[idx].deposits || [])];
+                                        deposits[depositIdx] = { 
+                                          ...deposits[depositIdx], 
+                                          request_status: e.target.value,
+                                          requested_at: e.target.value !== 'pending' ? (deposits[depositIdx].requested_at || new Date().toISOString()) : undefined
+                                        };
+                                        updated[idx] = { ...updated[idx], deposits };
+                                        setExpenses({ ...expenses, golf_course_settlement: updated });
+                                      }}
+                                      className="w-full border rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                    >
+                                      <option value="pending">요청 대기</option>
+                                      <option value="in_progress">진행중</option>
+                                      <option value="completed">완료</option>
+                                    </select>
+                                  </div>
+                                  <div className="flex items-end">
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        // 세금계산서 발행 요청서 생성
+                                        try {
+                                          const response = await fetch('/api/settlements/generate-receipt-request', {
+                                            method: 'POST',
+                                            headers: {
+                                              'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                              tourId: tourId,
+                                              golfCourseName: settlement.golf_course_name || '골프장',
+                                              deposit: deposit,
+                                              settlementDate: settlement.date,
+                                              subtotal: settlement.subtotal
+                                            }),
+                                          });
+                                          
+                                          if (!response.ok) throw new Error('발행 요청서 생성 실패');
+                                          
+                                          const blob = await response.blob();
+                                          const url = window.URL.createObjectURL(blob);
+                                          const a = document.createElement('a');
+                                          a.href = url;
+                                          a.download = `세금계산서발행요청_${settlement.golf_course_name || '골프장'}_${deposit.date || new Date().toISOString().split('T')[0]}.xlsx`;
+                                          document.body.appendChild(a);
+                                          a.click();
+                                          window.URL.revokeObjectURL(url);
+                                          document.body.removeChild(a);
+                                          
+                                          // 발행 요청 상태 업데이트
+                                          const updated = [...(expenses.golf_course_settlement || [])];
+                                          const deposits = [...(updated[idx].deposits || [])];
+                                          deposits[depositIdx] = { 
+                                            ...deposits[depositIdx], 
+                                            request_status: 'pending',
+                                            requested_at: new Date().toISOString()
+                                          };
+                                          updated[idx] = { ...updated[idx], deposits };
+                                          setExpenses({ ...expenses, golf_course_settlement: updated });
+                                          
+                                          alert('세금계산서 발행 요청서가 생성되었습니다.');
+                                        } catch (error: any) {
+                                          alert(`발행 요청서 생성 실패: ${error.message}`);
+                                        }
+                                      }}
+                                      className="w-full px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                    >
+                                      발행 요청서 생성
+                                    </button>
+                                  </div>
+                                </div>
+                                {deposit.requested_at && (
+                                  <p className="text-xs text-gray-500">
+                                    요청일: {new Date(deposit.requested_at).toLocaleDateString('ko-KR')}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                            
+                            {(deposit.is_issued && deposit.verified_at) && (
+                              <p className="text-xs text-gray-500 mt-2">
+                                검증일: {new Date(deposit.verified_at).toLocaleDateString('ko-KR')}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       ))}
                       {(!settlement.deposits || settlement.deposits.length === 0) && (
