@@ -132,16 +132,46 @@ export default function ModernDashboardContentV2() {
       ) || [];
 
       // 다가오는 투어 (7일 이내)
+      // 완료된 투어, 취소된 투어, 견적서 제외
       const sevenDaysLater = new Date(today);
       sevenDaysLater.setDate(today.getDate() + 7);
       
-      const { data: upcomingTours } = await supabase
+      const { data: upcomingToursRaw } = await supabase
         .from('singsing_tours')
         .select('*')
+        .is('quote_data', null)  // 견적서 제외
+        .neq('status', 'completed')  // 완료된 투어 제외
+        .neq('status', 'cancelled')  // 취소된 투어 제외
         .gt('start_date', today.toISOString())
         .lte('start_date', sevenDaysLater.toISOString())
         .order('start_date', { ascending: true })
         .limit(5);
+
+      // 참가자 수 계산 및 완료된 투어 추가 필터링 (날짜 기반)
+      const upcomingTours = await Promise.all(
+        (upcomingToursRaw || []).map(async (tour) => {
+          // 참가자 수 계산
+          const { count: participantCount } = await supabase
+            .from('singsing_participants')
+            .select('*', { count: 'exact', head: true })
+            .eq('tour_id', tour.id);
+
+          // 날짜 기반으로 완료 여부 확인 (추가 안전장치)
+          const endDate = new Date(tour.end_date);
+          endDate.setHours(23, 59, 59, 999);
+          const isCompleted = today > endDate;
+
+          return {
+            ...tour,
+            participants: participantCount || 0
+          };
+        })
+      ).then(tours => tours.filter(tour => {
+        // 날짜 기반으로 완료된 투어 제외
+        const endDate = new Date(tour.end_date);
+        endDate.setHours(23, 59, 59, 999);
+        return new Date() <= endDate;
+      }));
 
       // 완료된 투어 통계 (월간, 연간)
       const { count: completedToursMonthly } = await supabase
