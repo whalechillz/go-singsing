@@ -49,6 +49,9 @@ export default function UnissuedReceiptsPage() {
           other_receipt_number,
           other_is_issued,
           other_verified_at,
+          other_request_status,
+          other_requested_at,
+          other_requested_by,
           tour:tour_id (
             id,
             title,
