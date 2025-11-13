@@ -52,6 +52,7 @@ interface TourListEnhancedProps {
   onRefresh: () => void;
   onToggleClosed: (tour: Tour) => void;
   onMarkCompleted: (tour: Tour) => void;
+  onUnmarkCompleted: (tour: Tour) => void;
 }
 
 const TourListEnhanced: React.FC<TourListEnhancedProps> = ({ 
@@ -61,7 +62,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   onDelete,
   onRefresh,
   onToggleClosed,
-  onMarkCompleted
+  onMarkCompleted,
+  onUnmarkCompleted
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -736,6 +738,15 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                             title="투어 완료 처리 (정산 후)"
                           >
                             완료 처리
+                          </button>
+                        )}
+                        {status === 'completed' && (
+                          <button
+                            onClick={() => onUnmarkCompleted(tour)}
+                            className="text-xs text-orange-600 hover:text-orange-800 font-medium px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
+                            title="완료 처리 해제"
+                          >
+                            완료 처리 해제
                           </button>
                         )}
                       </div>

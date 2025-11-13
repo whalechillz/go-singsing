@@ -243,6 +243,39 @@ const TourListPage: React.FC = () => {
     }
   };
 
+  const handleUnmarkCompleted = async (tour: Tour) => {
+    if (!window.confirm('이 투어의 완료 처리를 해제하시겠습니까?\n\n투어가 "현재/예정 투어" 탭으로 이동합니다.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("singsing_tours")
+        .update({
+          status: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", tour.id);
+        
+      if (error) throw error;
+      
+      // 로컬 상태 업데이트
+      setTours(prev => prev.map(t => 
+        t.id === tour.id 
+          ? { ...t, status: undefined }
+          : t
+      ));
+      
+      alert('완료 처리가 해제되었습니다.');
+      
+      // 목록 새로고침
+      await fetchTours();
+      
+    } catch (error: any) {
+      alert('완료 처리 해제 실패: ' + error.message);
+    }
+  };
+
   const handleRefresh = async () => {
     await fetchTours();
   };
@@ -256,6 +289,7 @@ const TourListPage: React.FC = () => {
       onRefresh={handleRefresh}
       onToggleClosed={handleToggleClosed}
       onMarkCompleted={handleMarkCompleted}
+      onUnmarkCompleted={handleUnmarkCompleted}
     />
   );
 };
