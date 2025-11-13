@@ -131,10 +131,10 @@ export default function SettlementsPage() {
           const product = tour?.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
           const productName = product?.name || "";
           
-          // tour_expenses 존재 여부 확인
+          // tour_expenses 존재 여부 및 total_cost 확인
           const { data: expenses } = await supabase
             .from("tour_expenses")
-            .select("id")
+            .select("id, total_cost")
             .eq("tour_id", item.tour_id)
             .single();
           
@@ -158,7 +158,10 @@ export default function SettlementsPage() {
           
           // 마진 실시간 계산: 정산 금액 - 총 원가 (정산 상세 페이지와 동일한 로직)
           const settlementAmount = item.settlement_amount || 0;
-          const totalCost = item.total_cost || 0;
+          // tour_settlements의 total_cost가 0이거나 없으면 tour_expenses에서 직접 가져온 값 사용
+          const totalCost = (item.total_cost && item.total_cost > 0) 
+            ? item.total_cost 
+            : (expenses?.total_cost || 0);
           const calculatedMargin = settlementAmount - totalCost;
           const calculatedMarginRate = settlementAmount > 0 
             ? (calculatedMargin / settlementAmount) * 100 
