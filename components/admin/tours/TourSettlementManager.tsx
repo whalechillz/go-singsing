@@ -47,6 +47,13 @@ interface TourExpenses {
   insurance_cost?: number;
   other_expenses?: any[];
   other_expenses_total?: number;
+  other_receipt_type?: string;
+  other_receipt_number?: string;
+  other_is_issued?: boolean;
+  other_verified_at?: string;
+  other_request_status?: string;
+  other_requested_at?: string;
+  other_requested_by?: string;
   total_cost?: number;
   notes?: string;
 }
@@ -1292,6 +1299,73 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       </div>
                     </div>
                     
+                    {/* 세금계산서/영수증 정보 */}
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                      <h6 className="font-semibold text-gray-900 mb-3">세금계산서/영수증 정보</h6>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            세금계산서/영수증 종류
+                          </label>
+                          <select
+                            value={settlement.receipt_type || ""}
+                            onChange={(e) => {
+                              const updated = [...(expenses.golf_course_settlement || [])];
+                              updated[idx] = { ...updated[idx], receipt_type: e.target.value };
+                              setExpenses({ ...expenses, golf_course_settlement: updated });
+                            }}
+                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          >
+                            <option value="">선택 안함</option>
+                            <option value="tax_invoice">매입세금계산서</option>
+                            <option value="cash_receipt">현금영수증</option>
+                            <option value="none">없음</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            세금계산서/영수증 번호
+                          </label>
+                          <input
+                            type="text"
+                            value={settlement.receipt_number || ""}
+                            onChange={(e) => {
+                              const updated = [...(expenses.golf_course_settlement || [])];
+                              updated[idx] = { ...updated[idx], receipt_number: e.target.value };
+                              setExpenses({ ...expenses, golf_course_settlement: updated });
+                            }}
+                            placeholder="세금계산서 번호 또는 현금영수증 번호"
+                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`golf-issued-${idx}`}
+                            checked={settlement.is_issued || false}
+                            onChange={(e) => {
+                              const updated = [...(expenses.golf_course_settlement || [])];
+                              updated[idx] = { 
+                                ...updated[idx], 
+                                is_issued: e.target.checked,
+                                verified_at: e.target.checked ? new Date().toISOString() : null
+                              };
+                              setExpenses({ ...expenses, golf_course_settlement: updated });
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <label htmlFor={`golf-issued-${idx}`} className="text-sm text-gray-700">
+                            발행 확인 (국세청 검증 완료)
+                          </label>
+                        </div>
+                      </div>
+                      {settlement.verified_at && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          검증일: {new Date(settlement.verified_at).toLocaleDateString('ko-KR')}
+                        </p>
+                      )}
+                    </div>
+                    
                     {/* 입금 내역 */}
                     <div className="mt-4 pt-4 border-t border-gray-300">
                       <div className="flex justify-between items-center mb-3">
@@ -1962,6 +2036,72 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                         />
                       </div>
                     </div>
+                    
+                    {/* 세금계산서/영수증 정보 */}
+                    <div className="mt-4 pt-3 border-t border-gray-200">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            세금계산서/영수증 종류
+                          </label>
+                          <select
+                            value={expense.receipt_type || ""}
+                            onChange={(e) => {
+                              const updated = [...(expenses.meal_expenses || [])];
+                              updated[idx] = { ...updated[idx], receipt_type: e.target.value };
+                              setExpenses({ ...expenses, meal_expenses: updated });
+                            }}
+                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          >
+                            <option value="">선택 안함</option>
+                            <option value="tax_invoice">매입세금계산서</option>
+                            <option value="cash_receipt">현금영수증</option>
+                            <option value="none">없음</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            세금계산서/영수증 번호
+                          </label>
+                          <input
+                            type="text"
+                            value={expense.receipt_number || ""}
+                            onChange={(e) => {
+                              const updated = [...(expenses.meal_expenses || [])];
+                              updated[idx] = { ...updated[idx], receipt_number: e.target.value };
+                              setExpenses({ ...expenses, meal_expenses: updated });
+                            }}
+                            placeholder="세금계산서 번호 또는 현금영수증 번호"
+                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`meal-issued-${idx}`}
+                            checked={expense.is_issued || false}
+                            onChange={(e) => {
+                              const updated = [...(expenses.meal_expenses || [])];
+                              updated[idx] = { 
+                                ...updated[idx], 
+                                is_issued: e.target.checked,
+                                verified_at: e.target.checked ? new Date().toISOString() : null
+                              };
+                              setExpenses({ ...expenses, meal_expenses: updated });
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <label htmlFor={`meal-issued-${idx}`} className="text-sm text-gray-700">
+                            발행 확인 (국세청 검증 완료)
+                          </label>
+                        </div>
+                      </div>
+                      {expense.verified_at && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          검증일: {new Date(expense.verified_at).toLocaleDateString('ko-KR')}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
                 
@@ -2056,6 +2196,68 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       placeholder="0"
                     />
                   </div>
+                </div>
+                
+                {/* 기타 비용 세금계산서/영수증 정보 */}
+                <div className="mt-4 pt-4 border-t border-gray-300">
+                  <h5 className="font-semibold text-gray-900 mb-3">세금계산서/영수증 정보</h5>
+                  <p className="text-xs text-gray-500 mb-3">각 비용 항목별 세금계산서/영수증 정보는 메모 필드에 기록하거나, 아래에 추가할 수 있습니다.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        세금계산서/영수증 종류
+                      </label>
+                      <select
+                        value={expenses.other_receipt_type || ""}
+                        onChange={(e) => setExpenses({
+                          ...expenses,
+                          other_receipt_type: e.target.value
+                        })}
+                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      >
+                        <option value="">선택 안함</option>
+                        <option value="tax_invoice">매입세금계산서</option>
+                        <option value="cash_receipt">현금영수증</option>
+                        <option value="none">없음</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        세금계산서/영수증 번호
+                      </label>
+                      <input
+                        type="text"
+                        value={expenses.other_receipt_number || ""}
+                        onChange={(e) => setExpenses({
+                          ...expenses,
+                          other_receipt_number: e.target.value
+                        })}
+                        placeholder="세금계산서 번호 또는 현금영수증 번호"
+                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="other-issued"
+                        checked={expenses.other_is_issued || false}
+                        onChange={(e) => setExpenses({
+                          ...expenses,
+                          other_is_issued: e.target.checked,
+                          other_verified_at: e.target.checked ? new Date().toISOString() : undefined
+                        })}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="other-issued" className="text-sm text-gray-700">
+                        발행 확인 (국세청 검증 완료)
+                      </label>
+                    </div>
+                  </div>
+                  {expenses.other_verified_at && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      검증일: {new Date(expenses.other_verified_at).toLocaleDateString('ko-KR')}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -2301,15 +2503,32 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       상태
                     </label>
-                    <div className="text-lg font-semibold text-gray-900">
-                      {settlement.status === "completed" ? (
-                        <span className="text-green-600">완료</span>
-                      ) : settlement.status === "cancelled" ? (
-                        <span className="text-red-600">취소</span>
-                      ) : (
-                        <span className="text-yellow-600">대기</span>
-                      )}
-                    </div>
+                    <select
+                      value={settlement.status || 'pending'}
+                      onChange={async (e) => {
+                        const newStatus = e.target.value;
+                        try {
+                          const { error } = await supabase
+                            .from('tour_settlements')
+                            .update({ 
+                              status: newStatus,
+                              settled_at: newStatus === 'completed' ? new Date().toISOString() : null,
+                              updated_at: new Date().toISOString()
+                            })
+                            .eq('tour_id', tourId);
+                          if (error) throw error;
+                          await fetchData();
+                          alert('정산 상태가 변경되었습니다.');
+                        } catch (error: any) {
+                          alert(`상태 변경 실패: ${error.message}`);
+                        }
+                      }}
+                      className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    >
+                      <option value="pending">대기</option>
+                      <option value="completed">완료</option>
+                      <option value="cancelled">취소</option>
+                    </select>
                   </div>
                   {settlement.settled_at && (
                     <div>

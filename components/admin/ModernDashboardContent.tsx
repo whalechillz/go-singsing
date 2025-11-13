@@ -44,8 +44,8 @@ interface DashboardData {
     upcomingToursYearly: number;
   };
   paymentStats: {
-    totalRevenue: number;           // 총 수입
-    totalRevenueMonthly: number;   // 이번달 총 수입
+    totalRevenue: number;           // 정산 금액
+    totalRevenueMonthly: number;   // 이번달 정산 금액
     depositAmount: number;          // 계약금
     balanceAmount: number;          // 잔금
     fullPaymentAmount: number;      // 전액 입금
@@ -56,7 +56,7 @@ interface DashboardData {
     refundedAmount: number;        // 환불 금액
     collectionRate: number;         // 수금률
   };
-  monthlyRevenue: MonthlyRevenue[]; // 월별 매출 데이터
+  monthlyRevenue: MonthlyRevenue[]; // 월별 정산 데이터
   urgentTasks: UrgentTask[];
   recentActivities: Activity[];
 }
@@ -439,7 +439,7 @@ export default function ModernDashboardContentV2() {
           const monthKey = `${tourDate.getFullYear()}-${String(tourDate.getMonth() + 1).padStart(2, '0')}`;
           
           if (monthlyDataMap[monthKey]) {
-            // 정산 금액을 총 수입으로 사용 (실제 정산 금액)
+            // 정산 금액 사용 (실제 정산 금액)
             const settlementAmount = settlement.settlement_amount || 0;
             monthlyDataMap[monthKey].totalRevenue += settlementAmount;
             
@@ -849,7 +849,7 @@ export default function ModernDashboardContentV2() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
           <Link href="/admin/payments" className="block">
             <div className="bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-              <p className="text-sm font-medium text-gray-600">총 수입</p>
+              <p className="text-sm font-medium text-gray-600">정산 금액</p>
               <p className="text-xl font-bold text-gray-900 mt-1">
                 {dashboardData.paymentStats.totalRevenue.toLocaleString()}원
               </p>
@@ -947,7 +947,7 @@ export default function ModernDashboardContentV2() {
                   {dashboardData.paymentStats.settlementAmount.toLocaleString()}원
                 </p>
                 <p className="text-xs text-indigo-600 mt-2">
-                  총 수입: {dashboardData.paymentStats.totalRevenue.toLocaleString()}원 - 
+                  정산 금액: {dashboardData.paymentStats.totalRevenue.toLocaleString()}원 - 
                   환불: {dashboardData.paymentStats.refundedAmount.toLocaleString()}원
                 </p>
               </div>
@@ -1008,11 +1008,11 @@ export default function ModernDashboardContentV2() {
         </Link>
       </div>
 
-      {/* 월별 매출 현황 */}
+      {/* 월별 정산 현황 */}
       {dashboardData.monthlyRevenue && dashboardData.monthlyRevenue.length > 0 && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">월별 매출 현황</h2>
+            <h2 className="text-xl font-bold text-gray-900">월별 정산 현황</h2>
             <span className="text-sm text-gray-500">
               {new Date().getFullYear()}년 1월 ~ {new Date().getMonth() + 1}월
             </span>
@@ -1029,7 +1029,7 @@ export default function ModernDashboardContentV2() {
 
           {/* 요약 테이블 */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">월별 매출 요약</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">월별 정산 요약</h3>
             <MonthlyRevenueTable 
               data={dashboardData.monthlyRevenue}
               showDetails={false}

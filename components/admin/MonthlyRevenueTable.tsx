@@ -54,7 +54,7 @@ const MonthlyRevenueTable: React.FC<MonthlyRevenueTableProps> = ({
                 월
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider border-b">
-                총 수입
+                정산 금액
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider border-b">
                 계약금
@@ -113,7 +113,11 @@ const MonthlyRevenueTable: React.FC<MonthlyRevenueTableProps> = ({
                   {formatCurrency(month.margin)}원
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-green-600">
-                  {month.marginRate.toFixed(1)}%
+                  {month.totalCost > 0 ? (
+                    `${month.marginRate.toFixed(1)}%`
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-600">
                   {month.participantCount}명
@@ -223,7 +227,11 @@ const MonthlyRevenueTable: React.FC<MonthlyRevenueTableProps> = ({
               {formatCurrency(totals.margin)}원
             </td>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-bold text-green-600">
-              {totalMarginRate}%
+              {totals.totalCost > 0 ? (
+                `${totalMarginRate}%`
+              ) : (
+                <span className="text-gray-400">-</span>
+              )}
             </td>
           </tr>
         </tbody>

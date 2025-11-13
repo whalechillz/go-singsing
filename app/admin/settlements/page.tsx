@@ -547,6 +547,15 @@ export default function SettlementsPage() {
             </h1>
             <p className="mt-2 text-gray-600">투어별 정산 현황을 확인하고 관리할 수 있습니다.</p>
           </div>
+          <div className="flex gap-3 items-center">
+            <Link
+              href="/admin/settlements/unissued-receipts"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"
+            >
+              <AlertCircle className="w-4 h-4" />
+              미발행 세금계산서 관리
+            </Link>
+          </div>
           <div className="flex gap-3">
             {/* 투어 선택 드롭다운 */}
             <div className="relative">

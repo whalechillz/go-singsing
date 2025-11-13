@@ -17,9 +17,9 @@ import {
 export interface MonthlyRevenue {
   month: string;              // "2025-01"
   monthLabel: string;         // "1월"
-  totalRevenue: number;       // 총 수입
+  totalRevenue: number;       // 정산 금액
   totalCost: number;          // 총 비용 (투어 비용 등)
-  margin: number;             // 마진 (총 수입 - 총 비용)
+  margin: number;             // 마진 (정산 금액 - 총 비용)
   marginRate: number;         // 마진률 (%)
   depositAmount: number;       // 계약금
   balanceAmount: number;      // 잔금
@@ -75,7 +75,7 @@ const MonthlyRevenueChart: React.FC<MonthlyRevenueChartProps> = ({
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          <Bar dataKey="totalRevenue" fill="#3b82f6" name="총 수입" />
+          <Bar dataKey="totalRevenue" fill="#3b82f6" name="정산 금액" />
           {showCost && (
             <>
               <Bar dataKey="totalCost" fill="#ef4444" name="총 비용" />
@@ -106,7 +106,7 @@ const MonthlyRevenueChart: React.FC<MonthlyRevenueChartProps> = ({
           dataKey="totalRevenue" 
           stroke="#3b82f6" 
           strokeWidth={2}
-          name="총 수입"
+          name="정산 금액"
           dot={{ r: 4 }}
         />
         {showCost && (

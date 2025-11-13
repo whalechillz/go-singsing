@@ -377,3 +377,35 @@ CREATE TABLE user_roles (
   - `app/admin/tours/[tourId]/settlement/page.tsx`: 정산 관리 페이지
   - `components/admin/tours/TourSettlementManager.tsx`: 정산 관리 컴포넌트
   - `app/admin/tours/[tourId]/page.tsx`: 정산 관리 탭 추가
+
+## 2025-11-XX 정산 시스템 개선 및 세금계산서 관리 기능 추가
+
+- **내용**: 정산 시스템 용어 통일, 정산 상태 변경 기능, 매입세금계산서/현금영수증 기록 기능, 미발행 항목 관리 기능 추가
+- **구현된 기능**:
+  1. **Phase 1: 기본 기능**
+     - 정산 상태 변경 기능 (대기/완료/취소 드롭다운)
+     - 용어 통일: "총 수입" → "정산 금액", "월별 매출" → "월별 정산"
+     - 마진율 100% 개선 (비용이 0원일 때 "-" 표시)
+  2. **Phase 2: 세금계산서 기록**
+     - 골프장 정산 섹션에 세금계산서/영수증 입력 필드 추가
+     - 경비 지출 섹션에 세금계산서/영수증 입력 필드 추가
+     - 기타 비용 섹션에 세금계산서/영수증 입력 필드 추가
+     - 발행 여부 체크박스 추가 (국세청 검증 완료)
+  3. **Phase 3: 미발행 항목 관리**
+     - 미발행 세금계산서/영수증 목록 페이지 생성
+     - 체크박스로 항목 선택 및 일괄 발행 요청 기능
+     - 발행 요청 상태 추적 (요청 대기/진행중/완료)
+- **변경 파일**:
+  - `components/admin/tours/TourSettlementManager.tsx`: 정산 상태 변경, 세금계산서/영수증 입력 필드 추가
+  - `components/admin/ModernDashboardContent.tsx`: 용어 통일 (총 수입 → 정산 금액)
+  - `components/admin/MonthlyRevenueChart.tsx`: 그래프 레이블 변경 (총 수입 → 정산 금액)
+  - `components/admin/MonthlyRevenueTable.tsx`: 테이블 헤더 변경 및 마진율 개선
+  - `app/admin/settlements/unissued-receipts/page.tsx`: 미발행 항목 목록 페이지 (신규)
+  - `app/admin/settlements/page.tsx`: 미발행 항목 관리 링크 추가
+- **데이터 구조 확장**:
+  - `tour_expenses` 테이블의 JSONB 필드에 `receipt_type`, `receipt_number`, `is_issued`, `verified_at`, `request_status`, `requested_at`, `requested_by` 필드 추가
+  - `tour_expenses` 테이블에 `other_receipt_type`, `other_receipt_number`, `other_is_issued`, `other_verified_at`, `other_request_status`, `other_requested_at`, `other_requested_by` 필드 추가
+- **향후 계획**:
+  - 국세청 API 연동 (발행 여부 자동 검증)
+  - 발행 요청 알림 기능
+  - 발행 요청 이력 상세 관리
