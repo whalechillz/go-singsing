@@ -69,7 +69,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'past'>('all');
-  const [sortBy, setSortBy] = useState<'date' | 'name' | 'participants'>('date');
+  const [productFilter, setProductFilter] = useState<string>('all'); // 상품명 필터
+  const [sortBy, setSortBy] = useState<'date' | 'name' | 'participants' | 'product_name'>('date');
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [quickFilter, setQuickFilter] = useState<'none' | 'today' | 'week' | 'almostFull'>('none');
@@ -217,8 +218,20 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
       if (dateFilter === 'past' && startDate > today) return false;
     }
     
+    // 상품명 필터
+    if (productFilter !== 'all' && tour.product_name !== productFilter) {
+      return false;
+    }
+    
     return true;
   });
+  
+  // 고유한 상품명 목록 생성
+  const uniqueProductNames = Array.from(new Set(
+    tours
+      .map(t => t.product_name)
+      .filter((name): name is string => !!name)
+  )).sort();
 
   // 정렬 (마감 상태 고려)
   const sortedTours = [...filteredTours].sort((a, b) => {
@@ -256,6 +269,11 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
     
     // 정렬 방식에 따른 정렬
     switch (sortBy) {
+      case 'product_name':
+        // 상품명으로 정렬, 같은 상품명이면 투어명으로 정렬
+        const productCompare = (a.product_name || '').localeCompare(b.product_name || '');
+        if (productCompare !== 0) return productCompare;
+        return a.title.localeCompare(b.title);
       case 'name':
         return a.title.localeCompare(b.title);
       case 'participants':
@@ -554,11 +572,23 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
             
             <select
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={productFilter}
+              onChange={(e) => setProductFilter(e.target.value)}
+            >
+              <option value="all">모든 상품</option>
+              {uniqueProductNames.map(productName => (
+                <option key={productName} value={productName}>{productName}</option>
+              ))}
+            </select>
+            
+            <select
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
             >
               <option value="date">날짜순</option>
-              <option value="name">이름순</option>
+              <option value="name">투어명순</option>
+              <option value="product_name">상품명순</option>
               <option value="participants">참가자순</option>
             </select>
           </div>

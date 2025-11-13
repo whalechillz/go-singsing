@@ -22,6 +22,7 @@ interface TourSettlement {
   settlement_status?: 'not_started' | 'in_progress' | 'completed'; // 정산 상태
   participant_count?: number; // 참가자 수
   com_per_person?: number; // 1인당 COM
+  product_name?: string; // 상품명
 }
 
 interface Tour {
@@ -41,6 +42,7 @@ export default function SettlementsPage() {
   const [filter, setFilter] = useState<"all" | "not_started" | "in_progress" | "completed">("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [packageFilter, setPackageFilter] = useState<string>("all"); // 패키지 필터 (all, 순천, 영덕)
+  const [productFilter, setProductFilter] = useState<string>("all"); // 상품명 필터
   const [sortField, setSortField] = useState<string>("start_date"); // 정렬 필드
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc"); // 정렬 방향
 
@@ -68,6 +70,13 @@ export default function SettlementsPage() {
   const fetchSettlements = async () => {
     setLoading(true);
     try {
+      // tour_products 정보 가져오기
+      const { data: productsData } = await supabase
+        .from("tour_products")
+        .select("id, name");
+      
+      const productsMap = new Map(productsData?.map(p => [p.id, p]) || []);
+      
       // 1. tour_settlements가 있는 투어 가져오기
       let query = supabase
         .from("tour_settlements")
@@ -84,7 +93,8 @@ export default function SettlementsPage() {
           tour:tour_id (
             id,
             title,
-            start_date
+            start_date,
+            tour_product_id
           )
         `)
         .order("created_at", { ascending: false });
@@ -102,7 +112,7 @@ export default function SettlementsPage() {
       // 2. 모든 투어 가져오기 (정산 미시작 투어 포함)
       const { data: allTours, error: toursError } = await supabase
         .from("singsing_tours")
-        .select("id, title, start_date, price")
+        .select("id, title, start_date, price, tour_product_id")
         .is("quote_data", null)
         .order("start_date", { ascending: false })
         .limit(200);
@@ -116,6 +126,10 @@ export default function SettlementsPage() {
       const settlementsWithExpenses = await Promise.all(
         (settlementsData || []).map(async (item: any) => {
           const tour = Array.isArray(item.tour) ? item.tour[0] : item.tour;
+          
+          // 상품명 가져오기
+          const product = tour?.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
+          const productName = product?.name || "";
           
           // tour_expenses 존재 여부 확인
           const { data: expenses } = await supabase
@@ -163,6 +177,7 @@ export default function SettlementsPage() {
             settlement_status: settlementStatus,
             participant_count: participantCount || 0,
             com_per_person: comPerPerson,
+            product_name: productName, // 상품명 추가
           };
         })
       );
@@ -172,6 +187,10 @@ export default function SettlementsPage() {
         (allTours || [])
           .filter(tour => !settledTourIds.has(tour.id))
           .map(async (tour) => {
+            // 상품명 가져오기
+            const product = tour.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
+            const productName = product?.name || "";
+            
             // 참가자 수 확인
             const { count: participantCount } = await supabase
               .from("singsing_participants")
@@ -197,6 +216,7 @@ export default function SettlementsPage() {
               settlement_status: "not_started" as const,
               participant_count: participantCount || 0,
               com_per_person: 0,
+              product_name: productName, // 상품명 추가
             };
           })
       );
@@ -257,6 +277,13 @@ export default function SettlementsPage() {
     }
   };
 
+  // 고유한 상품명 목록 생성
+  const uniqueProductNames = Array.from(new Set(
+    settlements
+      .map(s => s.product_name)
+      .filter((name): name is string => !!name)
+  )).sort();
+  
   // 정렬 및 필터링된 정산 목록
   const filteredSettlements = settlements
     .filter((s) => {
@@ -274,6 +301,10 @@ export default function SettlementsPage() {
         if (packageFilter === "영덕" && !s.tour_title.includes("영덕")) {
           return false;
         }
+      }
+      // 상품명 필터
+      if (productFilter !== "all" && s.product_name !== productFilter) {
+        return false;
       }
       return true;
     })
@@ -536,6 +567,20 @@ export default function SettlementsPage() {
             >
               영덕 ({packageStats.영덕.count})
             </button>
+          </div>
+          {/* 상품명 필터 */}
+          <div className="flex gap-2 items-center">
+            <Filter className="w-5 h-5 text-gray-500" />
+            <select
+              value={productFilter}
+              onChange={(e) => setProductFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">모든 상품</option>
+              {uniqueProductNames.map(productName => (
+                <option key={productName} value={productName}>{productName}</option>
+              ))}
+            </select>
           </div>
           {/* 검색 및 내보내기 */}
           <div className="flex gap-2 flex-1 max-w-md">
