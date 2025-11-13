@@ -285,6 +285,23 @@ export default function SettlementsPage() {
     }
   };
 
+  // 상품명에 따른 뱃지 색상 결정 함수
+  const getProductBadgeColor = (productName: string | undefined) => {
+    if (!productName) return { bg: 'bg-gray-100', text: 'text-gray-700' };
+    
+    const name = productName.toLowerCase();
+    
+    if (name.includes('순천') && name.includes('풀패키지')) {
+      return { bg: 'bg-green-100', text: 'text-green-700' };
+    }
+    if (name.includes('영덕') && name.includes('풀패키지')) {
+      return { bg: 'bg-orange-100', text: 'text-orange-700' };
+    }
+    
+    // 기본 색상
+    return { bg: 'bg-blue-100', text: 'text-blue-700' };
+  };
+
   // 고유한 상품명 목록 생성
   const uniqueProductNames = Array.from(new Set(
     settlements
@@ -787,10 +804,19 @@ export default function SettlementsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredSettlements.map((settlement) => (
+                {filteredSettlements.map((settlement) => {
+                  const badgeColors = getProductBadgeColor(settlement.product_name);
+                  return (
                   <tr key={settlement.tour_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {settlement.tour_title}
+                      <div className="flex flex-col gap-1">
+                        {settlement.product_name && (
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${badgeColors.bg} ${badgeColors.text}`}>
+                            {settlement.product_name}
+                          </span>
+                        )}
+                        <span>{settlement.tour_title}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(settlement.tour_start_date)}
@@ -862,7 +888,8 @@ export default function SettlementsPage() {
                       </Link>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
