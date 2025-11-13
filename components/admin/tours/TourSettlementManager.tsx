@@ -229,17 +229,46 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
 
     setSaving(true);
     try {
+      // 총 원가 자동 계산
+      const busTotal = (expenses.bus_cost || 0) + 
+                       (expenses.bus_driver_cost || 0) + 
+                       (expenses.toll_fee || 0) + 
+                       (expenses.parking_fee || 0);
+      
+      const guideTotal = (expenses.guide_fee || 0) + 
+                         (expenses.guide_meal_cost || 0) + 
+                         (expenses.guide_accommodation_cost || 0) + 
+                         (expenses.guide_other_cost || 0);
+      
+      const otherTotal = (expenses.accommodation_cost || 0) + 
+                         (expenses.restaurant_cost || 0) + 
+                         (expenses.attraction_fee || 0) + 
+                         (expenses.insurance_cost || 0) + 
+                         (expenses.other_expenses_total || 0);
+      
+      const calculatedTotalCost = (expenses.golf_course_total || 0) + 
+                                  busTotal + 
+                                  guideTotal + 
+                                  (expenses.meal_expenses_total || 0) + 
+                                  otherTotal;
+      
+      // total_cost를 포함한 expenses 객체 생성
+      const expensesToSave = {
+        ...expenses,
+        total_cost: calculatedTotalCost
+      };
+
       if (expenses.id) {
         const { error } = await supabase
           .from("tour_expenses")
-          .update(expenses)
+          .update(expensesToSave)
           .eq("id", expenses.id);
 
         if (error) throw error;
       } else {
         // 새 레코드 삽입 시 id 생성
         const expensesWithId = {
-          ...expenses,
+          ...expensesToSave,
           id: crypto.randomUUID()
         };
         
