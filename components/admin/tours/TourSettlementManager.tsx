@@ -369,6 +369,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     onChange: (num: number) => void
   ) => {
     return {
+      type: "text" as const,
       value: formatNumberWithCommas(value),
       onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
         // 0이면 빈 문자열로 초기화
@@ -808,10 +809,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
   }
 
   // 계산 차이 확인 (예상 마진과 실제 계산 마진 비교)
-  const hasDiscrepancy = settlement?.expected_margin !== undefined && 
-                         settlement?.expected_margin !== null &&
-                         settlement?.margin !== undefined &&
-                         Math.abs((settlement.margin || 0) - (settlement.expected_margin || 0)) > 1000; // 1,000원 이상 차이
+  const hasDiscrepancy = settlement?.expected_margin !== undefined && settlement?.expected_margin !== null && settlement?.margin !== undefined && Math.abs((settlement.margin || 0) - (settlement.expected_margin || 0)) > 1000; // 1,000원 이상 차이
 
   return (
     <div className="space-y-6">
@@ -1135,7 +1133,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           소계
                         </label>
                         <input
-                          type="text"
                           {...handleNumberInput(settlement.subtotal, (subtotal) => {
                             const updated = [...(expenses.golf_course_settlement || [])];
                             updated[idx] = {
@@ -1157,7 +1154,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           입금액
                         </label>
                         <input
-                          type="text"
                           {...handleNumberInput(settlement.deposit, (deposit) => {
                             const updated = [...(expenses.golf_course_settlement || [])];
                             updated[idx] = {
@@ -1276,7 +1272,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                 입금 금액
                               </label>
                               <input
-                                type="text"
                                 {...handleNumberInput(deposit.amount, (amount) => {
                                   const updated = [...(expenses.golf_course_settlement || [])];
                                   const deposits = [...(updated[idx].deposits || [])];
@@ -1291,7 +1286,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                     ...expenses,
                                     golf_course_settlement: updated
                                   });
-                                }}
+                                })}
                                 className="w-full border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                                 placeholder="0"
                               />
@@ -1444,7 +1439,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                 환불 금액
                               </label>
                               <input
-                                type="text"
                                 {...handleNumberInput(refund.amount, (amount) => {
                                   const updated = [...(expenses.golf_course_settlement || [])];
                                   const refunds = [...(updated[idx].refunds || [])];
@@ -1545,7 +1539,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                         골프장 총 비용
                       </label>
                       <input
-                        type="text"
                         {...handleNumberInput(expenses.golf_course_total, (num) => setExpenses({
                           ...expenses,
                           golf_course_total: num
@@ -1570,7 +1563,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       버스 비용
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.bus_cost, (num) => setExpenses({
                         ...expenses,
                         bus_cost: num
@@ -1584,7 +1576,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       기사 비용
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.bus_driver_cost, (num) => setExpenses({
                         ...expenses,
                         bus_driver_cost: num
@@ -1598,7 +1589,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       톨게이트 비용
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.toll_fee, (num) => setExpenses({
                         ...expenses,
                         toll_fee: num
@@ -1612,7 +1602,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       주차비
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.parking_fee, (num) => setExpenses({
                         ...expenses,
                         parking_fee: num
@@ -1648,7 +1637,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       가이드 인건비
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.guide_fee, (num) => setExpenses({
                         ...expenses,
                         guide_fee: num
@@ -1662,7 +1650,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       가이드 식사비
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.guide_meal_cost, (num) => setExpenses({
                         ...expenses,
                         guide_meal_cost: num
@@ -1676,7 +1663,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       가이드 숙박비
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.guide_accommodation_cost, (num) => setExpenses({
                         ...expenses,
                         guide_accommodation_cost: num
@@ -1690,7 +1676,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       가이드 기타 비용
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.guide_other_cost, (num) => setExpenses({
                         ...expenses,
                         guide_other_cost: num
@@ -1817,7 +1802,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                           단가
                         </label>
                         <input
-                          type="text"
                           {...handleNumberInput(expense.unit_price, (unitPrice) => {
                             const updated = [...(expenses.meal_expenses || [])];
                             const quantity = updated[idx].quantity || 1;
@@ -1923,7 +1907,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       숙박비
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.accommodation_cost, (num) => setExpenses({
                         ...expenses,
                         accommodation_cost: num
@@ -1937,7 +1920,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       식당 비용
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.restaurant_cost, (num) => setExpenses({
                         ...expenses,
                         restaurant_cost: num
@@ -1951,7 +1933,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       관광지 입장료
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.attraction_fee, (num) => setExpenses({
                         ...expenses,
                         attraction_fee: num
@@ -1965,7 +1946,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       보험료
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.insurance_cost, (num) => setExpenses({
                         ...expenses,
                         insurance_cost: num
@@ -1979,7 +1959,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       기타 비용 총합
                     </label>
                     <input
-                      type="text"
                       {...handleNumberInput(expenses.other_expenses_total, (num) => setExpenses({
                         ...expenses,
                         other_expenses_total: num

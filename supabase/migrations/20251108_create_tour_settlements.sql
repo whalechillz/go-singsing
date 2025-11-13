@@ -94,3 +94,4 @@ CREATE TRIGGER trigger_calculate_tour_settlement_margin
 -- 완료 메시지
 SELECT 'tour_settlements 테이블 생성 완료' as status;
 
+

@@ -163,3 +163,4 @@ WHERE trigger_schema = 'public'
 
 자세한 내용은 `docs/SETTLEMENT_SYSTEM_PLAN.md` 참조
 
+

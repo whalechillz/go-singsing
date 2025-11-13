@@ -222,3 +222,4 @@ async function updateSettlementData(tourId, expensesData) {
 const tourId = process.argv[2] || '2c1684a7-4d9d-45bd-9b9f-3e2d8cc060c5'; // 안경헌님 8/11~13 투어 ID
 inputTourExpenses(tourId);
 
+

@@ -160,7 +160,7 @@
         - generic [ref=e225]: 로그아웃
     - generic [ref=e226]:
       - banner [ref=e227]:
-        - heading "대시보드" [level=1] [ref=e229]
+        - heading "투어 스케줄 관리" [level=1] [ref=e229]
         - generic [ref=e230]:
           - button [ref=e232] [cursor=pointer]:
             - img [ref=e233]
@@ -171,82 +171,122 @@
               - paragraph [ref=e242]: 관리자
       - main [ref=e243]:
         - generic [ref=e244]:
-          - generic [ref=e246]:
-            - generic [ref=e247]:
-              - heading "정산 관리" [level=1] [ref=e248]:
-                - img [ref=e249]
-                - text: 정산 관리
-              - paragraph [ref=e251]: 투어별 정산 현황을 확인하고 관리할 수 있습니다.
-            - generic [ref=e253]:
-              - combobox [ref=e254]:
-                - option "투어 선택하여 정산 입력..." [selected]
-                - option "[해피니스]2박3일 나주버스핑 (2025. 11. 24.)"
-                - option "[파인힐스] 2박3일 순천버스핑 (2025. 11. 17.)"
-                - option "[부킹] 최경민님 (2025. 11. 17.)"
-                - option "[고창] 2박3일 고창버스핑 (2025. 11. 10.)"
-                - option "[파인비치+솔라시도] 골프+식도락 럭셔리 2박3일 해남버스핑 (2025. 11. 10.)"
-                - option "[오션비치] 2박3일 영덕버스핑 (2025. 11. 3.)"
-                - option "[오션비치] 2박3일 영덕버스핑 (2025. 10. 13.)"
-                - option "[파인힐스] 3박4일 순천 버스핑 [정해철님] (2025. 9. 12.)"
-                - option "[파인힐스] 2박3일 순천버스핑 (2025. 9. 8.)"
-                - option "해남 파인비치36+솔라시도18 부킹 [오영숙 님] (2025. 8. 19.)"
-                - option "[오영숙] 해남 패키지 견적서 (2025. 8. 18.)"
-                - option "[오션비치] 2박3일 영덕 버스핑 [전경련/안경헌 님] (2025. 8. 11.)"
-                - option "[파인힐스] 2박3일 순천버스핑 (2025. 6. 16.)"
-                - option "2박3일 순천버스핑 (2025. 5. 19.)"
-                - option "2박3일 영덕버스핑 (2025. 4. 21.)"
-                - option "2박3일 순천버스핑 (2025. 4. 14.)"
-              - img
-          - generic [ref=e255]:
-            - generic [ref=e256]:
-              - button "전체" [ref=e257] [cursor=pointer]
-              - button "대기" [ref=e258] [cursor=pointer]
-              - button "완료" [ref=e259] [cursor=pointer]
-            - generic [ref=e260]:
-              - img [ref=e261]
-              - textbox "투어명으로 검색..." [ref=e264]
-          - generic [ref=e265]:
-            - generic [ref=e266]:
-              - generic [ref=e267]: 계약 매출
-              - generic [ref=e268]: 14,040,000원
-            - generic [ref=e269]:
-              - generic [ref=e270]: 정산 금액
-              - generic [ref=e271]: 13,160,000원
-            - generic [ref=e272]:
-              - generic [ref=e273]: 총 원가
-              - generic [ref=e274]: 12,189,500원
-            - generic [ref=e275]:
-              - generic [ref=e276]: 총 마진
-              - generic [ref=e277]:
-                - text: 970,500원
-                - img [ref=e278]
-              - generic [ref=e281]: "마진률: 7.37%"
-          - generic [ref=e282]:
-            - heading "정산 목록" [level=2] [ref=e284]
-            - table [ref=e286]:
-              - rowgroup [ref=e287]:
-                - row "투어명 시작일 계약 매출 정산 금액 총 원가 마진 마진률 상태 작업" [ref=e288]:
-                  - cell "투어명" [ref=e289]
-                  - cell "시작일" [ref=e290]
-                  - cell "계약 매출" [ref=e291]
-                  - cell "정산 금액" [ref=e292]
-                  - cell "총 원가" [ref=e293]
-                  - cell "마진" [ref=e294]
-                  - cell "마진률" [ref=e295]
-                  - cell "상태" [ref=e296]
-                  - cell "작업" [ref=e297]
-              - rowgroup [ref=e298]:
-                - row "[파인힐스] 3박4일 순천 버스핑 [정해철님] 2025. 9. 12. 14,040,000원 13,160,000원 12,189,500원 970,500원 7.37% 대기 상세보기" [ref=e299]:
-                  - cell "[파인힐스] 3박4일 순천 버스핑 [정해철님]" [ref=e300]
-                  - cell "2025. 9. 12." [ref=e301]
-                  - cell "14,040,000원" [ref=e302]
-                  - cell "13,160,000원" [ref=e303]
-                  - cell "12,189,500원" [ref=e304]
-                  - cell "970,500원" [ref=e305]
-                  - cell "7.37%" [ref=e306]
-                  - cell "대기" [ref=e307]
-                  - cell "상세보기" [ref=e308]:
-                    - link "상세보기" [ref=e309] [cursor=pointer]:
-                      - /url: /admin/tours/e5878cd2-bce7-495d-a428-c2b4e506fcc7/settlement
-  - alert [ref=e310]
+          - generic [ref=e245]:
+            - heading "정산 관리" [level=1] [ref=e246]
+            - paragraph [ref=e247]: 메이플비치 부킹 [박순양 님]
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - heading "정산 요약" [level=2] [ref=e250]:
+                - img [ref=e251]
+                - text: 정산 요약
+              - generic [ref=e253]:
+                - generic [ref=e254]:
+                  - generic [ref=e255]: 계약 매출
+                  - generic [ref=e256]: 2,880,000원
+                  - generic [ref=e257]: 상품가 × 인원
+                - generic [ref=e258]:
+                  - generic [ref=e259]: 정산 금액
+                  - generic [ref=e260]: 2,880,000원
+                  - generic [ref=e261]: 완납 - 환불
+                - generic [ref=e262]:
+                  - generic [ref=e263]: 총 원가
+                  - generic [ref=e264]: 0원
+                  - generic [ref=e265]: 자동 계산
+                - generic [ref=e266]:
+                  - generic [ref=e267]: 마진
+                  - generic [ref=e268]:
+                    - text: 2,880,000원
+                    - img [ref=e269]
+                  - generic [ref=e272]: "마진률: 100.00%"
+                  - generic [ref=e273]: "1인당 COM: 360,000원"
+            - generic [ref=e274]:
+              - navigation [ref=e276]:
+                - button "원가 입력" [ref=e277] [cursor=pointer]
+                - button "정산 상세" [ref=e278] [cursor=pointer]
+              - generic [ref=e280]:
+                - generic [ref=e281]:
+                  - heading "원가 입력" [level=3] [ref=e282]
+                  - button "저장" [ref=e283] [cursor=pointer]:
+                    - img [ref=e284]
+                    - text: 저장
+                - generic [ref=e288]:
+                  - generic [ref=e289]:
+                    - heading "골프장 정산" [level=4] [ref=e290]
+                    - button "골프장 추가" [ref=e291] [cursor=pointer]:
+                      - img [ref=e292]
+                      - text: 골프장 추가
+                  - generic [ref=e294]:
+                    - generic [ref=e295]:
+                      - generic [ref=e296]: 골프장 총 비용
+                      - spinbutton [ref=e297]: "0"
+                    - generic [ref=e299]: 골프장 정산 상세 항목의 소계 합계를 입력하세요.
+                - generic [ref=e300]:
+                  - heading "버스 비용" [level=4] [ref=e301]
+                  - generic [ref=e302]:
+                    - generic [ref=e303]:
+                      - generic [ref=e304]: 버스 비용
+                      - spinbutton [ref=e305]: "0"
+                    - generic [ref=e306]:
+                      - generic [ref=e307]: 기사 비용
+                      - spinbutton [ref=e308]: "0"
+                    - generic [ref=e309]:
+                      - generic [ref=e310]: 톨게이트 비용
+                      - spinbutton [ref=e311]: "0"
+                    - generic [ref=e312]:
+                      - generic [ref=e313]: 주차비
+                      - spinbutton [ref=e314]: "0"
+                    - generic [ref=e315]:
+                      - generic [ref=e316]: 버스 비용 메모
+                      - textbox "버스 비용 관련 메모를 입력하세요" [ref=e317]
+                - generic [ref=e318]:
+                  - heading "가이드 비용" [level=4] [ref=e319]
+                  - generic [ref=e320]:
+                    - generic [ref=e321]:
+                      - generic [ref=e322]: 가이드 인건비
+                      - spinbutton [ref=e323]: "0"
+                    - generic [ref=e324]:
+                      - generic [ref=e325]: 가이드 식사비
+                      - spinbutton [ref=e326]: "0"
+                    - generic [ref=e327]:
+                      - generic [ref=e328]: 가이드 숙박비
+                      - spinbutton [ref=e329]: "0"
+                    - generic [ref=e330]:
+                      - generic [ref=e331]: 가이드 기타 비용
+                      - spinbutton [ref=e332]: "0"
+                    - generic [ref=e333]:
+                      - generic [ref=e334]: 가이드 비용 메모
+                      - textbox "가이드 비용 관련 메모를 입력하세요" [ref=e335]
+                - generic [ref=e336]:
+                  - generic [ref=e337]:
+                    - heading "경비 지출" [level=4] [ref=e338]
+                    - button "경비 추가" [ref=e339] [cursor=pointer]:
+                      - img [ref=e340]
+                      - text: 경비 추가
+                  - generic [ref=e342]:
+                    - generic [ref=e343]:
+                      - generic [ref=e344]: 경비 지출 총합
+                      - spinbutton [ref=e345]: "0"
+                    - generic [ref=e347]: 경비 항목의 총액이 자동으로 계산됩니다.
+                - generic [ref=e348]:
+                  - heading "기타 비용" [level=4] [ref=e349]
+                  - generic [ref=e350]:
+                    - generic [ref=e351]:
+                      - generic [ref=e352]: 숙박비
+                      - spinbutton [ref=e353]: "0"
+                    - generic [ref=e354]:
+                      - generic [ref=e355]: 식당 비용
+                      - spinbutton [ref=e356]: "0"
+                    - generic [ref=e357]:
+                      - generic [ref=e358]: 관광지 입장료
+                      - spinbutton [ref=e359]: "0"
+                    - generic [ref=e360]:
+                      - generic [ref=e361]: 보험료
+                      - spinbutton [ref=e362]: "0"
+                    - generic [ref=e363]:
+                      - generic [ref=e364]: 기타 비용 총합
+                      - spinbutton [ref=e365]: "0"
+                - generic [ref=e366]:
+                  - heading "메모" [level=4] [ref=e367]
+                  - textbox "원가 관련 메모를 입력하세요" [ref=e368]
+  - alert [ref=e369]
 ```

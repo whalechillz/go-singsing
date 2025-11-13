@@ -319,3 +319,4 @@ async function updateSettlementData(tourId, expensesData) {
 const tourId = process.argv[2] || '42ec1758-08da-4372-a55c-efc57e9dd351'; // 영덕 4/21~23 투어 ID
 inputTourExpenses(tourId);
 
+
