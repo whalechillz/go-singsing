@@ -230,22 +230,22 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     setSaving(true);
     try {
       if (expenses.id) {
-        // 업데이트: id를 제외하고 업데이트
-        const { id, ...updateData } = expenses;
         const { error } = await supabase
           .from("tour_expenses")
-          .update(updateData)
-          .eq("id", id);
+          .update(expenses)
+          .eq("id", expenses.id);
 
         if (error) throw error;
       } else {
-        // 새로 생성: id 필드를 명시적으로 제거 (null이어도 제거)
-        const insertData = { ...expenses };
-        delete insertData.id;  // id 필드를 명시적으로 제거
+        // 새 레코드 삽입 시 id 생성
+        const expensesWithId = {
+          ...expenses,
+          id: crypto.randomUUID()
+        };
         
         const { data, error } = await supabase
           .from("tour_expenses")
-          .insert([insertData])
+          .insert([expensesWithId])
           .select()
           .single();
 
