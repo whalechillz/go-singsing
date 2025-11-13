@@ -229,6 +229,10 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
 
     setSaving(true);
     try {
+      // golf_course_total 자동 계산 (golf_course_settlement 배열의 subtotal 합계)
+      const calculatedGolfCourseTotal = (expenses.golf_course_settlement || [])
+        .reduce((sum: number, item: any) => sum + (item.subtotal || 0), 0);
+      
       // 총 원가 자동 계산
       const busTotal = (expenses.bus_cost || 0) + 
                        (expenses.bus_driver_cost || 0) + 
@@ -246,15 +250,16 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                          (expenses.insurance_cost || 0) + 
                          (expenses.other_expenses_total || 0);
       
-      const calculatedTotalCost = (expenses.golf_course_total || 0) + 
+      const calculatedTotalCost = calculatedGolfCourseTotal + 
                                   busTotal + 
                                   guideTotal + 
                                   (expenses.meal_expenses_total || 0) + 
                                   otherTotal;
       
-      // total_cost를 포함한 expenses 객체 생성
+      // total_cost와 golf_course_total을 포함한 expenses 객체 생성
       const expensesToSave = {
         ...expenses,
+        golf_course_total: calculatedGolfCourseTotal,  // 자동 계산된 값으로 업데이트
         total_cost: calculatedTotalCost
       };
 
