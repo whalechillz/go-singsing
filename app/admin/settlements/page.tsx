@@ -156,9 +156,17 @@ export default function SettlementsPage() {
             settlementStatus = "not_started";
           }
           
-          // 1인당 COM 계산
+          // 마진 실시간 계산: 정산 금액 - 총 원가 (정산 상세 페이지와 동일한 로직)
+          const settlementAmount = item.settlement_amount || 0;
+          const totalCost = item.total_cost || 0;
+          const calculatedMargin = settlementAmount - totalCost;
+          const calculatedMarginRate = settlementAmount > 0 
+            ? (calculatedMargin / settlementAmount) * 100 
+            : 0;
+          
+          // 1인당 COM 계산 (실시간 계산된 마진 사용)
           const comPerPerson = participantCount && participantCount > 0
-            ? Math.floor((item.margin || 0) / participantCount)
+            ? Math.floor(calculatedMargin / participantCount)
             : 0;
           
           return {
@@ -166,10 +174,10 @@ export default function SettlementsPage() {
             tour_title: tour?.title || "투어명 없음",
             tour_start_date: tour?.start_date || "",
             contract_revenue: item.contract_revenue || 0,
-            settlement_amount: item.settlement_amount || 0,
-            total_cost: item.total_cost || 0,
-            margin: item.margin || 0,
-            margin_rate: item.margin_rate || 0,
+            settlement_amount: settlementAmount,
+            total_cost: totalCost,
+            margin: calculatedMargin,  // 실시간 계산된 마진
+            margin_rate: calculatedMarginRate,  // 실시간 계산된 마진률
             status: item.status || "pending",
             needs_review: item.needs_review || false,
             review_notes: item.review_notes || "",
