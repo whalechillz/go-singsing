@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calculator, TrendingUp, TrendingDown, DollarSign, FileText, Plus, Search, AlertCircle, CheckCircle, RefreshCw, Clock, ArrowUpDown, ArrowUp, ArrowDown, Download, Filter } from "lucide-react";
+import MonthlyRevenueChart, { MonthlyRevenue } from "@/components/admin/MonthlyRevenueChart";
 
 interface TourSettlement {
   tour_id: string;
@@ -45,6 +46,7 @@ export default function SettlementsPage() {
   const [productFilter, setProductFilter] = useState<string>("all"); // 상품명 필터
   const [sortField, setSortField] = useState<string>("start_date"); // 정렬 필드
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc"); // 정렬 방향
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line'); // 그래프 타입
 
   useEffect(() => {
     fetchTours();
@@ -335,8 +337,63 @@ export default function SettlementsPage() {
         return false;
       }
       return true;
-    })
-    .sort((a, b) => {
+    });
+
+  // 월별 정산 데이터 계산 (filteredSettlements 기반)
+  const monthlyData: MonthlyRevenue[] = (() => {
+    const monthlyMap: { [key: string]: MonthlyRevenue } = {};
+    const today = new Date();
+    
+    // 최근 12개월 데이터 초기화
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = `${date.getMonth() + 1}월`;
+      
+      monthlyMap[monthKey] = {
+        month: monthKey,
+        monthLabel,
+        totalRevenue: 0,
+        totalCost: 0,
+        margin: 0,
+        marginRate: 0,
+        depositAmount: 0,
+        balanceAmount: 0,
+        fullPaymentAmount: 0,
+        refundedAmount: 0,
+        participantCount: 0,
+        tourCount: 0
+      };
+    }
+    
+    // 필터링된 정산 데이터를 월별로 집계
+    filteredSettlements.forEach(settlement => {
+      if (!settlement.tour_start_date) return;
+      
+      const tourDate = new Date(settlement.tour_start_date);
+      const monthKey = `${tourDate.getFullYear()}-${String(tourDate.getMonth() + 1).padStart(2, '0')}`;
+      
+      if (monthlyMap[monthKey]) {
+        monthlyMap[monthKey].totalRevenue += settlement.settlement_amount || 0;
+        monthlyMap[monthKey].totalCost += settlement.total_cost || 0;
+        monthlyMap[monthKey].margin += settlement.margin || 0;
+        monthlyMap[monthKey].participantCount += settlement.participant_count || 0;
+        monthlyMap[monthKey].tourCount += 1;
+      }
+    });
+    
+    // 마진률 계산
+    Object.values(monthlyMap).forEach(month => {
+      month.marginRate = month.totalRevenue > 0 
+        ? (month.margin / month.totalRevenue) * 100 
+        : 0;
+    });
+    
+    return Object.values(monthlyMap);
+  })();
+
+  // 정렬된 정산 목록
+  const sortedSettlements = filteredSettlements.sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
@@ -737,6 +794,40 @@ export default function SettlementsPage() {
         )}
       </div>
 
+      {/* 월별 정산 추이 그래프 */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">월별 정산 추이</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setChartType('line')}
+              className={`px-3 py-1 rounded text-sm ${
+                chartType === 'line'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              선 그래프
+            </button>
+            <button
+              onClick={() => setChartType('bar')}
+              className={`px-3 py-1 rounded text-sm ${
+                chartType === 'bar'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              막대 그래프
+            </button>
+          </div>
+        </div>
+        <MonthlyRevenueChart
+          data={monthlyData}
+          chartType={chartType}
+          showCost={true}
+        />
+      </div>
+
       {/* 정산 목록 */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -807,7 +898,7 @@ export default function SettlementsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredSettlements.map((settlement) => {
+                {sortedSettlements.map((settlement) => {
                   const badgeColors = getProductBadgeColor(settlement.product_name);
                   return (
                   <tr key={settlement.tour_id} className="hover:bg-gray-50">
