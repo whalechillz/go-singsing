@@ -895,6 +895,211 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  // 세금계산서 발행 요청서 HTML 생성
+  const generateReceiptRequestHTML = (golfCourseName: string, deposit: any, settlementDate: string, subtotal: number): string => {
+    if (!tour) return "";
+
+    const formatDate = (dateStr: string) => {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(2, '0')}. ${String(date.getDate()).padStart(2, '0')}.`;
+    };
+
+    const formatDateRange = (startDate: string, endDate?: string) => {
+      if (!startDate) return '';
+      const start = new Date(startDate);
+      const end = endDate ? new Date(endDate) : start;
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      return `${String(start.getMonth() + 1).padStart(2, '0')}/${String(start.getDate()).padStart(2, '0')}~${String(end.getDate()).padStart(2, '0')}(${days[start.getDay()]}~${days[end.getDay()]})`;
+    };
+
+    const contractAmount = deposit.amount || 0;
+    const refundAmount = 0; // 환불은 별도로 관리
+    const issuanceAmount = contractAmount - refundAmount;
+    const today = new Date();
+
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세금계산서 발행 요청</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #333;
+      background: #f5f5f5;
+      padding: 40px 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 60px;
+    }
+    
+    .title {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 50px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .content {
+      line-height: 2.2;
+    }
+    
+    .recipient {
+      margin-bottom: 30px;
+    }
+    
+    .sender {
+      margin-bottom: 30px;
+    }
+    
+    .greeting {
+      margin: 40px 0;
+      text-align: justify;
+      font-size: 15px;
+    }
+    
+    .payment-section {
+      margin: 40px 0;
+    }
+    
+    .payment-item {
+      margin: 15px 0;
+      padding-left: 20px;
+      font-size: 15px;
+    }
+    
+    .payment-amount {
+      font-weight: 700;
+      color: #2c5282;
+    }
+    
+    .signature-section {
+      margin-top: 80px;
+      text-align: right;
+    }
+    
+    .date {
+      margin-bottom: 20px;
+    }
+    
+    .company-name {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+    
+    .company-info {
+      margin-top: 30px;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    
+    @media print {
+      body {
+        padding: 0;
+        background: white;
+      }
+      .container {
+        box-shadow: none;
+        padding: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">세금계산서 발행 요청</h1>
+    
+    <div class="content">
+      <div class="recipient">
+        <strong>수신 :</strong> ${golfCourseName}
+      </div>
+      
+      <div class="sender">
+        <strong>발신 :</strong> 싱싱투어
+      </div>
+      
+      <div class="greeting">
+        귀사의 무궁한 발전을 기원하며, 항상 협조해 주심에 깊이 감사드립니다.
+      </div>
+      
+      <div class="payment-section">
+        입금내역은 다음과 같습니다.
+        
+        <div class="payment-item">
+          1. ${formatDateRange(tour.start_date, tour.end_date)} 계약금 : <span class="payment-amount">${contractAmount.toLocaleString()}원</span>${deposit.date ? ` (${formatDate(deposit.date)} 출금)` : ''}
+        </div>
+        
+        <div class="payment-item">
+          2. 세금계산서 발행금액 <span class="payment-amount">${issuanceAmount.toLocaleString()}원</span> (계약금-환불금)
+        </div>
+      </div>
+      
+      <div class="signature-section">
+        <div class="date">${formatDate(today.toISOString())}</div>
+        <div class="company-name">싱싱투어</div>
+        
+        <div class="company-info">
+          <div>주소 : 경기도 수원시 영통구 법조로149번길 200</div>
+          <div style="text-align: right; margin-top: 10px;">대표: 김탁수</div>
+          <div style="margin-top: 10px;">전화: 031-215-3990 / 010-3332-9020</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  // 세금계산서 발행 요청서 인쇄
+  const printReceiptRequest = (golfCourseName: string, deposit: any, settlementDate: string, subtotal: number) => {
+    const html = generateReceiptRequestHTML(golfCourseName, deposit, settlementDate, subtotal);
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  };
+
+  // 세금계산서 발행 요청서 HTML 다운로드
+  const downloadReceiptRequestHTML = (golfCourseName: string, deposit: any, settlementDate: string, subtotal: number) => {
+    const html = generateReceiptRequestHTML(golfCourseName, deposit, settlementDate, subtotal);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `세금계산서발행요청_${golfCourseName}_${deposit.date || new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1635,84 +1840,81 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                             {/* 계좌이체: 발행 요청 상태 및 발행 요청서 생성 */}
                             {deposit.method === 'bank' && (
                               <div className="space-y-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                                      발행 요청 상태
-                                    </label>
-                                    <select
-                                      value={deposit.request_status || "pending"}
-                                      onChange={(e) => {
-                                        const updated = [...(expenses.golf_course_settlement || [])];
-                                        const deposits = [...(updated[idx].deposits || [])];
-                                        deposits[depositIdx] = { 
-                                          ...deposits[depositIdx], 
-                                          request_status: e.target.value,
-                                          requested_at: e.target.value !== 'pending' ? (deposits[depositIdx].requested_at || new Date().toISOString()) : undefined
-                                        };
-                                        updated[idx] = { ...updated[idx], deposits };
-                                        setExpenses({ ...expenses, golf_course_settlement: updated });
-                                      }}
-                                      className="w-full border rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                    >
-                                      <option value="pending">요청 대기</option>
-                                      <option value="in_progress">진행중</option>
-                                      <option value="completed">완료</option>
-                                    </select>
-                                  </div>
-                                  <div className="flex items-end">
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        // 세금계산서 발행 요청서 생성
-                                        try {
-                                          const response = await fetch('/api/settlements/generate-receipt-request', {
-                                            method: 'POST',
-                                            headers: {
-                                              'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({
-                                              tourId: tourId,
-                                              golfCourseName: settlement.golf_course_name || '골프장',
-                                              deposit: deposit,
-                                              settlementDate: settlement.date,
-                                              subtotal: settlement.subtotal
-                                            }),
-                                          });
-                                          
-                                          if (!response.ok) throw new Error('발행 요청서 생성 실패');
-                                          
-                                          const blob = await response.blob();
-                                          const url = window.URL.createObjectURL(blob);
-                                          const a = document.createElement('a');
-                                          a.href = url;
-                                          a.download = `세금계산서발행요청_${settlement.golf_course_name || '골프장'}_${deposit.date || new Date().toISOString().split('T')[0]}.xlsx`;
-                                          document.body.appendChild(a);
-                                          a.click();
-                                          window.URL.revokeObjectURL(url);
-                                          document.body.removeChild(a);
-                                          
-                                          // 발행 요청 상태 업데이트
-                                          const updated = [...(expenses.golf_course_settlement || [])];
-                                          const deposits = [...(updated[idx].deposits || [])];
-                                          deposits[depositIdx] = { 
-                                            ...deposits[depositIdx], 
-                                            request_status: 'pending',
-                                            requested_at: new Date().toISOString()
-                                          };
-                                          updated[idx] = { ...updated[idx], deposits };
-                                          setExpenses({ ...expenses, golf_course_settlement: updated });
-                                          
-                                          alert('세금계산서 발행 요청서가 생성되었습니다.');
-                                        } catch (error: any) {
-                                          alert(`발행 요청서 생성 실패: ${error.message}`);
-                                        }
-                                      }}
-                                      className="w-full px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                                    >
-                                      발행 요청서 생성
-                                    </button>
-                                  </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    발행 요청 상태
+                                  </label>
+                                  <select
+                                    value={deposit.request_status || "pending"}
+                                    onChange={(e) => {
+                                      const updated = [...(expenses.golf_course_settlement || [])];
+                                      const deposits = [...(updated[idx].deposits || [])];
+                                      deposits[depositIdx] = { 
+                                        ...deposits[depositIdx], 
+                                        request_status: e.target.value,
+                                        requested_at: e.target.value !== 'pending' ? (deposits[depositIdx].requested_at || new Date().toISOString()) : undefined
+                                      };
+                                      updated[idx] = { ...updated[idx], deposits };
+                                      setExpenses({ ...expenses, golf_course_settlement: updated });
+                                    }}
+                                    className="w-full border rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600 mb-3"
+                                  >
+                                    <option value="pending">요청 대기</option>
+                                    <option value="in_progress">진행중</option>
+                                    <option value="completed">완료</option>
+                                  </select>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      printReceiptRequest(
+                                        settlement.golf_course_name || '골프장',
+                                        deposit,
+                                        settlement.date,
+                                        settlement.subtotal
+                                      );
+                                      // 발행 요청 상태 업데이트
+                                      const updated = [...(expenses.golf_course_settlement || [])];
+                                      const deposits = [...(updated[idx].deposits || [])];
+                                      deposits[depositIdx] = { 
+                                        ...deposits[depositIdx], 
+                                        request_status: 'pending',
+                                        requested_at: new Date().toISOString()
+                                      };
+                                      updated[idx] = { ...updated[idx], deposits };
+                                      setExpenses({ ...expenses, golf_course_settlement: updated });
+                                    }}
+                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                  >
+                                    <FileText className="w-3 h-3" />
+                                    발행 요청서 인쇄
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      downloadReceiptRequestHTML(
+                                        settlement.golf_course_name || '골프장',
+                                        deposit,
+                                        settlement.date,
+                                        settlement.subtotal
+                                      );
+                                      // 발행 요청 상태 업데이트
+                                      const updated = [...(expenses.golf_course_settlement || [])];
+                                      const deposits = [...(updated[idx].deposits || [])];
+                                      deposits[depositIdx] = { 
+                                        ...deposits[depositIdx], 
+                                        request_status: 'pending',
+                                        requested_at: new Date().toISOString()
+                                      };
+                                      updated[idx] = { ...updated[idx], deposits };
+                                      setExpenses({ ...expenses, golf_course_settlement: updated });
+                                    }}
+                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-1 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    발행 요청서 HTML 다운로드
+                                  </button>
                                 </div>
                                 {deposit.requested_at && (
                                   <p className="text-xs text-gray-500">
