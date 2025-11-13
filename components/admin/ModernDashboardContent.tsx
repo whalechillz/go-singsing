@@ -114,10 +114,11 @@ export default function ModernDashboardContentV2() {
       const startOfYear = new Date(today.getFullYear(), 0, 1);
       const endOfYear = new Date(today.getFullYear(), 11, 31, 23, 59, 59);
       
-      // 이번 달 투어 가져오기
+      // 이번 달 투어 가져오기 (견적서 제외, 정식 투어만)
       const { data: monthlyTours } = await supabase
         .from('singsing_tours')
         .select('*')
+        .is('quote_data', null)  // 견적서 제외, 정식 투어만
         .gte('start_date', startOfMonth.toISOString())
         .lte('start_date', endOfMonth.toISOString());
 
