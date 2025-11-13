@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2 } from 'lucide-react';
 import PremiumLetterPreview from '@/components/letters/PremiumLetterPreview';
+import { createNumberInputProps } from '@/lib/utils';
 
 interface GolfCourseContact {
   id: string;
@@ -1423,9 +1424,7 @@ export default function GolfContactsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">금액 (원)</label>
                   <input
-                    type="number"
-                    value={giftForm.gift_amount}
-                    onChange={(e) => setGiftForm({ ...giftForm, gift_amount: parseInt(e.target.value) || 0 })}
+                    {...createNumberInputProps(giftForm.gift_amount || 0, (amount) => setGiftForm({ ...giftForm, gift_amount: amount }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="30000"
                   />

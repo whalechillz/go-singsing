@@ -4,8 +4,7 @@ import DiscountSection from './DiscountSection';
 import PaymentMessageModal from './PaymentMessageModal';
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import MonthlyRevenueChart, { MonthlyRevenue } from '@/components/admin/MonthlyRevenueChart';
-import MonthlyRevenueTable from '@/components/admin/MonthlyRevenueTable';
+import { createNumberInputProps } from "@/lib/utils";
 import { 
   CreditCard, 
   Users, 
@@ -93,7 +92,6 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
@@ -201,130 +199,6 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
       
       setPayments(enrichedPayments);
     }
-    
-    // 월별 매출 데이터 가져오기 (올해 1월부터 현재까지)
-    const today = new Date();
-    const startOfYear = new Date(today.getFullYear(), 0, 1);
-    const endOfCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
-    
-    // 올해 1월부터 현재까지의 모든 결제 내역
-    const { data: yearPayments } = await supabase
-      .from('singsing_payments')
-      .select('amount, payment_type, payment_status, payment_date')
-      .gte('payment_date', startOfYear.toISOString())
-      .lte('payment_date', endOfCurrentMonth.toISOString())
-      .eq('payment_status', 'completed');
-
-    // 올해 1월부터 현재까지의 모든 투어
-    const { data: yearTours } = await supabase
-      .from('singsing_tours')
-      .select('id, price, start_date')
-      .gte('start_date', startOfYear.toISOString())
-      .lte('start_date', endOfCurrentMonth.toISOString());
-
-    // 올해 1월부터 현재까지의 모든 참가자
-    const { data: yearParticipants } = await supabase
-      .from('singsing_participants')
-      .select('id, tour_id');
-
-    // 월별 데이터 그룹화
-    const monthlyDataMap: { [key: string]: MonthlyRevenue } = {};
-    
-    // 현재 월까지의 모든 월 초기화
-    for (let month = 0; month <= today.getMonth(); month++) {
-      const monthKey = `${today.getFullYear()}-${String(month + 1).padStart(2, '0')}`;
-      const monthLabel = `${month + 1}월`;
-      monthlyDataMap[monthKey] = {
-        month: monthKey,
-        monthLabel,
-        totalRevenue: 0,
-        totalCost: 0,
-        margin: 0,
-        marginRate: 0,
-        depositAmount: 0,
-        balanceAmount: 0,
-        fullPaymentAmount: 0,
-        refundedAmount: 0,
-        participantCount: 0,
-        tourCount: 0
-      };
-    }
-
-    // 월별 결제 데이터 집계
-    if (yearPayments) {
-      yearPayments.forEach(payment => {
-        const paymentDate = new Date(payment.payment_date);
-        const monthKey = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
-        
-        if (monthlyDataMap[monthKey]) {
-          monthlyDataMap[monthKey].totalRevenue += payment.amount || 0;
-          
-          if (payment.payment_type === 'deposit') {
-            monthlyDataMap[monthKey].depositAmount += payment.amount || 0;
-          } else if (payment.payment_type === 'balance') {
-            monthlyDataMap[monthKey].balanceAmount += payment.amount || 0;
-          } else if (payment.payment_type === 'full') {
-            monthlyDataMap[monthKey].fullPaymentAmount += payment.amount || 0;
-          }
-        }
-      });
-    }
-
-    // 월별 환불 데이터 집계
-    const { data: yearRefunds } = await supabase
-      .from('singsing_payments')
-      .select('amount, payment_date')
-      .gte('payment_date', startOfYear.toISOString())
-      .lte('payment_date', endOfCurrentMonth.toISOString())
-      .eq('payment_status', 'refunded');
-
-    if (yearRefunds) {
-      yearRefunds.forEach(refund => {
-        const refundDate = new Date(refund.payment_date);
-        const monthKey = `${refundDate.getFullYear()}-${String(refundDate.getMonth() + 1).padStart(2, '0')}`;
-        
-        if (monthlyDataMap[monthKey]) {
-          monthlyDataMap[monthKey].refundedAmount += Math.abs(refund.amount || 0);
-        }
-      });
-    }
-
-    // 월별 투어 비용 및 참가자 수 계산
-    if (yearTours && yearParticipants) {
-      yearTours.forEach(tour => {
-        const tourDate = new Date(tour.start_date);
-        const monthKey = `${tourDate.getFullYear()}-${String(tourDate.getMonth() + 1).padStart(2, '0')}`;
-        
-        if (monthlyDataMap[monthKey]) {
-          // 해당 월의 투어 수 증가
-          monthlyDataMap[monthKey].tourCount += 1;
-          
-          // 해당 투어의 참가자 수 계산
-          const tourParticipants = yearParticipants.filter(p => p.tour_id === tour.id);
-          monthlyDataMap[monthKey].participantCount += tourParticipants.length;
-          
-          // 투어 비용 계산 (투어 가격 * 참가자 수)
-          const tourCost = (tour.price || 0) * tourParticipants.length;
-          monthlyDataMap[monthKey].totalCost += tourCost;
-        }
-      });
-    }
-
-    // 마진 및 마진률 계산
-    const monthlyRevenueData: MonthlyRevenue[] = Object.values(monthlyDataMap).map(month => {
-      const margin = month.totalRevenue - month.totalCost;
-      const marginRate = month.totalRevenue > 0 
-        ? (margin / month.totalRevenue) * 100 
-        : 0;
-      
-      return {
-        ...month,
-        margin,
-        marginRate
-      };
-    }).sort((a, b) => a.month.localeCompare(b.month));
-
-    setMonthlyRevenue(monthlyRevenueData);
     
     setLoading(false);
     
@@ -720,22 +594,10 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
   // 완납 금액 계산
   const fullyPaidAmount = participantPaymentStatus.filter(p => p.isFullyPaid).reduce((sum, p) => sum + p.totalPaid, 0);
   
-  // 부분납부 금액 계산 (부분납부 인원의 잔여 금액 합계)
-  const partiallyPaidAmount = participantPaymentStatus
-    .filter(p => p.totalPaid > 0 && !p.isFullyPaid)
-    .reduce((sum, p) => sum + p.remainingAmount, 0);
-  
-  // 미납 금액 계산 (미납 인원의 잔여 금액 합계)
-  const unpaidAmount = participantPaymentStatus
-    .filter(p => p.totalPaid === 0)
-    .reduce((sum, p) => sum + p.remainingAmount, 0);
-  
-  // 예상 매출 계산
+  // 미납 금액 계산 수정 - 실제 예상 매출에서 총 수입을 뺀 값
   const totalExpectedRevenue = selectedTourId && tours.find(t => t.id === selectedTourId)
     ? Number(tours.find(t => t.id === selectedTourId)?.price || 0) * filteredParticipants.length
     : participantPaymentStatus.reduce((sum, p) => sum + p.tourPrice, 0);
-  
-  // 전체 미수금액 (참고용 - 부분납부 + 미납)
   const totalUnpaidAmount = totalExpectedRevenue - stats.totalAmount;
 
   const tabs = [
@@ -950,7 +812,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                   <p className="text-sm font-medium text-gray-600">
                     {selectedTourId ? '상품가' : '예상 매출'}
                   </p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">
+                  <p className="text-2xl font-bold text-gray-900">
                     {selectedTourId && tours.find(t => t.id === selectedTourId) 
                       ? Number(tours.find(t => t.id === selectedTourId)?.price || 0).toLocaleString() 
                       : totalExpectedRevenue.toLocaleString()}원
@@ -1061,7 +923,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
             </div>
           )}
           
-          {/* 두 번째 줄: 완납 금액, 미수금, 미납, 정산 금액 */}
+          {/* 두 번째 줄: 완납 금액, 미수금, 환불, 정산 금액 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-green-50 rounded-lg p-4 border-2 border-green-200">
               <div className="flex items-center justify-between">
@@ -1079,33 +941,27 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
               </div>
             </div>
             
-            <div className="bg-orange-50 rounded-lg p-4 border-2 border-orange-200">
+            <div className="bg-orange-50 rounded-lg p-4">
               <div className="flex items-center justify-between">
-                <div className="flex-1 text-center">
+                <div>
                   <p className="text-sm font-medium text-orange-700">미수금</p>
-                  <p className="text-3xl font-bold text-orange-900 mt-1">
-                    {partiallyPaidAmount.toLocaleString()}원
-                  </p>
-                  <p className="text-xs text-orange-600 mt-2">
-                    부분납부: {partiallyPaidCount}명
+                  <p className="text-2xl font-bold text-orange-900">{partiallyPaidCount}명</p>
+                  <p className="text-xs text-orange-600 mt-1">
+                    {participantPaymentStatus.filter(p => p.totalPaid > 0 && !p.isFullyPaid).reduce((sum, p) => sum + p.remainingAmount, 0).toLocaleString()}원
                   </p>
                 </div>
-                <AlertCircle className="w-10 h-10 text-orange-600" />
+                <AlertCircle className="w-8 h-8 text-orange-600" />
               </div>
             </div>
             
-            <div className="bg-red-50 rounded-lg p-4 border-2 border-red-200">
+            <div className="bg-red-50 rounded-lg p-4">
               <div className="flex items-center justify-between">
-                <div className="flex-1 text-center">
-                  <p className="text-sm font-medium text-red-700">미납</p>
-                  <p className="text-3xl font-bold text-red-900 mt-1">
-                    {unpaidAmount.toLocaleString()}원
-                  </p>
-                  <p className="text-xs text-red-600 mt-2">
-                    미납 인원: {unpaidCount}명
-                  </p>
+                <div>
+                  <p className="text-sm font-medium text-red-700">환불</p>
+                  <p className="text-2xl font-bold text-red-900">{stats.refundedCount}건</p>
+                  <p className="text-xs text-red-600 mt-1">{stats.refundedAmount.toLocaleString()}원</p>
                 </div>
-                <X className="w-10 h-10 text-red-600" />
+                <RefreshCw className="w-8 h-8 text-red-600" />
               </div>
             </div>
             
@@ -1126,67 +982,43 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
             </div>
           </div>
           
-          {/* 환불 카드 (별도 줄 - 환불이 있을 경우만) */}
-          {stats.refundedCount > 0 && (
+          {/* 미납 카드 (별도 줄) */}
+          {unpaidCount > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
-              <div className="bg-red-50 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-red-700">환불</p>
-                    <p className="text-2xl font-bold text-red-900">{stats.refundedCount}건</p>
-                    <p className="text-xs text-red-600 mt-1">{stats.refundedAmount.toLocaleString()}원</p>
-                  </div>
-                  <RefreshCw className="w-8 h-8 text-red-600" />
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">미납</p>
+                  <p className="text-2xl font-bold text-gray-900">{unpaidCount}명</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {totalUnpaidAmount.toLocaleString()}원
+                  </p>
                 </div>
+                <X className="w-8 h-8 text-gray-600" />
               </div>
             </div>
+          </div>
           )}
           
-          {/* 세 번째 줄: 참가자 요약 */}
+          {/* 세 번째 줄: 참가자 요약 및 예상 매출 */}
           <div className="border-t pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">총 참가자</p>
-                <p className="text-lg font-bold text-gray-900">{filteredParticipants.length}명</p>
+                <p className="text-sm font-medium text-gray-600">부분납부</p>
+                <p className="text-lg font-bold text-orange-700">{partiallyPaidCount}명</p>
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">완납 인원</p>
-                <p className="text-lg font-bold text-green-700">{fullyPaidCount}명</p>
+                <p className="text-sm font-medium text-gray-600">미납</p>
+                <p className="text-lg font-bold text-red-700">{unpaidCount}명</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-600">예상 매출</p>
+                <p className="text-lg font-bold text-gray-900">{totalExpectedRevenue.toLocaleString()}원</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* 월별 매출 상세 */}
-      {monthlyRevenue && monthlyRevenue.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">월별 매출 상세</h2>
-            <span className="text-sm text-gray-500">
-              {new Date().getFullYear()}년 1월 ~ {new Date().getMonth() + 1}월
-            </span>
-          </div>
-          
-          {/* 차트 */}
-          <div className="mb-6">
-            <MonthlyRevenueChart 
-              data={monthlyRevenue} 
-              chartType="bar"
-              showCost={true}
-            />
-          </div>
-
-          {/* 상세 테이블 */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">월별 매출 상세</h3>
-            <MonthlyRevenueTable 
-              data={monthlyRevenue}
-              showDetails={true}
-            />
-          </div>
-        </div>
-      )}
 
       {/* 결제 목록 */}
       <div className="bg-white rounded-lg shadow-sm mb-6">
@@ -1791,18 +1623,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ tourId }) => {
                       금액 직접 입력
                     </label>
                     <input
-                      type="number"
+                      {...createNumberInputProps(form.amount || 0, (amount) => setForm({ ...form, amount }))}
                       className="w-full border rounded-lg px-3 py-2"
-                      value={form.amount || ''}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9]/g, '');
-                        setForm({ ...form, amount: Number(value) });
-                      }}
-                      onFocus={(e) => {
-                        if (e.target.value === '0') {
-                          e.target.value = '';
-                        }
-                      }}
                       placeholder="금액을 입력하세요"
                     />
                     {form.tour_id && (() => {

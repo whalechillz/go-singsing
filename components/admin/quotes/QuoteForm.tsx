@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/lib/supabaseClient";
 import Link from 'next/link';
+import { createNumberInputProps } from "@/lib/utils";
 import { 
   Calendar,
   Users,
@@ -437,11 +438,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess, onCancel, initialData 
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                       <input
-                        type="number"
+                        {...createNumberInputProps(form.price || 0, (price) => setForm({ ...form, price }))}
                         className="w-full border rounded-lg pl-10 pr-3 py-2"
-                        value={form.price}
-                        onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-                        min="0"
                         required
                       />
                     </div>
