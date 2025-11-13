@@ -192,6 +192,24 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
       const margin = settlementAmount - totalCost;
       const marginRate = settlementAmount > 0 ? (margin / settlementAmount) * 100 : 0;
 
+      // 예상 마진이 있으면 계산 차이 확인 (fetchData에서도)
+      const expectedMargin = settlementData?.expected_margin;
+      const discrepancy = expectedMargin !== undefined && expectedMargin !== null
+        ? margin - expectedMargin
+        : (settlementData?.calculation_discrepancy || null);
+
+      // 디버깅: fetchData에서의 계산 과정 로그 출력
+      if (expectedMargin !== undefined && expectedMargin !== null) {
+        console.log('=== fetchData 정산 계산 디버깅 ===');
+        console.log('정산 금액 (settlementAmount):', settlementAmount);
+        console.log('총 원가 (totalCost):', totalCost);
+        console.log('계산된 마진 (margin):', margin);
+        console.log('예상 마진 (expectedMargin):', expectedMargin);
+        console.log('차이 (discrepancy):', discrepancy);
+        console.log('차이 계산식:', `${margin} - ${expectedMargin} = ${discrepancy}`);
+        console.log('================================');
+      }
+
       if (settlementData) {
         setSettlement({
           ...settlementData,
@@ -201,7 +219,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
           settlement_amount: settlementAmount,
           total_cost: totalCost,
           margin: margin,
-          margin_rate: marginRate
+          margin_rate: marginRate,
+          calculation_discrepancy: discrepancy
         });
       } else {
         setSettlement({
@@ -255,6 +274,30 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                   guideTotal + 
                                   (expenses.meal_expenses_total || 0) + 
                                   otherTotal;
+      
+      // 디버깅: 원가 계산 과정 로그 출력
+      console.log('=== 원가 계산 디버깅 ===');
+      console.log('골프장 총 비용 (calculatedGolfCourseTotal):', calculatedGolfCourseTotal);
+      console.log('버스 비용 합계 (busTotal):', busTotal);
+      console.log('  - bus_cost:', expenses.bus_cost || 0);
+      console.log('  - bus_driver_cost:', expenses.bus_driver_cost || 0);
+      console.log('  - toll_fee:', expenses.toll_fee || 0);
+      console.log('  - parking_fee:', expenses.parking_fee || 0);
+      console.log('가이드 비용 합계 (guideTotal):', guideTotal);
+      console.log('  - guide_fee:', expenses.guide_fee || 0);
+      console.log('  - guide_meal_cost:', expenses.guide_meal_cost || 0);
+      console.log('  - guide_accommodation_cost:', expenses.guide_accommodation_cost || 0);
+      console.log('  - guide_other_cost:', expenses.guide_other_cost || 0);
+      console.log('식사 비용 (meal_expenses_total):', expenses.meal_expenses_total || 0);
+      console.log('기타 비용 합계 (otherTotal):', otherTotal);
+      console.log('  - accommodation_cost:', expenses.accommodation_cost || 0);
+      console.log('  - restaurant_cost:', expenses.restaurant_cost || 0);
+      console.log('  - attraction_fee:', expenses.attraction_fee || 0);
+      console.log('  - insurance_cost:', expenses.insurance_cost || 0);
+      console.log('  - other_expenses_total:', expenses.other_expenses_total || 0);
+      console.log('총 원가 (calculatedTotalCost):', calculatedTotalCost);
+      console.log('계산식:', `${calculatedGolfCourseTotal} + ${busTotal} + ${guideTotal} + ${expenses.meal_expenses_total || 0} + ${otherTotal} = ${calculatedTotalCost}`);
+      console.log('========================');
       
       // total_cost와 golf_course_total을 포함한 expenses 객체 생성
       const expensesToSave = {
@@ -337,6 +380,18 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     const discrepancy = expectedMargin !== undefined && expectedMargin !== null
       ? calculatedMargin - expectedMargin
       : null;
+    
+    // 디버깅: 계산 과정 로그 출력
+    if (expectedMargin !== undefined && expectedMargin !== null) {
+      console.log('=== 정산 계산 디버깅 ===');
+      console.log('정산 금액 (settlementAmount):', settlementAmount);
+      console.log('총 원가 (totalCost):', totalCost);
+      console.log('계산된 마진 (calculatedMargin):', calculatedMargin);
+      console.log('예상 마진 (expectedMargin):', expectedMargin);
+      console.log('차이 (discrepancy):', discrepancy);
+      console.log('차이 계산식:', `${calculatedMargin} - ${expectedMargin} = ${discrepancy}`);
+      console.log('========================');
+    }
     
     // 계산 차이가 1,000원 이상이면 확인 필요로 표시
     const needsReview = discrepancy !== null && Math.abs(discrepancy) > 1000;
