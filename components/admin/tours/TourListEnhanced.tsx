@@ -38,6 +38,7 @@ interface Tour {
   golf_course?: string;
   departure_location?: string;
   actual_revenue?: number; // 실제 결제 금액
+  product_name?: string; // 상품명
   // 뱃지 관련 필드 추가
   is_special_price?: boolean;
   special_badge_text?: string;
@@ -638,6 +639,12 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                     <div className="w-2 h-2 bg-green-500 rounded-full" title="예약 가능" />
                     )}
                     <div>
+                    {/* 상품명 뱃지 표시 */}
+                    {tour.product_name && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 mb-1">
+                        {tour.product_name}
+                      </span>
+                    )}
                     <Link 
                     href={`/admin/tours/${tour.id}`}
                     className="text-sm font-medium text-gray-900 hover:text-blue-600"

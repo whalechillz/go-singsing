@@ -50,6 +50,8 @@ const TourListPage: React.FC = () => {
       
       // 각 투어의 참가자 수와 실제 결제 금액 계산
       if (toursData) {
+        const toursWithoutProduct: any[] = []; // 상품명이 없는 투어 목록
+        
         const toursWithParticipants = await Promise.all(
           toursData.map(async (tour) => {
             // 참가자 수 계산 (각 참가자는 1명으로 계산)
@@ -75,10 +77,23 @@ const TourListPage: React.FC = () => {
             }
             
             const product = tour.tour_product_id ? productsMap.get(tour.tour_product_id) : null;
+            const productName = product?.name || "";
+            
+            // 상품명이 없는 투어 확인
+            if (!productName) {
+              toursWithoutProduct.push({
+                id: tour.id,
+                title: tour.title,
+                tour_product_id: tour.tour_product_id,
+                start_date: tour.start_date,
+                reason: tour.tour_product_id ? '상품이 삭제되었거나 존재하지 않음' : '상품 미지정'
+              });
+            }
             
             return {
               ...tour,
               golf_course: product?.golf_course || product?.name || "",
+              product_name: productName, // 상품명 추가
               current_participants: totalParticipants, // 실제 참가자 수 (레코드 수)
               max_participants: tour.max_participants || 40, // 기본값 40명
               price: tour.price || 0,
@@ -86,6 +101,12 @@ const TourListPage: React.FC = () => {
             };
           })
         );
+        
+        // 상품명이 없는 투어가 있으면 콘솔에 출력
+        if (toursWithoutProduct.length > 0) {
+          console.warn('⚠️ 상품명이 없는 투어:', toursWithoutProduct);
+          console.table(toursWithoutProduct);
+        }
         
         setTours(toursWithParticipants);
       }
