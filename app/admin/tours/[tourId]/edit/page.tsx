@@ -670,7 +670,7 @@ const TourEditPage: React.FC = () => {
                 </div>
                 <div className="border-t pt-3 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">투어 마감 설정</span>
+                    <span className="text-sm font-medium text-gray-700">모객 마감 설정</span>
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -679,8 +679,14 @@ const TourEditPage: React.FC = () => {
                         onChange={handleChange}
                         className="w-4 h-4"
                       />
-                      <span className="font-medium text-red-600">투어 마감</span>
+                      <span className="font-medium text-red-600">모객 마감</span>
                     </label>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded text-sm text-blue-700 dark:text-blue-300">
+                    <p className="font-medium mb-1">💡 모객 마감이란?</p>
+                    <p className="text-xs">고객용 페이지에서 투어를 "마감"으로 표시하여 인기 있는 상품처럼 보이게 하는 마케팅 기능입니다.</p>
+                    <p className="text-xs mt-1">• 실제로는 자리가 있어도 고객에게는 "마감"으로 보입니다</p>
+                    <p className="text-xs">• 모객을 중단하고 싶을 때 사용합니다</p>
                   </div>
                   {form.is_closed && (
                     <label className="flex flex-col gap-1">
@@ -690,7 +696,7 @@ const TourEditPage: React.FC = () => {
                         type="text"
                         value={form.closed_reason || ''}
                         onChange={handleChange}
-                        placeholder="예: 조기 마감, 취소, 연기 등"
+                        placeholder="예: 조기 마감, 모객 완료, 연기 등"
                         className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-800"
                       />
                     </label>

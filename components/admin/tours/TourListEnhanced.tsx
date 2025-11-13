@@ -51,6 +51,7 @@ interface TourListEnhancedProps {
   onDelete: (id: string) => void;
   onRefresh: () => void;
   onToggleClosed: (tour: Tour) => void;
+  onMarkCompleted: (tour: Tour) => void;
 }
 
 const TourListEnhanced: React.FC<TourListEnhancedProps> = ({ 
@@ -59,7 +60,8 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
   error, 
   onDelete,
   onRefresh,
-  onToggleClosed 
+  onToggleClosed,
+  onMarkCompleted
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -91,7 +93,11 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
 
   // 투어 상태 계산
   const getTourStatus = (tour: Tour): string => {
-    // 날짜를 기반으로 상태를 자동 계산 (DB의 status 값은 무시)
+    // DB의 status 필드가 'completed'이면 완료로 반환
+    if (tour.status === 'completed') return 'completed';
+    if (tour.status === 'cancelled') return 'cancelled';
+    
+    // 날짜를 기반으로 상태를 자동 계산
     const today = new Date();
     today.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
     
@@ -619,14 +625,11 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                 
                 return (
                   <tr key={tour.id} className={`hover:bg-gray-50 relative ${
-                    tour.is_closed ? 'bg-red-50' : 
+                    tour.is_closed ? 'bg-red-50 opacity-75' : 
                     status === 'completed' ? 'bg-gray-50' :
                     status === 'ongoing' ? 'bg-blue-50' :
                     isAvailable ? 'bg-green-50' : ''
-                  }`} style={{ 
-                    zIndex: showDropdown === tour.id ? 1 : 'auto',
-                    opacity: showDropdown === tour.id && tour.is_closed ? 1 : (tour.is_closed ? 0.75 : 1)
-                  }}>
+                  }`} style={{ zIndex: showDropdown === tour.id ? 1 : 'auto' }}>
                     <td className="px-6 py-6 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                     {isAvailable && (
@@ -704,7 +707,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                         {tour.is_closed && (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             <XCircle className="w-3 h-3" />
-                            마감
+                            모객 마감
                           </span>
                         )}
                         {getStatusBadge(status)}
@@ -712,18 +715,27 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                           <button
                             onClick={() => onToggleClosed(tour)}
                             className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
-                            title="투어 마감"
+                            title="모객 마감 (고객에게 마감으로 표시)"
                           >
-                            마감하기
+                            모객 마감
                           </button>
                         )}
                         {tour.is_closed && status !== 'completed' && (
                           <button
                             onClick={() => onToggleClosed(tour)}
                             className="text-xs text-green-600 hover:text-green-800 font-medium px-2 py-1 rounded-md hover:bg-green-50 transition-colors"
-                            title="마감 해제"
+                            title="모객 마감 해제"
                           >
-                            마감해제
+                            모객 마감 해제
+                          </button>
+                        )}
+                        {status !== 'completed' && (
+                          <button
+                            onClick={() => onMarkCompleted(tour)}
+                            className="text-xs text-gray-600 hover:text-gray-800 font-medium px-2 py-1 rounded-md hover:bg-gray-50 transition-colors"
+                            title="투어 완료 처리 (정산 후)"
+                          >
+                            완료 처리
                           </button>
                         )}
                       </div>
@@ -761,12 +773,10 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                               backgroundColor: '#ffffff',
                               opacity: 1,
                               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                              isolation: 'isolate',
-                              backdropFilter: 'none',
-                              WebkitBackdropFilter: 'none'
+                              isolation: 'isolate'
                             }}
                           >
-                            <div className="py-1 bg-white" role="menu" style={{ backgroundColor: '#ffffff' }}>
+                            <div className="py-1" role="menu">
                               <Link
                                 href={`/admin/tours/${tour.id}`}
                                 className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
@@ -793,7 +803,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                                   setShowDropdown(null);
                                   setBadgeModalTour(tour);
                                 }}
-                                className="block w-full px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                                className="block w-full text-left px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 flex items-center gap-2 transition-colors"
                               >
                                 <Tag className="w-4 h-4" />
                                 뱃지 설정
@@ -818,7 +828,7 @@ const TourListEnhanced: React.FC<TourListEnhancedProps> = ({
                                   setShowDropdown(null);
                                   onDelete(tour.id);
                                 }}
-                                className="block w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                                className="block w-full text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                               >
                                 삭제
                               </button>

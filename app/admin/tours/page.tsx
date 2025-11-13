@@ -203,10 +203,43 @@ const TourListPage: React.FC = () => {
           : t
       ));
       
-      alert(newClosedStatus ? '투어가 마감되었습니다.' : '투어 마감이 해제되었습니다.');
+      alert(newClosedStatus ? '모객 마감이 설정되었습니다.' : '모객 마감이 해제되었습니다.');
       
     } catch (error: any) {
       alert('마감 설정 실패: ' + error.message);
+    }
+  };
+
+  const handleMarkCompleted = async (tour: Tour) => {
+    if (!window.confirm('이 투어를 완료 처리하시겠습니까?\n\n완료 처리된 투어는 "완료된 투어" 탭으로 이동합니다.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("singsing_tours")
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", tour.id);
+        
+      if (error) throw error;
+      
+      // 로컬 상태 업데이트
+      setTours(prev => prev.map(t => 
+        t.id === tour.id 
+          ? { ...t, status: 'completed' as const }
+          : t
+      ));
+      
+      alert('투어가 완료 처리되었습니다.');
+      
+      // 목록 새로고침
+      await fetchTours();
+      
+    } catch (error: any) {
+      alert('완료 처리 실패: ' + error.message);
     }
   };
 
@@ -222,6 +255,7 @@ const TourListPage: React.FC = () => {
       onDelete={handleDelete}
       onRefresh={handleRefresh}
       onToggleClosed={handleToggleClosed}
+      onMarkCompleted={handleMarkCompleted}
     />
   );
 };
