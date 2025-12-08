@@ -1,0 +1,279 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - img "싱싱골프투어 로고" [ref=e7]
+        - button "사이드바 접기" [ref=e8] [cursor=pointer]:
+          - img [ref=e9]
+      - navigation [ref=e10]:
+        - list [ref=e11]:
+          - listitem [ref=e12]:
+            - button "대시보드" [ref=e13] [cursor=pointer]:
+              - img [ref=e15]
+              - generic [ref=e18]: 대시보드
+          - listitem [ref=e19]:
+            - button "투어 관리" [ref=e20] [cursor=pointer]:
+              - img [ref=e22]
+              - generic [ref=e25]: 투어 관리
+              - img [ref=e26]
+            - list [ref=e28]:
+              - listitem [ref=e29]:
+                - button "투어 스케줄 관리" [ref=e30] [cursor=pointer]:
+                  - generic [ref=e31]: 투어 스케줄 관리
+              - listitem [ref=e32]:
+                - button "여행상품 관리" [ref=e33] [cursor=pointer]:
+                  - generic [ref=e34]: 여행상품 관리
+              - listitem [ref=e35]:
+                - button "마케팅 콘텐츠" [ref=e36] [cursor=pointer]:
+                  - generic [ref=e37]: 마케팅 콘텐츠
+              - listitem [ref=e38]:
+                - button "스팟 관리" [ref=e39] [cursor=pointer]:
+                  - generic [ref=e40]: 스팟 관리
+              - listitem [ref=e41]:
+                - button "정산 관리" [ref=e42] [cursor=pointer]:
+                  - generic [ref=e43]: 정산 관리
+          - listitem [ref=e44]:
+            - button "견적 관리" [ref=e45] [cursor=pointer]:
+              - img [ref=e47]
+              - generic [ref=e49]: 견적 관리
+              - img [ref=e50]
+            - list [ref=e52]:
+              - listitem [ref=e53]:
+                - button "견적 목록" [ref=e54] [cursor=pointer]:
+                  - generic [ref=e55]: 견적 목록
+              - listitem [ref=e56]:
+                - button "새 견적 작성" [ref=e57] [cursor=pointer]:
+                  - generic [ref=e58]: 새 견적 작성
+          - listitem [ref=e59]:
+            - button "전체 참가자 관리" [ref=e60] [cursor=pointer]:
+              - img [ref=e62]
+              - generic [ref=e67]: 전체 참가자 관리
+              - img [ref=e68]
+            - list [ref=e70]:
+              - listitem [ref=e71]:
+                - button "참가자 목록" [ref=e72] [cursor=pointer]:
+                  - generic [ref=e73]: 참가자 목록
+              - listitem [ref=e74]:
+                - button "결제 관리" [ref=e75] [cursor=pointer]:
+                  - generic [ref=e76]: 결제 관리
+          - listitem [ref=e77]:
+            - button "고객 관리" [ref=e78] [cursor=pointer]:
+              - img [ref=e80]
+              - generic [ref=e82]: 고객 관리
+              - img [ref=e83]
+            - list [ref=e85]:
+              - listitem [ref=e86]:
+                - button "고객 데이터베이스" [ref=e87] [cursor=pointer]:
+                  - generic [ref=e88]: 고객 데이터베이스
+              - listitem [ref=e89]:
+                - button "메시지 발송" [ref=e90] [cursor=pointer]:
+                  - generic [ref=e91]: 메시지 발송
+              - listitem [ref=e92]:
+                - button "마케팅 캠페인" [ref=e93] [cursor=pointer]:
+                  - generic [ref=e94]: 마케팅 캠페인
+              - listitem [ref=e95]:
+                - button "홍보 페이지" [ref=e96] [cursor=pointer]:
+                  - generic [ref=e97]: 홍보 페이지
+              - listitem [ref=e98]:
+                - button "골프장 담당자" [ref=e99] [cursor=pointer]:
+                  - generic [ref=e100]: 골프장 담당자
+          - listitem [ref=e101]:
+            - button "투어 운영진" [ref=e102] [cursor=pointer]:
+              - img [ref=e104]
+              - generic [ref=e116]: 투어 운영진
+              - img [ref=e117]
+            - list [ref=e119]:
+              - listitem [ref=e120]:
+                - button "기사/가이드 관리" [ref=e121] [cursor=pointer]:
+                  - generic [ref=e122]: 기사/가이드 관리
+              - listitem [ref=e123]:
+                - button "시스템 계정" [ref=e124] [cursor=pointer]:
+                  - generic [ref=e125]: 시스템 계정
+              - listitem [ref=e126]:
+                - button "권한 설정" [ref=e127] [cursor=pointer]:
+                  - generic [ref=e128]: 권한 설정
+              - listitem [ref=e129]:
+                - button "비밀번호 초기화" [ref=e130] [cursor=pointer]:
+                  - generic [ref=e131]: 비밀번호 초기화
+          - listitem [ref=e132]:
+            - button "투어별 문서 링크" [ref=e133] [cursor=pointer]:
+              - img [ref=e135]
+              - generic [ref=e138]: 투어별 문서 링크
+          - listitem [ref=e139]:
+            - button "디자인 시스템" [ref=e140] [cursor=pointer]:
+              - img [ref=e142]
+              - generic [ref=e148]: 디자인 시스템
+              - img [ref=e149]
+            - list [ref=e151]:
+              - listitem [ref=e152]:
+                - button "디자인 템플릿" [ref=e153] [cursor=pointer]:
+                  - generic [ref=e154]: 디자인 템플릿
+              - listitem [ref=e155]:
+                - button "폰트 스타일" [ref=e156] [cursor=pointer]:
+                  - generic [ref=e157]: 폰트 스타일
+              - listitem [ref=e158]:
+                - button "뱃지 디자인" [ref=e159] [cursor=pointer]:
+                  - generic [ref=e160]: 뱃지 디자인
+              - listitem [ref=e161]:
+                - button "파비콘 디자인" [ref=e162] [cursor=pointer]:
+                  - generic [ref=e163]: 파비콘 디자인
+          - listitem [ref=e164]:
+            - button "일정표 템플릿" [ref=e165] [cursor=pointer]:
+              - img [ref=e167]
+              - generic [ref=e170]: 일정표 템플릿
+          - listitem [ref=e171]:
+            - button "공지사항 템플릿" [ref=e172] [cursor=pointer]:
+              - img [ref=e174]
+              - generic [ref=e176]: 공지사항 템플릿
+          - listitem [ref=e177]:
+            - button "메모 관리" [ref=e178] [cursor=pointer]:
+              - img [ref=e180]
+              - generic [ref=e182]: 메모 관리
+              - img [ref=e183]
+            - list [ref=e185]:
+              - listitem [ref=e186]:
+                - button "참가자 메모" [ref=e187] [cursor=pointer]:
+                  - generic [ref=e188]: 참가자 메모
+              - listitem [ref=e189]:
+                - button "업무 메모" [ref=e190] [cursor=pointer]:
+                  - generic [ref=e191]: 업무 메모
+              - listitem [ref=e192]:
+                - button "메모 템플릿" [ref=e193] [cursor=pointer]:
+                  - generic [ref=e194]: 메모 템플릿
+          - listitem [ref=e195]:
+            - button "통계" [ref=e196] [cursor=pointer]:
+              - img [ref=e198]
+              - generic [ref=e199]: 통계
+          - listitem [ref=e200]:
+            - button "네이버 API 디버깅" [ref=e201] [cursor=pointer]:
+              - img [ref=e203]
+              - generic [ref=e212]: 네이버 API 디버깅
+          - listitem [ref=e213]:
+            - button "설정" [ref=e214] [cursor=pointer]:
+              - img [ref=e216]
+              - generic [ref=e219]: 설정
+      - button "로그아웃" [ref=e221] [cursor=pointer]:
+        - img [ref=e222]
+        - generic [ref=e225]: 로그아웃
+    - generic [ref=e226]:
+      - banner [ref=e227]:
+        - heading "투어 스케줄 관리" [level=1] [ref=e229]
+        - generic [ref=e230]:
+          - button [ref=e232] [cursor=pointer]:
+            - img [ref=e233]
+          - button "P Prowhale 관리자" [ref=e238] [cursor=pointer]:
+            - generic [ref=e239]: P
+            - generic [ref=e240]:
+              - paragraph [ref=e241]: Prowhale
+              - paragraph [ref=e242]: 관리자
+      - main [ref=e243]:
+        - generic [ref=e244]:
+          - generic [ref=e245]:
+            - heading "정산 관리" [level=1] [ref=e246]
+            - paragraph [ref=e247]: "[단독/파인힐스] 3박4일 순천 버스핑_정해철 님"
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - heading "정산 요약" [level=2] [ref=e250]:
+                - img [ref=e251]
+                - text: 정산 요약
+              - generic [ref=e253]:
+                - generic [ref=e254]:
+                  - generic [ref=e255]: 계약 매출
+                  - generic [ref=e256]: 14,040,000원
+                  - generic [ref=e257]: 상품가 × 인원
+                - generic [ref=e258]:
+                  - generic [ref=e259]: 정산 금액
+                  - generic [ref=e260]: 13,160,000원
+                  - generic [ref=e261]: 완납 - 환불
+                - generic [ref=e262]:
+                  - generic [ref=e263]: 총 원가
+                  - generic [ref=e264]: 12,189,500원
+                  - generic [ref=e265]: 자동 계산
+                - generic [ref=e266]:
+                  - generic [ref=e267]: 마진
+                  - generic [ref=e268]:
+                    - text: 970,500원
+                    - img [ref=e269]
+                  - generic [ref=e272]: "마진률: 7.37%"
+                  - generic [ref=e273]: "1인당 COM: 80,875원"
+            - generic [ref=e274]:
+              - navigation [ref=e276]:
+                - button "원가 입력" [ref=e277] [cursor=pointer]
+                - button "정산 상세" [active] [ref=e278] [cursor=pointer]
+              - generic [ref=e280]:
+                - generic [ref=e281]:
+                  - heading "정산 상세" [level=3] [ref=e282]
+                  - generic [ref=e283]:
+                    - button "정산서 인쇄" [ref=e284] [cursor=pointer]:
+                      - img [ref=e285]
+                      - text: 정산서 인쇄
+                    - button "정산서 HTML 다운로드" [ref=e288] [cursor=pointer]:
+                      - img [ref=e289]
+                      - text: 정산서 HTML 다운로드
+                - generic [ref=e292]:
+                  - heading "예상 마진 입력 (이미지 정산서 기준 수익 값)" [level=4] [ref=e293]:
+                    - img [ref=e294]
+                    - text: 예상 마진 입력 (이미지 정산서 기준 수익 값)
+                  - paragraph [ref=e296]: 이미지 정산서의 수익 값을 입력하면, 계산된 마진과 비교하여 차이를 확인할 수 있습니다.
+                  - generic [ref=e298]:
+                    - generic [ref=e299]: 예상 마진 (이미지 정산서 기준 수익 값)
+                    - textbox "이미지 정산서의 수익 값을 입력하세요" [ref=e300]
+                - generic [ref=e301]:
+                  - heading "매출 정보" [level=4] [ref=e302]
+                  - generic [ref=e303]:
+                    - generic [ref=e304]:
+                      - generic [ref=e305]: 계약 매출
+                      - generic [ref=e306]: 14,040,000원
+                      - generic [ref=e307]: 상품가 × 인원
+                    - generic [ref=e308]:
+                      - generic [ref=e309]: 완납 금액
+                      - generic [ref=e310]: 14,040,000원
+                      - generic [ref=e311]: 입금 합계
+                    - generic [ref=e312]:
+                      - generic [ref=e313]: 환불 금액
+                      - generic [ref=e314]: 880,000원
+                      - generic [ref=e315]: 환불 합계
+                    - generic [ref=e316]:
+                      - generic [ref=e317]: 정산 금액
+                      - generic [ref=e318]: 13,160,000원
+                      - generic [ref=e319]: 완납 - 환불
+                - generic [ref=e320]:
+                  - heading "원가 정보" [level=4] [ref=e321]
+                  - generic [ref=e323]:
+                    - generic [ref=e324]: 총 원가
+                    - generic [ref=e325]: 12,189,500원
+                    - generic [ref=e326]: 자동 계산
+                - generic [ref=e327]:
+                  - heading "마진 정보" [level=4] [ref=e328]
+                  - generic [ref=e329]:
+                    - generic [ref=e330]:
+                      - generic [ref=e331]: 마진
+                      - generic [ref=e332]:
+                        - text: 970,500원
+                        - img [ref=e333]
+                      - generic [ref=e336]: 정산 금액 - 총 원가
+                    - generic [ref=e337]:
+                      - generic [ref=e338]: 마진률
+                      - generic [ref=e339]: 7.37%
+                      - generic [ref=e340]: (마진 / 정산 금액) × 100
+                    - generic [ref=e341]:
+                      - generic [ref=e342]: 1인당 COM
+                      - generic [ref=e343]: 80,875원
+                      - generic [ref=e344]: 마진 ÷ 참가자 수 (12명)
+                - generic [ref=e345]:
+                  - heading "정산 상태" [level=4] [ref=e346]
+                  - generic [ref=e347]:
+                    - generic [ref=e348]:
+                      - generic [ref=e349]: 상태
+                      - combobox [ref=e350]:
+                        - option "대기"
+                        - option "완료" [selected]
+                        - option "취소"
+                    - generic [ref=e351]:
+                      - generic [ref=e352]: 정산 완료일
+                      - generic [ref=e353]: 2025. 11. 17.
+  - alert [ref=e354]
+```

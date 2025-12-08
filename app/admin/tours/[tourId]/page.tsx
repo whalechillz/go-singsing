@@ -8,11 +8,10 @@ import RoomTypeManager from "@/components/RoomTypeManager";
 import IntegratedScheduleManager from "@/components/IntegratedScheduleManager";
 import TeeTimeSlotManager from "@/components/TeeTimeSlotManager";
 import TeeTimeAssignmentManager from "@/components/TeeTimeAssignmentManager";
-// 사용하지 않는 컴포넌트 import 제거됨
 import TourSchedulePreview from "@/components/TourSchedulePreview";
+import TourCommunicationsViewer from "@/components/admin/tours/TourCommunicationsViewer";
 
-
-import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock, Link, Calculator } from 'lucide-react';
+import { Users, BedDouble, Calendar, Flag, MapPin, FileText, Clock, Link, Calculator, MessageCircle } from 'lucide-react';
 import { useRouter } from "next/navigation";
 
 const TABS = [
@@ -21,6 +20,7 @@ const TABS = [
   { key: "schedules", label: "일정 관리", icon: <Calendar className="w-4 h-4" /> },
   { key: "tee-times", label: "티타임 관리", icon: <Flag className="w-4 h-4" /> },
   { key: "schedule-preview", label: "문서 미리보기", icon: <FileText className="w-4 h-4" /> },
+  { key: "communications", label: "커뮤니케이션", icon: <MessageCircle className="w-4 h-4" /> },
   { key: "settlement", label: "정산 관리", icon: <Calculator className="w-4 h-4" /> },
 ];
 
@@ -117,6 +117,9 @@ const TourDetailPage: React.FC = () => {
         )}
 
         {activeTab === "schedule-preview" && <TourSchedulePreview tourId={tourId} />}
+        {activeTab === "communications" && (
+          <TourCommunicationsViewer tourId={tourId} tourTitle={tour.title} />
+        )}
         {activeTab === "settlement" && (
           <div className="p-6">
             <a

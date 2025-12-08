@@ -24,7 +24,8 @@ import {
   Phone,
   Calculator,
   Type,
-  Bug
+  Bug,
+  Handshake
 } from 'lucide-react';
 
 interface NavSubItem {
@@ -57,7 +58,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     'tour-staff-management': true,
     'customer-management': true,
     'quote-management': true,
-    'design-system': true 
+    'design-system': true,
+    'collaboration-management': true
   });
   
   // pathname에 따라 activeNav 결정
@@ -99,6 +101,8 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
     if (pathname.startsWith('/admin/statistics')) return 'statistics';
     if (pathname.startsWith('/admin/naver-debug')) return 'naver-debug';
     if (pathname.startsWith('/admin/settings')) return 'settings';
+    if (pathname.startsWith('/admin/partners')) return 'partners';
+    if (pathname.startsWith('/admin/meetings')) return 'meetings';
     return 'dashboard';
   };
   
@@ -170,6 +174,15 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       label: '투어별 문서 링크', 
       icon: <FileText className="w-5 h-5" />,
       href: '/admin/tour-documents'
+    },
+    { 
+      id: 'collaboration-management', 
+      label: '협업 관리', 
+      icon: <Handshake className="w-5 h-5" />,
+      subMenu: [
+        { id: 'partners', label: '협업 업체', href: '/admin/partners' },
+        { id: 'meetings', label: '회의록', href: '/admin/meetings' },
+      ]
     },
     { 
       id: 'design-system', 

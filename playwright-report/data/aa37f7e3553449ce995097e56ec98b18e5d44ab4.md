@@ -1,0 +1,819 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - img "싱싱골프투어 로고" [ref=e7]
+        - button "사이드바 접기" [ref=e8] [cursor=pointer]:
+          - img [ref=e9]
+      - navigation [ref=e10]:
+        - list [ref=e11]:
+          - listitem [ref=e12]:
+            - button "대시보드" [ref=e13] [cursor=pointer]:
+              - img [ref=e15]
+              - generic [ref=e18]: 대시보드
+          - listitem [ref=e19]:
+            - button "투어 관리" [ref=e20] [cursor=pointer]:
+              - img [ref=e22]
+              - generic [ref=e25]: 투어 관리
+              - img [ref=e26]
+            - list [ref=e28]:
+              - listitem [ref=e29]:
+                - button "투어 스케줄 관리" [ref=e30] [cursor=pointer]:
+                  - generic [ref=e31]: 투어 스케줄 관리
+              - listitem [ref=e32]:
+                - button "여행상품 관리" [ref=e33] [cursor=pointer]:
+                  - generic [ref=e34]: 여행상품 관리
+              - listitem [ref=e35]:
+                - button "마케팅 콘텐츠" [ref=e36] [cursor=pointer]:
+                  - generic [ref=e37]: 마케팅 콘텐츠
+              - listitem [ref=e38]:
+                - button "스팟 관리" [ref=e39] [cursor=pointer]:
+                  - generic [ref=e40]: 스팟 관리
+              - listitem [ref=e41]:
+                - button "정산 관리" [ref=e42] [cursor=pointer]:
+                  - generic [ref=e43]: 정산 관리
+          - listitem [ref=e44]:
+            - button "견적 관리" [ref=e45] [cursor=pointer]:
+              - img [ref=e47]
+              - generic [ref=e49]: 견적 관리
+              - img [ref=e50]
+            - list [ref=e52]:
+              - listitem [ref=e53]:
+                - button "견적 목록" [ref=e54] [cursor=pointer]:
+                  - generic [ref=e55]: 견적 목록
+              - listitem [ref=e56]:
+                - button "새 견적 작성" [ref=e57] [cursor=pointer]:
+                  - generic [ref=e58]: 새 견적 작성
+          - listitem [ref=e59]:
+            - button "전체 참가자 관리" [ref=e60] [cursor=pointer]:
+              - img [ref=e62]
+              - generic [ref=e67]: 전체 참가자 관리
+              - img [ref=e68]
+            - list [ref=e70]:
+              - listitem [ref=e71]:
+                - button "참가자 목록" [ref=e72] [cursor=pointer]:
+                  - generic [ref=e73]: 참가자 목록
+              - listitem [ref=e74]:
+                - button "결제 관리" [ref=e75] [cursor=pointer]:
+                  - generic [ref=e76]: 결제 관리
+          - listitem [ref=e77]:
+            - button "고객 관리" [ref=e78] [cursor=pointer]:
+              - img [ref=e80]
+              - generic [ref=e82]: 고객 관리
+              - img [ref=e83]
+            - list [ref=e85]:
+              - listitem [ref=e86]:
+                - button "고객 데이터베이스" [ref=e87] [cursor=pointer]:
+                  - generic [ref=e88]: 고객 데이터베이스
+              - listitem [ref=e89]:
+                - button "메시지 발송" [ref=e90] [cursor=pointer]:
+                  - generic [ref=e91]: 메시지 발송
+              - listitem [ref=e92]:
+                - button "마케팅 캠페인" [ref=e93] [cursor=pointer]:
+                  - generic [ref=e94]: 마케팅 캠페인
+              - listitem [ref=e95]:
+                - button "홍보 페이지" [ref=e96] [cursor=pointer]:
+                  - generic [ref=e97]: 홍보 페이지
+              - listitem [ref=e98]:
+                - button "골프장 담당자" [ref=e99] [cursor=pointer]:
+                  - generic [ref=e100]: 골프장 담당자
+          - listitem [ref=e101]:
+            - button "투어 운영진" [ref=e102] [cursor=pointer]:
+              - img [ref=e104]
+              - generic [ref=e116]: 투어 운영진
+              - img [ref=e117]
+            - list [ref=e119]:
+              - listitem [ref=e120]:
+                - button "기사/가이드 관리" [ref=e121] [cursor=pointer]:
+                  - generic [ref=e122]: 기사/가이드 관리
+              - listitem [ref=e123]:
+                - button "시스템 계정" [ref=e124] [cursor=pointer]:
+                  - generic [ref=e125]: 시스템 계정
+              - listitem [ref=e126]:
+                - button "권한 설정" [ref=e127] [cursor=pointer]:
+                  - generic [ref=e128]: 권한 설정
+              - listitem [ref=e129]:
+                - button "비밀번호 초기화" [ref=e130] [cursor=pointer]:
+                  - generic [ref=e131]: 비밀번호 초기화
+          - listitem [ref=e132]:
+            - button "투어별 문서 링크" [ref=e133] [cursor=pointer]:
+              - img [ref=e135]
+              - generic [ref=e138]: 투어별 문서 링크
+          - listitem [ref=e139]:
+            - button "디자인 시스템" [ref=e140] [cursor=pointer]:
+              - img [ref=e142]
+              - generic [ref=e148]: 디자인 시스템
+              - img [ref=e149]
+            - list [ref=e151]:
+              - listitem [ref=e152]:
+                - button "디자인 템플릿" [ref=e153] [cursor=pointer]:
+                  - generic [ref=e154]: 디자인 템플릿
+              - listitem [ref=e155]:
+                - button "폰트 스타일" [ref=e156] [cursor=pointer]:
+                  - generic [ref=e157]: 폰트 스타일
+              - listitem [ref=e158]:
+                - button "뱃지 디자인" [ref=e159] [cursor=pointer]:
+                  - generic [ref=e160]: 뱃지 디자인
+              - listitem [ref=e161]:
+                - button "파비콘 디자인" [ref=e162] [cursor=pointer]:
+                  - generic [ref=e163]: 파비콘 디자인
+          - listitem [ref=e164]:
+            - button "일정표 템플릿" [ref=e165] [cursor=pointer]:
+              - img [ref=e167]
+              - generic [ref=e170]: 일정표 템플릿
+          - listitem [ref=e171]:
+            - button "공지사항 템플릿" [ref=e172] [cursor=pointer]:
+              - img [ref=e174]
+              - generic [ref=e176]: 공지사항 템플릿
+          - listitem [ref=e177]:
+            - button "메모 관리" [ref=e178] [cursor=pointer]:
+              - img [ref=e180]
+              - generic [ref=e182]: 메모 관리
+              - img [ref=e183]
+            - list [ref=e185]:
+              - listitem [ref=e186]:
+                - button "참가자 메모" [ref=e187] [cursor=pointer]:
+                  - generic [ref=e188]: 참가자 메모
+              - listitem [ref=e189]:
+                - button "업무 메모" [ref=e190] [cursor=pointer]:
+                  - generic [ref=e191]: 업무 메모
+              - listitem [ref=e192]:
+                - button "메모 템플릿" [ref=e193] [cursor=pointer]:
+                  - generic [ref=e194]: 메모 템플릿
+          - listitem [ref=e195]:
+            - button "통계" [ref=e196] [cursor=pointer]:
+              - img [ref=e198]
+              - generic [ref=e199]: 통계
+          - listitem [ref=e200]:
+            - button "네이버 API 디버깅" [ref=e201] [cursor=pointer]:
+              - img [ref=e203]
+              - generic [ref=e212]: 네이버 API 디버깅
+          - listitem [ref=e213]:
+            - button "설정" [ref=e214] [cursor=pointer]:
+              - img [ref=e216]
+              - generic [ref=e219]: 설정
+      - button "로그아웃" [ref=e221] [cursor=pointer]:
+        - img [ref=e222]
+        - generic [ref=e225]: 로그아웃
+    - generic [ref=e226]:
+      - banner [ref=e227]:
+        - heading "대시보드" [level=1] [ref=e229]
+        - generic [ref=e230]:
+          - button [ref=e232] [cursor=pointer]:
+            - img [ref=e233]
+          - button "P Prowhale 관리자" [ref=e238] [cursor=pointer]:
+            - generic [ref=e239]: P
+            - generic [ref=e240]:
+              - paragraph [ref=e241]: Prowhale
+              - paragraph [ref=e242]: 관리자
+      - main [ref=e243]:
+        - generic [ref=e244]:
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - heading "정산 관리" [level=1] [ref=e248]:
+                - img [ref=e249]
+                - text: 정산 관리
+              - paragraph [ref=e251]: 투어별 정산 현황을 확인하고 관리할 수 있습니다.
+            - link "미발행 세금계산서 관리" [ref=e253] [cursor=pointer]:
+              - /url: /admin/settlements/unissued-receipts
+              - img [ref=e254]
+              - text: 미발행 세금계산서 관리
+            - generic [ref=e257]:
+              - combobox [ref=e258]:
+                - option "투어 선택하여 정산 입력..." [selected]
+                - option "[부킹] 솔라시도 _ 권영중 님 (2025. 12. 11.)"
+                - option "미야코지마 3박4일 [나수진 님] (2025. 12. 8.)"
+                - option "이스타항공 가고시마 재취항 특별 프로모션 패키지 \"가고시마 시내\" 최저가 숙박 & 2색 골프코스 (2025. 11. 26.)"
+                - option "[해피니스]2박3일 나주버스핑 (2025. 11. 24.)"
+                - option "[부킹] 최경민 님 (2025. 11. 17.)"
+                - option "[부킹] 일삼일사회 님 (2025. 11. 13.)"
+                - option "[오션비치] 2박3일 영덕버스핑 (2025. 11. 3.)"
+                - option "[부킹] 윤근호 님 (2025. 11. 1.)"
+                - option "순천 풀패키지 견적서 (2025. 10. 20.)"
+                - option "[오션비치] 2박3일 영덕버스핑 (2025. 10. 13.)"
+                - option "[부킹] 박순양 님 (2025. 10. 1.)"
+                - option "[단독/파인힐스] 3박4일 순천 버스핑_정해철 님 (2025. 9. 12.)"
+                - option "[파인힐스] 2박3일 순천버스핑 (2025. 9. 8.)"
+                - option "[부킹] 오영숙 님 (2025. 8. 19.)"
+                - option "[단독/오션비치] 2박3일 영덕 버스핑_전경련(안경헌) 님 (2025. 8. 11.)"
+                - option "[부킹] 문두재 님 (2025. 7. 31.)"
+                - option "[파인힐스] 2박3일 순천버스핑 (2025. 6. 16.)"
+                - option "[부킹] 김인석 님 (2025. 6. 1.)"
+                - option "[파인힐스] 2박3일 순천버스핑 (2025. 5. 19.)"
+                - option "[단독/오션비치] 4박5일 영덕버스핑_정해철 님 (2025. 5. 2.)"
+                - option "[오션비치] 2박3일 영덕버스핑 (2025. 4. 21.)"
+                - option "[파인힐스] 2박3일 순천버스핑 (2025. 4. 14.)"
+                - option "[부킹] 유인수 님 (2025. 4. 3.)"
+              - img
+          - generic [ref=e260]:
+            - generic [ref=e261]:
+              - button "전체" [ref=e262] [cursor=pointer]
+              - button "정산 미시작" [ref=e263] [cursor=pointer]
+              - button "정산 진행중" [ref=e264] [cursor=pointer]
+              - button "정산 완료" [ref=e265] [cursor=pointer]
+            - generic [ref=e266]:
+              - img [ref=e267]
+              - button "전체 패키지" [ref=e269] [cursor=pointer]
+              - button "순천 (6)" [ref=e270] [cursor=pointer]
+              - button "영덕 (5)" [ref=e271] [cursor=pointer]
+            - generic [ref=e272]:
+              - img [ref=e273]
+              - combobox [ref=e275]:
+                - option "모든 상품" [selected]
+                - option "나주 풀패키지"
+                - option "부킹 / 강릉 1박2일"
+                - option "부킹 / 나주. 화순 2박3일"
+                - option "부킹 / 해남 2박3일"
+                - option "부킹 1박2일"
+                - option "부킹 2박3일"
+                - option "순천 풀패키지"
+                - option "순천 풀패키지 3박4일 [단독투어]"
+                - option "영덕 풀패키지"
+                - option "영덕 풀패키지 [단독투어]"
+                - option "일본"
+            - generic [ref=e276]:
+              - generic [ref=e277]:
+                - img [ref=e278]
+                - textbox "투어명으로 검색..." [ref=e281]
+              - button "CSV 내보내기" [ref=e282] [cursor=pointer]:
+                - img [ref=e283]
+                - text: CSV 내보내기
+          - generic [ref=e286]:
+            - generic [ref=e287]:
+              - generic [ref=e288]:
+                - generic [ref=e289]: 계약 매출
+                - generic [ref=e290]: 204,400,000원
+              - generic [ref=e291]:
+                - generic [ref=e292]: 정산 금액
+                - generic [ref=e293]: 170,244,000원
+              - generic [ref=e294]:
+                - generic [ref=e295]: 총 원가
+                - generic [ref=e296]: 150,082,990원
+              - generic [ref=e297]:
+                - generic [ref=e298]: 총 마진
+                - generic [ref=e299]:
+                  - text: 20,161,010원
+                  - img [ref=e300]
+                - generic [ref=e303]: "마진률: 11.84%"
+            - generic [ref=e304]:
+              - heading "순천 패키지 통계" [level=3] [ref=e305]
+              - generic [ref=e306]:
+                - generic [ref=e307]:
+                  - generic [ref=e308]: 투어 수
+                  - generic [ref=e309]: 6개
+                - generic [ref=e310]:
+                  - generic [ref=e311]: 평균 마진
+                  - generic [ref=e312]: 2,365,592원
+                - generic [ref=e313]:
+                  - generic [ref=e314]: 평균 마진률
+                  - generic [ref=e315]: 12.86%
+                - generic [ref=e316]:
+                  - generic [ref=e317]: 최고/최저 마진
+                  - generic [ref=e318]:
+                    - generic [ref=e319]: 4,235,950원
+                    - text: /
+                    - generic [ref=e320]: 0원
+            - generic [ref=e321]:
+              - heading "영덕 패키지 통계" [level=3] [ref=e322]
+              - generic [ref=e323]:
+                - generic [ref=e324]:
+                  - generic [ref=e325]: 투어 수
+                  - generic [ref=e326]: 5개
+                - generic [ref=e327]:
+                  - generic [ref=e328]: 평균 마진
+                  - generic [ref=e329]: 847,492원
+                - generic [ref=e330]:
+                  - generic [ref=e331]: 평균 마진률
+                  - generic [ref=e332]: 7.43%
+                - generic [ref=e333]:
+                  - generic [ref=e334]: 최고/최저 마진
+                  - generic [ref=e335]:
+                    - generic [ref=e336]: 1,501,500원
+                    - text: /
+                    - generic [ref=e337]: 494,500원
+          - generic [ref=e338]:
+            - generic [ref=e339]:
+              - heading "월별 정산 추이" [level=3] [ref=e340]
+              - generic [ref=e341]:
+                - button "선 그래프" [ref=e342] [cursor=pointer]
+                - button "막대 그래프" [ref=e343] [cursor=pointer]
+            - generic [ref=e345]:
+              - img [ref=e346]:
+                - generic [ref=e351]:
+                  - generic [ref=e353]: 12월
+                  - generic [ref=e355]: 1월
+                  - generic [ref=e357]: 2월
+                  - generic [ref=e359]: 3월
+                  - generic [ref=e361]: 4월
+                  - generic [ref=e363]: 5월
+                  - generic [ref=e365]: 6월
+                  - generic [ref=e367]: 7월
+                  - generic [ref=e369]: 8월
+                  - generic [ref=e371]: 9월
+                  - generic [ref=e373]: 10월
+                  - generic [ref=e375]: 11월
+                - generic [ref=e377]:
+                  - generic [ref=e379]: 0.0M
+                  - generic [ref=e381]: 15.0M
+                  - generic [ref=e383]: 30.0M
+                  - generic [ref=e385]: 45.0M
+                  - generic [ref=e387]: 60.0M
+              - list [ref=e404]:
+                - listitem [ref=e405]:
+                  - img [ref=e406]
+                  - text: 정산 금액
+          - generic [ref=e408]:
+            - heading "정산 목록" [level=2] [ref=e410]
+            - table [ref=e412]:
+              - rowgroup [ref=e413]:
+                - row "투어명 시작일 계약 매출 정산 금액 총 원가 마진 마진률 1인당 COM 상태 확인 작업" [ref=e414]:
+                  - cell "투어명" [ref=e415] [cursor=pointer]:
+                    - text: 투어명
+                    - img [ref=e416]
+                  - cell "시작일" [ref=e419] [cursor=pointer]:
+                    - text: 시작일
+                    - img [ref=e420]
+                  - cell "계약 매출" [ref=e422] [cursor=pointer]:
+                    - text: 계약 매출
+                    - img [ref=e423]
+                  - cell "정산 금액" [ref=e426] [cursor=pointer]:
+                    - text: 정산 금액
+                    - img [ref=e427]
+                  - cell "총 원가" [ref=e430]
+                  - cell "마진" [ref=e431] [cursor=pointer]:
+                    - text: 마진
+                    - img [ref=e432]
+                  - cell "마진률" [ref=e435] [cursor=pointer]:
+                    - text: 마진률
+                    - img [ref=e436]
+                  - cell "1인당 COM" [ref=e439]
+                  - cell "상태" [ref=e440]
+                  - cell "확인" [ref=e441]
+                  - cell "작업" [ref=e442]
+              - rowgroup [ref=e443]:
+                - row "부킹 / 해남 2박3일 [부킹] 솔라시도 _ 권영중 님 2025. 12. 11. 3,556,000원 0원 0원 0원 0.00% 0원 정산 미시작 확인 완료 상세보기" [ref=e444]:
+                  - cell "부킹 / 해남 2박3일 [부킹] 솔라시도 _ 권영중 님" [ref=e445]:
+                    - generic [ref=e446]:
+                      - generic [ref=e447]: 부킹 / 해남 2박3일
+                      - generic [ref=e448]: "[부킹] 솔라시도 _ 권영중 님"
+                  - cell "2025. 12. 11." [ref=e449]
+                  - cell "3,556,000원" [ref=e450]
+                  - cell "0원" [ref=e451]
+                  - cell "0원" [ref=e452]
+                  - cell "0원" [ref=e453]
+                  - cell "0.00%" [ref=e454]
+                  - cell "0원" [ref=e455]
+                  - cell "정산 미시작" [ref=e456]:
+                    - generic [ref=e457]:
+                      - img [ref=e458]
+                      - text: 정산 미시작
+                  - cell "확인 완료" [ref=e461]
+                  - cell "상세보기" [ref=e462]:
+                    - link "상세보기" [ref=e463] [cursor=pointer]:
+                      - /url: /admin/tours/b20143c2-d18a-4c2d-be00-4638b4e14998/settlement
+                - row "일본 미야코지마 3박4일 [나수진 님] 2025. 12. 8. 0원 0원 0원 0원 0.00% - 정산 미시작 확인 완료 상세보기" [ref=e464]:
+                  - cell "일본 미야코지마 3박4일 [나수진 님]" [ref=e465]:
+                    - generic [ref=e466]:
+                      - generic [ref=e467]: 일본
+                      - generic [ref=e468]: 미야코지마 3박4일 [나수진 님]
+                  - cell "2025. 12. 8." [ref=e469]
+                  - cell "0원" [ref=e470]
+                  - cell "0원" [ref=e471]
+                  - cell "0원" [ref=e472]
+                  - cell "0원" [ref=e473]
+                  - cell "0.00%" [ref=e474]
+                  - cell "-" [ref=e475]
+                  - cell "정산 미시작" [ref=e476]:
+                    - generic [ref=e477]:
+                      - img [ref=e478]
+                      - text: 정산 미시작
+                  - cell "확인 완료" [ref=e481]
+                  - cell "상세보기" [ref=e482]:
+                    - link "상세보기" [ref=e483] [cursor=pointer]:
+                      - /url: /admin/tours/5de9ff13-f2b4-44af-bd0f-d9cc20e97575/settlement
+                - row "일본 이스타항공 가고시마 재취항 특별 프로모션 패키지 \"가고시마 시내\" 최저가 숙박 & 2색 골프코스 2025. 11. 26. 0원 0원 0원 0원 0.00% - 정산 미시작 확인 완료 상세보기" [ref=e484]:
+                  - cell "일본 이스타항공 가고시마 재취항 특별 프로모션 패키지 \"가고시마 시내\" 최저가 숙박 & 2색 골프코스" [ref=e485]:
+                    - generic [ref=e486]:
+                      - generic [ref=e487]: 일본
+                      - generic [ref=e488]: 이스타항공 가고시마 재취항 특별 프로모션 패키지 "가고시마 시내" 최저가 숙박 & 2색 골프코스
+                  - cell "2025. 11. 26." [ref=e489]
+                  - cell "0원" [ref=e490]
+                  - cell "0원" [ref=e491]
+                  - cell "0원" [ref=e492]
+                  - cell "0원" [ref=e493]
+                  - cell "0.00%" [ref=e494]
+                  - cell "-" [ref=e495]
+                  - cell "정산 미시작" [ref=e496]:
+                    - generic [ref=e497]:
+                      - img [ref=e498]
+                      - text: 정산 미시작
+                  - cell "확인 완료" [ref=e501]
+                  - cell "상세보기" [ref=e502]:
+                    - link "상세보기" [ref=e503] [cursor=pointer]:
+                      - /url: /admin/tours/1d9f5db2-5398-4d6f-817f-a64934162aa3/settlement
+                - row "나주 풀패키지 [해피니스]2박3일 나주버스핑 2025. 11. 24. 14,240,000원 0원 0원 0원 0.00% 0원 정산 미시작 확인 완료 상세보기" [ref=e504]:
+                  - cell "나주 풀패키지 [해피니스]2박3일 나주버스핑" [ref=e505]:
+                    - generic [ref=e506]:
+                      - generic [ref=e507]: 나주 풀패키지
+                      - generic [ref=e508]: "[해피니스]2박3일 나주버스핑"
+                  - cell "2025. 11. 24." [ref=e509]
+                  - cell "14,240,000원" [ref=e510]
+                  - cell "0원" [ref=e511]
+                  - cell "0원" [ref=e512]
+                  - cell "0원" [ref=e513]
+                  - cell "0.00%" [ref=e514]
+                  - cell "0원" [ref=e515]
+                  - cell "정산 미시작" [ref=e516]:
+                    - generic [ref=e517]:
+                      - img [ref=e518]
+                      - text: 정산 미시작
+                  - cell "확인 완료" [ref=e521]
+                  - cell "상세보기" [ref=e522]:
+                    - link "상세보기" [ref=e523] [cursor=pointer]:
+                      - /url: /admin/tours/82001545-4eec-4e29-9127-f0e7ee6d01de/settlement
+                - row "부킹 2박3일 [부킹] 최경민 님 2025. 11. 17. 1,800,000원 0원 0원 0원 0.00% 0원 정산 완료 확인 완료 상세보기" [ref=e524]:
+                  - cell "부킹 2박3일 [부킹] 최경민 님" [ref=e525]:
+                    - generic [ref=e526]:
+                      - generic [ref=e527]: 부킹 2박3일
+                      - generic [ref=e528]: "[부킹] 최경민 님"
+                  - cell "2025. 11. 17." [ref=e529]
+                  - cell "1,800,000원" [ref=e530]
+                  - cell "0원" [ref=e531]
+                  - cell "0원" [ref=e532]
+                  - cell "0원" [ref=e533]
+                  - cell "0.00%" [ref=e534]
+                  - cell "0원" [ref=e535]
+                  - cell "정산 완료" [ref=e536]:
+                    - generic [ref=e537]:
+                      - img [ref=e538]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e541]
+                  - cell "상세보기" [ref=e542]:
+                    - link "상세보기" [ref=e543] [cursor=pointer]:
+                      - /url: /admin/tours/b5243d61-5a83-4789-8aee-a98fdcea5ad8/settlement
+                - row "부킹 / 해남 2박3일 [부킹] 일삼일사회 님 2025. 11. 13. 8,480,000원 7,950,000원 7,340,000원 610,000원 7.67% 38,125원 정산 완료 확인 완료 상세보기" [ref=e544]:
+                  - cell "부킹 / 해남 2박3일 [부킹] 일삼일사회 님" [ref=e545]:
+                    - generic [ref=e546]:
+                      - generic [ref=e547]: 부킹 / 해남 2박3일
+                      - generic [ref=e548]: "[부킹] 일삼일사회 님"
+                  - cell "2025. 11. 13." [ref=e549]
+                  - cell "8,480,000원" [ref=e550]
+                  - cell "7,950,000원" [ref=e551]
+                  - cell "7,340,000원" [ref=e552]
+                  - cell "610,000원" [ref=e553]
+                  - cell "7.67%" [ref=e554]
+                  - cell "38,125원" [ref=e555]
+                  - cell "정산 완료" [ref=e556]:
+                    - generic [ref=e557]:
+                      - img [ref=e558]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e561]
+                  - cell "상세보기" [ref=e562]:
+                    - link "상세보기" [ref=e563] [cursor=pointer]:
+                      - /url: /admin/tours/1346a068-ac11-45fb-9b34-db01437f9dfe/settlement
+                - row "영덕 풀패키지 [오션비치] 2박3일 영덕버스핑 2025. 11. 3. 9,960,000원 9,880,000원 9,380,000원 500,000원 5.06% 41,666원 정산 완료 확인 완료 상세보기" [ref=e564]:
+                  - cell "영덕 풀패키지 [오션비치] 2박3일 영덕버스핑" [ref=e565]:
+                    - generic [ref=e566]:
+                      - generic [ref=e567]: 영덕 풀패키지
+                      - generic [ref=e568]: "[오션비치] 2박3일 영덕버스핑"
+                  - cell "2025. 11. 3." [ref=e569]
+                  - cell "9,960,000원" [ref=e570]
+                  - cell "9,880,000원" [ref=e571]
+                  - cell "9,380,000원" [ref=e572]
+                  - cell "500,000원" [ref=e573]
+                  - cell "5.06%" [ref=e574]
+                  - cell "41,666원" [ref=e575]
+                  - cell "정산 완료" [ref=e576]:
+                    - generic [ref=e577]:
+                      - img [ref=e578]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e581]
+                  - cell "상세보기" [ref=e582]:
+                    - link "상세보기" [ref=e583] [cursor=pointer]:
+                      - /url: /admin/tours/1c9494a7-c95c-4104-8849-34ea20cb943a/settlement
+                - row "부킹 / 나주. 화순 2박3일 [부킹] 윤근호 님 2025. 11. 1. 3,576,000원 3,576,000원 3,416,000원 160,000원 4.47% 20,000원 정산 완료 확인 완료 상세보기" [ref=e584]:
+                  - cell "부킹 / 나주. 화순 2박3일 [부킹] 윤근호 님" [ref=e585]:
+                    - generic [ref=e586]:
+                      - generic [ref=e587]: 부킹 / 나주. 화순 2박3일
+                      - generic [ref=e588]: "[부킹] 윤근호 님"
+                  - cell "2025. 11. 1." [ref=e589]
+                  - cell "3,576,000원" [ref=e590]
+                  - cell "3,576,000원" [ref=e591]
+                  - cell "3,416,000원" [ref=e592]
+                  - cell "160,000원" [ref=e593]
+                  - cell "4.47%" [ref=e594]
+                  - cell "20,000원" [ref=e595]
+                  - cell "정산 완료" [ref=e596]:
+                    - generic [ref=e597]:
+                      - img [ref=e598]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e601]
+                  - cell "상세보기" [ref=e602]:
+                    - link "상세보기" [ref=e603] [cursor=pointer]:
+                      - /url: /admin/tours/28ec5b65-03a6-4dac-bc7d-ff1f029516bd/settlement
+                - row "순천 풀패키지 순천 풀패키지 견적서 2025. 10. 20. 3,400,000원 0원 0원 0원 0.00% 0원 정산 완료 확인 완료 상세보기" [ref=e604]:
+                  - cell "순천 풀패키지 순천 풀패키지 견적서" [ref=e605]:
+                    - generic [ref=e606]:
+                      - generic [ref=e607]: 순천 풀패키지
+                      - generic [ref=e608]: 순천 풀패키지 견적서
+                  - cell "2025. 10. 20." [ref=e609]
+                  - cell "3,400,000원" [ref=e610]
+                  - cell "0원" [ref=e611]
+                  - cell "0원" [ref=e612]
+                  - cell "0원" [ref=e613]
+                  - cell "0.00%" [ref=e614]
+                  - cell "0원" [ref=e615]
+                  - cell "정산 완료" [ref=e616]:
+                    - generic [ref=e617]:
+                      - img [ref=e618]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e621]
+                  - cell "상세보기" [ref=e622]:
+                    - link "상세보기" [ref=e623] [cursor=pointer]:
+                      - /url: /admin/tours/453a87b9-2da3-4e1d-9eae-9ae8b36ee43c/settlement
+                - row "영덕 풀패키지 [오션비치] 2박3일 영덕버스핑 2025. 10. 13. 9,840,000원 8,190,000원 7,695,500원 494,500원 6.04% 41,208원 정산 완료 확인 완료 상세보기" [ref=e624]:
+                  - cell "영덕 풀패키지 [오션비치] 2박3일 영덕버스핑" [ref=e625]:
+                    - generic [ref=e626]:
+                      - generic [ref=e627]: 영덕 풀패키지
+                      - generic [ref=e628]: "[오션비치] 2박3일 영덕버스핑"
+                  - cell "2025. 10. 13." [ref=e629]
+                  - cell "9,840,000원" [ref=e630]
+                  - cell "8,190,000원" [ref=e631]
+                  - cell "7,695,500원" [ref=e632]
+                  - cell "494,500원" [ref=e633]
+                  - cell "6.04%" [ref=e634]
+                  - cell "41,208원" [ref=e635]
+                  - cell "정산 완료" [ref=e636]:
+                    - generic [ref=e637]:
+                      - img [ref=e638]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e641]
+                  - cell "상세보기" [ref=e642]:
+                    - link "상세보기" [ref=e643] [cursor=pointer]:
+                      - /url: /admin/tours/951e9f8d-a2a9-4504-a33d-86321b09b359/settlement
+                - row "부킹 / 강릉 1박2일 [부킹] 박순양 님 2025. 10. 1. 2,880,000원 2,880,000원 2,760,000원 120,000원 4.17% 15,000원 정산 완료 확인 완료 상세보기" [ref=e644]:
+                  - cell "부킹 / 강릉 1박2일 [부킹] 박순양 님" [ref=e645]:
+                    - generic [ref=e646]:
+                      - generic [ref=e647]: 부킹 / 강릉 1박2일
+                      - generic [ref=e648]: "[부킹] 박순양 님"
+                  - cell "2025. 10. 1." [ref=e649]
+                  - cell "2,880,000원" [ref=e650]
+                  - cell "2,880,000원" [ref=e651]
+                  - cell "2,760,000원" [ref=e652]
+                  - cell "120,000원" [ref=e653]
+                  - cell "4.17%" [ref=e654]
+                  - cell "15,000원" [ref=e655]
+                  - cell "정산 완료" [ref=e656]:
+                    - generic [ref=e657]:
+                      - img [ref=e658]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e661]
+                  - cell "상세보기" [ref=e662]:
+                    - link "상세보기" [ref=e663] [cursor=pointer]:
+                      - /url: /admin/tours/586fcb42-b1bd-4eb3-9bd0-899986a74a7a/settlement
+                - row "순천 풀패키지 3박4일 [단독투어] [단독/파인힐스] 3박4일 순천 버스핑_정해철 님 2025. 9. 12. 14,040,000원 13,160,000원 12,189,500원 970,500원 7.37% 80,875원 정산 완료 확인 완료 상세보기" [ref=e664]:
+                  - cell "순천 풀패키지 3박4일 [단독투어] [단독/파인힐스] 3박4일 순천 버스핑_정해철 님" [ref=e665]:
+                    - generic [ref=e666]:
+                      - generic [ref=e667]: 순천 풀패키지 3박4일 [단독투어]
+                      - generic [ref=e668]: "[단독/파인힐스] 3박4일 순천 버스핑_정해철 님"
+                  - cell "2025. 9. 12." [ref=e669]
+                  - cell "14,040,000원" [ref=e670]
+                  - cell "13,160,000원" [ref=e671]
+                  - cell "12,189,500원" [ref=e672]
+                  - cell "970,500원" [ref=e673]
+                  - cell "7.37%" [ref=e674]
+                  - cell "80,875원" [ref=e675]
+                  - cell "정산 완료" [ref=e676]:
+                    - generic [ref=e677]:
+                      - img [ref=e678]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e681]
+                  - cell "상세보기" [ref=e682]:
+                    - link "상세보기" [ref=e683] [cursor=pointer]:
+                      - /url: /admin/tours/e5878cd2-bce7-495d-a428-c2b4e506fcc7/settlement
+                - row "순천 풀패키지 [파인힐스] 2박3일 순천버스핑 2025. 9. 8. 16,400,000원 16,250,000원 12,632,300원 3,617,700원 22.26% 180,885원 정산 완료 확인 완료 상세보기" [ref=e684]:
+                  - cell "순천 풀패키지 [파인힐스] 2박3일 순천버스핑" [ref=e685]:
+                    - generic [ref=e686]:
+                      - generic [ref=e687]: 순천 풀패키지
+                      - generic [ref=e688]: "[파인힐스] 2박3일 순천버스핑"
+                  - cell "2025. 9. 8." [ref=e689]
+                  - cell "16,400,000원" [ref=e690]
+                  - cell "16,250,000원" [ref=e691]
+                  - cell "12,632,300원" [ref=e692]
+                  - cell "3,617,700원" [ref=e693]
+                  - cell "22.26%" [ref=e694]
+                  - cell "180,885원" [ref=e695]
+                  - cell "정산 완료" [ref=e696]:
+                    - generic [ref=e697]:
+                      - img [ref=e698]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e701]
+                  - cell "상세보기" [ref=e702]:
+                    - link "상세보기" [ref=e703] [cursor=pointer]:
+                      - /url: /admin/tours/e75fdea1-eb22-4134-9334-523028b04e1e/settlement
+                - row "부킹 2박3일 [부킹] 오영숙 님 2025. 8. 19. 2,540,000원 2,540,000원 2,420,000원 120,000원 4.72% 30,000원 정산 완료 확인 완료 상세보기" [ref=e704]:
+                  - cell "부킹 2박3일 [부킹] 오영숙 님" [ref=e705]:
+                    - generic [ref=e706]:
+                      - generic [ref=e707]: 부킹 2박3일
+                      - generic [ref=e708]: "[부킹] 오영숙 님"
+                  - cell "2025. 8. 19." [ref=e709]
+                  - cell "2,540,000원" [ref=e710]
+                  - cell "2,540,000원" [ref=e711]
+                  - cell "2,420,000원" [ref=e712]
+                  - cell "120,000원" [ref=e713]
+                  - cell "4.72%" [ref=e714]
+                  - cell "30,000원" [ref=e715]
+                  - cell "정산 완료" [ref=e716]:
+                    - generic [ref=e717]:
+                      - img [ref=e718]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e721]
+                  - cell "상세보기" [ref=e722]:
+                    - link "상세보기" [ref=e723] [cursor=pointer]:
+                      - /url: /admin/tours/348021dd-c9ac-4108-9738-ca3dd163a1da/settlement
+                - row "영덕 풀패키지 [단독투어] [단독/오션비치] 2박3일 영덕 버스핑_전경련(안경헌) 님 2025. 8. 11. 8,200,000원 8,020,000원 7,189,500원 830,500원 10.36% 83,050원 정산 완료 확인 완료 상세보기" [ref=e724]:
+                  - cell "영덕 풀패키지 [단독투어] [단독/오션비치] 2박3일 영덕 버스핑_전경련(안경헌) 님" [ref=e725]:
+                    - generic [ref=e726]:
+                      - generic [ref=e727]: 영덕 풀패키지 [단독투어]
+                      - generic [ref=e728]: "[단독/오션비치] 2박3일 영덕 버스핑_전경련(안경헌) 님"
+                  - cell "2025. 8. 11." [ref=e729]
+                  - cell "8,200,000원" [ref=e730]
+                  - cell "8,020,000원" [ref=e731]
+                  - cell "7,189,500원" [ref=e732]
+                  - cell "830,500원" [ref=e733]
+                  - cell "10.36%" [ref=e734]
+                  - cell "83,050원" [ref=e735]
+                  - cell "정산 완료" [ref=e736]:
+                    - generic [ref=e737]:
+                      - img [ref=e738]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e741]
+                  - cell "상세보기" [ref=e742]:
+                    - link "상세보기" [ref=e743] [cursor=pointer]:
+                      - /url: /admin/tours/2c1684a7-4d9d-45bd-9b9f-3e2d8cc060c5/settlement
+                - row "부킹 / 해남 2박3일 [부킹] 문두재 님 2025. 7. 31. 6,000,000원 3,000,000원 2,680,000원 320,000원 10.67% 40,000원 정산 완료 확인 완료 상세보기" [ref=e744]:
+                  - cell "부킹 / 해남 2박3일 [부킹] 문두재 님" [ref=e745]:
+                    - generic [ref=e746]:
+                      - generic [ref=e747]: 부킹 / 해남 2박3일
+                      - generic [ref=e748]: "[부킹] 문두재 님"
+                  - cell "2025. 7. 31." [ref=e749]
+                  - cell "6,000,000원" [ref=e750]
+                  - cell "3,000,000원" [ref=e751]
+                  - cell "2,680,000원" [ref=e752]
+                  - cell "320,000원" [ref=e753]
+                  - cell "10.67%" [ref=e754]
+                  - cell "40,000원" [ref=e755]
+                  - cell "정산 완료" [ref=e756]:
+                    - generic [ref=e757]:
+                      - img [ref=e758]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e761]
+                  - cell "상세보기" [ref=e762]:
+                    - link "상세보기" [ref=e763] [cursor=pointer]:
+                      - /url: /admin/tours/1c16d7e2-567a-4873-9044-54bd3c80aa27/settlement
+                - row "순천 풀패키지 [파인힐스] 2박3일 순천버스핑 2025. 6. 16. 13,600,000원 13,600,000원 12,021,800원 1,578,200원 11.60% 98,637원 정산 완료 확인 완료 상세보기" [ref=e764]:
+                  - cell "순천 풀패키지 [파인힐스] 2박3일 순천버스핑" [ref=e765]:
+                    - generic [ref=e766]:
+                      - generic [ref=e767]: 순천 풀패키지
+                      - generic [ref=e768]: "[파인힐스] 2박3일 순천버스핑"
+                  - cell "2025. 6. 16." [ref=e769]
+                  - cell "13,600,000원" [ref=e770]
+                  - cell "13,600,000원" [ref=e771]
+                  - cell "12,021,800원" [ref=e772]
+                  - cell "1,578,200원" [ref=e773]
+                  - cell "11.60%" [ref=e774]
+                  - cell "98,637원" [ref=e775]
+                  - cell "정산 완료" [ref=e776]:
+                    - generic [ref=e777]:
+                      - img [ref=e778]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e781]
+                  - cell "상세보기" [ref=e782]:
+                    - link "상세보기" [ref=e783] [cursor=pointer]:
+                      - /url: /admin/tours/eefd49f9-6431-4ad1-a235-3f4f1f176ef0/settlement
+                - row "부킹 / 강릉 1박2일 [부킹] 김인석 님 2025. 6. 1. 2,888,000원 2,888,000원 2,648,000원 240,000원 8.31% 30,000원 정산 완료 확인 완료 상세보기" [ref=e784]:
+                  - cell "부킹 / 강릉 1박2일 [부킹] 김인석 님" [ref=e785]:
+                    - generic [ref=e786]:
+                      - generic [ref=e787]: 부킹 / 강릉 1박2일
+                      - generic [ref=e788]: "[부킹] 김인석 님"
+                  - cell "2025. 6. 1." [ref=e789]
+                  - cell "2,888,000원" [ref=e790]
+                  - cell "2,888,000원" [ref=e791]
+                  - cell "2,648,000원" [ref=e792]
+                  - cell "240,000원" [ref=e793]
+                  - cell "8.31%" [ref=e794]
+                  - cell "30,000원" [ref=e795]
+                  - cell "정산 완료" [ref=e796]:
+                    - generic [ref=e797]:
+                      - img [ref=e798]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e801]
+                  - cell "상세보기" [ref=e802]:
+                    - link "상세보기" [ref=e803] [cursor=pointer]:
+                      - /url: /admin/tours/7a24d299-4dc1-4f9b-97f2-c70092159e2b/settlement
+                - row "순천 풀패키지 [파인힐스] 2박3일 순천버스핑 2025. 5. 19. 23,880,000원 23,880,000원 19,644,050원 4,235,950원 17.74% 151,283원 정산 완료 확인 완료 상세보기" [ref=e804]:
+                  - cell "순천 풀패키지 [파인힐스] 2박3일 순천버스핑" [ref=e805]:
+                    - generic [ref=e806]:
+                      - generic [ref=e807]: 순천 풀패키지
+                      - generic [ref=e808]: "[파인힐스] 2박3일 순천버스핑"
+                  - cell "2025. 5. 19." [ref=e809]
+                  - cell "23,880,000원" [ref=e810]
+                  - cell "23,880,000원" [ref=e811]
+                  - cell "19,644,050원" [ref=e812]
+                  - cell "4,235,950원" [ref=e813]
+                  - cell "17.74%" [ref=e814]
+                  - cell "151,283원" [ref=e815]
+                  - cell "정산 완료" [ref=e816]:
+                    - generic [ref=e817]:
+                      - img [ref=e818]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e821]
+                  - cell "상세보기" [ref=e822]:
+                    - link "상세보기" [ref=e823] [cursor=pointer]:
+                      - /url: /admin/tours/6ee634ba-9adb-49c5-915c-cb2e246dc51f/settlement
+                - row "영덕 풀패키지 [단독투어] [단독/오션비치] 4박5일 영덕버스핑_정해철 님 2025. 5. 2. 20,640,000원 17,464,000원 15,962,500원 1,501,500원 8.60% 150,150원 정산 완료 확인 완료 상세보기" [ref=e824]:
+                  - cell "영덕 풀패키지 [단독투어] [단독/오션비치] 4박5일 영덕버스핑_정해철 님" [ref=e825]:
+                    - generic [ref=e826]:
+                      - generic [ref=e827]: 영덕 풀패키지 [단독투어]
+                      - generic [ref=e828]: "[단독/오션비치] 4박5일 영덕버스핑_정해철 님"
+                  - cell "2025. 5. 2." [ref=e829]
+                  - cell "20,640,000원" [ref=e830]
+                  - cell "17,464,000원" [ref=e831]
+                  - cell "15,962,500원" [ref=e832]
+                  - cell "1,501,500원" [ref=e833]
+                  - cell "8.60%" [ref=e834]
+                  - cell "150,150원" [ref=e835]
+                  - cell "정산 완료" [ref=e836]:
+                    - generic [ref=e837]:
+                      - img [ref=e838]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e841]
+                  - cell "상세보기" [ref=e842]:
+                    - link "상세보기" [ref=e843] [cursor=pointer]:
+                      - /url: /admin/tours/7d1ffa2b-2c1b-4154-9b17-372a78e7c801/settlement
+                - row "영덕 풀패키지 [오션비치] 2박3일 영덕버스핑 2025. 4. 21. 12,800,000원 12,800,000원 11,889,040원 910,960원 7.12% 56,935원 정산 완료 확인 완료 상세보기" [ref=e844]:
+                  - cell "영덕 풀패키지 [오션비치] 2박3일 영덕버스핑" [ref=e845]:
+                    - generic [ref=e846]:
+                      - generic [ref=e847]: 영덕 풀패키지
+                      - generic [ref=e848]: "[오션비치] 2박3일 영덕버스핑"
+                  - cell "2025. 4. 21." [ref=e849]
+                  - cell "12,800,000원" [ref=e850]
+                  - cell "12,800,000원" [ref=e851]
+                  - cell "11,889,040원" [ref=e852]
+                  - cell "910,960원" [ref=e853]
+                  - cell "7.12%" [ref=e854]
+                  - cell "56,935원" [ref=e855]
+                  - cell "정산 완료" [ref=e856]:
+                    - generic [ref=e857]:
+                      - img [ref=e858]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e861]
+                  - cell "상세보기" [ref=e862]:
+                    - link "상세보기" [ref=e863] [cursor=pointer]:
+                      - /url: /admin/tours/42ec1758-08da-4372-a55c-efc57e9dd351/settlement
+                - row "순천 풀패키지 [파인힐스] 2박3일 순천버스핑 2025. 4. 14. 22,400,000원 20,886,000원 17,094,800원 3,791,200원 18.15% 135,400원 정산 완료 확인 완료 상세보기" [ref=e864]:
+                  - cell "순천 풀패키지 [파인힐스] 2박3일 순천버스핑" [ref=e865]:
+                    - generic [ref=e866]:
+                      - generic [ref=e867]: 순천 풀패키지
+                      - generic [ref=e868]: "[파인힐스] 2박3일 순천버스핑"
+                  - cell "2025. 4. 14." [ref=e869]
+                  - cell "22,400,000원" [ref=e870]
+                  - cell "20,886,000원" [ref=e871]
+                  - cell "17,094,800원" [ref=e872]
+                  - cell "3,791,200원" [ref=e873]
+                  - cell "18.15%" [ref=e874]
+                  - cell "135,400원" [ref=e875]
+                  - cell "정산 완료" [ref=e876]:
+                    - generic [ref=e877]:
+                      - img [ref=e878]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e881]
+                  - cell "상세보기" [ref=e882]:
+                    - link "상세보기" [ref=e883] [cursor=pointer]:
+                      - /url: /admin/tours/48da6f0b-80b3-4256-83c2-66b19ff2feaa/settlement
+                - row "부킹 1박2일 [부킹] 유인수 님 2025. 4. 3. 3,280,000원 3,280,000원 3,120,000원 160,000원 4.88% 20,000원 정산 완료 확인 완료 상세보기" [ref=e884]:
+                  - cell "부킹 1박2일 [부킹] 유인수 님" [ref=e885]:
+                    - generic [ref=e886]:
+                      - generic [ref=e887]: 부킹 1박2일
+                      - generic [ref=e888]: "[부킹] 유인수 님"
+                  - cell "2025. 4. 3." [ref=e889]
+                  - cell "3,280,000원" [ref=e890]
+                  - cell "3,280,000원" [ref=e891]
+                  - cell "3,120,000원" [ref=e892]
+                  - cell "160,000원" [ref=e893]
+                  - cell "4.88%" [ref=e894]
+                  - cell "20,000원" [ref=e895]
+                  - cell "정산 완료" [ref=e896]:
+                    - generic [ref=e897]:
+                      - img [ref=e898]
+                      - text: 정산 완료
+                  - cell "확인 완료" [ref=e901]
+                  - cell "상세보기" [ref=e902]:
+                    - link "상세보기" [ref=e903] [cursor=pointer]:
+                      - /url: /admin/tours/5e862ea2-d084-4836-a397-b55bf83ef709/settlement
+  - alert [ref=e904]
+  - generic [ref=e905]: 15.0M
+```

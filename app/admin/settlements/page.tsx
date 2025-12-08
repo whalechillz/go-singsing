@@ -313,7 +313,7 @@ export default function SettlementsPage() {
       .map(s => s.product_name)
       .filter((name): name is string => !!name)
   )).sort();
-  
+
   // 정렬 및 필터링된 정산 목록
   const filteredSettlements = settlements
     .filter((s) => {

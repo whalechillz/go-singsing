@@ -10,7 +10,7 @@ export function simplifyCourseName(fullName: string): string {
   if (!fullName) return '';
   const parts = fullName.split(' - ');
   return parts.length > 1 ? parts[1] : fullName;
-}
+} 
 
 // 숫자를 천단위 콤마가 포함된 문자열로 변환 (0일 때는 빈 문자열)
 export function formatNumberWithCommas(value: number | undefined | null): string {

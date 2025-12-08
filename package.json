@@ -17,7 +17,8 @@
     "fix-duplicates": "tsx scripts/debug/fix-duplicate-participants.ts",
     "check-tours": "tsx scripts/check-tour-participants.ts",
     "cleanup-mms-images": "tsx scripts/cleanup-unused-mms-images.ts",
-    "retry-messages": "tsx scripts/retry-failed-messages.ts"
+    "retry-messages": "tsx scripts/retry-failed-messages.ts",
+    "settlement-docs:migrate": "tsx scripts/migrate-settlement-docs.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",

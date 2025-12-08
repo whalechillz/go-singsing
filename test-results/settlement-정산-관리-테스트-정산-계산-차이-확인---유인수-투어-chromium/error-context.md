@@ -240,284 +240,422 @@
                         - generic [ref=e317]: 메모
                         - textbox "메모를 입력하세요" [ref=e318]: 오션비치 정산
                     - generic [ref=e319]:
-                      - generic [ref=e320]:
-                        - heading "입금 내역" [level=6] [ref=e321]
-                        - button "입금 추가" [ref=e322] [cursor=pointer]:
-                          - img [ref=e323]
-                          - text: 입금 추가
-                      - generic [ref=e324]:
+                      - heading "세금계산서/영수증 정보" [level=6] [ref=e320]
+                      - generic [ref=e321]:
+                        - generic [ref=e322]:
+                          - generic [ref=e323]: 세금계산서/영수증 종류
+                          - combobox [ref=e324]:
+                            - option "선택 안함" [selected]
+                            - option "매입세금계산서"
+                            - option "현금영수증"
+                            - option "없음"
                         - generic [ref=e325]:
-                          - generic [ref=e326]:
-                            - generic [ref=e327]: 입금 방법
-                            - combobox [ref=e328]:
+                          - generic [ref=e326]: 세금계산서/영수증 번호
+                          - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e327]
+                        - generic [ref=e328]:
+                          - checkbox "발행 확인 (국세청 검증 완료)" [ref=e329]
+                          - generic [ref=e330]: 발행 확인 (국세청 검증 완료)
+                    - generic [ref=e331]:
+                      - generic [ref=e332]:
+                        - heading "입금 내역" [level=6] [ref=e333]
+                        - button "입금 추가" [ref=e334] [cursor=pointer]:
+                          - img [ref=e335]
+                          - text: 입금 추가
+                      - generic [ref=e336]:
+                        - generic [ref=e337]:
+                          - generic [ref=e338]:
+                            - generic [ref=e339]: 입금 방법
+                            - combobox [ref=e340]:
                               - option "현금" [selected]
                               - option "카드"
                               - option "계좌이체"
-                          - generic [ref=e329]:
-                            - generic [ref=e330]: 입금 금액
-                            - textbox "0" [ref=e331]: 4,600,000
-                          - generic [ref=e332]:
-                            - generic [ref=e333]: 입금 날짜
-                            - textbox [ref=e334]: 2025-04-21
-                          - generic [ref=e335]:
-                            - textbox "계좌 정보 (선택)" [ref=e336]
-                            - button [ref=e337] [cursor=pointer]:
-                              - img [ref=e338]
-                        - 'textbox "비고 (예: 농협 615082-55-000077)" [ref=e342]': 현금
-                      - generic [ref=e343]:
-                        - generic [ref=e344]:
-                          - generic [ref=e345]:
-                            - generic [ref=e346]: 입금 방법
-                            - combobox [ref=e347]:
+                          - generic [ref=e341]:
+                            - generic [ref=e342]: 입금 금액
+                            - textbox "0" [ref=e343]: 4,600,000
+                          - generic [ref=e344]:
+                            - generic [ref=e345]: 입금 날짜
+                            - textbox [ref=e346]: 2025-04-21
+                          - generic [ref=e347]:
+                            - textbox "계좌 정보 (선택)" [ref=e348]
+                            - button [ref=e349] [cursor=pointer]:
+                              - img [ref=e350]
+                        - 'textbox "비고 (예: 농협 615082-55-000077)" [ref=e354]': 현금
+                        - generic [ref=e355]:
+                          - generic [ref=e356]: 세금계산서/영수증 정보
+                          - generic [ref=e357]:
+                            - generic [ref=e358]:
+                              - generic [ref=e359]: 세금계산서/영수증 종류
+                              - combobox [ref=e360]:
+                                - option "선택 안함" [selected]
+                                - option "매입세금계산서"
+                                - option "현금영수증"
+                                - option "없음"
+                            - generic [ref=e361]:
+                              - generic [ref=e362]: 세금계산서/영수증 번호
+                              - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e363]
+                            - generic [ref=e364]:
+                              - checkbox "발행 확인 (국세청 검증 완료)" [ref=e365]
+                              - generic [ref=e366]: 발행 확인 (국세청 검증 완료)
+                      - generic [ref=e367]:
+                        - generic [ref=e368]:
+                          - generic [ref=e369]:
+                            - generic [ref=e370]: 입금 방법
+                            - combobox [ref=e371]:
                               - option "현금"
                               - option "카드" [selected]
                               - option "계좌이체"
-                          - generic [ref=e348]:
-                            - generic [ref=e349]: 입금 금액
-                            - textbox "0" [ref=e350]: 4,736,000
-                          - generic [ref=e351]:
-                            - generic [ref=e352]: 입금 날짜
-                            - textbox [ref=e353]: 2025-04-21
-                          - generic [ref=e354]:
-                            - textbox "계좌 정보 (선택)" [ref=e355]
-                            - button [ref=e356] [cursor=pointer]:
-                              - img [ref=e357]
-                        - 'textbox "비고 (예: 농협 615082-55-000077)" [ref=e361]': 카드
-                    - generic [ref=e362]:
-                      - generic [ref=e363]:
-                        - heading "환불 내역" [level=6] [ref=e364]
-                        - button "환불 추가" [ref=e365] [cursor=pointer]:
-                          - img [ref=e366]
+                          - generic [ref=e372]:
+                            - generic [ref=e373]: 입금 금액
+                            - textbox "0" [ref=e374]: 4,736,000
+                          - generic [ref=e375]:
+                            - generic [ref=e376]: 입금 날짜
+                            - textbox [ref=e377]: 2025-04-21
+                          - generic [ref=e378]:
+                            - textbox "계좌 정보 (선택)" [ref=e379]
+                            - button [ref=e380] [cursor=pointer]:
+                              - img [ref=e381]
+                        - 'textbox "비고 (예: 농협 615082-55-000077)" [ref=e385]': 카드
+                        - generic [ref=e386]:
+                          - generic [ref=e387]: 세금계산서/영수증 정보
+                          - generic [ref=e388]:
+                            - checkbox "카드 처리 확인 (카드를 긁은 담당자가 체크)" [ref=e389]
+                            - generic [ref=e390]: 카드 처리 확인 (카드를 긁은 담당자가 체크)
+                    - generic [ref=e391]:
+                      - generic [ref=e392]:
+                        - heading "환불 내역" [level=6] [ref=e393]
+                        - button "환불 추가" [ref=e394] [cursor=pointer]:
+                          - img [ref=e395]
                           - text: 환불 추가
-                      - paragraph [ref=e367]: 환불 내역이 없습니다.
-                  - generic [ref=e369]:
-                    - generic [ref=e370]:
-                      - generic [ref=e371]: 골프장 총 비용
-                      - textbox "0" [ref=e372]: 9,336,000
-                    - generic [ref=e374]: 골프장 정산 상세 항목의 소계 합계를 입력하세요.
-                - generic [ref=e375]:
-                  - heading "버스 비용" [level=4] [ref=e376]
-                  - generic [ref=e377]:
-                    - generic [ref=e378]:
-                      - generic [ref=e379]: 버스 비용
-                      - textbox "0" [ref=e380]: 2,310,000
-                    - generic [ref=e381]:
-                      - generic [ref=e382]: 기사 비용
-                      - textbox "0" [ref=e383]
-                    - generic [ref=e384]:
-                      - generic [ref=e385]: 톨게이트 비용
-                      - textbox "0" [ref=e386]
-                    - generic [ref=e387]:
-                      - generic [ref=e388]: 주차비
-                      - textbox "0" [ref=e389]
-                    - generic [ref=e390]:
-                      - generic [ref=e391]: 버스 비용 메모
-                      - textbox "버스 비용 관련 메모를 입력하세요" [ref=e392]: 기업 052-053625-01-017 스위스관광㈜
-                - generic [ref=e393]:
-                  - heading "가이드 비용" [level=4] [ref=e394]
-                  - generic [ref=e395]:
-                    - generic [ref=e396]:
-                      - generic [ref=e397]: 가이드 인건비
-                      - textbox "0" [ref=e398]
+                      - paragraph [ref=e396]: 환불 내역이 없습니다.
+                  - generic [ref=e398]:
                     - generic [ref=e399]:
-                      - generic [ref=e400]: 가이드 식사비
-                      - textbox "0" [ref=e401]
-                    - generic [ref=e402]:
-                      - generic [ref=e403]: 가이드 숙박비
-                      - textbox "0" [ref=e404]
-                    - generic [ref=e405]:
-                      - generic [ref=e406]: 가이드 기타 비용
-                      - textbox "0" [ref=e407]
-                    - generic [ref=e408]:
-                      - generic [ref=e409]: 가이드 비용 메모
-                      - textbox "가이드 비용 관련 메모를 입력하세요" [ref=e410]
-                - generic [ref=e411]:
-                  - generic [ref=e412]:
-                    - heading "경비 지출" [level=4] [ref=e413]
-                    - button "경비 추가" [ref=e414] [cursor=pointer]:
-                      - img [ref=e415]
+                      - generic [ref=e400]: 골프장 총 비용
+                      - textbox "0" [ref=e401]: 9,336,000
+                    - generic [ref=e403]: 골프장 정산 상세 항목의 소계 합계를 입력하세요.
+                - generic [ref=e404]:
+                  - heading "버스 비용" [level=4] [ref=e405]
+                  - generic [ref=e406]:
+                    - generic [ref=e407]:
+                      - generic [ref=e408]: 버스 비용
+                      - textbox "0" [ref=e409]: 2,310,000
+                    - generic [ref=e410]:
+                      - generic [ref=e411]: 기사 비용
+                      - textbox "0" [ref=e412]
+                    - generic [ref=e413]:
+                      - generic [ref=e414]: 톨게이트 비용
+                      - textbox "0" [ref=e415]
+                    - generic [ref=e416]:
+                      - generic [ref=e417]: 주차비
+                      - textbox "0" [ref=e418]
+                    - generic [ref=e419]:
+                      - generic [ref=e420]: 버스 비용 메모
+                      - textbox "버스 비용 관련 메모를 입력하세요" [ref=e421]: 기업 052-053625-01-017 스위스관광㈜
+                - generic [ref=e422]:
+                  - heading "가이드 비용" [level=4] [ref=e423]
+                  - generic [ref=e424]:
+                    - generic [ref=e425]:
+                      - generic [ref=e426]: 가이드 인건비
+                      - textbox "0" [ref=e427]
+                    - generic [ref=e428]:
+                      - generic [ref=e429]: 가이드 식사비
+                      - textbox "0" [ref=e430]
+                    - generic [ref=e431]:
+                      - generic [ref=e432]: 가이드 숙박비
+                      - textbox "0" [ref=e433]
+                    - generic [ref=e434]:
+                      - generic [ref=e435]: 가이드 기타 비용
+                      - textbox "0" [ref=e436]
+                    - generic [ref=e437]:
+                      - generic [ref=e438]: 가이드 비용 메모
+                      - textbox "가이드 비용 관련 메모를 입력하세요" [ref=e439]
+                - generic [ref=e440]:
+                  - generic [ref=e441]:
+                    - heading "경비 지출" [level=4] [ref=e442]
+                    - button "경비 추가" [ref=e443] [cursor=pointer]:
+                      - img [ref=e444]
                       - text: 경비 추가
-                  - generic [ref=e416]:
-                    - generic [ref=e417]:
-                      - heading "경비 항목 1" [level=5] [ref=e418]
-                      - button [ref=e419] [cursor=pointer]:
-                        - img [ref=e420]
-                    - generic [ref=e423]:
-                      - generic [ref=e424]:
-                        - generic [ref=e425]: 유형
-                        - combobox [ref=e426]:
+                  - generic [ref=e445]:
+                    - generic [ref=e446]:
+                      - heading "경비 항목 1" [level=5] [ref=e447]
+                      - button [ref=e448] [cursor=pointer]:
+                        - img [ref=e449]
+                    - generic [ref=e452]:
+                      - generic [ref=e453]:
+                        - generic [ref=e454]: 유형
+                        - combobox [ref=e455]:
                           - option "김밥" [selected]
                           - option "생수"
                           - option "간식"
                           - option "식사"
                           - option "기타"
-                      - generic [ref=e427]:
-                        - generic [ref=e428]: 설명
-                        - textbox "설명" [ref=e429]: 김밥
-                      - generic [ref=e430]:
-                        - generic [ref=e431]: 단가
-                        - textbox "0" [ref=e432]: 3,500
-                      - generic [ref=e433]:
-                        - generic [ref=e434]: 수량
-                        - textbox "1" [ref=e435]: "17"
-                      - generic [ref=e436]:
-                        - generic [ref=e437]: 총액
-                        - textbox "0" [ref=e438]: 59,500
-                  - generic [ref=e439]:
-                    - generic [ref=e440]:
-                      - heading "경비 항목 2" [level=5] [ref=e441]
-                      - button [ref=e442] [cursor=pointer]:
-                        - img [ref=e443]
-                    - generic [ref=e446]:
-                      - generic [ref=e447]:
-                        - generic [ref=e448]: 유형
-                        - combobox [ref=e449]:
+                      - generic [ref=e456]:
+                        - generic [ref=e457]: 설명
+                        - textbox "설명" [ref=e458]: 김밥
+                      - generic [ref=e459]:
+                        - generic [ref=e460]: 단가
+                        - textbox "0" [ref=e461]: 3,500
+                      - generic [ref=e462]:
+                        - generic [ref=e463]: 수량
+                        - textbox "1" [ref=e464]: "17"
+                      - generic [ref=e465]:
+                        - generic [ref=e466]: 총액
+                        - textbox "0" [ref=e467]: 59,500
+                    - generic [ref=e469]:
+                      - generic [ref=e470]:
+                        - generic [ref=e471]: 세금계산서/영수증 종류
+                        - combobox [ref=e472]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e473]:
+                        - generic [ref=e474]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e475]
+                      - generic [ref=e476]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e477]
+                        - generic [ref=e478]: 발행 확인 (국세청 검증 완료)
+                  - generic [ref=e479]:
+                    - generic [ref=e480]:
+                      - heading "경비 항목 2" [level=5] [ref=e481]
+                      - button [ref=e482] [cursor=pointer]:
+                        - img [ref=e483]
+                    - generic [ref=e486]:
+                      - generic [ref=e487]:
+                        - generic [ref=e488]: 유형
+                        - combobox [ref=e489]:
                           - option "김밥"
                           - option "생수" [selected]
                           - option "간식"
                           - option "식사"
                           - option "기타"
-                      - generic [ref=e450]:
-                        - generic [ref=e451]: 설명
-                        - textbox "설명" [ref=e452]: 생수
-                      - generic [ref=e453]:
-                        - generic [ref=e454]: 단가
-                        - textbox "0" [ref=e455]: 11,000
-                      - generic [ref=e456]:
-                        - generic [ref=e457]: 수량
-                        - textbox "1" [ref=e458]: "3"
-                      - generic [ref=e459]:
-                        - generic [ref=e460]: 총액
-                        - textbox "0" [ref=e461]: 33,000
-                  - generic [ref=e462]:
-                    - generic [ref=e463]:
-                      - heading "경비 항목 3" [level=5] [ref=e464]
-                      - button [ref=e465] [cursor=pointer]:
-                        - img [ref=e466]
-                    - generic [ref=e469]:
-                      - generic [ref=e470]:
-                        - generic [ref=e471]: 유형
-                        - combobox [ref=e472]:
-                          - option "김밥"
-                          - option "생수"
-                          - option "간식"
-                          - option "식사"
-                          - option "기타" [selected]
-                      - generic [ref=e473]:
-                        - generic [ref=e474]: 설명
-                        - textbox "설명" [ref=e475]: 와인
-                      - generic [ref=e476]:
-                        - generic [ref=e477]: 단가
-                        - textbox "0" [ref=e478]: 30,000
-                      - generic [ref=e479]:
-                        - generic [ref=e480]: 수량
-                        - textbox "1" [ref=e481]: "4"
-                      - generic [ref=e482]:
-                        - generic [ref=e483]: 총액
-                        - textbox "0" [ref=e484]: 120,000
-                  - generic [ref=e485]:
-                    - generic [ref=e486]:
-                      - heading "경비 항목 4" [level=5] [ref=e487]
-                      - button [ref=e488] [cursor=pointer]:
-                        - img [ref=e489]
-                    - generic [ref=e492]:
+                      - generic [ref=e490]:
+                        - generic [ref=e491]: 설명
+                        - textbox "설명" [ref=e492]: 생수
                       - generic [ref=e493]:
-                        - generic [ref=e494]: 유형
-                        - combobox [ref=e495]:
-                          - option "김밥"
-                          - option "생수"
-                          - option "간식"
-                          - option "식사"
-                          - option "기타" [selected]
+                        - generic [ref=e494]: 단가
+                        - textbox "0" [ref=e495]: 11,000
                       - generic [ref=e496]:
-                        - generic [ref=e497]: 설명
-                        - textbox "설명" [ref=e498]: 와인오프너
+                        - generic [ref=e497]: 수량
+                        - textbox "1" [ref=e498]: "3"
                       - generic [ref=e499]:
-                        - generic [ref=e500]: 단가
-                        - textbox "0" [ref=e501]: 9,300
-                      - generic [ref=e502]:
-                        - generic [ref=e503]: 수량
-                        - textbox "1" [ref=e504]
-                      - generic [ref=e505]:
-                        - generic [ref=e506]: 총액
-                        - textbox "0" [ref=e507]: 9,300
-                  - generic [ref=e508]:
-                    - generic [ref=e509]:
-                      - heading "경비 항목 5" [level=5] [ref=e510]
-                      - button [ref=e511] [cursor=pointer]:
-                        - img [ref=e512]
-                    - generic [ref=e515]:
-                      - generic [ref=e516]:
-                        - generic [ref=e517]: 유형
-                        - combobox [ref=e518]:
+                        - generic [ref=e500]: 총액
+                        - textbox "0" [ref=e501]: 33,000
+                    - generic [ref=e503]:
+                      - generic [ref=e504]:
+                        - generic [ref=e505]: 세금계산서/영수증 종류
+                        - combobox [ref=e506]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e507]:
+                        - generic [ref=e508]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e509]
+                      - generic [ref=e510]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e511]
+                        - generic [ref=e512]: 발행 확인 (국세청 검증 완료)
+                  - generic [ref=e513]:
+                    - generic [ref=e514]:
+                      - heading "경비 항목 3" [level=5] [ref=e515]
+                      - button [ref=e516] [cursor=pointer]:
+                        - img [ref=e517]
+                    - generic [ref=e520]:
+                      - generic [ref=e521]:
+                        - generic [ref=e522]: 유형
+                        - combobox [ref=e523]:
                           - option "김밥"
                           - option "생수"
                           - option "간식"
                           - option "식사"
                           - option "기타" [selected]
-                      - generic [ref=e519]:
-                        - generic [ref=e520]: 설명
-                        - textbox "설명" [ref=e521]: 와인잔
-                      - generic [ref=e522]:
-                        - generic [ref=e523]: 단가
-                        - textbox "0" [ref=e524]: 11,340
-                      - generic [ref=e525]:
-                        - generic [ref=e526]: 수량
-                        - textbox "1" [ref=e527]
-                      - generic [ref=e528]:
-                        - generic [ref=e529]: 총액
-                        - textbox "0" [ref=e530]: 11,340
-                  - generic [ref=e531]:
-                    - generic [ref=e532]:
-                      - heading "경비 항목 6" [level=5] [ref=e533]
-                      - button [ref=e534] [cursor=pointer]:
-                        - img [ref=e535]
-                    - generic [ref=e538]:
-                      - generic [ref=e539]:
-                        - generic [ref=e540]: 유형
-                        - combobox [ref=e541]:
+                      - generic [ref=e524]:
+                        - generic [ref=e525]: 설명
+                        - textbox "설명" [ref=e526]: 와인
+                      - generic [ref=e527]:
+                        - generic [ref=e528]: 단가
+                        - textbox "0" [ref=e529]: 30,000
+                      - generic [ref=e530]:
+                        - generic [ref=e531]: 수량
+                        - textbox "1" [ref=e532]: "4"
+                      - generic [ref=e533]:
+                        - generic [ref=e534]: 총액
+                        - textbox "0" [ref=e535]: 120,000
+                    - generic [ref=e537]:
+                      - generic [ref=e538]:
+                        - generic [ref=e539]: 세금계산서/영수증 종류
+                        - combobox [ref=e540]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e541]:
+                        - generic [ref=e542]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e543]
+                      - generic [ref=e544]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e545]
+                        - generic [ref=e546]: 발행 확인 (국세청 검증 완료)
+                  - generic [ref=e547]:
+                    - generic [ref=e548]:
+                      - heading "경비 항목 4" [level=5] [ref=e549]
+                      - button [ref=e550] [cursor=pointer]:
+                        - img [ref=e551]
+                    - generic [ref=e554]:
+                      - generic [ref=e555]:
+                        - generic [ref=e556]: 유형
+                        - combobox [ref=e557]:
                           - option "김밥"
                           - option "생수"
                           - option "간식"
                           - option "식사"
                           - option "기타" [selected]
-                      - generic [ref=e542]:
-                        - generic [ref=e543]: 설명
-                        - textbox "설명" [ref=e544]: 택배
-                      - generic [ref=e545]:
-                        - generic [ref=e546]: 단가
-                        - textbox "0" [ref=e547]: 3,300
-                      - generic [ref=e548]:
-                        - generic [ref=e549]: 수량
-                        - textbox "1" [ref=e550]: "3"
-                      - generic [ref=e551]:
-                        - generic [ref=e552]: 총액
-                        - textbox "0" [ref=e553]: 9,900
-                  - generic [ref=e555]:
-                    - generic [ref=e556]:
-                      - generic [ref=e557]: 경비 지출 총합
-                      - textbox "0" [ref=e558]: 243,040
-                    - generic [ref=e560]: 경비 항목의 총액이 자동으로 계산됩니다.
-                - generic [ref=e561]:
-                  - heading "기타 비용" [level=4] [ref=e562]
-                  - generic [ref=e563]:
-                    - generic [ref=e564]:
-                      - generic [ref=e565]: 숙박비
-                      - textbox "0" [ref=e566]
-                    - generic [ref=e567]:
-                      - generic [ref=e568]: 식당 비용
-                      - textbox "0" [ref=e569]
-                    - generic [ref=e570]:
-                      - generic [ref=e571]: 관광지 입장료
-                      - textbox "0" [ref=e572]
-                    - generic [ref=e573]:
-                      - generic [ref=e574]: 보험료
-                      - textbox "0" [ref=e575]
-                    - generic [ref=e576]:
-                      - generic [ref=e577]: 기타 비용 총합
-                      - textbox "0" [ref=e578]
-                - generic [ref=e579]:
-                  - heading "메모" [level=4] [ref=e580]
-                  - textbox "원가 관련 메모를 입력하세요" [ref=e581]: 영덕 4/21~23 투어 정산
-  - alert [ref=e582]
+                      - generic [ref=e558]:
+                        - generic [ref=e559]: 설명
+                        - textbox "설명" [ref=e560]: 와인오프너
+                      - generic [ref=e561]:
+                        - generic [ref=e562]: 단가
+                        - textbox "0" [ref=e563]: 9,300
+                      - generic [ref=e564]:
+                        - generic [ref=e565]: 수량
+                        - textbox "1" [ref=e566]
+                      - generic [ref=e567]:
+                        - generic [ref=e568]: 총액
+                        - textbox "0" [ref=e569]: 9,300
+                    - generic [ref=e571]:
+                      - generic [ref=e572]:
+                        - generic [ref=e573]: 세금계산서/영수증 종류
+                        - combobox [ref=e574]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e575]:
+                        - generic [ref=e576]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e577]
+                      - generic [ref=e578]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e579]
+                        - generic [ref=e580]: 발행 확인 (국세청 검증 완료)
+                  - generic [ref=e581]:
+                    - generic [ref=e582]:
+                      - heading "경비 항목 5" [level=5] [ref=e583]
+                      - button [ref=e584] [cursor=pointer]:
+                        - img [ref=e585]
+                    - generic [ref=e588]:
+                      - generic [ref=e589]:
+                        - generic [ref=e590]: 유형
+                        - combobox [ref=e591]:
+                          - option "김밥"
+                          - option "생수"
+                          - option "간식"
+                          - option "식사"
+                          - option "기타" [selected]
+                      - generic [ref=e592]:
+                        - generic [ref=e593]: 설명
+                        - textbox "설명" [ref=e594]: 와인잔
+                      - generic [ref=e595]:
+                        - generic [ref=e596]: 단가
+                        - textbox "0" [ref=e597]: 11,340
+                      - generic [ref=e598]:
+                        - generic [ref=e599]: 수량
+                        - textbox "1" [ref=e600]
+                      - generic [ref=e601]:
+                        - generic [ref=e602]: 총액
+                        - textbox "0" [ref=e603]: 11,340
+                    - generic [ref=e605]:
+                      - generic [ref=e606]:
+                        - generic [ref=e607]: 세금계산서/영수증 종류
+                        - combobox [ref=e608]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e609]:
+                        - generic [ref=e610]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e611]
+                      - generic [ref=e612]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e613]
+                        - generic [ref=e614]: 발행 확인 (국세청 검증 완료)
+                  - generic [ref=e615]:
+                    - generic [ref=e616]:
+                      - heading "경비 항목 6" [level=5] [ref=e617]
+                      - button [ref=e618] [cursor=pointer]:
+                        - img [ref=e619]
+                    - generic [ref=e622]:
+                      - generic [ref=e623]:
+                        - generic [ref=e624]: 유형
+                        - combobox [ref=e625]:
+                          - option "김밥"
+                          - option "생수"
+                          - option "간식"
+                          - option "식사"
+                          - option "기타" [selected]
+                      - generic [ref=e626]:
+                        - generic [ref=e627]: 설명
+                        - textbox "설명" [ref=e628]: 택배
+                      - generic [ref=e629]:
+                        - generic [ref=e630]: 단가
+                        - textbox "0" [ref=e631]: 3,300
+                      - generic [ref=e632]:
+                        - generic [ref=e633]: 수량
+                        - textbox "1" [ref=e634]: "3"
+                      - generic [ref=e635]:
+                        - generic [ref=e636]: 총액
+                        - textbox "0" [ref=e637]: 9,900
+                    - generic [ref=e639]:
+                      - generic [ref=e640]:
+                        - generic [ref=e641]: 세금계산서/영수증 종류
+                        - combobox [ref=e642]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e643]:
+                        - generic [ref=e644]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e645]
+                      - generic [ref=e646]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e647]
+                        - generic [ref=e648]: 발행 확인 (국세청 검증 완료)
+                  - generic [ref=e650]:
+                    - generic [ref=e651]:
+                      - generic [ref=e652]: 경비 지출 총합
+                      - textbox "0" [ref=e653]: 243,040
+                    - generic [ref=e655]: 경비 항목의 총액이 자동으로 계산됩니다.
+                - generic [ref=e656]:
+                  - heading "기타 비용" [level=4] [ref=e657]
+                  - generic [ref=e658]:
+                    - generic [ref=e659]:
+                      - generic [ref=e660]: 숙박비
+                      - textbox "0" [ref=e661]
+                    - generic [ref=e662]:
+                      - generic [ref=e663]: 식당 비용
+                      - textbox "0" [ref=e664]
+                    - generic [ref=e665]:
+                      - generic [ref=e666]: 관광지 입장료
+                      - textbox "0" [ref=e667]
+                    - generic [ref=e668]:
+                      - generic [ref=e669]: 보험료
+                      - textbox "0" [ref=e670]
+                    - generic [ref=e671]:
+                      - generic [ref=e672]: 기타 비용 총합
+                      - textbox "0" [ref=e673]
+                  - generic [ref=e674]:
+                    - heading "세금계산서/영수증 정보" [level=5] [ref=e675]
+                    - paragraph [ref=e676]: 각 비용 항목별 세금계산서/영수증 정보는 메모 필드에 기록하거나, 아래에 추가할 수 있습니다.
+                    - generic [ref=e677]:
+                      - generic [ref=e678]:
+                        - generic [ref=e679]: 세금계산서/영수증 종류
+                        - combobox [ref=e680]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e681]:
+                        - generic [ref=e682]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e683]
+                      - generic [ref=e684]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e685]
+                        - generic [ref=e686]: 발행 확인 (국세청 검증 완료)
+                - generic [ref=e687]:
+                  - heading "메모" [level=4] [ref=e688]
+                  - textbox "원가 관련 메모를 입력하세요" [ref=e689]: 영덕 4/21~23 투어 정산
+  - alert [ref=e690]
 ```

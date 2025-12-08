@@ -409,3 +409,104 @@ CREATE TABLE user_roles (
   - 국세청 API 연동 (발행 여부 자동 검증)
   - 발행 요청 알림 기능
   - 발행 요청 이력 상세 관리
+
+## 2025-11-20 정산 자료 업로드 인프라 1차 구축
+
+- **내용**:
+  - `tour_settlement_documents` 테이블 및 인덱스 생성
+  - `tour-settlement-docs` 버킷 연동을 위한 업로드/삭제 유틸 (`uploadSettlementDocument`, `deleteSettlementDocument`) 구현
+  - `SettlementReceiptUploader`, `SettlementReceiptViewer` 컴포넌트 신설 및 `TourSettlementManager`에 "정산 자료" 탭 추가
+  - 정산 자료 업로드/목록/미리보기/삭제/다운로드 플로우 완성
+  - Supabase Storage 중복 파일 정리 (2025-04-14 순천 투어)
+  - `scripts/migrate-settlement-docs.ts` 작성 (dry-run + 실제 업로드 지원)
+- **변경 파일**:
+  - `supabase/migrations/20251120_create_tour_settlement_documents.sql`
+  - `utils/settlementDocsUpload.ts`
+  - `components/admin/tours/SettlementReceiptUploader.tsx`
+  - `components/admin/tours/SettlementReceiptViewer.tsx`
+  - `scripts/migrate-settlement-docs.ts`
+  - `components/admin/tours/TourSettlementManager.tsx`
+- **남은 작업**:
+  - OCR/AI 태깅 파이프라인 연동
+  - 정산 상세에서 문서-비용 매핑 (자동 원가 반영)
+  - 추가 연도 자료 업로드 자동화
+- **상태**: ✅ 완료
+
+## 2025-11-24 회의록 게시판 시스템 개발 시작
+
+- **내용**: 싱싱골프와 외부업체(코코넛 골프투어 등) 협업을 위한 회의록 게시판 시스템 구축
+- **목표**:
+  - 협업 업체 정보 관리
+  - 회의록 작성/조회/수정/삭제
+  - 회의록 첨부파일 관리 (이미지, PDF)
+  - Action Items 추적
+  - 비교표 및 상세 정보 관리
+- **데이터베이스 설계**:
+  - `partner_companies` 테이블: 협업 업체 정보
+  - `meeting_minutes` 테이블: 회의록 정보
+  - `meeting_minute_attachments` 테이블: 첨부파일 정보
+  - Supabase Storage 버킷: `meeting-attachments`
+- **구현 단계**:
+  1. 데이터베이스 마이그레이션 ✅ (완료)
+  2. 사이드바 메뉴 추가 ✅ (완료)
+  3. 협업 업체 관리 ✅ (완료)
+  4. 회의록 게시판 기본 기능 ✅ (완료)
+  5. 첨부파일 관리 ✅ (완료)
+  6. 초기 데이터 입력 ✅ (완료)
+- **변경 파일**:
+  - `components/admin/ModernAdminSidebar.tsx`: 협업 관리 메뉴 추가
+  - `@types/partner.ts`: 협업 업체 타입 정의
+  - `@types/meeting.ts`: 회의록 타입 정의
+  - `app/admin/partners/page.tsx`: 협업 업체 목록 페이지
+  - `app/admin/partners/new/page.tsx`: 협업 업체 등록 페이지
+  - `app/admin/partners/[id]/page.tsx`: 협업 업체 상세/수정 페이지
+  - `app/admin/meetings/page.tsx`: 회의록 목록 페이지
+  - `app/admin/meetings/new/page.tsx`: 회의록 작성 페이지
+  - `app/admin/meetings/[id]/page.tsx`: 회의록 상세 페이지
+  - `app/admin/meetings/[id]/edit/page.tsx`: 회의록 수정 페이지
+  - `utils/meetingUpload.ts`: 첨부파일 업로드 유틸리티
+  - `components/admin/meetings/MeetingAttachmentUploader.tsx`: 첨부파일 업로더 컴포넌트
+  - `scripts/create-meeting-minutes.ts`: 초기 회의록 데이터 생성 스크립트
+- **완료된 기능**:
+  - 협업 업체 목록 조회 (검색, 필터링)
+  - 협업 업체 등록/수정/삭제
+  - 회의록 목록 조회 (검색, 필터링 - 유형별, 상태별, 업체별)
+  - 회의록 작성 (기본 정보, 참석자, 회의 내용, Action Items, 태그)
+  - 회의록 상세 보기 (탭 구조: 내용/비교표/Action Items/첨부파일)
+  - 회의록 수정/삭제
+  - 첨부파일 업로드/삭제 (드래그 앤 드롭 지원)
+  - 첨부파일 미리보기 및 다운로드
+  - 초기 회의록 데이터 생성 (코코넛 골프투어 협업 회의 2건)
+- **생성된 데이터**:
+  - 협업 업체: 코코넛 골프투어 (베트남 하노이)
+  - 회의록 1: 2025-11-24 전화 통화
+  - 회의록 2: 2025-12-01 대면 회의 (마스골프 오피스)
+- **RLS 정책 설정**:
+  - `meeting_minutes` 테이블: SELECT, INSERT, UPDATE, DELETE 정책 추가 ✅
+  - `partner_companies` 테이블: SELECT, INSERT, UPDATE, DELETE 정책 추가 ✅
+  - `meeting_minute_attachments` 테이블: SELECT, INSERT, DELETE 정책 추가 ✅
+  - 마이그레이션 파일: `supabase/migrations/20251124_meeting_minutes_rls.sql`
+- **2025-12-02 추가 작업**:
+  - 신희갑 프로 협력업체 등록 ✅
+    - 이름: 신희갑 프로
+    - 전화번호: 010-8442-7773
+    - 페이스북: https://www.facebook.com/hee.gab.shin
+    - 국가: 베트남
+    - 스크립트: `scripts/add-partner-shin-hee-gab.ts`
+  - 비교표 탭 표시 개선 ✅
+    - 비교표 탭이 항상 표시되도록 수정 (데이터 유무와 관계없이)
+    - 비교표 데이터가 없을 때 안내 메시지 표시
+    - 파일: `app/admin/meetings/[id]/page.tsx`
+  - 논의 사항 섹션에 비교표 테이블 추가 ✅
+    - 논의 사항 섹션에서 `comparison_data`가 있으면 테이블로 표시
+    - 비교표 테이블이 먼저 표시되고, 비교표가 없을 때만 `discussion` 텍스트 표시
+    - 파일: `app/admin/meetings/[id]/page.tsx`
+  - 비교표 데이터 업데이트 ✅
+    - 콩골프 vs 코코넛투어 비교표 데이터 업데이트
+    - 새로운 항목 추가: 운영자 (사촌형 운영 vs 양일성 대표 운영)
+    - 기존 항목 수정:
+      - 플랫폼: 상세 정보 추가 (URL 포함)
+      - 가이드: "X" → "가이드 없음"으로 변경
+      - 호텔: "한정적" → "한정적(싱싱에서 직접 컨텍)"으로 변경
+      - 기사: 코코넛투어 "좌동"으로 변경
+    - 회의록 ID: a09ae16f-b84d-46e3-a653-df418baa9141

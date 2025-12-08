@@ -1,0 +1,443 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - img "싱싱골프투어 로고" [ref=e7]
+        - button "사이드바 접기" [ref=e8] [cursor=pointer]:
+          - img [ref=e9]
+      - navigation [ref=e10]:
+        - list [ref=e11]:
+          - listitem [ref=e12]:
+            - button "대시보드" [ref=e13] [cursor=pointer]:
+              - img [ref=e15]
+              - generic [ref=e18]: 대시보드
+          - listitem [ref=e19]:
+            - button "투어 관리" [ref=e20] [cursor=pointer]:
+              - img [ref=e22]
+              - generic [ref=e25]: 투어 관리
+              - img [ref=e26]
+            - list [ref=e28]:
+              - listitem [ref=e29]:
+                - button "투어 스케줄 관리" [ref=e30] [cursor=pointer]:
+                  - generic [ref=e31]: 투어 스케줄 관리
+              - listitem [ref=e32]:
+                - button "여행상품 관리" [ref=e33] [cursor=pointer]:
+                  - generic [ref=e34]: 여행상품 관리
+              - listitem [ref=e35]:
+                - button "마케팅 콘텐츠" [ref=e36] [cursor=pointer]:
+                  - generic [ref=e37]: 마케팅 콘텐츠
+              - listitem [ref=e38]:
+                - button "스팟 관리" [ref=e39] [cursor=pointer]:
+                  - generic [ref=e40]: 스팟 관리
+              - listitem [ref=e41]:
+                - button "정산 관리" [ref=e42] [cursor=pointer]:
+                  - generic [ref=e43]: 정산 관리
+          - listitem [ref=e44]:
+            - button "견적 관리" [ref=e45] [cursor=pointer]:
+              - img [ref=e47]
+              - generic [ref=e49]: 견적 관리
+              - img [ref=e50]
+            - list [ref=e52]:
+              - listitem [ref=e53]:
+                - button "견적 목록" [ref=e54] [cursor=pointer]:
+                  - generic [ref=e55]: 견적 목록
+              - listitem [ref=e56]:
+                - button "새 견적 작성" [ref=e57] [cursor=pointer]:
+                  - generic [ref=e58]: 새 견적 작성
+          - listitem [ref=e59]:
+            - button "전체 참가자 관리" [ref=e60] [cursor=pointer]:
+              - img [ref=e62]
+              - generic [ref=e67]: 전체 참가자 관리
+              - img [ref=e68]
+            - list [ref=e70]:
+              - listitem [ref=e71]:
+                - button "참가자 목록" [ref=e72] [cursor=pointer]:
+                  - generic [ref=e73]: 참가자 목록
+              - listitem [ref=e74]:
+                - button "결제 관리" [ref=e75] [cursor=pointer]:
+                  - generic [ref=e76]: 결제 관리
+          - listitem [ref=e77]:
+            - button "고객 관리" [ref=e78] [cursor=pointer]:
+              - img [ref=e80]
+              - generic [ref=e82]: 고객 관리
+              - img [ref=e83]
+            - list [ref=e85]:
+              - listitem [ref=e86]:
+                - button "고객 데이터베이스" [ref=e87] [cursor=pointer]:
+                  - generic [ref=e88]: 고객 데이터베이스
+              - listitem [ref=e89]:
+                - button "메시지 발송" [ref=e90] [cursor=pointer]:
+                  - generic [ref=e91]: 메시지 발송
+              - listitem [ref=e92]:
+                - button "마케팅 캠페인" [ref=e93] [cursor=pointer]:
+                  - generic [ref=e94]: 마케팅 캠페인
+              - listitem [ref=e95]:
+                - button "홍보 페이지" [ref=e96] [cursor=pointer]:
+                  - generic [ref=e97]: 홍보 페이지
+              - listitem [ref=e98]:
+                - button "골프장 담당자" [ref=e99] [cursor=pointer]:
+                  - generic [ref=e100]: 골프장 담당자
+          - listitem [ref=e101]:
+            - button "투어 운영진" [ref=e102] [cursor=pointer]:
+              - img [ref=e104]
+              - generic [ref=e116]: 투어 운영진
+              - img [ref=e117]
+            - list [ref=e119]:
+              - listitem [ref=e120]:
+                - button "기사/가이드 관리" [ref=e121] [cursor=pointer]:
+                  - generic [ref=e122]: 기사/가이드 관리
+              - listitem [ref=e123]:
+                - button "시스템 계정" [ref=e124] [cursor=pointer]:
+                  - generic [ref=e125]: 시스템 계정
+              - listitem [ref=e126]:
+                - button "권한 설정" [ref=e127] [cursor=pointer]:
+                  - generic [ref=e128]: 권한 설정
+              - listitem [ref=e129]:
+                - button "비밀번호 초기화" [ref=e130] [cursor=pointer]:
+                  - generic [ref=e131]: 비밀번호 초기화
+          - listitem [ref=e132]:
+            - button "투어별 문서 링크" [ref=e133] [cursor=pointer]:
+              - img [ref=e135]
+              - generic [ref=e138]: 투어별 문서 링크
+          - listitem [ref=e139]:
+            - button "디자인 시스템" [ref=e140] [cursor=pointer]:
+              - img [ref=e142]
+              - generic [ref=e148]: 디자인 시스템
+              - img [ref=e149]
+            - list [ref=e151]:
+              - listitem [ref=e152]:
+                - button "디자인 템플릿" [ref=e153] [cursor=pointer]:
+                  - generic [ref=e154]: 디자인 템플릿
+              - listitem [ref=e155]:
+                - button "폰트 스타일" [ref=e156] [cursor=pointer]:
+                  - generic [ref=e157]: 폰트 스타일
+              - listitem [ref=e158]:
+                - button "뱃지 디자인" [ref=e159] [cursor=pointer]:
+                  - generic [ref=e160]: 뱃지 디자인
+              - listitem [ref=e161]:
+                - button "파비콘 디자인" [ref=e162] [cursor=pointer]:
+                  - generic [ref=e163]: 파비콘 디자인
+          - listitem [ref=e164]:
+            - button "일정표 템플릿" [ref=e165] [cursor=pointer]:
+              - img [ref=e167]
+              - generic [ref=e170]: 일정표 템플릿
+          - listitem [ref=e171]:
+            - button "공지사항 템플릿" [ref=e172] [cursor=pointer]:
+              - img [ref=e174]
+              - generic [ref=e176]: 공지사항 템플릿
+          - listitem [ref=e177]:
+            - button "메모 관리" [ref=e178] [cursor=pointer]:
+              - img [ref=e180]
+              - generic [ref=e182]: 메모 관리
+              - img [ref=e183]
+            - list [ref=e185]:
+              - listitem [ref=e186]:
+                - button "참가자 메모" [ref=e187] [cursor=pointer]:
+                  - generic [ref=e188]: 참가자 메모
+              - listitem [ref=e189]:
+                - button "업무 메모" [ref=e190] [cursor=pointer]:
+                  - generic [ref=e191]: 업무 메모
+              - listitem [ref=e192]:
+                - button "메모 템플릿" [ref=e193] [cursor=pointer]:
+                  - generic [ref=e194]: 메모 템플릿
+          - listitem [ref=e195]:
+            - button "통계" [ref=e196] [cursor=pointer]:
+              - img [ref=e198]
+              - generic [ref=e199]: 통계
+          - listitem [ref=e200]:
+            - button "네이버 API 디버깅" [ref=e201] [cursor=pointer]:
+              - img [ref=e203]
+              - generic [ref=e212]: 네이버 API 디버깅
+          - listitem [ref=e213]:
+            - button "설정" [ref=e214] [cursor=pointer]:
+              - img [ref=e216]
+              - generic [ref=e219]: 설정
+      - button "로그아웃" [ref=e221] [cursor=pointer]:
+        - img [ref=e222]
+        - generic [ref=e225]: 로그아웃
+    - generic [ref=e226]:
+      - banner [ref=e227]:
+        - heading "투어 스케줄 관리" [level=1] [ref=e229]
+        - generic [ref=e230]:
+          - button [ref=e232] [cursor=pointer]:
+            - img [ref=e233]
+          - button "P Prowhale 관리자" [ref=e238] [cursor=pointer]:
+            - generic [ref=e239]: P
+            - generic [ref=e240]:
+              - paragraph [ref=e241]: Prowhale
+              - paragraph [ref=e242]: 관리자
+      - main [ref=e243]:
+        - generic [ref=e244]:
+          - generic [ref=e245]:
+            - heading "정산 관리" [level=1] [ref=e246]
+            - paragraph [ref=e247]: "[단독/파인힐스] 3박4일 순천 버스핑_정해철 님"
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - heading "정산 요약" [level=2] [ref=e250]:
+                - img [ref=e251]
+                - text: 정산 요약
+              - generic [ref=e253]:
+                - generic [ref=e254]:
+                  - generic [ref=e255]: 계약 매출
+                  - generic [ref=e256]: 14,040,000원
+                  - generic [ref=e257]: 상품가 × 인원
+                - generic [ref=e258]:
+                  - generic [ref=e259]: 정산 금액
+                  - generic [ref=e260]: 13,160,000원
+                  - generic [ref=e261]: 완납 - 환불
+                - generic [ref=e262]:
+                  - generic [ref=e263]: 총 원가
+                  - generic [ref=e264]: 12,189,500원
+                  - generic [ref=e265]: 자동 계산
+                - generic [ref=e266]:
+                  - generic [ref=e267]: 마진
+                  - generic [ref=e268]:
+                    - text: 970,500원
+                    - img [ref=e269]
+                  - generic [ref=e272]: "마진률: 7.37%"
+                  - generic [ref=e273]: "1인당 COM: 80,875원"
+            - generic [ref=e274]:
+              - navigation [ref=e276]:
+                - button "원가 입력" [ref=e277] [cursor=pointer]
+                - button "정산 상세" [ref=e278] [cursor=pointer]
+              - generic [ref=e280]:
+                - generic [ref=e281]:
+                  - heading "원가 입력" [level=3] [ref=e282]
+                  - button "저장" [ref=e283] [cursor=pointer]:
+                    - img [ref=e284]
+                    - text: 저장
+                - generic [ref=e288]:
+                  - generic [ref=e289]:
+                    - heading "골프장 정산" [level=4] [ref=e290]
+                    - button "골프장 추가" [ref=e291] [cursor=pointer]:
+                      - img [ref=e292]
+                      - text: 골프장 추가
+                  - generic [ref=e293]:
+                    - generic [ref=e294]:
+                      - heading "골프장 1" [level=5] [ref=e295]
+                      - button [ref=e296] [cursor=pointer]:
+                        - img [ref=e297]
+                    - generic [ref=e300]:
+                      - generic [ref=e301]:
+                        - generic [ref=e302]: 골프장명
+                        - textbox "골프장명" [ref=e303]: 순천 파인힐스
+                      - generic [ref=e304]:
+                        - generic [ref=e305]: 날짜
+                        - textbox [ref=e306]: 2025-09-12
+                      - generic [ref=e307]:
+                        - generic [ref=e308]: 소계
+                        - textbox "0" [ref=e309]: 9,928,000
+                      - generic [ref=e310]:
+                        - generic [ref=e311]: 입금액
+                        - textbox "0" [ref=e312]: 10,000,000
+                      - generic [ref=e313]:
+                        - generic [ref=e314]: 차액
+                        - textbox "0" [ref=e315]: "-72,000"
+                      - generic [ref=e316]:
+                        - generic [ref=e317]: 메모
+                        - textbox "메모를 입력하세요" [ref=e318]: 9/11 입금, 차액 발생
+                    - generic [ref=e319]:
+                      - heading "세금계산서/영수증 정보" [level=6] [ref=e320]
+                      - generic [ref=e321]:
+                        - generic [ref=e322]:
+                          - generic [ref=e323]: 세금계산서/영수증 종류
+                          - combobox [ref=e324]:
+                            - option "선택 안함" [selected]
+                            - option "매입세금계산서"
+                            - option "현금영수증"
+                            - option "없음"
+                        - generic [ref=e325]:
+                          - generic [ref=e326]: 세금계산서/영수증 번호
+                          - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e327]
+                        - generic [ref=e328]:
+                          - checkbox "발행 확인 (국세청 검증 완료)" [ref=e329]
+                          - generic [ref=e330]: 발행 확인 (국세청 검증 완료)
+                    - generic [ref=e331]:
+                      - generic [ref=e332]:
+                        - heading "입금 내역" [level=6] [ref=e333]
+                        - button "입금 추가" [ref=e334] [cursor=pointer]:
+                          - img [ref=e335]
+                          - text: 입금 추가
+                      - paragraph [ref=e336]: 입금 내역이 없습니다. "입금 추가" 버튼을 클릭하여 추가하세요.
+                    - generic [ref=e337]:
+                      - generic [ref=e338]:
+                        - heading "환불 내역" [level=6] [ref=e339]
+                        - button "환불 추가" [ref=e340] [cursor=pointer]:
+                          - img [ref=e341]
+                          - text: 환불 추가
+                      - paragraph [ref=e342]: 환불 내역이 없습니다.
+                  - generic [ref=e344]:
+                    - generic [ref=e345]:
+                      - generic [ref=e346]: 골프장 총 비용
+                      - textbox "0" [ref=e347]: 9,928,000
+                    - generic [ref=e349]: 골프장 정산 상세 항목의 소계 합계를 입력하세요.
+                - generic [ref=e350]:
+                  - heading "버스 비용" [level=4] [ref=e351]
+                  - generic [ref=e352]:
+                    - generic [ref=e353]:
+                      - generic [ref=e354]: 버스 비용
+                      - textbox "0" [ref=e355]: 2,200,000
+                    - generic [ref=e356]:
+                      - generic [ref=e357]: 기사 비용
+                      - textbox "0" [ref=e358]
+                    - generic [ref=e359]:
+                      - generic [ref=e360]: 톨게이트 비용
+                      - textbox "0" [ref=e361]
+                    - generic [ref=e362]:
+                      - generic [ref=e363]: 주차비
+                      - textbox "0" [ref=e364]
+                    - generic [ref=e365]:
+                      - generic [ref=e366]: 버스 비용 메모
+                      - textbox "버스 비용 관련 메모를 입력하세요" [ref=e367]: 왕복픽업/개인계좌입금
+                - generic [ref=e368]:
+                  - heading "가이드 비용" [level=4] [ref=e369]
+                  - generic [ref=e370]:
+                    - generic [ref=e371]:
+                      - generic [ref=e372]: 가이드 인건비
+                      - textbox "0" [ref=e373]
+                    - generic [ref=e374]:
+                      - generic [ref=e375]: 가이드 식사비
+                      - textbox "0" [ref=e376]
+                    - generic [ref=e377]:
+                      - generic [ref=e378]: 가이드 숙박비
+                      - textbox "0" [ref=e379]
+                    - generic [ref=e380]:
+                      - generic [ref=e381]: 가이드 기타 비용
+                      - textbox "0" [ref=e382]
+                    - generic [ref=e383]:
+                      - generic [ref=e384]: 가이드 비용 메모
+                      - textbox "가이드 비용 관련 메모를 입력하세요" [ref=e385]
+                - generic [ref=e386]:
+                  - generic [ref=e387]:
+                    - heading "경비 지출" [level=4] [ref=e388]
+                    - button "경비 추가" [ref=e389] [cursor=pointer]:
+                      - img [ref=e390]
+                      - text: 경비 추가
+                  - generic [ref=e391]:
+                    - generic [ref=e392]:
+                      - heading "경비 항목 1" [level=5] [ref=e393]
+                      - button [ref=e394] [cursor=pointer]:
+                        - img [ref=e395]
+                    - generic [ref=e398]:
+                      - generic [ref=e399]:
+                        - generic [ref=e400]: 유형
+                        - combobox [ref=e401]:
+                          - option "김밥" [selected]
+                          - option "생수"
+                          - option "간식"
+                          - option "식사"
+                          - option "기타"
+                      - generic [ref=e402]:
+                        - generic [ref=e403]: 설명
+                        - textbox "설명" [ref=e404]: 김밥
+                      - generic [ref=e405]:
+                        - generic [ref=e406]: 단가
+                        - textbox "0" [ref=e407]: 3,500
+                      - generic [ref=e408]:
+                        - generic [ref=e409]: 수량
+                        - textbox "1" [ref=e410]: "11"
+                      - generic [ref=e411]:
+                        - generic [ref=e412]: 총액
+                        - textbox "0" [ref=e413]: 38,500
+                    - generic [ref=e415]:
+                      - generic [ref=e416]:
+                        - generic [ref=e417]: 세금계산서/영수증 종류
+                        - combobox [ref=e418]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e419]:
+                        - generic [ref=e420]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e421]
+                      - generic [ref=e422]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e423]
+                        - generic [ref=e424]: 발행 확인 (국세청 검증 완료)
+                  - generic [ref=e425]:
+                    - generic [ref=e426]:
+                      - heading "경비 항목 2" [level=5] [ref=e427]
+                      - button [ref=e428] [cursor=pointer]:
+                        - img [ref=e429]
+                    - generic [ref=e432]:
+                      - generic [ref=e433]:
+                        - generic [ref=e434]: 유형
+                        - combobox [ref=e435]:
+                          - option "김밥"
+                          - option "생수" [selected]
+                          - option "간식"
+                          - option "식사"
+                          - option "기타"
+                      - generic [ref=e436]:
+                        - generic [ref=e437]: 설명
+                        - textbox "설명" [ref=e438]: 생수
+                      - generic [ref=e439]:
+                        - generic [ref=e440]: 단가
+                        - textbox "0" [ref=e441]: 11,500
+                      - generic [ref=e442]:
+                        - generic [ref=e443]: 수량
+                        - textbox "1" [ref=e444]: "2"
+                      - generic [ref=e445]:
+                        - generic [ref=e446]: 총액
+                        - textbox "0" [ref=e447]: 23,000
+                    - generic [ref=e449]:
+                      - generic [ref=e450]:
+                        - generic [ref=e451]: 세금계산서/영수증 종류
+                        - combobox [ref=e452]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e453]:
+                        - generic [ref=e454]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e455]
+                      - generic [ref=e456]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e457]
+                        - generic [ref=e458]: 발행 확인 (국세청 검증 완료)
+                  - generic [ref=e460]:
+                    - generic [ref=e461]:
+                      - generic [ref=e462]: 경비 지출 총합
+                      - textbox "0" [ref=e463]: 61,500
+                    - generic [ref=e465]: 경비 항목의 총액이 자동으로 계산됩니다.
+                - generic [ref=e466]:
+                  - heading "기타 비용" [level=4] [ref=e467]
+                  - generic [ref=e468]:
+                    - generic [ref=e469]:
+                      - generic [ref=e470]: 숙박비
+                      - textbox "0" [ref=e471]
+                    - generic [ref=e472]:
+                      - generic [ref=e473]: 식당 비용
+                      - textbox "0" [ref=e474]
+                    - generic [ref=e475]:
+                      - generic [ref=e476]: 관광지 입장료
+                      - textbox "0" [ref=e477]
+                    - generic [ref=e478]:
+                      - generic [ref=e479]: 보험료
+                      - textbox "0" [ref=e480]
+                    - generic [ref=e481]:
+                      - generic [ref=e482]: 기타 비용 총합
+                      - textbox "0" [ref=e483]
+                  - generic [ref=e484]:
+                    - heading "세금계산서/영수증 정보" [level=5] [ref=e485]
+                    - paragraph [ref=e486]: 각 비용 항목별 세금계산서/영수증 정보는 메모 필드에 기록하거나, 아래에 추가할 수 있습니다.
+                    - generic [ref=e487]:
+                      - generic [ref=e488]:
+                        - generic [ref=e489]: 세금계산서/영수증 종류
+                        - combobox [ref=e490]:
+                          - option "선택 안함" [selected]
+                          - option "매입세금계산서"
+                          - option "현금영수증"
+                          - option "없음"
+                      - generic [ref=e491]:
+                        - generic [ref=e492]: 세금계산서/영수증 번호
+                        - textbox "세금계산서 번호 또는 현금영수증 번호" [ref=e493]
+                      - generic [ref=e494]:
+                        - checkbox "발행 확인 (국세청 검증 완료)" [ref=e495]
+                        - generic [ref=e496]: 발행 확인 (국세청 검증 완료)
+                - generic [ref=e497]:
+                  - heading "메모" [level=4] [ref=e498]
+                  - textbox "원가 관련 메모를 입력하세요" [ref=e499]: 정해철님 투어 정산
+  - alert [ref=e500]
+```
