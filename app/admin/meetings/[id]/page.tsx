@@ -330,7 +330,7 @@ export default function MeetingDetailPage() {
                               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-300">
                                 항목
                               </th>
-                              {Object.keys(meeting.comparison_data).map((company) => (
+                              {meeting.comparison_data && Object.keys(meeting.comparison_data).map((company) => (
                                 <th
                                   key={company}
                                   className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-300 border-l"
@@ -342,9 +342,13 @@ export default function MeetingDetailPage() {
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
+                              // 타입 가드를 위해 comparison_data를 변수에 할당
+                              const comparisonData = meeting.comparison_data;
+                              if (!comparisonData) return null;
+
                               // 모든 회사에서 공통 항목 추출
                               const allKeys = new Set<string>();
-                              Object.values(meeting.comparison_data).forEach((company: any) => {
+                              Object.values(comparisonData).forEach((company: any) => {
                                 if (typeof company === "object" && company !== null) {
                                   Object.keys(company).forEach((key) => allKeys.add(key));
                                 }
@@ -360,13 +364,13 @@ export default function MeetingDetailPage() {
                                   <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200 whitespace-nowrap">
                                     {key}
                                   </td>
-                                  {Object.keys(meeting.comparison_data).map((company) => (
+                                  {Object.keys(comparisonData).map((company) => (
                                     <td
                                       key={company}
                                       className="px-6 py-4 text-sm text-gray-700 border-l border-gray-200"
                                     >
                                       <div className="whitespace-pre-wrap break-words">
-                                        {meeting.comparison_data[company]?.[key] || (
+                                        {comparisonData[company]?.[key] || (
                                           <span className="text-gray-400">-</span>
                                         )}
                                       </div>
@@ -563,7 +567,7 @@ export default function MeetingDetailPage() {
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
                           항목
                         </th>
-                        {Object.keys(meeting.comparison_data).map((company) => (
+                        {meeting.comparison_data && Object.keys(meeting.comparison_data).map((company) => (
                           <th
                             key={company}
                             className="px-6 py-4 text-left text-sm font-semibold text-gray-700 border-b border-gray-300 border-l"
@@ -575,9 +579,13 @@ export default function MeetingDetailPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {(() => {
+                        // 타입 가드를 위해 comparison_data를 변수에 할당
+                        const comparisonData = meeting.comparison_data;
+                        if (!comparisonData) return null;
+
                         // 모든 회사에서 공통 항목 추출
                         const allKeys = new Set<string>();
-                        Object.values(meeting.comparison_data).forEach((company: any) => {
+                        Object.values(comparisonData).forEach((company: any) => {
                           if (typeof company === "object" && company !== null) {
                             Object.keys(company).forEach((key) => allKeys.add(key));
                           }
@@ -593,13 +601,13 @@ export default function MeetingDetailPage() {
                           <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200 whitespace-nowrap">
                             {key}
                           </td>
-                          {Object.keys(meeting.comparison_data).map((company) => (
+                          {Object.keys(comparisonData).map((company) => (
                             <td
                               key={company}
                               className="px-6 py-4 text-sm text-gray-700 border-l border-gray-200"
                             >
                               <div className="whitespace-pre-wrap break-words">
-                                {meeting.comparison_data[company]?.[key] || (
+                                {comparisonData[company]?.[key] || (
                                   <span className="text-gray-400">-</span>
                                 )}
                               </div>
