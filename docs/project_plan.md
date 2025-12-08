@@ -514,3 +514,43 @@ CREATE TABLE user_roles (
     - 싱싱골프 주력 패키지 투어 협력 기사 14명 등록
     - 등록된 기사: 권은준, 김광수, 양영식, 김상석, 송윤해, 김경철, 주병성, 김성팔(메인), 신희철, 안광인, 추대연, 엄태동, 유중현(45인승, 2024년 연계약), 어울림(김상보 이사, 서성용 기사, 가격 내고 힘듬)
     - 스크립트: `scripts/add-bus-drivers.ts` (실행 완료 후 삭제)
+  - 신경철 협업 업체 등록 ✅ (2025-12-08)
+    - 이름: 신경철
+    - 전화번호: 010-5233-2020
+    - 비고: [파인힐스] 2박3일 순천버스핑 (2025. 6. 16.)\n김성팔 지인
+    - 스크립트: `scripts/add-partner-shin-kyung-chul.ts` (실행 완료 후 삭제)
+- **2025-12-02 보안 업데이트**:
+  - Next.js 취약점 패치 ✅
+    - Next.js 버전: 15.3.1 → 15.3.6 업데이트
+    - eslint-config-next 버전: 15.3.1 → 15.3.6 업데이트
+    - Vercel Agent가 자동으로 생성한 수정사항 병합
+    - React Flight / Next.js RCE 취약점 해결
+    - 빌드 테스트 통과 확인
+    - 변경 파일: `package.json`, `package-lock.json`
+- **2025-12-08 고객 투어 이력 업데이트**:
+  - 2025년 투어 데이터 기반 고객 투어 이력 일괄 업데이트 ✅
+    - 2025년 투어 21개 발견
+    - 참가자 데이터 253개 처리
+    - 총 46명의 고객 통계 계산 및 업데이트
+    - 업데이트: 18명 (기존 고객)
+    - 신규 생성: 28명 (참가자 데이터에서 자동 생성)
+    - 업데이트 항목: `total_tour_count`, `last_tour_date`, `first_tour_date`
+    - 스크립트: `scripts/update-customer-tour-history-2025.ts` (실행 완료 후 삭제)
+- **2025-12-08 고객 정보 필드 확장**:
+  - 고객 테이블에 새로운 필드 추가 ✅
+    - `position` VARCHAR(50): 직급 (총무, 회장, 방장)
+    - `activity_platform` VARCHAR(50): 활동 플랫폼 (밴드, 당근마켓, 모임(오프라인), 카카오톡, 기타)
+    - `referral_source` VARCHAR(50): 유입경로 (네이버블로그, 홈페이지, 네이버검색, 구글검색, 지인추천, 페이스북 광고, 인스타그램 광고, 카카오톡 채널, 기타)
+    - `last_contact_at` TIMESTAMP: 최근 연락 일시
+    - `unsubscribed` BOOLEAN: 수신거부 여부
+    - `unsubscribed_reason` TEXT: 수신거부 사유
+    - 인덱스 추가: `idx_customers_position`, `idx_customers_activity_platform`, `idx_customers_referral_source`, `idx_customers_last_contact_at`, `idx_customers_unsubscribed`
+    - 마이그레이션 파일: `supabase/migrations/20251208_add_customer_fields.sql`
+  - 프론트엔드 개선 ✅
+    - 고객 유형 드롭다운: "신규" 제거, "일반", "VIP"만 표시
+    - 폼에 필드 추가: 직급, 활동 플랫폼, 유입경로, 최근 연락, 수신거부
+    - 고객 목록 테이블 개선:
+      - 투어 이력 컬럼: 최초 투어일, 마지막 투어일 표시
+      - 최근 연락 컬럼 추가
+      - 수신거부 컬럼 추가 (수신거부/수신동의 배지 표시)
+    - 파일: `app/admin/customers/page.tsx`

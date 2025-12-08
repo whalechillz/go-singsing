@@ -28,6 +28,12 @@ type Customer = {
   source?: string | null;
   notes?: string | null;
   tags?: string[] | null;
+  position?: string | null;
+  activity_platform?: string | null;
+  referral_source?: string | null;
+  last_contact_at?: string | null;
+  unsubscribed?: boolean;
+  unsubscribed_reason?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -66,7 +72,13 @@ export default function CustomerManagementPage() {
     status: "active",
     customer_type: "regular",
     notes: "",
-    tags: [] as string[]
+    tags: [] as string[],
+    position: "",
+    activity_platform: "",
+    referral_source: "",
+    last_contact_at: "",
+    unsubscribed: false,
+    unsubscribed_reason: "",
   });
 
   // 데이터 불러오기
@@ -143,7 +155,10 @@ export default function CustomerManagementPage() {
         ...formData,
         phone: formData.phone.replace(/-/g, "").replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3"),
         marketing_agreed_at: formData.marketing_agreed ? new Date().toISOString() : null,
-        kakao_friend_at: formData.kakao_friend ? new Date().toISOString() : null
+        kakao_friend_at: formData.kakao_friend ? new Date().toISOString() : null,
+        last_contact_at: formData.last_contact_at ? new Date(formData.last_contact_at).toISOString() : null,
+        unsubscribed: formData.unsubscribed || false,
+        unsubscribed_reason: formData.unsubscribed ? formData.unsubscribed_reason : null,
       };
 
       if (editingCustomer) {
@@ -210,7 +225,13 @@ export default function CustomerManagementPage() {
       status: "active",
       customer_type: "regular",
       notes: "",
-      tags: []
+      tags: [],
+      position: "",
+      activity_platform: "",
+      referral_source: "",
+      last_contact_at: "",
+      unsubscribed: false,
+      unsubscribed_reason: "",
     });
     setEditingCustomer(null);
   };
@@ -229,7 +250,13 @@ export default function CustomerManagementPage() {
       status: customer.status,
       customer_type: customer.customer_type || "regular",
       notes: customer.notes || "",
-      tags: customer.tags || []
+      tags: customer.tags || [],
+      position: customer.position || "",
+      activity_platform: customer.activity_platform || "",
+      referral_source: customer.referral_source || "",
+      last_contact_at: customer.last_contact_at || "",
+      unsubscribed: customer.unsubscribed || false,
+      unsubscribed_reason: customer.unsubscribed_reason || "",
     });
     setShowModal(true);
   };
@@ -497,6 +524,12 @@ export default function CustomerManagementPage() {
                   투어 이력
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  최근 연락
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  수신거부
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   마케팅
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -528,6 +561,11 @@ export default function CustomerManagementPage() {
                     <div>
                       <div className="text-sm font-medium text-gray-900">{customer.name}</div>
                       <div className="text-sm text-gray-500">
+                        {customer.position && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-1">
+                            {customer.position}
+                          </span>
+                        )}
                         {customer.customer_type === "vip" && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
                             VIP
@@ -560,12 +598,37 @@ export default function CustomerManagementPage() {
                       <div className="text-gray-900">
                         총 {customer.total_tour_count}회
                       </div>
+                      {customer.first_tour_date && (
+                        <div className="text-gray-500 text-xs">
+                          최초: {new Date(customer.first_tour_date).toLocaleDateString()}
+                        </div>
+                      )}
                       {customer.last_tour_date && (
                         <div className="text-gray-500 text-xs">
                           마지막: {new Date(customer.last_tour_date).toLocaleDateString()}
                         </div>
                       )}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {customer.last_contact_at ? (
+                        new Date(customer.last_contact_at).toLocaleDateString()
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {customer.unsubscribed ? (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        수신거부
+                      </span>
+                    ) : (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        수신동의
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex gap-2">
@@ -695,7 +758,6 @@ export default function CustomerManagementPage() {
                   onChange={(e) => setFormData({ ...formData, customer_type: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="new">신규</option>
                   <option value="regular">일반</option>
                   <option value="vip">VIP</option>
                 </select>
@@ -714,6 +776,100 @@ export default function CustomerManagementPage() {
                   <option value="inactive">비활성</option>
                   <option value="blocked">차단</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  직급
+                </label>
+                <select
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">선택안함</option>
+                  <option value="총무">총무</option>
+                  <option value="회장">회장</option>
+                  <option value="방장">방장</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  활동 플랫폼
+                </label>
+                <select
+                  value={formData.activity_platform}
+                  onChange={(e) => setFormData({ ...formData, activity_platform: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">선택안함</option>
+                  <option value="밴드">밴드</option>
+                  <option value="당근마켓">당근마켓</option>
+                  <option value="모임(오프라인)">모임(오프라인)</option>
+                  <option value="카카오톡">카카오톡</option>
+                  <option value="기타">기타</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  유입경로
+                </label>
+                <select
+                  value={formData.referral_source}
+                  onChange={(e) => setFormData({ ...formData, referral_source: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">선택안함</option>
+                  <option value="네이버블로그">네이버블로그</option>
+                  <option value="홈페이지">홈페이지</option>
+                  <option value="네이버검색">네이버검색</option>
+                  <option value="구글검색">구글검색</option>
+                  <option value="지인추천">지인추천</option>
+                  <option value="페이스북 광고">페이스북 광고</option>
+                  <option value="인스타그램 광고">인스타그램 광고</option>
+                  <option value="카카오톡 채널">카카오톡 채널</option>
+                  <option value="기타">기타</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  최근 연락
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.last_contact_at}
+                  onChange={(e) => setFormData({ ...formData, last_contact_at: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="col-span-2 space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.unsubscribed}
+                    onChange={(e) => setFormData({ ...formData, unsubscribed: e.target.checked })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">수신거부</span>
+                </label>
+                {formData.unsubscribed && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      수신거부 사유
+                    </label>
+                    <textarea
+                      value={formData.unsubscribed_reason}
+                      onChange={(e) => setFormData({ ...formData, unsubscribed_reason: e.target.value })}
+                      rows={2}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="수신거부 사유를 입력하세요"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="col-span-2">
