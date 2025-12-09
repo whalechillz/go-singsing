@@ -154,7 +154,6 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
         { id: 'messages', label: '메시지 발송', href: '/admin/messages' },
         { id: 'campaigns', label: '마케팅 캠페인', href: '/admin/campaigns' },
         { id: 'promotions', label: '홍보 페이지', href: '/admin/promotions' },
-        { id: 'golf-contacts', label: '골프장 담당자', href: '/admin/golf-contacts' },
       ]
     },
     { 
@@ -181,6 +180,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
       icon: <Handshake className="w-5 h-5" />,
       subMenu: [
         { id: 'partners', label: '협업 업체', href: '/admin/partners' },
+        { id: 'golf-contacts', label: '골프장 담당자', href: '/admin/golf-contacts' },
         { id: 'meetings', label: '회의록', href: '/admin/meetings' },
       ]
     },
