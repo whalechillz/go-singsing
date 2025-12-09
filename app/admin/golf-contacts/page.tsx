@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2, Power } from 'lucide-react';
 import PremiumLetterPreview from '@/components/letters/PremiumLetterPreview';
 import { createNumberInputProps } from '@/lib/utils';
 
@@ -82,21 +82,27 @@ export default function GolfContactsPage() {
   const [giftToDelete, setGiftToDelete] = useState<any>(null);
   const [isGiftSaving, setIsGiftSaving] = useState(false);
   const [isGiftDeleting, setIsGiftDeleting] = useState(false);
+  const [showInactive, setShowInactive] = useState(false); // 비활성화된 항목 표시 여부
 
   useEffect(() => {
     fetchContacts();
     fetchGiftHistory();
     fetchAllLetterHistory();
-  }, []);
+  }, [showInactive]);
 
   const fetchContacts = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('golf_course_contacts')
         .select('*')
-        .eq('is_active', true)
         .order('golf_course_name');
+      
+      // 비활성화된 항목도 보려면 필터 제거
+      if (!showInactive) {
+        query = query.eq('is_active', true);
+      }
 
+      const { data, error } = await query;
       if (error) throw error;
       setContacts(data || []);
     } catch (error) {
@@ -225,6 +231,23 @@ export default function GolfContactsPage() {
     } catch (error) {
       console.error('Error deleting contact:', error);
       alert('삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 비활성화 토글 함수
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('golf_course_contacts')
+        .update({ is_active: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchContacts();
+      alert(currentStatus ? '담당자가 비활성화되었습니다.' : '담당자가 활성화되었습니다.');
+    } catch (error) {
+      console.error('Error toggling active status:', error);
+      alert('상태 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -627,6 +650,17 @@ export default function GolfContactsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">골프장 담당자 관리</h1>
         <div className="flex gap-2">
+          <label className="flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="checkbox"
+              checked={showInactive}
+              onChange={(e) => {
+                setShowInactive(e.target.checked);
+              }}
+              className="rounded"
+            />
+            <span className="text-sm text-gray-700">비활성화된 항목 표시</span>
+          </label>
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
@@ -647,6 +681,7 @@ export default function GolfContactsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">담당자</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">직책</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">연락처</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
               </tr>
             </thead>
@@ -656,7 +691,9 @@ export default function GolfContactsPage() {
                 return (
                   <tr 
                     key={contact.id} 
-                    className={`hover:bg-gray-50 cursor-pointer ${isRepresentative ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''}`}
+                    className={`hover:bg-gray-50 cursor-pointer ${
+                      !contact.is_active ? 'opacity-50 bg-gray-100' : ''
+                    } ${isRepresentative ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''}`}
                     onClick={() => {
                       // 담당자 클릭시 개별 이력 표시
                       setSelectedContact(contact);
@@ -686,8 +723,32 @@ export default function GolfContactsPage() {
                         {contact.mobile && <div>📱 {contact.mobile}</div>}
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm">
+                        {contact.is_active ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            활성
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            비활성
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleToggleActive(contact.id, contact.is_active)}
+                          className={`${
+                            contact.is_active 
+                              ? 'text-orange-600 hover:text-orange-900' 
+                              : 'text-green-600 hover:text-green-900'
+                          }`}
+                          title={contact.is_active ? '비활성화' : '활성화'}
+                        >
+                          <Power className={`w-4 h-4 ${contact.is_active ? '' : 'opacity-50'}`} />
+                        </button>
                         <button
                           onClick={() => openEditModal(contact)}
                           className="text-blue-600 hover:text-blue-900"

@@ -100,3 +100,4 @@ SELECT 'tour_settlements 테이블 생성 완료' as status;
 
 
 
+
