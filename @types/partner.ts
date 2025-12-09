@@ -12,6 +12,7 @@ export interface PartnerCompany {
   address?: string;
   notes?: string;
   status: 'active' | 'inactive';
+  category?: '해외업체' | '해외랜드' | '국내부킹' | '버스기사' | '프로' | '기타';
   created_at: string;
   updated_at: string;
 }

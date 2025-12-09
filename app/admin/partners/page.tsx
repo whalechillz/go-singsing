@@ -2,8 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Handshake, Plus, Search, Edit, Trash2, Phone, Mail, Globe, MapPin } from "lucide-react";
+import { Handshake, Plus, Search, Edit, Trash2, Phone, Mail, Globe, MapPin, Grid, List } from "lucide-react";
 import type { PartnerCompany } from "@/@types/partner";
+
+type ViewMode = 'card' | 'list';
+type CategoryFilter = 'all' | '해외업체' | '해외랜드' | '국내부킹' | '버스기사' | '프로' | '기타';
 
 export default function PartnersPage() {
   const router = useRouter();
@@ -11,6 +14,8 @@ export default function PartnersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>('card');
 
   useEffect(() => {
     fetchPartners();
@@ -58,8 +63,9 @@ export default function PartnersPage() {
       partner.country?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || partner.status === statusFilter;
+    const matchesCategory = categoryFilter === "all" || partner.category === categoryFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   if (loading) {
@@ -87,8 +93,8 @@ export default function PartnersPage() {
         </button>
       </div>
 
-      {/* 필터 */}
-      <div className="mb-6 flex gap-4">
+      {/* 필터 및 뷰 전환 */}
+      <div className="mb-6 flex gap-4 items-center">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
@@ -104,10 +110,48 @@ export default function PartnersPage() {
           onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
           className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="all">전체</option>
+          <option value="all">전체 상태</option>
           <option value="active">활성</option>
           <option value="inactive">비활성</option>
         </select>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
+          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">전체 분류</option>
+          <option value="해외업체">해외업체</option>
+          <option value="해외랜드">해외랜드</option>
+          <option value="국내부킹">국내부킹</option>
+          <option value="버스기사">버스기사</option>
+          <option value="프로">프로</option>
+          <option value="기타">기타</option>
+        </select>
+        {/* 뷰 전환 버튼 */}
+        <div className="flex gap-1 border rounded-lg p-1 bg-gray-50">
+          <button
+            onClick={() => setViewMode('card')}
+            className={`p-2 rounded transition-colors ${
+              viewMode === 'card' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            title="카드 뷰"
+          >
+            <Grid className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded transition-colors ${
+              viewMode === 'list' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            title="리스트 뷰"
+          >
+            <List className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* 업체 목록 */}
@@ -115,11 +159,11 @@ export default function PartnersPage() {
         <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
           <Handshake className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500 mb-4">
-            {searchTerm || statusFilter !== "all" 
+            {searchTerm || statusFilter !== "all" || categoryFilter !== "all"
               ? "검색 결과가 없습니다." 
               : "등록된 협업 업체가 없습니다."}
           </p>
-          {!searchTerm && statusFilter === "all" && (
+          {!searchTerm && statusFilter === "all" && categoryFilter === "all" && (
             <button
               onClick={() => router.push("/admin/partners/new")}
               className="text-blue-600 hover:text-blue-800 font-medium"
@@ -128,7 +172,7 @@ export default function PartnersPage() {
             </button>
           )}
         </div>
-      ) : (
+      ) : viewMode === 'card' ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredPartners.map((partner) => (
             <div
@@ -141,12 +185,19 @@ export default function PartnersPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">
                     {partner.name}
                   </h3>
-                  {partner.country && (
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <MapPin className="w-4 h-4" />
-                      <span>{partner.country}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {partner.category && (
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        {partner.category}
+                      </span>
+                    )}
+                    {partner.country && (
+                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <MapPin className="w-4 h-4" />
+                        <span>{partner.country}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <span
                   className={`px-2 py-1 rounded text-xs font-medium ${
@@ -218,6 +269,88 @@ export default function PartnersPage() {
               </div>
             </div>
           ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  업체명
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  분류
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  지역
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  담당자
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  연락처
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  상태
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  작업
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredPartners.map((partner) => (
+                <tr key={partner.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{partner.name}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {partner.category ? (
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        {partner.category}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {partner.country || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {partner.contact_person || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {partner.contact_phone || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        partner.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {partner.status === "active" ? "활성" : "비활성"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => router.push(`/admin/partners/${partner.id}`)}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                    >
+                      <Edit className="w-4 h-4 inline" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(partner.id, partner.name)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <Trash2 className="w-4 h-4 inline" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

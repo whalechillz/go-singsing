@@ -27,6 +27,7 @@ export default function PartnerDetailPage() {
     address: "",
     notes: "",
     status: "active" as "active" | "inactive",
+    category: "" as "" | "해외업체" | "해외랜드" | "국내부킹" | "버스기사" | "프로" | "기타",
   });
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export default function PartnerDetailPage() {
           address: data.address || "",
           notes: data.notes || "",
           status: data.status || "active",
+          category: data.category || "",
         });
       }
     } catch (error: any) {
@@ -229,6 +231,26 @@ export default function PartnerDetailPage() {
                     <option value="inactive">비활성</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    업체 분류
+                  </label>
+                  <select
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">선택안함</option>
+                    <option value="해외업체">해외업체</option>
+                    <option value="해외랜드">해외랜드</option>
+                    <option value="국내부킹">국내부킹</option>
+                    <option value="버스기사">버스기사</option>
+                    <option value="프로">프로</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -386,13 +408,18 @@ export default function PartnerDetailPage() {
                 <span className="text-sm font-medium text-gray-500">업체명</span>
                 <p className="text-lg font-semibold text-gray-900">{partner.name}</p>
               </div>
-              {partner.country && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-700">{partner.country}</span>
-                </div>
-              )}
-              <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {partner.category && (
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                    {partner.category}
+                  </span>
+                )}
+                {partner.country && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-700">{partner.country}</span>
+                  </div>
+                )}
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
                   partner.status === "active"
                     ? "bg-green-100 text-green-800"

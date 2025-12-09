@@ -536,6 +536,20 @@ CREATE TABLE user_roles (
     - 신규 생성: 28명 (참가자 데이터에서 자동 생성)
     - 업데이트 항목: `total_tour_count`, `last_tour_date`, `first_tour_date`
     - 스크립트: `scripts/update-customer-tour-history-2025.ts` (실행 완료 후 삭제)
+- **2025-12-08 협업 업체 분류 및 뷰 전환 기능**:
+  - 협업 업체 카테고리 필드 추가 ✅
+    - `category` VARCHAR(50): 업체 분류 (해외업체, 해외랜드, 국내부킹, 버스기사, 프로, 기타)
+    - 인덱스 추가: `idx_partner_companies_category`
+    - 기존 데이터 자동 분류 마이그레이션 (이름과 비고 필드 기반)
+    - 마이그레이션 파일: `supabase/migrations/20251208_add_partner_category.sql`
+  - 프론트엔드 개선 ✅
+    - 카테고리 필터 추가 (전체 분류 드롭다운)
+    - 뷰 전환 기능 추가 (카드뷰/리스트뷰 토글)
+    - 카드뷰: 카테고리 배지 표시
+    - 리스트뷰: 테이블 형식으로 표시 (업체명, 분류, 지역, 담당자, 연락처, 상태, 작업)
+    - 등록/수정 폼에 카테고리 선택 필드 추가
+    - 상세 페이지에 카테고리 표시
+    - 파일: `app/admin/partners/page.tsx`, `app/admin/partners/new/page.tsx`, `app/admin/partners/[id]/page.tsx`, `@types/partner.ts`
 - **2025-12-08 고객 정보 필드 확장**:
   - 고객 테이블에 새로운 필드 추가 ✅
     - `position` VARCHAR(50): 직급 (총무, 회장, 방장)
