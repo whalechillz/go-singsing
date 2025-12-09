@@ -606,3 +606,15 @@ CREATE TABLE user_roles (
       - 순천 파인힐스
       - 고창 컨트리클럽
     - 파일: `@types/partner.ts`, `app/admin/partners/page.tsx`, `app/admin/partners/new/page.tsx`, `app/admin/partners/[id]/page.tsx`
+- **2025-12-09 골프장 담당자 관리 개선**:
+  - "대표" 항목 삭제 마이그레이션 ✅
+    - 골프장 담당자에서 "대표" 항목 삭제 (협업 업체에서 관리하도록 변경)
+    - 삭제 대상: position이 '대표'이고 contact_name이 '예약실' 또는 '대표'인 항목
+    - 삭제 대상: 특정 골프장명(세븐힐스, 순천 파인힐스, 영덕 오션비치, 영광 웨스트 오션)에서 position이 '대표'인 항목
+    - 마이그레이션 파일: `supabase/migrations/20251209_remove_representative_contacts.sql`
+  - 비활성화 기능 추가 ✅
+    - 비활성화된 항목 표시 옵션 추가 (체크박스)
+    - 상태 컬럼 추가 (활성/비활성 배지)
+    - 활성화/비활성화 토글 버튼 추가 (Power 아이콘)
+    - 비활성화된 항목은 반투명 처리
+    - 파일: `app/admin/golf-contacts/page.tsx`
