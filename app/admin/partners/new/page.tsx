@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Heart } from "lucide-react";
 import Link from "next/link";
 
 export default function PartnerNewPage() {
@@ -21,13 +21,18 @@ export default function PartnerNewPage() {
     notes: "",
     status: "active" as "active" | "inactive",
     category: "" as "" | "해외업체" | "해외랜드" | "국내부킹" | "버스기사" | "프로" | "기타",
+    is_favorite: false,
   });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    setForm({ 
+      ...form, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -137,6 +142,22 @@ export default function PartnerNewPage() {
                   <option value="프로">프로</option>
                   <option value="기타">기타</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="is_favorite"
+                    checked={form.is_favorite}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700 flex items-center gap-1">
+                    <Heart className="w-4 h-4 text-red-500" />
+                    긴밀 협력 업체
+                  </span>
+                </label>
               </div>
             </div>
           </div>

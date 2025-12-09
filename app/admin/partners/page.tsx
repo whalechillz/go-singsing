@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Handshake, Plus, Search, Edit, Trash2, Phone, Mail, Globe, MapPin, Grid, List } from "lucide-react";
+import { Handshake, Plus, Search, Edit, Trash2, Phone, Mail, Globe, MapPin, Grid, List, Heart } from "lucide-react";
 import type { PartnerCompany } from "@/@types/partner";
 
 type ViewMode = 'card' | 'list';
@@ -16,6 +16,7 @@ export default function PartnersPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [favoriteFilter, setFavoriteFilter] = useState<"all" | "favorite">("all");
 
   useEffect(() => {
     fetchPartners();
@@ -26,6 +27,7 @@ export default function PartnersPage() {
       const { data, error } = await supabase
         .from("partner_companies")
         .select("*")
+        .order("is_favorite", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -56,6 +58,21 @@ export default function PartnersPage() {
     }
   };
 
+  const handleToggleFavorite = async (id: string, currentFavorite: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("partner_companies")
+        .update({ is_favorite: !currentFavorite })
+        .eq("id", id);
+
+      if (error) throw error;
+      fetchPartners();
+    } catch (error) {
+      console.error("즐겨찾기 토글 오류:", error);
+      alert("즐겨찾기 설정에 실패했습니다.");
+    }
+  };
+
   const filteredPartners = partners.filter((partner) => {
     const matchesSearch =
       partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,8 +81,9 @@ export default function PartnersPage() {
     
     const matchesStatus = statusFilter === "all" || partner.status === statusFilter;
     const matchesCategory = categoryFilter === "all" || partner.category === categoryFilter;
+    const matchesFavorite = favoriteFilter === "all" || partner.is_favorite === true;
     
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch && matchesStatus && matchesCategory && matchesFavorite;
   });
 
   if (loading) {
@@ -127,6 +145,14 @@ export default function PartnersPage() {
           <option value="프로">프로</option>
           <option value="기타">기타</option>
         </select>
+        <select
+          value={favoriteFilter}
+          onChange={(e) => setFavoriteFilter(e.target.value as "all" | "favorite")}
+          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">전체</option>
+          <option value="favorite">⭐ 긴밀 협력</option>
+        </select>
         {/* 뷰 전환 버튼 */}
         <div className="flex gap-1 border rounded-lg p-1 bg-gray-50">
           <button
@@ -159,11 +185,11 @@ export default function PartnersPage() {
         <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
           <Handshake className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500 mb-4">
-            {searchTerm || statusFilter !== "all" || categoryFilter !== "all"
+            {searchTerm || statusFilter !== "all" || categoryFilter !== "all" || favoriteFilter !== "all"
               ? "검색 결과가 없습니다." 
               : "등록된 협업 업체가 없습니다."}
           </p>
-          {!searchTerm && statusFilter === "all" && categoryFilter === "all" && (
+          {!searchTerm && statusFilter === "all" && categoryFilter === "all" && favoriteFilter === "all" && (
             <button
               onClick={() => router.push("/admin/partners/new")}
               className="text-blue-600 hover:text-blue-800 font-medium"
@@ -182,9 +208,27 @@ export default function PartnersPage() {
               {/* 헤더 */}
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {partner.name}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {partner.name}
+                    </h3>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleFavorite(partner.id, partner.is_favorite || false);
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                      title={partner.is_favorite ? "긴밀 협력 해제" : "긴밀 협력으로 설정"}
+                    >
+                      <Heart 
+                        className={`w-5 h-5 ${
+                          partner.is_favorite 
+                            ? "fill-red-500 text-red-500" 
+                            : "text-gray-400 hover:text-red-500"
+                        } transition-colors`} 
+                      />
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     {partner.category && (
                       <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
@@ -302,7 +346,22 @@ export default function PartnersPage() {
               {filteredPartners.map((partner) => (
                 <tr key={partner.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{partner.name}</div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleToggleFavorite(partner.id, partner.is_favorite || false)}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                        title={partner.is_favorite ? "긴밀 협력 해제" : "긴밀 협력으로 설정"}
+                      >
+                        <Heart 
+                          className={`w-4 h-4 ${
+                            partner.is_favorite 
+                              ? "fill-red-500 text-red-500" 
+                              : "text-gray-400 hover:text-red-500"
+                          } transition-colors`} 
+                        />
+                      </button>
+                      <div className="text-sm font-medium text-gray-900">{partner.name}</div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {partner.category ? (

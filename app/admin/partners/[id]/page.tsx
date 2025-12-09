@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { ArrowLeft, Save, Trash2, Edit, Phone, Mail, Globe, MapPin, Calendar } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Edit, Phone, Mail, Globe, MapPin, Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 import type { PartnerCompany } from "@/@types/partner";
 
@@ -28,6 +28,7 @@ export default function PartnerDetailPage() {
     notes: "",
     status: "active" as "active" | "inactive",
     category: "" as "" | "해외업체" | "해외랜드" | "국내부킹" | "버스기사" | "프로" | "기타",
+    is_favorite: false,
   });
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function PartnerDetailPage() {
           notes: data.notes || "",
           status: data.status || "active",
           category: data.category || "",
+          is_favorite: data.is_favorite || false,
         });
       }
     } catch (error: any) {
@@ -74,8 +76,12 @@ export default function PartnerDetailPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    setForm({ 
+      ...form, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
   };
 
   const handleSave = async () => {
@@ -251,6 +257,22 @@ export default function PartnerDetailPage() {
                     <option value="기타">기타</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="is_favorite"
+                      checked={form.is_favorite}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 flex items-center gap-1">
+                      <Heart className="w-4 h-4 text-red-500" />
+                      긴밀 협력 업체
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -406,7 +428,14 @@ export default function PartnerDetailPage() {
             <div className="space-y-3">
               <div>
                 <span className="text-sm font-medium text-gray-500">업체명</span>
-                <p className="text-lg font-semibold text-gray-900">{partner.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-semibold text-gray-900">{partner.name}</p>
+                  {partner.is_favorite && (
+                    <div title="긴밀 협력 업체">
+                      <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 {partner.category && (
