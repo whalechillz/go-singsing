@@ -284,12 +284,16 @@ export default function PartnersPage() {
                     <span className="font-medium">네이트온:</span> {partner.nateon_id}
                   </div>
                 )}
-                {(partner.facebook_url || partner.website_url) && (
+                {partner.facebook_url && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Globe className="w-4 h-4" />
-                    <span className="truncate">
-                      {partner.facebook_url || partner.website_url}
-                    </span>
+                    <span className="truncate">페이스북: {partner.facebook_url}</span>
+                  </div>
+                )}
+                {partner.website_url && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Globe className="w-4 h-4" />
+                    <span className="truncate">웹사이트: {partner.website_url}</span>
                   </div>
                 )}
               </div>
@@ -384,8 +388,30 @@ export default function PartnersPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {partner.contact_person || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {partner.contact_phone || '-'}
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    <div className="space-y-1">
+                      {partner.contact_phone && (
+                        <div className="flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          <span>{partner.contact_phone}</span>
+                        </div>
+                      )}
+                      {partner.kakao_talk_id && (
+                        <div className="text-xs text-gray-400">카톡: {partner.kakao_talk_id}</div>
+                      )}
+                      {partner.nateon_id && (
+                        <div className="text-xs text-gray-400">네이트온: {partner.nateon_id}</div>
+                      )}
+                      {partner.facebook_url && (
+                        <div className="text-xs text-gray-400 truncate max-w-xs">
+                          <Globe className="w-3 h-3 inline mr-1" />
+                          페이스북
+                        </div>
+                      )}
+                      {!partner.contact_phone && !partner.kakao_talk_id && !partner.nateon_id && !partner.facebook_url && (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
