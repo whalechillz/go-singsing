@@ -586,3 +586,23 @@ CREATE TABLE user_roles (
     - "고객 관리" 메뉴에서 "협업 관리" 메뉴로 이동
     - 협업 관련 기능을 한 곳에 통합 (협업 업체, 골프장 담당자, 회의록)
     - 파일: `components/admin/ModernAdminSidebar.tsx`
+- **2025-12-09 협업 업체 기능 확장**:
+  - 네이트온 필드 추가 ✅
+    - `nateon_id` VARCHAR(100): 네이트온 ID 필드 추가
+    - 인덱스 추가: `idx_partner_companies_nateon_id`
+    - 등록/수정/상세 페이지에 네이트온 필드 추가
+    - 목록 페이지에 네이트온 표시
+    - 마이그레이션 파일: `supabase/migrations/20251209_add_nateon_and_update_partners.sql`
+  - 카테고리 확장 ✅
+    - "국내 버스패키지" 카테고리 추가
+    - 카테고리 타입: `'해외업체' | '해외랜드' | '국내부킹' | '국내 버스패키지' | '버스기사' | '프로' | '기타'`
+    - 등록/수정 폼 및 필터에 "국내 버스패키지" 옵션 추가
+  - 데이터 마이그레이션 ✅
+    - 이름에서 접미사 제거: `_버스기사`, `_국내부킹`, `_해외랜드`, `_해외단독`
+    - 특정 골프장들을 "국내 버스패키지"로 변경:
+      - 영덕 오션비치
+      - 파인비치,솔라시도
+      - 함평 엘리체
+      - 순천 파인힐스
+      - 고창 컨트리클럽
+    - 파일: `@types/partner.ts`, `app/admin/partners/page.tsx`, `app/admin/partners/new/page.tsx`, `app/admin/partners/[id]/page.tsx`
