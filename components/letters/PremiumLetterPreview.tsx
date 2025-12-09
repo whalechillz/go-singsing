@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { Download, MessageSquare, Smartphone } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface PremiumLetterPreviewProps {
   content: string;
@@ -62,70 +64,75 @@ export default function PremiumLetterPreview({
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (onDownload) {
       onDownload();
-    } else {
-      // PDF 다운로드 로직
-      const element = document.getElementById('letter-content');
-      if (element) {
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(`
-            <html>
-              <head>
-                <title>싱싱골프투어 손편지 - ${occasion}</title>
-                <style>
-                  @page { 
-                    size: A4; 
-                    margin: 2cm;
-                  }
-                  body { 
-                    font-family: 'Noto Serif KR', serif; 
-                    line-height: 1.8;
-                    color: #333;
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 40px 20px;
-                  }
-                  .letter-header {
-                    text-align: center;
-                    margin-bottom: 40px;
-                    border-bottom: 2px solid #2563eb;
-                    padding-bottom: 20px;
-                  }
-                  .letter-title {
-                    font-size: 28px;
-                    font-weight: bold;
-                    color: #2563eb;
-                    margin-bottom: 10px;
-                    font-style: italic;
-                  }
-                  .letter-content {
-                    font-size: 16px;
-                    line-height: 2;
-                    white-space: pre-line;
-                    margin: 30px 0;
-                  }
-                  .letter-footer {
-                    margin-top: 50px;
-                    text-align: right;
-                  }
-                  .date {
-                    font-size: 18px;
-                    color: #666;
-                  }
-                </style>
-              </head>
-              <body>
-                ${element.innerHTML}
-              </body>
-            </html>
-          `);
-          printWindow.document.close();
-          printWindow.print();
-        }
+      return;
+    }
+
+    // PDF 다운로드 로직
+    const element = document.getElementById('letter-content');
+    if (!element) {
+      alert('편지 내용을 찾을 수 없습니다.');
+      return;
+    }
+
+    try {
+      // 로딩 표시
+      const loadingMessage = document.createElement('div');
+      loadingMessage.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 8px; z-index: 10000;';
+      loadingMessage.textContent = 'PDF 생성 중...';
+      document.body.appendChild(loadingMessage);
+
+      // HTML을 Canvas로 변환
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      // Canvas를 이미지로 변환
+      const imgData = canvas.toDataURL('image/png');
+
+      // PDF 생성
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // 첫 페이지 추가
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // 여러 페이지가 필요한 경우
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
+
+      // 파일명 생성
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+      const fileName = `싱싱골프투어_손편지_${golfCourseName}_${contactName}_${dateStr}.pdf`;
+
+      // PDF 다운로드
+      pdf.save(fileName);
+
+      // 로딩 메시지 제거
+      document.body.removeChild(loadingMessage);
+    } catch (error) {
+      console.error('PDF 생성 오류:', error);
+      alert('PDF 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
 
