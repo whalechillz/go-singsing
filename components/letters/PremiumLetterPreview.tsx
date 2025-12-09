@@ -188,7 +188,13 @@ export default function PremiumLetterPreview({
         {/* 편지 푸터 */}
         <div className="letter-footer text-right">
           <div className="date text-gray-500 text-lg">
-            2025년 9월 2일
+            {(() => {
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = today.getMonth() + 1;
+              const day = today.getDate();
+              return `${year}년 ${month}월 ${day}일`;
+            })()}
           </div>
         </div>
       </div>
