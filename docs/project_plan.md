@@ -568,3 +568,16 @@ CREATE TABLE user_roles (
       - 최근 연락 컬럼 추가
       - 수신거부 컬럼 추가 (수신거부/수신동의 배지 표시)
     - 파일: `app/admin/customers/page.tsx`
+- **2025-12-08 협업 업체 즐겨찾기(긴밀 협력) 기능**:
+  - 데이터베이스 마이그레이션 ✅
+    - `is_favorite` BOOLEAN: 긴밀 협력 업체 여부 (기본값: false)
+    - 인덱스 추가: `idx_partner_companies_is_favorite`
+    - 마이그레이션 파일: `supabase/migrations/20251208_add_partner_favorite.sql`
+  - 프론트엔드 개선 ✅
+    - 목록 페이지:
+      - 하트 아이콘으로 즐겨찾기 토글 기능 (카드뷰/리스트뷰 모두)
+      - 즐겨찾기 필터 추가 ("⭐ 긴밀 협력" 옵션)
+      - 즐겨찾기 업체를 목록 상단에 정렬
+    - 등록/수정 폼: 즐겨찾기 체크박스 추가
+    - 상세 페이지: 즐겨찾기 상태 표시 (하트 아이콘)
+    - 파일: `app/admin/partners/page.tsx`, `app/admin/partners/new/page.tsx`, `app/admin/partners/[id]/page.tsx`, `@types/partner.ts`
