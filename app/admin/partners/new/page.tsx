@@ -15,12 +15,13 @@ export default function PartnerNewPage() {
     contact_phone: "",
     contact_email: "",
     kakao_talk_id: "",
+    nateon_id: "",
     facebook_url: "",
     website_url: "",
     address: "",
     notes: "",
     status: "active" as "active" | "inactive",
-    category: "" as "" | "해외업체" | "해외랜드" | "국내부킹" | "버스기사" | "프로" | "기타",
+    category: "" as "" | "해외업체" | "해외랜드" | "국내부킹" | "국내 버스패키지" | "버스기사" | "프로" | "기타",
     is_favorite: false,
   });
 
@@ -138,6 +139,7 @@ export default function PartnerNewPage() {
                   <option value="해외업체">해외업체</option>
                   <option value="해외랜드">해외랜드</option>
                   <option value="국내부킹">국내부킹</option>
+                  <option value="국내 버스패키지">국내 버스패키지</option>
                   <option value="버스기사">버스기사</option>
                   <option value="프로">프로</option>
                   <option value="기타">기타</option>
@@ -217,6 +219,20 @@ export default function PartnerNewPage() {
                   value={form.kakao_talk_id}
                   onChange={handleChange}
                   placeholder="yang1912"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  네이트온 ID
+                </label>
+                <input
+                  type="text"
+                  name="nateon_id"
+                  value={form.nateon_id}
+                  onChange={handleChange}
+                  placeholder="nateon_id"
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

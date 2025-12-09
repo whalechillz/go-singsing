@@ -6,7 +6,7 @@ import { Handshake, Plus, Search, Edit, Trash2, Phone, Mail, Globe, MapPin, Grid
 import type { PartnerCompany } from "@/@types/partner";
 
 type ViewMode = 'card' | 'list';
-type CategoryFilter = 'all' | '해외업체' | '해외랜드' | '국내부킹' | '버스기사' | '프로' | '기타';
+type CategoryFilter = 'all' | '해외업체' | '해외랜드' | '국내부킹' | '국내 버스패키지' | '버스기사' | '프로' | '기타';
 
 export default function PartnersPage() {
   const router = useRouter();
@@ -141,6 +141,7 @@ export default function PartnersPage() {
           <option value="해외업체">해외업체</option>
           <option value="해외랜드">해외랜드</option>
           <option value="국내부킹">국내부킹</option>
+          <option value="국내 버스패키지">국내 버스패키지</option>
           <option value="버스기사">버스기사</option>
           <option value="프로">프로</option>
           <option value="기타">기타</option>
@@ -276,6 +277,11 @@ export default function PartnersPage() {
                 {partner.kakao_talk_id && (
                   <div className="text-sm text-gray-600">
                     <span className="font-medium">카카오톡:</span> {partner.kakao_talk_id}
+                  </div>
+                )}
+                {partner.nateon_id && (
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">네이트온:</span> {partner.nateon_id}
                   </div>
                 )}
                 {(partner.facebook_url || partner.website_url) && (

@@ -22,12 +22,13 @@ export default function PartnerDetailPage() {
     contact_phone: "",
     contact_email: "",
     kakao_talk_id: "",
+    nateon_id: "",
     facebook_url: "",
     website_url: "",
     address: "",
     notes: "",
     status: "active" as "active" | "inactive",
-    category: "" as "" | "해외업체" | "해외랜드" | "국내부킹" | "버스기사" | "프로" | "기타",
+    category: "" as "" | "해외업체" | "해외랜드" | "국내부킹" | "국내 버스패키지" | "버스기사" | "프로" | "기타",
     is_favorite: false,
   });
 
@@ -56,6 +57,7 @@ export default function PartnerDetailPage() {
           contact_phone: data.contact_phone || "",
           contact_email: data.contact_email || "",
           kakao_talk_id: data.kakao_talk_id || "",
+          nateon_id: data.nateon_id || "",
           facebook_url: data.facebook_url || "",
           website_url: data.website_url || "",
           address: data.address || "",
@@ -252,6 +254,7 @@ export default function PartnerDetailPage() {
                     <option value="해외업체">해외업체</option>
                     <option value="해외랜드">해외랜드</option>
                     <option value="국내부킹">국내부킹</option>
+                    <option value="국내 버스패키지">국내 버스패키지</option>
                     <option value="버스기사">버스기사</option>
                     <option value="프로">프로</option>
                     <option value="기타">기타</option>
@@ -327,6 +330,19 @@ export default function PartnerDetailPage() {
                     type="text"
                     name="kakao_talk_id"
                     value={form.kakao_talk_id}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    네이트온 ID
+                  </label>
+                  <input
+                    type="text"
+                    name="nateon_id"
+                    value={form.nateon_id}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -461,7 +477,7 @@ export default function PartnerDetailPage() {
           </div>
 
           {/* 연락처 정보 */}
-          {(partner.contact_person || partner.contact_phone || partner.contact_email || partner.kakao_talk_id) && (
+          {(partner.contact_person || partner.contact_phone || partner.contact_email || partner.kakao_talk_id || partner.nateon_id) && (
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">연락처 정보</h2>
               <div className="space-y-2">
@@ -487,6 +503,12 @@ export default function PartnerDetailPage() {
                   <div>
                     <span className="text-sm font-medium text-gray-500">카카오톡 ID</span>
                     <p className="text-gray-900">{partner.kakao_talk_id}</p>
+                  </div>
+                )}
+                {partner.nateon_id && (
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">네이트온 ID</span>
+                    <p className="text-gray-900">{partner.nateon_id}</p>
                   </div>
                 )}
               </div>
