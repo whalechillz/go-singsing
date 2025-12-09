@@ -581,3 +581,8 @@ CREATE TABLE user_roles (
     - 등록/수정 폼: 즐겨찾기 체크박스 추가
     - 상세 페이지: 즐겨찾기 상태 표시 (하트 아이콘)
     - 파일: `app/admin/partners/page.tsx`, `app/admin/partners/new/page.tsx`, `app/admin/partners/[id]/page.tsx`, `@types/partner.ts`
+- **2025-12-08 메뉴 구조 개선**:
+  - 골프장 담당자 메뉴 이동 ✅
+    - "고객 관리" 메뉴에서 "협업 관리" 메뉴로 이동
+    - 협업 관련 기능을 한 곳에 통합 (협업 업체, 골프장 담당자, 회의록)
+    - 파일: `components/admin/ModernAdminSidebar.tsx`
