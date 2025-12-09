@@ -193,9 +193,9 @@ export default function PartnerDetailPage() {
       {/* 내용 */}
       {isEditing ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* 기본 정보 */}
-            <div>
+            <div className="pb-6 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">기본 정보</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
@@ -280,7 +280,7 @@ export default function PartnerDetailPage() {
             </div>
 
             {/* 연락처 정보 */}
-            <div>
+            <div className="pb-6 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">연락처 정보</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -351,7 +351,7 @@ export default function PartnerDetailPage() {
             </div>
 
             {/* 웹사이트 정보 */}
-            <div>
+            <div className="pb-6 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">웹사이트 정보</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -477,72 +477,69 @@ export default function PartnerDetailPage() {
           </div>
 
           {/* 연락처 정보 */}
-          {(partner.contact_person || partner.contact_phone || partner.contact_email || partner.kakao_talk_id || partner.nateon_id) && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">연락처 정보</h2>
-              <div className="space-y-2">
+          {(partner.contact_person || partner.contact_phone || partner.contact_email || partner.kakao_talk_id || partner.nateon_id || partner.facebook_url || partner.website_url) && (
+            <div className="mb-6 bg-gray-50 rounded-lg p-4">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">연락처 정보</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {partner.contact_person && (
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">담당자</span>
-                    <p className="text-gray-900">{partner.contact_person}</p>
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">담당자</div>
+                    <div className="text-sm font-semibold text-gray-900">{partner.contact_person}</div>
                   </div>
                 )}
                 {partner.contact_phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700">{partner.contact_phone}</span>
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      <div className="text-xs font-medium text-gray-500 uppercase">전화번호</div>
+                    </div>
+                    <a href={`tel:${partner.contact_phone}`} className="text-sm text-blue-600 hover:underline font-medium">
+                      {partner.contact_phone}
+                    </a>
                   </div>
                 )}
                 {partner.contact_email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700">{partner.contact_email}</span>
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <div className="text-xs font-medium text-gray-500 uppercase">이메일</div>
+                    </div>
+                    <a href={`mailto:${partner.contact_email}`} className="text-sm text-blue-600 hover:underline truncate block">
+                      {partner.contact_email}
+                    </a>
                   </div>
                 )}
                 {partner.kakao_talk_id && (
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">카카오톡 ID</span>
-                    <p className="text-gray-900">{partner.kakao_talk_id}</p>
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">카카오톡 ID</div>
+                    <div className="text-sm text-gray-900 font-medium">{partner.kakao_talk_id}</div>
                   </div>
                 )}
                 {partner.nateon_id && (
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">네이트온 ID</span>
-                    <p className="text-gray-900">{partner.nateon_id}</p>
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">네이트온 ID</div>
+                    <div className="text-sm text-gray-900 font-medium">{partner.nateon_id}</div>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* 웹사이트 정보 */}
-          {(partner.facebook_url || partner.website_url) && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">웹사이트 정보</h2>
-              <div className="space-y-2">
                 {partner.facebook_url && (
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-gray-400" />
-                    <a
-                      href={partner.facebook_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 break-all"
-                    >
-                      {partner.facebook_url}
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Globe className="w-4 h-4 text-blue-600" />
+                      <div className="text-xs font-medium text-gray-500 uppercase">페이스북</div>
+                    </div>
+                    <a href={partner.facebook_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate block">
+                      링크 열기
                     </a>
                   </div>
                 )}
                 {partner.website_url && (
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-gray-400" />
-                    <a
-                      href={partner.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 break-all"
-                    >
-                      {partner.website_url}
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Globe className="w-4 h-4 text-gray-400" />
+                      <div className="text-xs font-medium text-gray-500 uppercase">웹사이트</div>
+                    </div>
+                    <a href={partner.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate block">
+                      링크 열기
                     </a>
                   </div>
                 )}

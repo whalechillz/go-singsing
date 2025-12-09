@@ -256,46 +256,59 @@ export default function PartnersPage() {
               </div>
 
               {/* 연락처 정보 */}
-              <div className="space-y-2 mb-4">
+              <div className="mb-4 space-y-2">
                 {partner.contact_person && (
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">담당자:</span> {partner.contact_person}
+                  <div className="pb-2 border-b border-gray-100">
+                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">담당자</div>
+                    <div className="text-sm font-semibold text-gray-900">{partner.contact_person}</div>
                   </div>
                 )}
-                {partner.contact_phone && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="w-4 h-4" />
-                    <span>{partner.contact_phone}</span>
-                  </div>
-                )}
-                {partner.contact_email && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Mail className="w-4 h-4" />
-                    <span className="truncate">{partner.contact_email}</span>
-                  </div>
-                )}
-                {partner.kakao_talk_id && (
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">카카오톡:</span> {partner.kakao_talk_id}
-                  </div>
-                )}
-                {partner.nateon_id && (
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">네이트온:</span> {partner.nateon_id}
-                  </div>
-                )}
-                {partner.facebook_url && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Globe className="w-4 h-4" />
-                    <span className="truncate">페이스북: {partner.facebook_url}</span>
-                  </div>
-                )}
-                {partner.website_url && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Globe className="w-4 h-4" />
-                    <span className="truncate">웹사이트: {partner.website_url}</span>
-                  </div>
-                )}
+                <div className="space-y-1.5 pt-1">
+                  {partner.contact_phone && (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <a href={`tel:${partner.contact_phone}`} className="hover:text-blue-600 hover:underline">
+                        {partner.contact_phone}
+                      </a>
+                    </div>
+                  )}
+                  {partner.contact_email && (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <a href={`mailto:${partner.contact_email}`} className="hover:text-blue-600 hover:underline truncate">
+                        {partner.contact_email}
+                      </a>
+                    </div>
+                  )}
+                  {partner.kakao_talk_id && (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <span className="text-yellow-500 flex-shrink-0">💬</span>
+                      <span>카톡: {partner.kakao_talk_id}</span>
+                    </div>
+                  )}
+                  {partner.nateon_id && (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <span className="text-blue-500 flex-shrink-0">💬</span>
+                      <span>네이트온: {partner.nateon_id}</span>
+                    </div>
+                  )}
+                  {partner.facebook_url && (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Globe className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <a href={partner.facebook_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate">
+                        페이스북
+                      </a>
+                    </div>
+                  )}
+                  {partner.website_url && (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Globe className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <a href={partner.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate">
+                        웹사이트
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 비고 */}
