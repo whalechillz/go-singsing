@@ -86,9 +86,12 @@ export default function GolfContactsPage() {
 
   useEffect(() => {
     fetchContacts();
+  }, [showInactive]);
+
+  useEffect(() => {
     fetchGiftHistory();
     fetchAllLetterHistory();
-  }, [showInactive]);
+  }, []);
 
   const fetchContacts = async () => {
     try {
