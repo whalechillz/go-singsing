@@ -226,16 +226,27 @@ export default function GolfContactsPage() {
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('golf_course_contacts')
         .update({ is_active: false })
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
-      if (error) throw error;
-      fetchContacts();
-    } catch (error) {
+      if (error) {
+        console.error('삭제 오류 상세:', error);
+        alert(`삭제 중 오류가 발생했습니다: ${error.message || JSON.stringify(error)}`);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        alert('담당자가 삭제되었습니다.');
+        fetchContacts();
+      } else {
+        alert('삭제할 항목을 찾을 수 없습니다.');
+      }
+    } catch (error: any) {
       console.error('Error deleting contact:', error);
-      alert('삭제 중 오류가 발생했습니다.');
+      alert(`삭제 중 오류가 발생했습니다: ${error?.message || '알 수 없는 오류'}`);
     }
   };
 
