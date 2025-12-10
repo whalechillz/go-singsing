@@ -1,0 +1,390 @@
+/**
+ * Google Sheets에서 고객 데이터를 가져와서 Supabase customers 테이블에 마이그레이션
+ * 
+ * 사용 방법:
+ * 1. Google Sheets를 공개로 설정하거나 서비스 계정에 공유
+ * 2. 환경 변수 설정 (선택사항)
+ * 3. npm run migrate:customers:google-sheets
+ */
+
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import * as https from 'https';
+
+dotenv.config({ path: '.env.local' });
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+// Google Sheets 정보
+const SPREADSHEET_ID = '1MUvJyKGXFBZLUCuSnuOjZMjQqkSi5byu9d7u4O6uf9w';
+const SHEET_NAME = 'singsing';
+const GID = '812281138';
+
+interface GoogleSheetsRow {
+  [key: string]: string | number | null;
+}
+
+/**
+ * CSV 파싱 (따옴표와 쉼표 처리)
+ */
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        // 이스케이프된 따옴표
+        current += '"';
+        i++;
+      } else {
+        // 따옴표 시작/끝
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // 필드 구분자
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // 마지막 필드 추가
+  result.push(current.trim());
+  return result;
+}
+
+/**
+ * Google Sheets에서 CSV 데이터 가져오기 (공개 시트인 경우)
+ */
+async function fetchGoogleSheetsData(): Promise<GoogleSheetsRow[]> {
+  return new Promise((resolve, reject) => {
+    // CSV 형식으로 데이터 가져오기 (gid 파라미터 제거, sheet 이름 사용)
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+    
+    console.log(`📥 데이터 가져오기 URL: ${url}`);
+    
+    https.get(url, (res) => {
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+        return;
+      }
+      
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk.toString('utf-8');
+      });
+      
+      res.on('end', () => {
+        try {
+          // CSV 파싱
+          const lines = data.split('\n').filter(line => line.trim());
+          if (lines.length === 0) {
+            reject(new Error('데이터가 없습니다.'));
+            return;
+          }
+          
+          // 헤더 추출 (개선된 CSV 파싱 사용)
+          const headers = parseCSVLine(lines[0])
+            .map(h => h.replace(/^"|"$/g, '').trim())
+            .filter(h => h.length > 0); // 빈 헤더 제거
+          console.log(`📋 발견된 컬럼 (${headers.length}개): ${headers.join(', ')}`);
+          
+          // 데이터 행 파싱
+          const rows: GoogleSheetsRow[] = [];
+          for (let i = 1; i < lines.length; i++) {
+            const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim());
+            const row: GoogleSheetsRow = {};
+            headers.forEach((header, index) => {
+              const value = values[index];
+              row[header] = (value && value.length > 0) ? value : null;
+            });
+            rows.push(row);
+          }
+          
+          resolve(rows);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }).on('error', (error) => {
+      reject(error);
+    });
+  });
+}
+
+/**
+ * 전화번호 정규화 (하이픈 제거)
+ */
+function normalizePhone(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  // 숫자만 추출
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 10) return null;
+  return digits;
+}
+
+/**
+ * 이메일 검증
+ */
+function isValidEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * 날짜 형식 변환 (YYYY-MM-DD)
+ */
+function parseDate(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  
+  // 다양한 날짜 형식 처리
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return null;
+  
+  return date.toISOString().split('T')[0];
+}
+
+/**
+ * Google Sheets 데이터를 customers 테이블 형식으로 변환
+ * 실제 스프레드시트 컬럼명: 이름, 연락처, 최초문의일, 최근투어일, 최근투어지, 특이사항
+ */
+function mapToCustomer(row: GoogleSheetsRow, rowIndex: number): any {
+  // 실제 Google Sheets 컬럼명 매핑
+  const rawName = row['이름'];
+  const rawPhone = row['연락처'];
+  
+  // 이름과 전화번호가 모두 없으면 건너뛰기
+  if (!rawName && !rawPhone) {
+    return null;
+  }
+  
+  const name = (rawName || '').trim();
+  const phone = normalizePhone(rawPhone);
+  
+  // 이름이나 전화번호 중 하나라도 없으면 건너뛰기
+  if (!name || !phone) {
+    return null;
+  }
+  
+  // 이름이 너무 짧거나 이상한 경우 건너뛰기 (예: "1~2팀..." 같은 경우)
+  if (name.length < 2 || name.includes('~') && name.length > 50) {
+    return null;
+  }
+  
+  // 최초문의일을 first_tour_date로 매핑 (또는 별도 필드로)
+  const firstInquiryDate = parseDate(row['최초문의일'] || row['최초문의'] || row['first_inquiry']);
+  const lastTourDate = parseDate(row['최근투어일'] || row['최근투어'] || row['last_tour']);
+  const lastTourLocation = (row['최근투어지'] || row['최근투어지역'] || row['last_tour_location'] || '').trim();
+  
+  // 특이사항을 notes로 매핑
+  const notes = (row['특이사항'] || row['비고'] || row['notes'] || row['Notes'] || '').trim();
+  
+  // 투어 이력이 있으면 customer_type을 'regular'로, 없으면 'new'로 설정
+  const customerType = lastTourDate ? 'regular' : 'new';
+  
+  return {
+    name,
+    phone,
+    email: null, // 스프레드시트에 이메일 컬럼이 없음
+    birth_date: null,
+    gender: null,
+    marketing_agreed: false,
+    kakao_friend: false,
+    status: 'active',
+    customer_type: customerType,
+    first_tour_date: firstInquiryDate || lastTourDate, // 최초문의일이 없으면 최근투어일 사용
+    last_tour_date: lastTourDate,
+    total_tour_count: lastTourDate ? 1 : 0, // 최소 1회로 설정 (정확한 횟수는 투어 데이터에서 계산 필요)
+    total_payment_amount: 0,
+    source: 'google_sheet',
+    // source_id 컬럼이 없으므로 notes에 포함
+    notes: [
+      notes,
+      lastTourLocation ? `최근 투어지: ${lastTourLocation}` : null,
+      `Google Sheets 행: ${rowIndex + 2}`
+    ].filter(Boolean).join(' | ') || null,
+    position: null,
+    activity_platform: null,
+    referral_source: null,
+    unsubscribed: false,
+    unsubscribed_reason: null,
+  };
+}
+
+/**
+ * 마이그레이션 실행
+ */
+async function migrateCustomers() {
+  console.log('🚀 Google Sheets 고객 데이터 마이그레이션 시작...\n');
+  
+  try {
+    // 1. Google Sheets에서 데이터 가져오기
+    console.log('📥 Google Sheets에서 데이터 가져오는 중...');
+    const rows = await fetchGoogleSheetsData();
+    console.log(`✅ ${rows.length}개의 행을 가져왔습니다.\n`);
+    
+    // 2. 데이터 변환
+    console.log('🔄 데이터 변환 중...');
+    const customers = rows
+      .map((row, index) => mapToCustomer(row, index))
+      .filter(customer => customer !== null);
+    
+    console.log(`✅ ${customers.length}개의 고객 데이터로 변환되었습니다.\n`);
+    
+    // 3. 기존 고객 확인 (전화번호 기준) - 배치로 처리
+    console.log('🔍 기존 고객 확인 중...');
+    const phones = customers.map(c => c.phone).filter(Boolean);
+    
+    if (phones.length === 0) {
+      console.log('⚠️  유효한 전화번호가 없습니다.');
+      return;
+    }
+    
+    // 대량 데이터는 배치로 확인
+    const existingPhones = new Set<string>();
+    const batchSize = 1000;
+    
+    for (let i = 0; i < phones.length; i += batchSize) {
+      const phoneBatch = phones.slice(i, i + batchSize);
+      const { data: existingCustomers, error: fetchError } = await supabase
+        .from('customers')
+        .select('phone')
+        .in('phone', phoneBatch);
+      
+      if (fetchError) {
+        console.error('❌ 기존 고객 확인 오류:', fetchError);
+        throw fetchError;
+      }
+      
+      existingCustomers?.forEach(c => existingPhones.add(c.phone));
+    }
+    
+    console.log(`✅ ${existingPhones.size}개의 기존 고객을 찾았습니다.\n`);
+    
+    // 4. 신규 고객과 업데이트 대상 분리
+    const newCustomers = customers.filter(c => !existingPhones.has(c.phone));
+    const updateCustomers = customers.filter(c => existingPhones.has(c.phone));
+    
+    console.log(`📊 통계:`);
+    console.log(`  - 신규 고객: ${newCustomers.length}명`);
+    console.log(`  - 업데이트 대상: ${updateCustomers.length}명\n`);
+    
+    // 5. 신규 고객 삽입 (배치 처리)
+    if (newCustomers.length > 0) {
+      console.log(`💾 신규 고객 데이터 삽입 중... (총 ${newCustomers.length}명, 배치 크기: 100)`);
+      
+      const batchSize = 100;
+      let totalInserted = 0;
+      let totalFailed = 0;
+      const failedCustomers: any[] = [];
+      
+      for (let i = 0; i < newCustomers.length; i += batchSize) {
+        const batch = newCustomers.slice(i, i + batchSize);
+        const batchNumber = Math.floor(i / batchSize) + 1;
+        const totalBatches = Math.ceil(newCustomers.length / batchSize);
+        
+        try {
+          const { data: inserted, error: insertError } = await supabase
+            .from('customers')
+            .insert(batch)
+            .select();
+          
+          if (insertError) {
+            // 중복 키 오류인 경우 개별 삽입 시도
+            if (insertError.code === '23505') {
+              console.log(`⚠️  배치 ${batchNumber}/${totalBatches}에 중복이 있습니다. 개별 삽입 시도 중...`);
+              
+              // 개별 삽입
+              for (const customer of batch) {
+                try {
+                  const { data: singleInserted, error: singleError } = await supabase
+                    .from('customers')
+                    .insert(customer)
+                    .select();
+                  
+                  if (singleError) {
+                    if (singleError.code === '23505') {
+                      // 중복이면 건너뛰기
+                      totalFailed++;
+                    } else {
+                      console.error(`   고객 ${customer.name} (${customer.phone}) 삽입 실패:`, singleError.message);
+                      failedCustomers.push(customer);
+                      totalFailed++;
+                    }
+                  } else {
+                    totalInserted += singleInserted?.length || 0;
+                  }
+                } catch (singleError: any) {
+                  console.error(`   고객 ${customer.name} (${customer.phone}) 예외:`, singleError.message);
+                  failedCustomers.push(customer);
+                  totalFailed++;
+                }
+              }
+              
+              console.log(`   배치 ${batchNumber}/${totalBatches} 개별 처리 완료`);
+            } else {
+              console.error(`❌ 배치 ${batchNumber}/${totalBatches} 삽입 실패:`, insertError);
+              console.error(`   상세 오류:`, JSON.stringify(insertError, null, 2));
+              failedCustomers.push(...batch);
+              totalFailed += batch.length;
+            }
+          } else {
+            totalInserted += inserted?.length || 0;
+            console.log(`✅ 배치 ${batchNumber}/${totalBatches} 완료 (${inserted?.length || 0}개)`);
+          }
+        } catch (error: any) {
+          console.error(`❌ 배치 ${batchNumber}/${totalBatches} 예외 발생:`, error);
+          console.error(`   상세 오류:`, error?.message || JSON.stringify(error, null, 2));
+          failedCustomers.push(...batch);
+          totalFailed += batch.length;
+        }
+      }
+      
+      console.log(`\n📊 삽입 결과:`);
+      console.log(`   - 성공: ${totalInserted}명`);
+      console.log(`   - 실패: ${totalFailed}명`);
+      
+      if (failedCustomers.length > 0) {
+        console.log(`\n⚠️  실패한 고객 목록 (처음 10개):`);
+        failedCustomers.slice(0, 10).forEach(c => {
+          console.log(`   - ${c.name} (${c.phone})`);
+        });
+      }
+      console.log('');
+    }
+    
+    // 6. 기존 고객 업데이트 (선택적)
+    if (updateCustomers.length > 0) {
+      console.log('⚠️  기존 고객 업데이트는 건너뜁니다. (필요시 수동으로 업데이트하세요)');
+      console.log(`   업데이트 대상: ${updateCustomers.map(c => `${c.name} (${c.phone})`).join(', ')}\n`);
+    }
+    
+    // 7. 결과 리포트
+    console.log('📋 마이그레이션 완료!');
+    console.log(`   - 총 처리: ${customers.length}명`);
+    console.log(`   - 신규 추가: ${newCustomers.length}명`);
+    console.log(`   - 기존 고객: ${updateCustomers.length}명`);
+    
+  } catch (error) {
+    console.error('❌ 마이그레이션 실패:', error);
+    process.exit(1);
+  }
+}
+
+// 실행
+migrateCustomers();
+

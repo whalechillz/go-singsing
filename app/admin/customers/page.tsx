@@ -85,10 +85,62 @@ export default function CustomerManagementPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
+      // 통계는 별도로 가져오기 (전체 개수)
+      let statsQuery = supabase
+        .from("customers")
+        .select("*", { count: 'exact', head: true });
+
+      if (filterStatus) {
+        statsQuery = statsQuery.eq("status", filterStatus);
+      }
+      if (filterType) {
+        statsQuery = statsQuery.eq("customer_type", filterType);
+      }
+
+      const { count: totalCount } = await statsQuery;
+
+      // 활성 고객 수
+      let activeQuery = supabase
+        .from("customers")
+        .select("*", { count: 'exact', head: true })
+        .eq("status", "active");
+      
+      if (filterType) {
+        activeQuery = activeQuery.eq("customer_type", filterType);
+      }
+      const { count: activeCount } = await activeQuery;
+
+      // VIP 고객 수
+      let vipQuery = supabase
+        .from("customers")
+        .select("*", { count: 'exact', head: true })
+        .eq("customer_type", "vip");
+      
+      if (filterStatus) {
+        vipQuery = vipQuery.eq("status", filterStatus);
+      }
+      const { count: vipCount } = await vipQuery;
+
+      // 마케팅 동의 고객 수
+      let marketingQuery = supabase
+        .from("customers")
+        .select("*", { count: 'exact', head: true })
+        .eq("marketing_agreed", true);
+      
+      if (filterStatus) {
+        marketingQuery = marketingQuery.eq("status", filterStatus);
+      }
+      if (filterType) {
+        marketingQuery = marketingQuery.eq("customer_type", filterType);
+      }
+      const { count: marketingCount } = await marketingQuery;
+
+      // 고객 목록 가져오기 (최대 1000개, 페이지네이션 필요 시 추가 구현)
       let query = supabase
         .from("customers")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(1000); // Supabase 기본 limit
 
       // 필터 적용
       if (filterStatus) {
@@ -121,14 +173,13 @@ export default function CustomerManagementPage() {
 
       setCustomers(filteredData);
 
-      // 통계 계산
-      const stats = {
-        total: filteredData.length,
-        active: filteredData.filter(c => c.status === "active").length,
-        vip: filteredData.filter(c => c.customer_type === "vip").length,
-        marketing_agreed: filteredData.filter(c => c.marketing_agreed).length
-      };
-      setStats(stats);
+      // 통계 설정 (전체 개수 사용)
+      setStats({
+        total: totalCount || 0,
+        active: activeCount || 0,
+        vip: vipCount || 0,
+        marketing_agreed: marketingCount || 0
+      });
 
     } catch (error) {
       console.error("Error fetching customers:", error);
