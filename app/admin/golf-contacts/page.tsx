@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2, Power } from 'lucide-react';
+import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2, Power, X } from 'lucide-react';
 import PremiumLetterPreview from '@/components/letters/PremiumLetterPreview';
 import { createNumberInputProps } from '@/lib/utils';
 
@@ -83,6 +83,8 @@ export default function GolfContactsPage() {
   const [isGiftSaving, setIsGiftSaving] = useState(false);
   const [isGiftDeleting, setIsGiftDeleting] = useState(false);
   const [showInactive, setShowInactive] = useState(false); // 비활성화된 항목 표시 여부
+  const [showLetterPreviewModal, setShowLetterPreviewModal] = useState(false); // 읽기 전용 미리보기 모달
+  const [previewLetter, setPreviewLetter] = useState<any>(null); // 미리보기할 편지 데이터
 
   useEffect(() => {
     fetchContacts();
@@ -846,27 +848,9 @@ export default function GolfContactsPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
-                              // 편지 내용 미리보기 모달 열기
-                              setSelectedContact({
-                                id: letter.golf_course_contact_id,
-                                golf_course_name: letter.golf_course_contacts?.golf_course_name || '',
-                                contact_name: letter.golf_course_contacts?.contact_name || '',
-                                position: '',
-                                phone: '',
-                                mobile: '',
-                                email: '',
-                                address: '',
-                                notes: '',
-                                is_active: true,
-                                created_at: '',
-                                updated_at: ''
-                              });
-                              setLetterForm({
-                                template: '',
-                                custom_content: letter.letter_content,
-                                occasion: letter.occasion
-                              });
-                              setShowLetterModal(true);
+                              // 읽기 전용 미리보기 모달 열기
+                              setPreviewLetter(letter);
+                              setShowLetterPreviewModal(true);
                             }}
                             className="text-blue-600 hover:text-blue-900"
                           >
@@ -1429,6 +1413,65 @@ export default function GolfContactsPage() {
               >
                 {isDeleting ? '삭제 중...' : '삭제'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 읽기 전용 편지 미리보기 모달 */}
+      {showLetterPreviewModal && previewLetter && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+            {/* 헤더 */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">📝 편지 미리보기</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  {previewLetter.golf_course_contacts?.golf_course_name} - {previewLetter.golf_course_contacts?.contact_name}
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    previewLetter.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                    previewLetter.status === 'sent' ? 'bg-green-100 text-green-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {previewLetter.status === 'draft' ? '임시저장' :
+                     previewLetter.status === 'sent' ? '발송완료' : '인쇄완료'}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    발송일: {new Date(previewLetter.created_at).toLocaleDateString('ko-KR')}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowLetterPreviewModal(false);
+                  setPreviewLetter(null);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="닫기"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* 편지 미리보기 */}
+            <div className="p-6">
+              <PremiumLetterPreview
+                content={previewLetter.letter_content}
+                occasion={previewLetter.occasion}
+                golfCourseName={previewLetter.golf_course_contacts?.golf_course_name || ''}
+                contactName={previewLetter.golf_course_contacts?.contact_name || ''}
+                onDownload={() => {
+                  // PDF 다운로드 로직은 컴포넌트 내부에서 처리
+                }}
+                onKakaoSend={() => {
+                  // 카카오톡 전송 로직은 컴포넌트 내부에서 처리
+                }}
+                onSmsSend={() => {
+                  // SMS 전송 로직은 컴포넌트 내부에서 처리
+                }}
+              />
             </div>
           </div>
         </div>
