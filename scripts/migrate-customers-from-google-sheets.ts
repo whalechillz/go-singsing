@@ -189,9 +189,28 @@ function mapToCustomer(row: GoogleSheetsRow, rowIndex: number): any {
   const firstInquiryDate = parseDate(row['최초문의일'] || row['최초문의'] || row['first_inquiry']);
   const lastTourDate = parseDate(row['최근투어일'] || row['최근투어'] || row['last_tour']);
   const lastTourLocation = (row['최근투어지'] || row['최근투어지역'] || row['last_tour_location'] || '').trim();
+  const lastContactDate = parseDate(row['최근연락내역'] || row['최근연락'] || row['last_contact']);
+  
+  // 모임명을 tags에 추가
+  const meetingName = (row['모임명'] || row['모임'] || row['meeting_name'] || '').trim();
+  const tags: string[] = [];
+  if (meetingName) {
+    tags.push(meetingName);
+  }
   
   // 특이사항을 notes로 매핑
   const notes = (row['특이사항'] || row['비고'] || row['notes'] || row['Notes'] || '').trim();
+  
+  // 직급 추출 (이름에서 "총무", "회장", "방장" 키워드 추출)
+  let position: string | null = null;
+  const positionKeywords = ['총무', '회장', '방장'];
+  for (const keyword of positionKeywords) {
+    if (name.includes(keyword)) {
+      position = keyword;
+      break;
+    }
+  }
+  // 또는 별도 컬럼이 있다면: position = (row['직급'] || '').trim() || null;
   
   // 투어 이력이 있으면 customer_type을 'regular'로, 없으면 'new'로 설정
   const customerType = lastTourDate ? 'regular' : 'new';
@@ -217,9 +236,11 @@ function mapToCustomer(row: GoogleSheetsRow, rowIndex: number): any {
       lastTourLocation ? `최근 투어지: ${lastTourLocation}` : null,
       `Google Sheets 행: ${rowIndex + 2}`
     ].filter(Boolean).join(' | ') || null,
-    position: null,
+    tags: tags.length > 0 ? tags : null, // 모임명을 tags에 추가
+    position: position, // 직급 추가
     activity_platform: null,
     referral_source: null,
+    last_contact_at: lastContactDate || null,
     unsubscribed: false,
     unsubscribed_reason: null,
   };
@@ -367,10 +388,115 @@ async function migrateCustomers() {
       console.log('');
     }
     
-    // 6. 기존 고객 업데이트 (선택적)
+    // 6. 기존 고객 업데이트 (기존 데이터 보존, 모임명/특이사항/직급만 추가)
     if (updateCustomers.length > 0) {
-      console.log('⚠️  기존 고객 업데이트는 건너뜁니다. (필요시 수동으로 업데이트하세요)');
-      console.log(`   업데이트 대상: ${updateCustomers.map(c => `${c.name} (${c.phone})`).join(', ')}\n`);
+      console.log(`⚠️  기존 고객 ${updateCustomers.length}명 발견. 기존 데이터를 보존하며 선택적 업데이트합니다.`);
+      
+      let updatedCount = 0;
+      let skippedCount = 0;
+      
+      // Google Sheets 데이터를 전화번호로 매핑
+      const sheetDataMap = new Map<string, any>();
+      updateCustomers.forEach(c => {
+        sheetDataMap.set(c.phone, c);
+      });
+      
+      // 기존 고객 정보 가져오기 (배치 처리)
+      const updatePhones = Array.from(sheetDataMap.keys());
+      const batchSize = 100;
+      
+      for (let i = 0; i < updatePhones.length; i += batchSize) {
+        const phoneBatch = updatePhones.slice(i, i + batchSize);
+        const { data: existingCustomers, error: fetchError } = await supabase
+          .from('customers')
+          .select('*')
+          .in('phone', phoneBatch);
+        
+        if (fetchError) {
+          console.error('❌ 기존 고객 정보 조회 오류:', fetchError);
+          continue;
+        }
+        
+        // 각 기존 고객에 대해 업데이트
+        for (const existing of existingCustomers || []) {
+          const sheetData = sheetDataMap.get(existing.phone);
+          if (!sheetData) continue;
+          
+          try {
+            // 업데이트할 데이터 준비 (기존 데이터 보존)
+            const updateData: any = {};
+            let hasUpdate = false;
+            
+            // 1. 모임명 (tags에 추가, 기존 tags 유지)
+            const existingTags = existing.tags || [];
+            const newTags = sheetData.tags || [];
+            if (newTags.length > 0) {
+              const mergedTags = [...new Set([...existingTags, ...newTags])];
+              if (mergedTags.length > existingTags.length) {
+                updateData.tags = mergedTags;
+                hasUpdate = true;
+              }
+            }
+            
+            // 2. 특이사항 (notes에 추가, 기존 notes 유지)
+            const existingNotes = existing.notes || '';
+            // Google Sheets의 notes에서 특이사항만 추출 (최근 투어지, 행 번호 제외)
+            const sheetNotes = sheetData.notes || '';
+            const specialNotes = sheetNotes.split(' | ').filter((n: string) => 
+              !n.includes('최근 투어지:') && !n.includes('Google Sheets 행:')
+            ).join(' | ').trim();
+            
+            if (specialNotes && !existingNotes.includes(specialNotes)) {
+              updateData.notes = existingNotes 
+                ? `${existingNotes} | ${specialNotes}`
+                : specialNotes;
+              hasUpdate = true;
+            }
+            
+            // 3. 직급 (기존 값이 없을 때만 업데이트)
+            if (sheetData.position && !existing.position) {
+              updateData.position = sheetData.position;
+              hasUpdate = true;
+            }
+            
+            // 4. 최근연락내역 (더 최신 날짜로 업데이트)
+            if (sheetData.last_contact_at) {
+              const existingContactDate = existing.last_contact_at 
+                ? new Date(existing.last_contact_at).getTime() 
+                : 0;
+              const newContactDate = new Date(sheetData.last_contact_at).getTime();
+              if (newContactDate > existingContactDate) {
+                updateData.last_contact_at = sheetData.last_contact_at;
+                hasUpdate = true;
+              }
+            }
+            
+            // 업데이트 실행
+            if (hasUpdate) {
+              const { error: updateError } = await supabase
+                .from('customers')
+                .update(updateData)
+                .eq('phone', existing.phone);
+              
+              if (!updateError) {
+                updatedCount++;
+              } else {
+                console.error(`   고객 ${existing.name} (${existing.phone}) 업데이트 실패:`, updateError.message);
+                skippedCount++;
+              }
+            } else {
+              skippedCount++;
+            }
+          } catch (error: any) {
+            console.error(`   고객 ${existing.name} (${existing.phone}) 예외:`, error.message);
+            skippedCount++;
+          }
+        }
+      }
+      
+      console.log(`\n📊 기존 고객 업데이트 결과:`);
+      console.log(`   - 업데이트: ${updatedCount}명 (모임명/특이사항/직급 추가)`);
+      console.log(`   - 건너뜀: ${skippedCount}명 (변경사항 없음 또는 기존 데이터 우선)\n`);
     }
     
     // 7. 결과 리포트
