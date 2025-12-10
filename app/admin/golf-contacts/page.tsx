@@ -1179,12 +1179,29 @@ export default function GolfContactsPage() {
       {/* 손편지 발송 모달 */}
       {showLetterModal && selectedContact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
+            {/* 헤더 */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <div>
+                <h2 className="text-xl font-bold mb-1">📝 고급 손편지 발송</h2>
+                <p className="text-sm text-gray-600">
+                  {selectedContact.golf_course_name} - {selectedContact.contact_name}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowLetterModal(false);
+                  setLetterForm({ template: '', custom_content: '', occasion: '' });
+                  setAiImprovementRequest('');
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="닫기"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
             <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">📝 고급 손편지 발송</h2>
-              <p className="text-sm text-gray-600 mb-6">
-                {selectedContact.golf_course_name} - {selectedContact.contact_name}
-              </p>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 편집 패널 */}
@@ -1462,15 +1479,6 @@ export default function GolfContactsPage() {
                 occasion={previewLetter.occasion}
                 golfCourseName={previewLetter.golf_course_contacts?.golf_course_name || ''}
                 contactName={previewLetter.golf_course_contacts?.contact_name || ''}
-                onDownload={() => {
-                  // PDF 다운로드 로직은 컴포넌트 내부에서 처리
-                }}
-                onKakaoSend={() => {
-                  // 카카오톡 전송 로직은 컴포넌트 내부에서 처리
-                }}
-                onSmsSend={() => {
-                  // SMS 전송 로직은 컴포넌트 내부에서 처리
-                }}
               />
             </div>
           </div>
