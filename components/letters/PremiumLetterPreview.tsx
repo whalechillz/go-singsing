@@ -84,16 +84,17 @@ export default function PremiumLetterPreview({
       loadingMessage.textContent = 'PDF 생성 중...';
       document.body.appendChild(loadingMessage);
 
-      // HTML을 Canvas로 변환
+      // HTML을 Canvas로 변환 (용량 최적화: scale 1.5로 낮춤)
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 1.5, // 2에서 1.5로 낮춰 용량 감소 (약 44% 감소)
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        removeContainer: true // 불필요한 컨테이너 제거
       });
 
-      // Canvas를 이미지로 변환
-      const imgData = canvas.toDataURL('image/png');
+      // Canvas를 JPEG로 변환하여 용량 대폭 감소 (품질 0.85)
+      const imgData = canvas.toDataURL('image/jpeg', 0.85);
 
       // PDF 생성
       const pdf = new jsPDF({
@@ -108,15 +109,15 @@ export default function PremiumLetterPreview({
       let heightLeft = imgHeight;
       let position = 0;
 
-      // 첫 페이지 추가
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      // 첫 페이지 추가 (JPEG 형식 사용)
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
       // 여러 페이지가 필요한 경우
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
 
