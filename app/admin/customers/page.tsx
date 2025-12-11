@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { 
   Search, Plus, Edit2, Trash2, Upload, Download, 
   Phone, Mail, Calendar, Tag, Filter, X,
-  UserCheck, UserX, Star, MessageSquare
+  UserCheck, UserX, Star, MessageSquare,
+  ArrowUpDown, ArrowUp, ArrowDown
 } from "lucide-react";
 import { formatPhoneNumber, normalizePhoneNumber, handlePhoneInputChange } from "@/lib/phoneUtils";
 
@@ -58,6 +59,10 @@ export default function CustomerManagementPage() {
   const [pageSize] = useState(1000); // 페이지당 1000개
   const [totalPages, setTotalPages] = useState(1);
   
+  // 정렬 상태
+  const [sortField, setSortField] = useState<string>("created_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  
   // 통계
   const [stats, setStats] = useState({
     total: 0,
@@ -82,6 +87,9 @@ export default function CustomerManagementPage() {
     position: "",
     activity_platform: "",
     referral_source: "",
+    first_tour_date: "",
+    last_tour_date: "",
+    last_tour_location: "",
     last_contact_at: "",
     unsubscribed: false,
     unsubscribed_reason: "",
@@ -162,12 +170,20 @@ export default function CustomerManagementPage() {
       const totalPagesCount = filteredCount ? Math.ceil(filteredCount / pageSize) : 1;
       setTotalPages(totalPagesCount);
 
-      // 고객 목록 가져오기 (페이지네이션 적용)
+      // 고객 목록 가져오기 (페이지네이션 및 정렬 적용)
       let query = supabase
         .from("customers")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
+        .select("*");
+      
+      // 정렬 필드에 따라 다르게 처리
+      if (sortField === "tags") {
+        // tags는 배열이므로 클라이언트 사이드에서 정렬
+        query = query.order("created_at", { ascending: false });
+      } else {
+        query = query.order(sortField, { ascending: sortDirection === "asc" });
+      }
+      
+      query = query.range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
 
       // 필터 적용
       if (filterStatus) {
@@ -186,12 +202,25 @@ export default function CustomerManagementPage() {
 
       if (error) throw error;
 
-      // 태그 필터링 (클라이언트 사이드 - 태그는 배열이므로)
+      // 태그 필터링 및 정렬 (클라이언트 사이드 - 태그는 배열이므로)
       let filteredData = data || [];
       if (filterTags.length > 0) {
         filteredData = filteredData.filter(customer =>
           filterTags.some(tag => customer.tags?.includes(tag))
         );
+      }
+
+      // tags 정렬은 클라이언트 사이드에서 처리
+      if (sortField === "tags") {
+        filteredData.sort((a, b) => {
+          const aTags = a.tags && a.tags.length > 0 ? a.tags[0] : "";
+          const bTags = b.tags && b.tags.length > 0 ? b.tags[0] : "";
+          if (sortDirection === "asc") {
+            return aTags.localeCompare(bTags);
+          } else {
+            return bTags.localeCompare(aTags);
+          }
+        });
       }
 
       setCustomers(filteredData);
@@ -213,12 +242,12 @@ export default function CustomerManagementPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [filterStatus, filterType, filterTags, searchTerm, currentPage]);
+  }, [filterStatus, filterType, filterTags, searchTerm, currentPage, sortField, sortDirection]);
 
   // 검색어나 필터 변경 시 첫 페이지로 이동
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus, filterType]);
+  }, [searchTerm, filterStatus, filterType, sortField]);
 
   // 고객 저장
   const handleSave = async () => {
@@ -230,15 +259,34 @@ export default function CustomerManagementPage() {
         return;
       }
 
+      // notes에 최근 투어지 추가 (기존 notes 유지)
+      let notes = formData.notes || "";
+      if (formData.last_tour_location) {
+        const tourLocationNote = `최근 투어지: ${formData.last_tour_location}`;
+        if (notes && !notes.includes(tourLocationNote)) {
+          notes = notes.includes("최근 투어지:") 
+            ? notes.replace(/최근 투어지:[^|]*/, tourLocationNote)
+            : `${notes} | ${tourLocationNote}`;
+        } else if (!notes) {
+          notes = tourLocationNote;
+        }
+      }
+
       const customerData = {
         ...formData,
         phone: normalizedPhone,
+        first_tour_date: formData.first_tour_date || null,
+        last_tour_date: formData.last_tour_date || null,
+        notes: notes || null,
         marketing_agreed_at: formData.marketing_agreed ? new Date().toISOString() : null,
         kakao_friend_at: formData.kakao_friend ? new Date().toISOString() : null,
         last_contact_at: formData.last_contact_at ? new Date(formData.last_contact_at).toISOString() : null,
         unsubscribed: formData.unsubscribed || false,
         unsubscribed_reason: formData.unsubscribed ? formData.unsubscribed_reason : null,
       };
+      
+      // last_tour_location은 notes에 포함되므로 제거
+      delete (customerData as any).last_tour_location;
 
       if (editingCustomer) {
         // 수정
@@ -308,6 +356,9 @@ export default function CustomerManagementPage() {
       position: "",
       activity_platform: "",
       referral_source: "",
+      first_tour_date: "",
+      last_tour_date: "",
+      last_tour_location: "",
       last_contact_at: "",
       unsubscribed: false,
       unsubscribed_reason: "",
@@ -318,6 +369,16 @@ export default function CustomerManagementPage() {
   // 수정 모드
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
+    
+    // notes에서 최근 투어지 추출 (형식: "최근 투어지: ...")
+    let lastTourLocation = "";
+    if (customer.notes) {
+      const tourLocationMatch = customer.notes.match(/최근 투어지:\s*([^|]+)/);
+      if (tourLocationMatch) {
+        lastTourLocation = tourLocationMatch[1].trim();
+      }
+    }
+    
     setFormData({
       name: customer.name,
       phone: formatPhoneNumber(customer.phone),
@@ -333,11 +394,37 @@ export default function CustomerManagementPage() {
       position: customer.position || "",
       activity_platform: customer.activity_platform || "",
       referral_source: customer.referral_source || "",
-      last_contact_at: customer.last_contact_at || "",
+      first_tour_date: customer.first_tour_date || "",
+      last_tour_date: customer.last_tour_date || "",
+      last_tour_location: lastTourLocation,
+      last_contact_at: customer.last_contact_at ? new Date(customer.last_contact_at).toISOString().slice(0, 16) : "",
       unsubscribed: customer.unsubscribed || false,
       unsubscribed_reason: customer.unsubscribed_reason || "",
     });
     setShowModal(true);
+  };
+
+  // 정렬 핸들러
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+    setCurrentPage(1); // 정렬 변경 시 첫 페이지로
+  };
+
+  // 정렬 아이콘 렌더링
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-4 h-4 inline ml-1 text-gray-400" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="w-4 h-4 inline ml-1 text-blue-600" />
+    ) : (
+      <ArrowDown className="w-4 h-4 inline ml-1 text-blue-600" />
+    );
   };
 
   // 태그 추가
@@ -596,20 +683,45 @@ export default function CustomerManagementPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   고객정보
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  직급
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort("position")}
+                >
+                  <div className="flex items-center">
+                    직급
+                    {getSortIcon("position")}
+                  </div>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  모임명
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort("tags")}
+                  title="모임명은 tags 필드에 저장됩니다"
+                >
+                  <div className="flex items-center">
+                    모임명 (tags)
+                    {getSortIcon("tags")}
+                  </div>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   연락처
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  투어 이력
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort("last_tour_date")}
+                >
+                  <div className="flex items-center">
+                    투어 이력
+                    {getSortIcon("last_tour_date")}
+                  </div>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  최근 연락
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort("last_contact_at")}
+                >
+                  <div className="flex items-center">
+                    최근 연락
+                    {getSortIcon("last_contact_at")}
+                  </div>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   수신거부
@@ -970,6 +1082,43 @@ export default function CustomerManagementPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  최초 문의일
+                </label>
+                <input
+                  type="date"
+                  value={formData.first_tour_date}
+                  onChange={(e) => setFormData({ ...formData, first_tour_date: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  최근 투어일
+                </label>
+                <input
+                  type="date"
+                  value={formData.last_tour_date}
+                  onChange={(e) => setFormData({ ...formData, last_tour_date: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  최근 투어지
+                </label>
+                <input
+                  type="text"
+                  value={formData.last_tour_location}
+                  onChange={(e) => setFormData({ ...formData, last_tour_location: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="예: 순천파인힐스CC, 화순+나주"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   최근 연락
                 </label>
                 <input
@@ -1008,7 +1157,8 @@ export default function CustomerManagementPage() {
 
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  태그
+                  모임명 (태그)
+                  <span className="ml-2 text-xs text-gray-500 font-normal">(여러 모임명을 태그로 추가할 수 있습니다)</span>
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {formData.tags.map(tag => (
@@ -1026,7 +1176,7 @@ export default function CustomerManagementPage() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="태그 입력 후 Enter"
+                    placeholder="모임명 입력 후 Enter (예: 일삼일사회, 변연화팀)"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();

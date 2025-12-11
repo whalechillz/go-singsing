@@ -471,6 +471,10 @@ async function migrateCustomers() {
               }
             }
             
+            // 5. 투어 날짜는 기존 데이터 우선 (실제 투어 참가 데이터 보존)
+            // first_tour_date, last_tour_date는 업데이트하지 않음
+            // total_tour_count도 업데이트하지 않음 (실제 투어 데이터에서 계산)
+            
             // 업데이트 실행
             if (hasUpdate) {
               const { error: updateError } = await supabase
