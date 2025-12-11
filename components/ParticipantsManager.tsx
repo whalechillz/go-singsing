@@ -332,6 +332,24 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       });
     }
     
+    // 고객 정보 조회 (전화번호로 모임명 가져오기)
+    const participantPhones = participantsData?.map(p => p.phone).filter(Boolean) || [];
+    let customersMap = new Map<string, { tags?: string[] | null }>();
+    
+    if (participantPhones.length > 0) {
+      // 전화번호로 고객 정보 조회 (배치 처리)
+      const { data: customersData } = await supabase
+        .from("customers")
+        .select("phone, tags")
+        .in("phone", participantPhones);
+      
+      if (customersData) {
+        customersData.forEach(customer => {
+          customersMap.set(customer.phone, { tags: customer.tags });
+        });
+      }
+    }
+    
     // 각 참가자에 대한 결제 정보와 일괄결제자 여부 설정
     if (participantsData && paymentsData) {
       const participantsWithPayment = participantsData.map(participant => {
@@ -353,8 +371,13 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
         // 일괄결제자 여부 확인
         const isGroupPayer = paymentsData.filter(p => p.payer_id === participant.id).length > 1;
         
+        // 고객의 모임명(tags)을 team_name으로 사용 (team_name이 없을 때만)
+        const customer = participant.phone ? customersMap.get(participant.phone) : null;
+        const teamName = participant.team_name || (customer?.tags && customer.tags.length > 0 ? customer.tags[0] : undefined);
+        
         return {
           ...participant,
+          team_name: teamName, // 고객의 모임명으로 업데이트
           paymentSummary: participantPayments.length > 0 ? {
             totalAmount,
             payments: participantPayments,
@@ -369,7 +392,16 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       });
       setParticipants(participantsWithPayment as Participant[]);
     } else {
-      setParticipants((participantsData || []) as Participant[]);
+      // 결제 정보가 없어도 고객의 모임명은 적용
+      const participantsWithTeam = (participantsData || []).map(participant => {
+        const customer = participant.phone ? customersMap.get(participant.phone) : null;
+        const teamName = participant.team_name || (customer?.tags && customer.tags.length > 0 ? customer.tags[0] : undefined);
+        return {
+          ...participant,
+          team_name: teamName
+        };
+      });
+      setParticipants(participantsWithTeam as Participant[]);
     }
     
     setLoading(false);
