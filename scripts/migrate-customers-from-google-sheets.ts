@@ -201,16 +201,25 @@ function mapToCustomer(row: GoogleSheetsRow, rowIndex: number): any {
   // 특이사항을 notes로 매핑
   const notes = (row['특이사항'] || row['비고'] || row['notes'] || row['Notes'] || '').trim();
   
-  // 직급 추출 (이름에서 "총무", "회장", "방장" 키워드 추출)
+  // 직급 추출 (특이사항 또는 이름에서 "총무", "회장", "방장" 키워드 추출)
   let position: string | null = null;
   const positionKeywords = ['총무', '회장', '방장'];
+  // 먼저 특이사항에서 찾기
   for (const keyword of positionKeywords) {
-    if (name.includes(keyword)) {
+    if (notes.includes(keyword)) {
       position = keyword;
       break;
     }
   }
-  // 또는 별도 컬럼이 있다면: position = (row['직급'] || '').trim() || null;
+  // 특이사항에 없으면 이름에서 찾기
+  if (!position) {
+    for (const keyword of positionKeywords) {
+      if (name.includes(keyword)) {
+        position = keyword;
+        break;
+      }
+    }
+  }
   
   // 투어 이력이 있으면 customer_type을 'regular'로, 없으면 'new'로 설정
   const customerType = lastTourDate ? 'regular' : 'new';

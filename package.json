@@ -19,7 +19,9 @@
     "cleanup-mms-images": "tsx scripts/cleanup-unused-mms-images.ts",
     "retry-messages": "tsx scripts/retry-failed-messages.ts",
     "settlement-docs:migrate": "tsx scripts/migrate-settlement-docs.ts",
-    "migrate:customers:google-sheets": "tsx scripts/migrate-customers-from-google-sheets.ts"
+    "migrate:customers:google-sheets": "tsx scripts/migrate-customers-from-google-sheets.ts",
+    "check:customer-migration": "tsx scripts/check-customer-migration.ts",
+    "check:vip2769": "tsx scripts/check-vip2769.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",

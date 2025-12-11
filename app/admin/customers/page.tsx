@@ -52,6 +52,11 @@ export default function CustomerManagementPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadMessage, setUploadMessage] = useState("");
   
+  // 페이지네이션
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(1000); // 페이지당 1000개
+  const [totalPages, setTotalPages] = useState(1);
+  
   // 통계
   const [stats, setStats] = useState({
     total: 0,
@@ -135,12 +140,33 @@ export default function CustomerManagementPage() {
       }
       const { count: marketingCount } = await marketingQuery;
 
-      // 고객 목록 가져오기 (최대 1000개, 페이지네이션 필요 시 추가 구현)
+      // 검색어가 있으면 서버 사이드에서 검색, 없으면 전체 조회
+      // 먼저 검색 결과 개수 확인 (페이지네이션 계산용)
+      let countQuery = supabase
+        .from("customers")
+        .select("*", { count: 'exact', head: true });
+
+      if (filterStatus) {
+        countQuery = countQuery.eq("status", filterStatus);
+      }
+      if (filterType) {
+        countQuery = countQuery.eq("customer_type", filterType);
+      }
+      if (searchTerm) {
+        // 서버 사이드 검색
+        countQuery = countQuery.or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+      }
+
+      const { count: filteredCount } = await countQuery;
+      const totalPagesCount = filteredCount ? Math.ceil(filteredCount / pageSize) : 1;
+      setTotalPages(totalPagesCount);
+
+      // 고객 목록 가져오기 (페이지네이션 적용)
       let query = supabase
         .from("customers")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(1000); // Supabase 기본 limit
+        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
 
       // 필터 적용
       if (filterStatus) {
@@ -150,21 +176,17 @@ export default function CustomerManagementPage() {
         query = query.eq("customer_type", filterType);
       }
 
+      // 검색어가 있으면 서버 사이드에서 검색
+      if (searchTerm) {
+        query = query.or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;
 
-      // 검색어 필터링
+      // 태그 필터링 (클라이언트 사이드 - 태그는 배열이므로)
       let filteredData = data || [];
-      if (searchTerm) {
-        filteredData = filteredData.filter(customer => 
-          customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer.phone.includes(searchTerm) ||
-          (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-      }
-
-      // 태그 필터링
       if (filterTags.length > 0) {
         filteredData = filteredData.filter(customer =>
           filterTags.some(tag => customer.tags?.includes(tag))
@@ -190,7 +212,12 @@ export default function CustomerManagementPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [filterStatus, filterType, filterTags, searchTerm]);
+  }, [filterStatus, filterType, filterTags, searchTerm, currentPage]);
+
+  // 검색어나 필터 변경 시 첫 페이지로 이동
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterType]);
 
   // 고객 저장
   const handleSave = async () => {
@@ -744,6 +771,34 @@ export default function CustomerManagementPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* 페이지네이션 */}
+      {!loading && stats.total > 0 && (
+        <div className="flex items-center justify-between mt-4 px-4 py-3 bg-white rounded-lg shadow">
+          <div className="text-sm text-gray-700">
+            {((currentPage - 1) * pageSize + 1)}-{Math.min(currentPage * pageSize, stats.total)} / {stats.total}명
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              이전
+            </button>
+            <span className="px-3 py-1 text-sm text-gray-700">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              다음
+            </button>
+          </div>
         </div>
       )}
 
