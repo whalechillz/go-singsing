@@ -7,6 +7,7 @@ import {
   Phone, Mail, Calendar, Tag, Filter, X,
   UserCheck, UserX, Star, MessageSquare
 } from "lucide-react";
+import { formatPhoneNumber, normalizePhoneNumber, handlePhoneInputChange } from "@/lib/phoneUtils";
 
 type Customer = {
   id: string;
@@ -222,16 +223,16 @@ export default function CustomerManagementPage() {
   // 고객 저장
   const handleSave = async () => {
     try {
-      // 전화번호 형식 검증
-      const phoneRegex = /^010-?\d{4}-?\d{4}$/;
-      if (!phoneRegex.test(formData.phone.replace(/-/g, ""))) {
+      // 전화번호 정규화 및 검증
+      const normalizedPhone = normalizePhoneNumber(formData.phone);
+      if (normalizedPhone.length !== 11 || !normalizedPhone.startsWith('010')) {
         alert("올바른 전화번호 형식이 아닙니다. (010-XXXX-XXXX)");
         return;
       }
 
       const customerData = {
         ...formData,
-        phone: formData.phone.replace(/-/g, "").replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3"),
+        phone: normalizedPhone,
         marketing_agreed_at: formData.marketing_agreed ? new Date().toISOString() : null,
         kakao_friend_at: formData.kakao_friend ? new Date().toISOString() : null,
         last_contact_at: formData.last_contact_at ? new Date(formData.last_contact_at).toISOString() : null,
@@ -319,7 +320,7 @@ export default function CustomerManagementPage() {
     setEditingCustomer(customer);
     setFormData({
       name: customer.name,
-      phone: customer.phone,
+      phone: formatPhoneNumber(customer.phone),
       email: customer.email || "",
       birth_date: customer.birth_date || "",
       gender: customer.gender || "",
@@ -683,7 +684,7 @@ export default function CustomerManagementPage() {
                     <div className="text-sm">
                       <div className="flex items-center text-gray-900">
                         <Phone className="w-4 h-4 mr-1" />
-                        {customer.phone}
+                        {formatPhoneNumber(customer.phone)}
                       </div>
                       {customer.email && (
                         <div className="flex items-center text-gray-500">
@@ -831,9 +832,14 @@ export default function CustomerManagementPage() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => handlePhoneInputChange(e.target.value, (value) => setFormData({ ...formData, phone: value }))}
+                  onBlur={(e) => {
+                    const formatted = formatPhoneNumber(e.target.value);
+                    setFormData({ ...formData, phone: formatted });
+                  }}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="010-0000-0000"
+                  maxLength={13}
                   required
                 />
               </div>

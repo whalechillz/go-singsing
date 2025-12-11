@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2, Power, X } from 'lucide-react';
 import PremiumLetterPreview from '@/components/letters/PremiumLetterPreview';
 import { createNumberInputProps } from '@/lib/utils';
+import { formatPhoneNumber, handlePhoneInputChange, normalizePhoneNumber } from '@/lib/phoneUtils';
 
 interface GolfCourseContact {
   id: string;
@@ -155,17 +156,24 @@ export default function GolfContactsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // 전화번호 정규화
+      const normalizedForm = {
+        ...form,
+        phone: normalizePhoneNumber(form.phone) || null,
+        mobile: normalizePhoneNumber(form.mobile) || null,
+      };
+      
       if (editingContact) {
         const { error } = await supabase
           .from('golf_course_contacts')
-          .update({ ...form, updated_at: new Date().toISOString() })
+          .update({ ...normalizedForm, updated_at: new Date().toISOString() })
           .eq('id', editingContact.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('golf_course_contacts')
-          .insert([form]);
+          .insert([normalizedForm]);
 
         if (error) throw error;
       }
@@ -269,8 +277,8 @@ export default function GolfContactsPage() {
       golf_course_name: contact.golf_course_name,
       contact_name: contact.contact_name,
       position: contact.position || '',
-      phone: contact.phone || '',
-      mobile: contact.mobile || '',
+      phone: formatPhoneNumber(contact.phone) || '',
+      mobile: formatPhoneNumber(contact.mobile) || '',
       email: contact.email || '',
       address: contact.address || '',
       notes: contact.notes || ''
@@ -731,8 +739,8 @@ export default function GolfContactsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
-                        {contact.phone && <div>📞 {contact.phone}</div>}
-                        {contact.mobile && <div>📱 {contact.mobile}</div>}
+                        {contact.phone && <div>📞 {formatPhoneNumber(contact.phone)}</div>}
+                        {contact.mobile && <div>📱 {formatPhoneNumber(contact.mobile)}</div>}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1015,8 +1023,14 @@ export default function GolfContactsPage() {
                 <input
                   type="tel"
                   value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  onChange={(e) => handlePhoneInputChange(e.target.value, (value) => setForm({ ...form, phone: value }))}
+                  onBlur={(e) => {
+                    const formatted = formatPhoneNumber(e.target.value);
+                    setForm({ ...form, phone: formatted });
+                  }}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="010-0000-0000"
+                  maxLength={13}
                 />
               </div>
               <div>
@@ -1024,8 +1038,14 @@ export default function GolfContactsPage() {
                 <input
                   type="tel"
                   value={form.mobile}
-                  onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                  onChange={(e) => handlePhoneInputChange(e.target.value, (value) => setForm({ ...form, mobile: value }))}
+                  onBlur={(e) => {
+                    const formatted = formatPhoneNumber(e.target.value);
+                    setForm({ ...form, mobile: formatted });
+                  }}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="010-0000-0000"
+                  maxLength={13}
                 />
               </div>
               <div>

@@ -21,7 +21,8 @@
     "settlement-docs:migrate": "tsx scripts/migrate-settlement-docs.ts",
     "migrate:customers:google-sheets": "tsx scripts/migrate-customers-from-google-sheets.ts",
     "check:customer-migration": "tsx scripts/check-customer-migration.ts",
-    "check:vip2769": "tsx scripts/check-vip2769.ts"
+    "check:vip2769": "tsx scripts/check-vip2769.ts",
+    "check:vip2295": "tsx scripts/check-vip2295.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",

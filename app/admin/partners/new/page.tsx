@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { ArrowLeft, Save, Heart } from "lucide-react";
 import Link from "next/link";
+import { formatPhoneNumber, handlePhoneInputChange, normalizePhoneNumber } from "@/lib/phoneUtils";
 
 export default function PartnerNewPage() {
   const router = useRouter();
@@ -46,9 +47,15 @@ export default function PartnerNewPage() {
 
     setLoading(true);
     try {
+      // 전화번호 정규화
+      const normalizedForm = {
+        ...form,
+        contact_phone: normalizePhoneNumber(form.contact_phone) || null,
+      };
+      
       const { error } = await supabase
         .from("partner_companies")
-        .insert([form]);
+        .insert([normalizedForm]);
 
       if (error) throw error;
 
@@ -185,14 +192,23 @@ export default function PartnerNewPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   전화번호
                 </label>
-                <input
-                  type="tel"
-                  name="contact_phone"
-                  value={form.contact_phone}
-                  onChange={handleChange}
-                  placeholder="010-0000-0000"
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  <input
+                    type="tel"
+                    name="contact_phone"
+                    value={form.contact_phone}
+                    onChange={(e) => {
+                      handlePhoneInputChange(e.target.value, (value) => {
+                        setForm({ ...form, contact_phone: value });
+                      });
+                    }}
+                    onBlur={(e) => {
+                      const formatted = formatPhoneNumber(e.target.value);
+                      setForm({ ...form, contact_phone: formatted });
+                    }}
+                    placeholder="010-0000-0000"
+                    maxLength={13}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
               </div>
 
               <div>

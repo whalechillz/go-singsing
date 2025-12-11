@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { ArrowLeft, Save, Trash2, Edit, Phone, Mail, Globe, MapPin, Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 import type { PartnerCompany } from "@/@types/partner";
+import { formatPhoneNumber, handlePhoneInputChange, normalizePhoneNumber } from "@/lib/phoneUtils";
 
 export default function PartnerDetailPage() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function PartnerDetailPage() {
           name: data.name || "",
           country: data.country || "",
           contact_person: data.contact_person || "",
-          contact_phone: data.contact_phone || "",
+          contact_phone: formatPhoneNumber(data.contact_phone) || "",
           contact_email: data.contact_email || "",
           kakao_talk_id: data.kakao_talk_id || "",
           nateon_id: data.nateon_id || "",
@@ -304,8 +305,18 @@ export default function PartnerDetailPage() {
                     type="tel"
                     name="contact_phone"
                     value={form.contact_phone}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      handlePhoneInputChange(e.target.value, (value) => {
+                        setForm({ ...form, contact_phone: value });
+                      });
+                    }}
+                    onBlur={(e) => {
+                      const formatted = formatPhoneNumber(e.target.value);
+                      setForm({ ...form, contact_phone: formatted });
+                    }}
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="010-0000-0000"
+                    maxLength={13}
                   />
                 </div>
 
@@ -493,8 +504,8 @@ export default function PartnerDetailPage() {
                       <Phone className="w-4 h-4 text-gray-400" />
                       <div className="text-xs font-medium text-gray-500 uppercase">전화번호</div>
                     </div>
-                    <a href={`tel:${partner.contact_phone}`} className="text-sm text-blue-600 hover:underline font-medium">
-                      {partner.contact_phone}
+                    <a href={`tel:${partner.contact_phone?.replace(/-/g, '')}`} className="text-sm text-blue-600 hover:underline font-medium">
+                      {formatPhoneNumber(partner.contact_phone)}
                     </a>
                   </div>
                 )}

@@ -160,7 +160,7 @@ function parseDate(dateStr: string | null | undefined): string | null {
 
 /**
  * Google Sheets 데이터를 customers 테이블 형식으로 변환
- * 실제 스프레드시트 컬럼명: 이름, 연락처, 최초문의일, 최근투어일, 최근투어지, 특이사항
+ * 실제 스프레드시트 컬럼명: 이름, 연락처, 최초문의일, 최근투어일, 최근투어지, 최근연락일, 모임명, 특이사항(컬럼 H), 직급(컬럼 I)
  */
 function mapToCustomer(row: GoogleSheetsRow, rowIndex: number): any {
   // 실제 Google Sheets 컬럼명 매핑
@@ -198,26 +198,17 @@ function mapToCustomer(row: GoogleSheetsRow, rowIndex: number): any {
     tags.push(meetingName);
   }
   
-  // 특이사항을 notes로 매핑
+  // 특이사항을 notes로 매핑 (컬럼 H)
   const notes = (row['특이사항'] || row['비고'] || row['notes'] || row['Notes'] || '').trim();
   
-  // 직급 추출 (특이사항 또는 이름에서 "총무", "회장", "방장" 키워드 추출)
+  // 직급을 컬럼 I에서 직접 읽기
   let position: string | null = null;
-  const positionKeywords = ['총무', '회장', '방장'];
-  // 먼저 특이사항에서 찾기
-  for (const keyword of positionKeywords) {
-    if (notes.includes(keyword)) {
-      position = keyword;
-      break;
-    }
-  }
-  // 특이사항에 없으면 이름에서 찾기
-  if (!position) {
-    for (const keyword of positionKeywords) {
-      if (name.includes(keyword)) {
-        position = keyword;
-        break;
-      }
+  const rawPosition = (row['직급'] || row['position'] || '').trim();
+  if (rawPosition) {
+    // 유효한 직급인지 확인 (총무, 회장, 방장)
+    const validPositions = ['총무', '회장', '방장'];
+    if (validPositions.includes(rawPosition)) {
+      position = rawPosition;
     }
   }
   
