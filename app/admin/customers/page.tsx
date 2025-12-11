@@ -174,16 +174,6 @@ export default function CustomerManagementPage() {
       let query = supabase
         .from("customers")
         .select("*");
-      
-      // 정렬 필드에 따라 다르게 처리
-      if (sortField === "tags") {
-        // tags는 배열이므로 클라이언트 사이드에서 정렬
-        query = query.order("created_at", { ascending: false });
-      } else {
-        query = query.order(sortField, { ascending: sortDirection === "asc" });
-      }
-      
-      query = query.range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
 
       // 필터 적용
       if (filterStatus) {
@@ -198,20 +188,22 @@ export default function CustomerManagementPage() {
         query = query.or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // 태그 필터링 및 정렬 (클라이언트 사이드 - 태그는 배열이므로)
-      let filteredData = data || [];
-      if (filterTags.length > 0) {
-        filteredData = filteredData.filter(customer =>
-          filterTags.some(tag => customer.tags?.includes(tag))
-        );
-      }
-
-      // tags 정렬은 클라이언트 사이드에서 처리
+      // tags 정렬은 전체 데이터를 가져와서 클라이언트 사이드에서 정렬 후 페이지네이션
       if (sortField === "tags") {
+        // tags 정렬 시에는 페이지네이션 없이 전체 데이터 가져오기
+        const { data: allData, error } = await query;
+        
+        if (error) throw error;
+        
+        // 태그 필터링
+        let filteredData = allData || [];
+        if (filterTags.length > 0) {
+          filteredData = filteredData.filter(customer =>
+            filterTags.some(tag => customer.tags?.includes(tag))
+          );
+        }
+        
+        // tags 정렬 (클라이언트 사이드)
         filteredData.sort((a, b) => {
           const aTags = a.tags && a.tags.length > 0 ? a.tags[0] : "";
           const bTags = b.tags && b.tags.length > 0 ? b.tags[0] : "";
@@ -221,9 +213,36 @@ export default function CustomerManagementPage() {
             return bTags.localeCompare(aTags);
           }
         });
+        
+        // 정렬 후 페이지네이션 적용
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedData = filteredData.slice(startIndex, endIndex);
+        
+        setCustomers(paginatedData);
+        
+        // 전체 개수 업데이트 (정렬된 데이터 기준)
+        const totalPagesCount = Math.ceil(filteredData.length / pageSize);
+        setTotalPages(totalPagesCount);
+      } else {
+        // 다른 필드 정렬은 서버 사이드에서 처리
+        query = query.order(sortField, { ascending: sortDirection === "asc" });
+        query = query.range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
+        
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        // 태그 필터링 (클라이언트 사이드)
+        let filteredData = data || [];
+        if (filterTags.length > 0) {
+          filteredData = filteredData.filter(customer =>
+            filterTags.some(tag => customer.tags?.includes(tag))
+          );
+        }
+        
+        setCustomers(filteredData);
       }
-
-      setCustomers(filteredData);
 
       // 통계 설정 (전체 개수 사용)
       setStats({
