@@ -82,6 +82,11 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [tourInfo, setTourInfo] = useState<any>(null);
   
+  // 탑승지 토글 및 스팟 필터 상태
+  const [showBoardingSpots, setShowBoardingSpots] = useState(false);
+  const [spotCategoryFilter, setSpotCategoryFilter] = useState<string>('all');
+  const [spotSearchTerm, setSpotSearchTerm] = useState('');
+  
   // 폼 데이터
   const [formData, setFormData] = useState<JourneyItem>({
     tour_id: tourId,
@@ -567,6 +572,28 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
     ? journeyItems 
     : journeyItems.filter(item => getCategoryFromItem(item) === selectedCategory);
 
+  // 스팟 필터링 로직
+  const getFilteredSpots = () => {
+    let filtered = nonBoardingSpots;
+    
+    // 카테고리 필터
+    if (spotCategoryFilter !== 'all') {
+      filtered = filtered.filter(spot => spot.category === spotCategoryFilter);
+    }
+    
+    // 검색 필터
+    if (spotSearchTerm) {
+      const searchLower = spotSearchTerm.toLowerCase();
+      filtered = filtered.filter(spot =>
+        spot.name?.toLowerCase().includes(searchLower) ||
+        spot.address?.toLowerCase().includes(searchLower) ||
+        spot.description?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  };
+
   // 타임라인 뷰
   const TimelineView = () => (
     <div className="space-y-4">
@@ -775,14 +802,27 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
       
       {/* 기존 등록된 장소 추가 섹션 */}
       <div className="mt-8 space-y-6">
-        {/* 탑승지 섹션 */}
+        {/* 탑승지 섹션 - 토글로 변경 */}
         {boardingSpots.length > 0 && (
           <div>
-            <h3 className="font-medium text-sm text-gray-700 mb-3 flex items-center gap-2">
-              <Bus className="w-4 h-4 text-blue-500" />
-              등록된 탑승지 추가
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              onClick={() => setShowBoardingSpots(!showBoardingSpots)}
+              className="flex items-center justify-between w-full font-medium text-sm text-gray-700 mb-3 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Bus className="w-4 h-4 text-blue-500" />
+                등록된 탑승지 추가
+                <span className="text-xs text-gray-500">({boardingSpots.length})</span>
+              </div>
+              {showBoardingSpots ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            
+            {showBoardingSpots && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {boardingSpots.map(spot => {
                 const isAdded = journeyItems.some(item => item.spot_id === spot.id);
                 
@@ -856,19 +896,66 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                   </div>
                 );
               })}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* 스팟 섹션 (탑승지 제외) */}
+        {/* 스팟 섹션 (탑승지 제외) - 카테고리 탭 및 검색 추가 */}
         {nonBoardingSpots.length > 0 && (
           <div>
-            <h3 className="font-medium text-sm text-gray-700 mb-3 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-green-500" />
-              등록된 스팟 추가
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-sm text-gray-700 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-green-500" />
+                등록된 스팟 추가
+                <span className="text-xs text-gray-500">({nonBoardingSpots.length})</span>
+              </h3>
+            </div>
+            
+            {/* 검색 바 */}
+            <div className="mb-3">
+              <input
+                type="text"
+                placeholder="스팟 이름, 주소, 설명 검색..."
+                value={spotSearchTerm}
+                onChange={(e) => setSpotSearchTerm(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+            
+            {/* 카테고리 탭 */}
+            <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-200 pb-2">
+              <button
+                onClick={() => setSpotCategoryFilter('all')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  spotCategoryFilter === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                전체
+              </button>
+              {Object.entries(categoryConfig)
+                .filter(([key]) => key !== 'boarding') // 탑승지 제외
+                .map(([key, config]) => (
+                  <button
+                    key={key}
+                    onClick={() => setSpotCategoryFilter(key)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                      spotCategoryFilter === key
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {React.createElement(config.icon, { className: 'w-3 h-3' })}
+                    {config.label}
+                  </button>
+                ))}
+            </div>
+            
+            {/* 필터링된 스팟 그리드 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {nonBoardingSpots.map(spot => {
+              {getFilteredSpots().map(spot => {
               const isAdded = journeyItems.some(item => item.spot_id === spot.id);
               
               return (
@@ -1134,14 +1221,27 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
           
           {/* 기존 등록된 장소 추가 섹션 */}
           <div className="mt-8 space-y-6 text-left">
-            {/* 탑승지 섹션 */}
+            {/* 탑승지 섹션 - 토글로 변경 */}
             {boardingSpots.length > 0 && (
               <div>
-                <h3 className="font-medium text-sm text-gray-700 mb-3 flex items-center gap-2">
-                  <Bus className="w-4 h-4 text-blue-500" />
-                  등록된 탑승지 추가
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button
+                  onClick={() => setShowBoardingSpots(!showBoardingSpots)}
+                  className="flex items-center justify-between w-full font-medium text-sm text-gray-700 mb-3 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Bus className="w-4 h-4 text-blue-500" />
+                    등록된 탑승지 추가
+                    <span className="text-xs text-gray-500">({boardingSpots.length})</span>
+                  </div>
+                  {showBoardingSpots ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+                
+                {showBoardingSpots && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {boardingSpots.map(spot => {
                     const isAdded = journeyItems.some(item => item.spot_id === spot.id);
                     
@@ -1217,19 +1317,66 @@ export default function TourJourneyManager({ tourId }: TourJourneyManagerProps) 
                       </div>
                     );
                   })}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* 스팟 섹션 */}
+            {/* 스팟 섹션 - 카테고리 탭 및 검색 추가 */}
             {nonBoardingSpots.length > 0 && (
               <div>
-                <h3 className="font-medium text-sm text-gray-700 mb-3 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-green-500" />
-                  등록된 스팟 추가
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-sm text-gray-700 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-green-500" />
+                    등록된 스팟 추가
+                    <span className="text-xs text-gray-500">({nonBoardingSpots.length})</span>
+                  </h3>
+                </div>
+                
+                {/* 검색 바 */}
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    placeholder="스팟 이름, 주소, 설명 검색..."
+                    value={spotSearchTerm}
+                    onChange={(e) => setSpotSearchTerm(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                
+                {/* 카테고리 탭 */}
+                <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-200 pb-2">
+                  <button
+                    onClick={() => setSpotCategoryFilter('all')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      spotCategoryFilter === 'all'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    전체
+                  </button>
+                  {Object.entries(categoryConfig)
+                    .filter(([key]) => key !== 'boarding') // 탑승지 제외
+                    .map(([key, config]) => (
+                      <button
+                        key={key}
+                        onClick={() => setSpotCategoryFilter(key)}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                          spotCategoryFilter === key
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {React.createElement(config.icon, { className: 'w-3 h-3' })}
+                        {config.label}
+                      </button>
+                    ))}
+                </div>
+                
+                {/* 필터링된 스팟 그리드 */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {nonBoardingSpots.map(spot => {
+                  {getFilteredSpots().map(spot => {
                     const isAdded = journeyItems.some(item => item.spot_id === spot.id);
                     
                     return (
