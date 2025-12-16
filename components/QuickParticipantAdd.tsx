@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { UserPlus, X } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { syncMultipleTeamNamesToCustomerTags } from '@/lib/syncTeamToCustomerTags';
 
 interface QuickParticipantAddProps {
   tourId: string;
@@ -121,6 +122,9 @@ const QuickParticipantAdd: React.FC<QuickParticipantAddProps> = ({ tourId, onSuc
     if (error) {
       setError('저장 중 오류가 발생했습니다: ' + error.message);
     } else {
+      // team_name이 있는 참가자들의 customers.tags 동기화
+      await syncMultipleTeamNamesToCustomerTags(validParticipants);
+      
       alert(`${validParticipants.length}명의 참가자가 추가되었습니다.`);
       setIsOpen(false);
       setParticipants('');

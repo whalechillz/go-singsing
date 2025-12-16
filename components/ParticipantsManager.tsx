@@ -7,6 +7,7 @@ import QuickMemo from "@/components/memo/QuickMemo";
 import MemoViewer from "@/components/memo/MemoViewer";
 import QuickParticipantAdd from "@/components/QuickParticipantAdd";
 import DocumentSendModal from "@/components/DocumentSendModal";
+import { syncTeamNameToCustomerTags } from "@/lib/syncTeamToCustomerTags";
 
 // 공통 ParticipantsManager Props
 interface ParticipantsManagerProps {
@@ -536,6 +537,11 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       } else {
         console.log('참가자 정보 수정 성공:', editingId);
         
+        // team_name이 있으면 customers.tags에 동기화
+        if (phone && form.team_name && form.team_name.trim() !== "") {
+          await syncTeamNameToCustomerTags(phone, form.team_name);
+        }
+        
         // 탑승지가 변경되었고 동반자가 있는 경우, 동반자들의 탑승지도 업데이트
         if (pickupLocationChanged && form.pickup_location && form.companions && form.companions.length > 0) {
           const companionNames = form.companions.filter(c => c.trim() !== "");
@@ -623,6 +629,12 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
         setError(error.message);
       } else {
         console.log('새 참가자 추가 성공:', newParticipant?.id);
+        
+        // team_name이 있으면 customers.tags에 동기화
+        if (phone && form.team_name && form.team_name.trim() !== "") {
+          await syncTeamNameToCustomerTags(phone, form.team_name);
+        }
+        
         closeModal();
         await fetchParticipants();
         // 새로 추가한 항목으로 스크롤

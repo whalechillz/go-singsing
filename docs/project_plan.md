@@ -618,3 +618,26 @@ CREATE TABLE user_roles (
     - 활성화/비활성화 토글 버튼 추가 (Power 아이콘)
     - 비활성화된 항목은 반투명 처리
     - 파일: `app/admin/golf-contacts/page.tsx`
+- **2025-12-10 참가자 팀명과 고객 모임명 동기화**:
+  - 데이터 통합 마이그레이션 ✅
+    - 참가자의 `team_name`을 `customers.tags`로 통합
+    - 중복 제거 및 타입 캐스팅 처리
+    - 마이그레이션 파일: `supabase/migrations/20251210_sync_participant_team_to_customer_tags.sql`
+  - 동기화 로직 구현 ✅
+    - 공통 유틸리티 함수 생성: `lib/syncTeamToCustomerTags.ts`
+      - `syncTeamNameToCustomerTags`: 단일 참가자의 team_name을 customers.tags에 동기화
+      - `syncMultipleTeamNamesToCustomerTags`: 여러 참가자의 team_name을 일괄 동기화
+    - ParticipantsManager.tsx 수정:
+      - 참가자 저장/수정 시 `team_name`이 있으면 `customers.tags`에 자동 추가
+      - `handleSubmit` 함수에 동기화 로직 추가
+    - QuickParticipantAdd.tsx 수정:
+      - 일괄 참가자 추가 시 `team_name`이 있으면 `customers.tags`에 자동 추가
+      - `handleSave` 함수에 일괄 동기화 로직 추가
+    - customers/[id]/page.tsx 수정:
+      - 고객 `tags` 수정 시 관련 참가자의 `team_name` 동기화 (단방향)
+      - `team_name`이 null인 참가자만 업데이트 (기존 team_name 보존)
+  - 단일 소스 원칙 적용 ✅
+    - `customers.tags`를 단일 소스로 사용
+    - 참가자 저장/수정 시 `customers.tags` 자동 업데이트
+    - 고객 `tags` 수정 시 관련 참가자 `team_name` 동기화 (선택적)
+    - 파일: `lib/syncTeamToCustomerTags.ts`, `components/ParticipantsManager.tsx`, `components/QuickParticipantAdd.tsx`, `app/admin/customers/[id]/page.tsx`

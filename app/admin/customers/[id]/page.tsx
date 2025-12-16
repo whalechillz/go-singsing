@@ -10,6 +10,36 @@ import {
 import Link from "next/link";
 import { formatPhoneNumber, handlePhoneInputChange, normalizePhoneNumber } from "@/lib/phoneUtils";
 
+/**
+ * customers.tags 변경 시 관련 참가자의 team_name 동기화
+ */
+const syncCustomerTagsToParticipantTeamName = async (
+  phone: string,
+  tags: string[] | null
+): Promise<void> => {
+  if (!phone || !tags || tags.length === 0) {
+    return;
+  }
+
+  try {
+    // 첫 번째 tag를 team_name으로 사용
+    const teamName = tags[0];
+
+    // 해당 전화번호를 가진 참가자들의 team_name 업데이트
+    const { error } = await supabase
+      .from("singsing_participants")
+      .update({ team_name: teamName })
+      .eq("phone", phone)
+      .is("team_name", null); // team_name이 null인 경우만 업데이트
+
+    if (error) {
+      console.error("참가자 team_name 동기화 오류:", error);
+    }
+  } catch (error) {
+    console.error("tags 동기화 오류:", error);
+  }
+};
+
 type Customer = {
   id: string;
   name: string;
@@ -203,6 +233,11 @@ export default function CustomerDetailPage() {
         .eq("id", id);
 
       if (error) throw error;
+
+      // tags가 변경되었으면 관련 참가자의 team_name 동기화
+      if (form.tags && form.tags.length > 0) {
+        await syncCustomerTagsToParticipantTeamName(normalizedPhone, form.tags);
+      }
 
       alert("수정되었습니다.");
       setIsEditing(false);
