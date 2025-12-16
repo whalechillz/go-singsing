@@ -786,7 +786,12 @@ export default function CustomerManagementPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                      <Link 
+                        href={`/admin/customers/${customer.id}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {customer.name}
+                      </Link>
                       <div className="text-sm text-gray-500">
                         {customer.customer_type === "vip" && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
