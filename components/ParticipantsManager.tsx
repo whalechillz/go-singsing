@@ -2,7 +2,7 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
-import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare, Send } from 'lucide-react';
+import { Search, UserPlus, Edit, Trash2, Check, X, Calendar, Eye, Download, Upload, FileSpreadsheet, CheckSquare, Square, Ban, MessageSquare, Send, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import QuickMemo from "@/components/memo/QuickMemo";
 import MemoViewer from "@/components/memo/MemoViewer";
 import QuickParticipantAdd from "@/components/QuickParticipantAdd";
@@ -136,10 +136,36 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
   const [showDocumentSendModal, setShowDocumentSendModal] = useState<boolean>(false);
   // const [viewMode, setViewMode] = useState<'marketing' | 'operational'>('operational'); // 뷰 모드 제거
 
+  // 정렬 상태
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
   const roleOptions = ["총무", "회장", "회원", "부회장", "서기", "기타"];
   const [customRole, setCustomRole] = useState("");
 
-  // 필터링 로직을 먼저 정의
+  // 정렬 핸들러
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // 같은 필드면 방향 토글
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // 다른 필드면 오름차순으로 설정
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  // 정렬 아이콘 표시
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-3 h-3 ml-1 text-gray-400" />;
+    }
+    return sortDirection === "asc" 
+      ? <ArrowUp className="w-3 h-3 ml-1 text-blue-600" />
+      : <ArrowDown className="w-3 h-3 ml-1 text-blue-600" />;
+  };
+
+  // 필터링 및 정렬 로직
   const getFilteredParticipants = () => {
     let filtered = participants;
 
@@ -188,6 +214,67 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
       case "unpaid":
         filtered = filtered.filter(p => !p.paymentSummary || !p.paymentSummary.totalAmount || p.paymentSummary.totalAmount === 0);
         break;
+    }
+
+    // 정렬 적용
+    if (sortField) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+        let aIsNull = false;
+        let bIsNull = false;
+
+        switch (sortField) {
+          case "name":
+            aValue = a.name || "";
+            bValue = b.name || "";
+            aIsNull = !a.name;
+            bIsNull = !b.name;
+            break;
+          case "team_name":
+            aValue = a.team_name || "";
+            bValue = b.team_name || "";
+            aIsNull = !a.team_name || a.team_name === "";
+            bIsNull = !b.team_name || b.team_name === "";
+            break;
+          case "phone":
+            aValue = a.phone || "";
+            bValue = b.phone || "";
+            aIsNull = !a.phone;
+            bIsNull = !b.phone;
+            break;
+          case "status":
+            aValue = a.status || "";
+            bValue = b.status || "";
+            aIsNull = !a.status;
+            bIsNull = !b.status;
+            break;
+          case "join_count":
+            aValue = a.join_count || 0;
+            bValue = b.join_count || 0;
+            aIsNull = a.join_count === null || a.join_count === undefined;
+            bIsNull = b.join_count === null || b.join_count === undefined;
+            break;
+          default:
+            return 0;
+        }
+
+        // null 값 처리: null은 항상 맨 뒤로
+        if (aIsNull && bIsNull) return 0;
+        if (aIsNull) return 1; // a가 null이면 뒤로
+        if (bIsNull) return -1; // b가 null이면 뒤로
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          const result = sortDirection === "asc" 
+            ? aValue.localeCompare(bValue, 'ko', { numeric: true })
+            : bValue.localeCompare(aValue, 'ko', { numeric: true });
+          return result;
+        } else {
+          return sortDirection === "asc" 
+            ? (aValue > bValue ? 1 : aValue < bValue ? -1 : 0)
+            : (aValue < bValue ? 1 : aValue > bValue ? -1 : 0);
+        }
+      });
     }
 
     return filtered;
@@ -295,98 +382,26 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     setLoading(true);
     setError("");
     
-    // 참가자 정보 조회 (전체 데이터 가져오기 - Supabase 기본 제한 1000개를 넘기기 위해)
-    let query = supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_number)", { count: 'exact' });
+    // 참가자 정보 조회
+    let query = supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_number)");
     if (tourId) query = query.eq("tour_id", tourId);
+    const { data: participantsData, error } = await query.order("created_at", { ascending: true });
     
-    // 전체 데이터를 가져오기 위해 여러 번 쿼리
-    let allParticipants: any[] = [];
-    let from = 0;
-    const pageSize = 1000;
-    let hasMore = true;
-    
-    while (hasMore) {
-      const { data: participantsData, error, count } = await query
-        .order("created_at", { ascending: true })
-        .range(from, from + pageSize - 1);
-      
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
-      
-      if (participantsData) {
-        allParticipants = [...allParticipants, ...participantsData];
-      }
-      
-      // 더 이상 데이터가 없으면 종료
-      if (!participantsData || participantsData.length < pageSize || (count && allParticipants.length >= count)) {
-        hasMore = false;
-      } else {
-        from += pageSize;
-      }
+    if (error) {
+      setError(error.message);
+    setLoading(false);
+      return;
     }
     
-    const participantsData = allParticipants;
+    // 결제 정보 조회
+    let paymentQuery = supabase.from("singsing_payments").select("*");
+    if (tourId) paymentQuery = paymentQuery.eq("tour_id", tourId);
+    const { data: paymentsData } = await paymentQuery;
     
-    // 결제 정보 조회 (전체 데이터)
-    let allPayments: any[] = [];
-    let paymentFrom = 0;
-    let paymentHasMore = true;
-    
-    while (paymentHasMore) {
-      let paymentQuery = supabase.from("singsing_payments").select("*", { count: 'exact' });
-      if (tourId) paymentQuery = paymentQuery.eq("tour_id", tourId);
-      
-      const { data: paymentsPage, error: paymentError, count: paymentCount } = await paymentQuery
-        .range(paymentFrom, paymentFrom + pageSize - 1);
-      
-      if (paymentError) {
-        console.error("결제 정보 조회 오류:", paymentError);
-        break;
-      }
-      
-      if (paymentsPage) {
-        allPayments = [...allPayments, ...paymentsPage];
-      }
-      
-      if (!paymentsPage || paymentsPage.length < pageSize || (paymentCount && allPayments.length >= paymentCount)) {
-        paymentHasMore = false;
-      } else {
-        paymentFrom += pageSize;
-      }
-    }
-    const paymentsData = allPayments;
-    
-    // 메모 정보 조회 (전체 데이터)
-    let allMemos: any[] = [];
-    let memoFrom = 0;
-    let memoHasMore = true;
-    
-    while (memoHasMore) {
-      let memoQuery = supabase.from("singsing_memos").select("participant_id, status, priority", { count: 'exact' });
-      if (tourId) memoQuery = memoQuery.eq("tour_id", tourId);
-      
-      const { data: memosPage, error: memoError, count: memoCount } = await memoQuery
-        .range(memoFrom, memoFrom + pageSize - 1);
-      
-      if (memoError) {
-        console.error("메모 정보 조회 오류:", memoError);
-        break;
-      }
-      
-      if (memosPage) {
-        allMemos = [...allMemos, ...memosPage];
-      }
-      
-      if (!memosPage || memosPage.length < pageSize || (memoCount && allMemos.length >= memoCount)) {
-        memoHasMore = false;
-      } else {
-        memoFrom += pageSize;
-      }
-    }
-    const memosData = allMemos;
+    // 메모 정보 조회
+    let memoQuery = supabase.from("singsing_memos").select("participant_id, status, priority");
+    if (tourId) memoQuery = memoQuery.eq("tour_id", tourId);
+    const { data: memosData } = await memoQuery;
     
     // 참가자별 메모 개수 및 상태 계산
     const memoStats: Record<string, { total: number; pending: number; urgent: number }> = {};
@@ -410,15 +425,25 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     let customersMap = new Map<string, { tags?: string[] | null }>();
     
     if (participantPhones.length > 0) {
-      // 전화번호로 고객 정보 조회 (배치 처리)
-      const { data: customersData } = await supabase
+      // 전화번호 정규화 (하이픈 제거)
+      const normalizedPhones = participantPhones.map(p => normalizePhone(p));
+      
+      // 모든 고객 조회 (전화번호 정규화하여 비교)
+      const { data: allCustomers } = await supabase
         .from("customers")
         .select("phone, tags")
-        .in("phone", participantPhones);
+        .not("phone", "is", null);
       
-      if (customersData) {
-        customersData.forEach(customer => {
-          customersMap.set(customer.phone, { tags: customer.tags });
+      if (allCustomers) {
+        // 정규화된 전화번호로 매핑
+        allCustomers.forEach(customer => {
+          if (customer.phone) {
+            const normalizedCustomerPhone = normalizePhone(customer.phone);
+            if (normalizedPhones.includes(normalizedCustomerPhone)) {
+              // 정규화된 전화번호를 키로 사용
+              customersMap.set(normalizedCustomerPhone, { tags: customer.tags });
+            }
+          }
         });
       }
     }
@@ -445,7 +470,9 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
         const isGroupPayer = paymentsData.filter(p => p.payer_id === participant.id).length > 1;
         
         // 고객의 모임명(tags)을 team_name으로 사용 (team_name이 없을 때만)
-        const customer = participant.phone ? customersMap.get(participant.phone) : null;
+        // 전화번호 정규화하여 매칭
+        const normalizedParticipantPhone = participant.phone ? normalizePhone(participant.phone) : null;
+        const customer = normalizedParticipantPhone ? customersMap.get(normalizedParticipantPhone) : null;
         const teamName = participant.team_name || (customer?.tags && customer.tags.length > 0 ? customer.tags[0] : undefined);
         
         return {
@@ -467,7 +494,9 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     } else {
       // 결제 정보가 없어도 고객의 모임명은 적용
       const participantsWithTeam = (participantsData || []).map(participant => {
-        const customer = participant.phone ? customersMap.get(participant.phone) : null;
+        // 전화번호 정규화하여 매칭
+        const normalizedParticipantPhone = participant.phone ? normalizePhone(participant.phone) : null;
+        const customer = normalizedParticipantPhone ? customersMap.get(normalizedParticipantPhone) : null;
         const teamName = participant.team_name || (customer?.tags && customer.tags.length > 0 ? customer.tags[0] : undefined);
         return {
           ...participant,
@@ -1513,22 +1542,41 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
                           />
                         </th>
                       )}
-                      {showColumns.filter(col => col !== "선택").map(col => (
-                        <th key={col} className={`px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
-                          col === "이름" ? "min-w-[140px] w-[200px]" :
-                          col === "연락처" ? "min-w-[110px] w-[130px]" :
-                          col === "팀" ? "min-w-[70px] w-[100px]" :
-                          col === "투어" ? "min-w-[160px] w-[220px]" :
-                          col === "탑승지" ? "min-w-[70px] w-[90px]" :
-                          col === "객실" ? "min-w-[60px] w-[80px]" :
-                          col === "참여횟수" ? "min-w-[70px] w-[90px]" :
-                          col === "결제상태" ? "min-w-[90px] w-[110px]" :
-                          col === "상태" ? "min-w-[90px] w-[110px]" :
-                          col === "관리" ? "min-w-[70px] w-[90px]" : ""
-                        }`}>
-                          {col}
-                        </th>
-                      ))}
+                      {showColumns.filter(col => col !== "선택").map(col => {
+                        const sortableFields: Record<string, string> = {
+                          "이름": "name",
+                          "팀": "team_name",
+                          "연락처": "phone",
+                          "상태": "status",
+                          "참여횟수": "join_count"
+                        };
+                        const sortFieldKey = sortableFields[col];
+                        const isSortable = !!sortFieldKey;
+
+                        return (
+                          <th 
+                            key={col} 
+                            className={`px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
+                              col === "이름" ? "min-w-[140px] w-[200px]" :
+                              col === "연락처" ? "min-w-[110px] w-[130px]" :
+                              col === "팀" ? "min-w-[70px] w-[100px]" :
+                              col === "투어" ? "min-w-[160px] w-[220px]" :
+                              col === "탑승지" ? "min-w-[70px] w-[90px]" :
+                              col === "객실" ? "min-w-[60px] w-[80px]" :
+                              col === "참여횟수" ? "min-w-[70px] w-[90px]" :
+                              col === "결제상태" ? "min-w-[90px] w-[110px]" :
+                              col === "상태" ? "min-w-[90px] w-[110px]" :
+                              col === "관리" ? "min-w-[70px] w-[90px]" : ""
+                            } ${isSortable ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+                            onClick={isSortable ? () => handleSort(sortFieldKey) : undefined}
+                          >
+                            <div className="flex items-center">
+                              {col}
+                              {isSortable && getSortIcon(sortFieldKey)}
+                            </div>
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">

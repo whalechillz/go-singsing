@@ -193,13 +193,13 @@ export default function CustomerManagementPage() {
       if (sortField === "tags") {
         // tags 정렬 시에는 페이지네이션 없이 전체 데이터 가져오기
         const { data: allData, error } = await query;
-        
-        if (error) throw error;
-        
+
+      if (error) throw error;
+
         // 태그 필터링
         let filteredData = allData || [];
         if (filterTags.length > 0) {
-          filteredData = filteredData.filter(customer =>
+        filteredData = filteredData.filter(customer => 
             filterTags.some(tag => customer.tags?.includes(tag))
           );
         }
@@ -236,13 +236,13 @@ export default function CustomerManagementPage() {
         
         // 태그 필터링 (클라이언트 사이드)
         let filteredData = data || [];
-        if (filterTags.length > 0) {
-          filteredData = filteredData.filter(customer =>
-            filterTags.some(tag => customer.tags?.includes(tag))
-          );
-        }
-        
-        setCustomers(filteredData);
+      if (filterTags.length > 0) {
+        filteredData = filteredData.filter(customer =>
+          filterTags.some(tag => customer.tags?.includes(tag))
+        );
+      }
+
+      setCustomers(filteredData);
       }
 
       // 통계 설정 (전체 개수 사용)
@@ -741,7 +741,7 @@ export default function CustomerManagementPage() {
                   onClick={() => handleSort("last_tour_date")}
                 >
                   <div className="flex items-center">
-                    투어 이력
+                  투어 이력
                     {getSortIcon("last_tour_date")}
                   </div>
                 </th>
@@ -819,10 +819,10 @@ export default function CustomerManagementPage() {
                         <div className="flex flex-wrap gap-1">
                           {customer.tags.map(tag => (
                             <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                       ) : (
                         <span className="text-gray-400 text-xs">-</span>
                       )}
