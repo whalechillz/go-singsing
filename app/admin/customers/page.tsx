@@ -300,18 +300,19 @@ export default function CustomerManagementPage() {
       const customerData = {
         ...formData,
         phone: normalizedPhone,
-        // 빈 문자열을 명시적으로 null로 변환
+        // 날짜 필드들 - 빈 문자열을 명시적으로 null로 변환
+        birth_date: toNullIfEmpty(formData.birth_date),
         first_tour_date: toNullIfEmpty(formData.first_tour_date),
         last_tour_date: toNullIfEmpty(formData.last_tour_date),
         notes: notes || null,
         marketing_agreed_at: formData.marketing_agreed ? new Date().toISOString() : null,
         kakao_friend_at: formData.kakao_friend ? new Date().toISOString() : null,
-        // last_contact_at도 빈 문자열 체크
-        last_contact_at: formData.last_contact_at && formData.last_contact_at.trim() !== "" 
+        // last_contact_at도 빈 문자열 체크 (안전하게)
+        last_contact_at: (formData.last_contact_at && typeof formData.last_contact_at === 'string' && formData.last_contact_at.trim() !== "") 
           ? new Date(formData.last_contact_at).toISOString() 
           : null,
         unsubscribed: formData.unsubscribed || false,
-        unsubscribed_reason: formData.unsubscribed ? formData.unsubscribed_reason : null,
+        unsubscribed_reason: formData.unsubscribed ? toNullIfEmpty(formData.unsubscribed_reason) : null,
       };
       
       // last_tour_location은 notes에 포함되므로 제거
