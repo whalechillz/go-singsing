@@ -295,26 +295,98 @@ const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({ tourId, showC
     setLoading(true);
     setError("");
     
-    // 참가자 정보 조회
-    let query = supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_number)");
+    // 참가자 정보 조회 (전체 데이터 가져오기 - Supabase 기본 제한 1000개를 넘기기 위해)
+    let query = supabase.from("singsing_participants").select("*, singsing_rooms:room_id(room_type, room_number)", { count: 'exact' });
     if (tourId) query = query.eq("tour_id", tourId);
-    const { data: participantsData, error } = await query.order("created_at", { ascending: true });
     
-    if (error) {
-      setError(error.message);
-    setLoading(false);
-      return;
+    // 전체 데이터를 가져오기 위해 여러 번 쿼리
+    let allParticipants: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const { data: participantsData, error, count } = await query
+        .order("created_at", { ascending: true })
+        .range(from, from + pageSize - 1);
+      
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+      
+      if (participantsData) {
+        allParticipants = [...allParticipants, ...participantsData];
+      }
+      
+      // 더 이상 데이터가 없으면 종료
+      if (!participantsData || participantsData.length < pageSize || (count && allParticipants.length >= count)) {
+        hasMore = false;
+      } else {
+        from += pageSize;
+      }
     }
     
-    // 결제 정보 조회
-    let paymentQuery = supabase.from("singsing_payments").select("*");
-    if (tourId) paymentQuery = paymentQuery.eq("tour_id", tourId);
-    const { data: paymentsData } = await paymentQuery;
+    const participantsData = allParticipants;
     
-    // 메모 정보 조회
-    let memoQuery = supabase.from("singsing_memos").select("participant_id, status, priority");
-    if (tourId) memoQuery = memoQuery.eq("tour_id", tourId);
-    const { data: memosData } = await memoQuery;
+    // 결제 정보 조회 (전체 데이터)
+    let allPayments: any[] = [];
+    let paymentFrom = 0;
+    let paymentHasMore = true;
+    
+    while (paymentHasMore) {
+      let paymentQuery = supabase.from("singsing_payments").select("*", { count: 'exact' });
+      if (tourId) paymentQuery = paymentQuery.eq("tour_id", tourId);
+      
+      const { data: paymentsPage, error: paymentError, count: paymentCount } = await paymentQuery
+        .range(paymentFrom, paymentFrom + pageSize - 1);
+      
+      if (paymentError) {
+        console.error("결제 정보 조회 오류:", paymentError);
+        break;
+      }
+      
+      if (paymentsPage) {
+        allPayments = [...allPayments, ...paymentsPage];
+      }
+      
+      if (!paymentsPage || paymentsPage.length < pageSize || (paymentCount && allPayments.length >= paymentCount)) {
+        paymentHasMore = false;
+      } else {
+        paymentFrom += pageSize;
+      }
+    }
+    const paymentsData = allPayments;
+    
+    // 메모 정보 조회 (전체 데이터)
+    let allMemos: any[] = [];
+    let memoFrom = 0;
+    let memoHasMore = true;
+    
+    while (memoHasMore) {
+      let memoQuery = supabase.from("singsing_memos").select("participant_id, status, priority", { count: 'exact' });
+      if (tourId) memoQuery = memoQuery.eq("tour_id", tourId);
+      
+      const { data: memosPage, error: memoError, count: memoCount } = await memoQuery
+        .range(memoFrom, memoFrom + pageSize - 1);
+      
+      if (memoError) {
+        console.error("메모 정보 조회 오류:", memoError);
+        break;
+      }
+      
+      if (memosPage) {
+        allMemos = [...allMemos, ...memosPage];
+      }
+      
+      if (!memosPage || memosPage.length < pageSize || (memoCount && allMemos.length >= memoCount)) {
+        memoHasMore = false;
+      } else {
+        memoFrom += pageSize;
+      }
+    }
+    const memosData = allMemos;
     
     // 참가자별 메모 개수 및 상태 계산
     const memoStats: Record<string, { total: number; pending: number; urgent: number }> = {};
