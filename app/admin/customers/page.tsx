@@ -9,6 +9,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown
 } from "lucide-react";
 import { formatPhoneNumber, normalizePhoneNumber, handlePhoneInputChange } from "@/lib/phoneUtils";
+import Link from "next/link";
 
 type Customer = {
   id: string;
