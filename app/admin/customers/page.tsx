@@ -291,15 +291,25 @@ export default function CustomerManagementPage() {
         }
       }
 
+      // 빈 문자열을 null로 변환하는 헬퍼
+      const toNullIfEmpty = (value: string | null | undefined): string | null => {
+        if (!value || (typeof value === 'string' && value.trim() === "")) return null;
+        return value;
+      };
+
       const customerData = {
         ...formData,
         phone: normalizedPhone,
-        first_tour_date: formData.first_tour_date || null,
-        last_tour_date: formData.last_tour_date || null,
+        // 빈 문자열을 명시적으로 null로 변환
+        first_tour_date: toNullIfEmpty(formData.first_tour_date),
+        last_tour_date: toNullIfEmpty(formData.last_tour_date),
         notes: notes || null,
         marketing_agreed_at: formData.marketing_agreed ? new Date().toISOString() : null,
         kakao_friend_at: formData.kakao_friend ? new Date().toISOString() : null,
-        last_contact_at: formData.last_contact_at ? new Date(formData.last_contact_at).toISOString() : null,
+        // last_contact_at도 빈 문자열 체크
+        last_contact_at: formData.last_contact_at && formData.last_contact_at.trim() !== "" 
+          ? new Date(formData.last_contact_at).toISOString() 
+          : null,
         unsubscribed: formData.unsubscribed || false,
         unsubscribed_reason: formData.unsubscribed ? formData.unsubscribed_reason : null,
       };
