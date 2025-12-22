@@ -342,19 +342,20 @@ const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
                 닫기
               </button>
             </div>
-            <div className="flex-1 bg-gray-50">
+            <div className="flex-1 bg-gray-50 overflow-auto">
               {previewDoc.file_type?.startsWith("image/") ? (
-                <div className="w-full h-full flex items-center justify-center p-4">
+                <div className="w-full min-h-full flex items-start justify-center p-4">
                   <img
                     src={previewUrl}
                     alt={previewDoc.file_name}
-                    className="max-h-full max-w-full object-contain rounded-lg"
+                    className="max-w-full h-auto object-contain rounded-lg"
+                    style={{ minHeight: '100%' }}
                   />
                 </div>
               ) : (
                 <iframe
                   src={previewUrl}
-                  className="w-full h-full"
+                  className="w-full h-full min-h-[600px]"
                   title={previewDoc.file_name}
                 />
               )}

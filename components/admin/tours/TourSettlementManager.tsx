@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import SettlementReceiptUploader from "./SettlementReceiptUploader";
 import SettlementReceiptViewer from "./SettlementReceiptViewer";
+import DepositReceiptLinker from "./DepositReceiptLinker";
+import { createSettlementSignedUrl } from "@/utils/settlementDocsUpload";
 
 interface TourSettlementManagerProps {
   tourId: string;
@@ -95,11 +97,62 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
   const [participantCount, setParticipantCount] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>("expenses");
   const [documentsRefreshKey, setDocumentsRefreshKey] = useState<number>(0);
+  const [receiptLinkerOpen, setReceiptLinkerOpen] = useState(false);
+  const [selectedDeposit, setSelectedDeposit] = useState<{
+    settlementIdx: number;
+    depositIdx: number;
+  } | null>(null);
+  const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
+  const [receiptPreviewFileName, setReceiptPreviewFileName] = useState<string>("");
+  const [depositThumbnails, setDepositThumbnails] = useState<Record<string, string>>({});
 
   // 데이터 가져오기
   useEffect(() => {
     fetchData();
   }, [tourId]);
+
+  // 입금 내역 영수증 썸네일 로드
+  useEffect(() => {
+    const loadThumbnails = async () => {
+      if (!expenses?.golf_course_settlement) return;
+
+      const thumbnailPromises: Promise<void>[] = [];
+
+      expenses.golf_course_settlement.forEach((settlement: any, idx: number) => {
+        (settlement.deposits || []).forEach(async (deposit: any, depositIdx: number) => {
+          if (deposit.document_id) {
+            const key = `${idx}-${depositIdx}`;
+            // 이미 로드된 썸네일은 스킵
+            if (depositThumbnails[key]) return;
+
+            thumbnailPromises.push(
+              (async () => {
+                try {
+                  const { data: doc } = await supabase
+                    .from("tour_settlement_documents")
+                    .select("file_path, file_type")
+                    .eq("id", deposit.document_id)
+                    .single();
+
+                  if (doc && doc.file_type?.startsWith("image/")) {
+                    const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
+                    setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+                  }
+                } catch (error) {
+                  console.error(`Failed to load thumbnail for deposit ${key}:`, error);
+                }
+              })()
+            );
+          }
+        });
+      });
+
+      await Promise.all(thumbnailPromises);
+    };
+
+    loadThumbnails();
+  }, [expenses?.golf_course_settlement]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -1770,7 +1823,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                               amount: 0,
                               date: new Date().toISOString().split("T")[0],
                               account: "", // 계좌 정보 (선택)
-                              notes: ""
+                              notes: "",
+                              document_id: undefined // 영수증 문서 ID
                             });
                             updated[idx] = { ...updated[idx], deposits };
                             // 입금액 자동 계산
@@ -1996,29 +2050,126 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                               </div>
                             )}
                             
-                            {/* 카드: 발행 확인만 */}
+                            {/* 카드: 영수증 연결 및 발행 확인 */}
                             {deposit.method === 'card' && (
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  id={`deposit-card-issued-${idx}-${depositIdx}`}
-                                  checked={deposit.is_issued || false}
-                                  onChange={(e) => {
-                                    const updated = [...(expenses.golf_course_settlement || [])];
-                                    const deposits = [...(updated[idx].deposits || [])];
-                                    deposits[depositIdx] = { 
-                                      ...deposits[depositIdx], 
-                                      is_issued: e.target.checked,
-                                      verified_at: e.target.checked ? new Date().toISOString() : undefined
-                                    };
-                                    updated[idx] = { ...updated[idx], deposits };
-                                    setExpenses({ ...expenses, golf_course_settlement: updated });
-                                  }}
-                                  className="w-4 h-4"
-                                />
-                                <label htmlFor={`deposit-card-issued-${idx}-${depositIdx}`} className="text-xs text-gray-700">
-                                  카드 처리 확인 (카드를 긁은 담당자가 체크)
-                                </label>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`deposit-card-issued-${idx}-${depositIdx}`}
+                                      checked={deposit.is_issued || false}
+                                      onChange={(e) => {
+                                        const updated = [...(expenses.golf_course_settlement || [])];
+                                        const deposits = [...(updated[idx].deposits || [])];
+                                        deposits[depositIdx] = { 
+                                          ...deposits[depositIdx], 
+                                          is_issued: e.target.checked,
+                                          verified_at: e.target.checked ? new Date().toISOString() : undefined
+                                        };
+                                        updated[idx] = { ...updated[idx], deposits };
+                                        setExpenses({ ...expenses, golf_course_settlement: updated });
+                                      }}
+                                      className="w-4 h-4"
+                                    />
+                                    <label htmlFor={`deposit-card-issued-${idx}-${depositIdx}`} className="text-xs text-gray-700">
+                                      카드 처리 확인 (카드를 긁은 담당자가 체크)
+                                    </label>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  {deposit.document_id ? (
+                                    <>
+                                      {/* 영수증 썸네일 이미지 */}
+                                      <div className="flex items-start gap-2">
+                                        {depositThumbnails[`${idx}-${depositIdx}`] ? (
+                                          <div className="w-24 h-24 border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                            <img
+                                              src={depositThumbnails[`${idx}-${depositIdx}`]}
+                                              alt="영수증 썸네일"
+                                              className="w-full h-full object-cover cursor-pointer"
+                                              onClick={async () => {
+                                                const { data: doc } = await supabase
+                                                  .from("tour_settlement_documents")
+                                                  .select("file_path, file_name")
+                                                  .eq("id", deposit.document_id)
+                                                  .single();
+                                                
+                                                if (doc) {
+                                                  const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
+                                                  setReceiptPreviewUrl(url);
+                                                  setReceiptPreviewFileName(doc.file_name);
+                                                  setReceiptPreviewOpen(true);
+                                                }
+                                              }}
+                                            />
+                                          </div>
+                                        ) : (
+                                          <div className="w-24 h-24 border border-gray-200 rounded-lg bg-gray-50 flex items-center justify-center">
+                                            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                          </div>
+                                        )}
+                                        <div className="flex flex-col gap-1 flex-1">
+                                          <button
+                                            type="button"
+                                            onClick={async () => {
+                                              const { data: doc } = await supabase
+                                                .from("tour_settlement_documents")
+                                                .select("file_path, file_name")
+                                                .eq("id", deposit.document_id)
+                                                .single();
+                                              
+                                              if (doc) {
+                                                const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
+                                                setReceiptPreviewUrl(url);
+                                                setReceiptPreviewFileName(doc.file_name);
+                                                setReceiptPreviewOpen(true);
+                                              }
+                                            }}
+                                            className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 w-fit"
+                                          >
+                                            <Eye className="w-3 h-3" />
+                                            영수증 확인
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const updated = [...(expenses.golf_course_settlement || [])];
+                                              const deposits = [...(updated[idx].deposits || [])];
+                                              deposits[depositIdx] = { 
+                                                ...deposits[depositIdx], 
+                                                document_id: undefined
+                                              };
+                                              updated[idx] = { ...updated[idx], deposits };
+                                              setExpenses({ ...expenses, golf_course_settlement: updated });
+                                              // 썸네일도 제거
+                                              setDepositThumbnails(prev => {
+                                                const newThumbnails = { ...prev };
+                                                delete newThumbnails[`${idx}-${depositIdx}`];
+                                                return newThumbnails;
+                                              });
+                                            }}
+                                            className="px-2 py-1 text-xs text-red-600 hover:text-red-700 w-fit"
+                                          >
+                                            연결 해제
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedDeposit({ settlementIdx: idx, depositIdx: depositIdx });
+                                        setReceiptLinkerOpen(true);
+                                      }}
+                                      className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                    >
+                                      <FileText className="w-3 h-3" />
+                                      영수증 연결
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             )}
                             
@@ -3131,6 +3282,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">정산 자료</h3>
               </div>
+              
               <SettlementReceiptUploader
                 tourId={tourId}
                 onUploaded={() => {
@@ -3150,6 +3302,85 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
           )}
         </div>
       </div>
+
+      {/* 영수증 연결 모달 */}
+      {receiptLinkerOpen && selectedDeposit && expenses && (
+        <DepositReceiptLinker
+          tourId={tourId}
+          deposit={expenses.golf_course_settlement?.[selectedDeposit.settlementIdx]?.deposits?.[selectedDeposit.depositIdx]}
+          isOpen={receiptLinkerOpen}
+          onClose={() => {
+            setReceiptLinkerOpen(false);
+            setSelectedDeposit(null);
+          }}
+          onSelect={async (documentId: string) => {
+            if (!selectedDeposit || !expenses) return;
+            
+            const updated = [...(expenses.golf_course_settlement || [])];
+            const deposits = [...(updated[selectedDeposit.settlementIdx].deposits || [])];
+            deposits[selectedDeposit.depositIdx] = {
+              ...deposits[selectedDeposit.depositIdx],
+              document_id: documentId
+            };
+            updated[selectedDeposit.settlementIdx] = {
+              ...updated[selectedDeposit.settlementIdx],
+              deposits
+            };
+            setExpenses({
+              ...expenses,
+              golf_course_settlement: updated
+            });
+
+            // 썸네일 로드
+            const key = `${selectedDeposit.settlementIdx}-${selectedDeposit.depositIdx}`;
+            try {
+              const { data: doc } = await supabase
+                .from("tour_settlement_documents")
+                .select("file_path, file_type")
+                .eq("id", documentId)
+                .single();
+
+              if (doc && doc.file_type?.startsWith("image/")) {
+                const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
+                setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+              }
+            } catch (error) {
+              console.error("Failed to load thumbnail:", error);
+            }
+          }}
+        />
+      )}
+
+      {/* 영수증 미리보기 모달 */}
+      {receiptPreviewOpen && receiptPreviewUrl && (
+        <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <p className="font-semibold text-gray-900">{receiptPreviewFileName}</p>
+              <button
+                onClick={() => {
+                  setReceiptPreviewOpen(false);
+                  setReceiptPreviewUrl(null);
+                  setReceiptPreviewFileName("");
+                }}
+                className="px-3 py-1 text-sm text-gray-500 hover:text-gray-900"
+              >
+                닫기
+              </button>
+            </div>
+            <div className="flex-1 bg-gray-50 overflow-auto">
+              <div className="w-full min-h-full flex items-start justify-center p-4">
+                <img
+                  src={receiptPreviewUrl}
+                  alt={receiptPreviewFileName}
+                  className="max-w-full h-auto object-contain rounded-lg"
+                  style={{ minHeight: "100%" }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

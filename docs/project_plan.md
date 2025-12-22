@@ -431,3 +431,30 @@ CREATE TABLE user_roles (
   - 정산 상세에서 문서-비용 매핑 (자동 원가 반영)
   - 추가 연도 자료 업로드 자동화
 - **상태**: ✅ 완료
+
+## 2025-11-XX 골프장 입금 내역 영수증 연결 기능 및 회사 카드 문자 내역 업로드 기능 추가
+
+- **내용**:
+  1. **이미지 미리보기 개선**: 영수증 이미지 전체 내용이 스크롤 가능하도록 수정
+  2. **골프장 입금 내역 영수증 연결**: 카드 입금 내역에 영수증 문서 연결 기능 추가
+     - 입금 내역에 `document_id` 필드 추가
+     - 영수증 연결 모달 (`DepositReceiptLinker`) 컴포넌트 생성
+     - 연결된 영수증 미리보기 기능
+  3. **회사 카드 문자 내역 업로드**: 골프장 카드 오픈 후 받은 승인 문자 업로드 기능
+     - 회사 카드 번호 관리 기능 (로컬 스토리지 기반)
+     - 카드 번호 매칭을 통한 자동 분류
+     - 정산 자료 탭에 업로드 UI 추가
+- **변경 파일**:
+  - `components/admin/tours/SettlementReceiptViewer.tsx`: 이미지 미리보기 스크롤 개선
+  - `components/admin/tours/SettlementMappingModal.tsx`: 이미지 미리보기 스크롤 개선
+  - `components/admin/tours/DepositReceiptLinker.tsx`: 영수증 연결 모달 컴포넌트 (신규)
+  - `components/admin/tours/CardSMSUploader.tsx`: 회사 카드 문자 내역 업로드 컴포넌트 (신규)
+  - `components/admin/tours/TourSettlementManager.tsx`: 
+    - 입금 내역에 영수증 연결 버튼 및 미리보기 기능 추가
+    - 회사 카드 문자 내역 업로드 컴포넌트 통합
+- **데이터 구조**:
+  - `tour_expenses.golf_course_settlement[].deposits[].document_id`: 연결된 영수증 문서 ID
+- **향후 계획**:
+  - 회사 카드 정보를 데이터베이스 테이블로 관리 (현재는 로컬 스토리지)
+  - 카드 번호 OCR을 통한 자동 매칭 개선
+  - 골프장별 카드 오픈 정보 관리 기능
