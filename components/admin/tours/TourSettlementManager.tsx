@@ -106,6 +106,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
     settlementIdx: number;
     depositIdx: number;
   } | null>(null);
+  const [pendingDocumentId, setPendingDocumentId] = useState<string | null>(null); // 잔금 파일 연결용
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
   const [receiptPreviewFileName, setReceiptPreviewFileName] = useState<string>("");
@@ -1779,73 +1780,6 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       </div>
                     </div>
                     
-                    {/* 세금계산서/영수증 정보 */}
-                    <div className="mt-4 pt-4 border-t border-gray-300">
-                      <h6 className="font-semibold text-gray-900 mb-3">세금계산서/영수증 정보</h6>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            세금계산서/영수증 종류
-                          </label>
-                          <select
-                            value={settlement.receipt_type || ""}
-                            onChange={(e) => {
-                              const updated = [...(expenses.golf_course_settlement || [])];
-                              updated[idx] = { ...updated[idx], receipt_type: e.target.value };
-                              setExpenses({ ...expenses, golf_course_settlement: updated });
-                            }}
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                          >
-                            <option value="">선택 안함</option>
-                            <option value="tax_invoice">매입세금계산서</option>
-                            <option value="cash_receipt">현금영수증</option>
-                            <option value="none">없음</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            세금계산서/영수증 번호
-                          </label>
-                          <input
-                            type="text"
-                            value={settlement.receipt_number || ""}
-                            onChange={(e) => {
-                              const updated = [...(expenses.golf_course_settlement || [])];
-                              updated[idx] = { ...updated[idx], receipt_number: e.target.value };
-                              setExpenses({ ...expenses, golf_course_settlement: updated });
-                            }}
-                            placeholder="세금계산서 번호 또는 현금영수증 번호"
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id={`golf-issued-${idx}`}
-                            checked={settlement.is_issued || false}
-                            onChange={(e) => {
-                              const updated = [...(expenses.golf_course_settlement || [])];
-                              updated[idx] = { 
-                                ...updated[idx], 
-                                is_issued: e.target.checked,
-                                verified_at: e.target.checked ? new Date().toISOString() : null
-                              };
-                              setExpenses({ ...expenses, golf_course_settlement: updated });
-                            }}
-                            className="w-4 h-4"
-                          />
-                          <label htmlFor={`golf-issued-${idx}`} className="text-sm text-gray-700">
-                            발행 확인 (국세청 검증 완료)
-                          </label>
-                        </div>
-                      </div>
-                      {settlement.verified_at && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          검증일: {new Date(settlement.verified_at).toLocaleDateString('ko-KR')}
-                        </p>
-                      )}
-                    </div>
-                    
                     {/* 입금 내역 */}
                     <div className="mt-4 pt-4 border-t border-gray-300">
                       <div className="flex justify-between items-center mb-3">
@@ -1882,6 +1816,33 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       </div>
                       {(settlement.deposits || []).map((deposit: any, depositIdx: number) => (
                         <div key={depositIdx} className="bg-white rounded-lg p-3 mb-2 border border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-semibold text-gray-700">
+                              {deposit.sequence ? `입금 ${deposit.sequence}차` : `입금 ${depositIdx + 1}차`}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = [...(expenses.golf_course_settlement || [])];
+                                const deposits = [...(updated[idx].deposits || [])];
+                                deposits.splice(depositIdx, 1);
+                                // 순번 재정렬
+                                deposits.forEach((d: any, i: number) => {
+                                  d.sequence = i + 1;
+                                });
+                                updated[idx] = { ...updated[idx], deposits };
+                                // 입금액 자동 계산
+                                const totalDeposit = deposits.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+                                const totalRefund = (updated[idx].refunds || []).reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                                updated[idx].deposit = totalDeposit - totalRefund;
+                                updated[idx].difference = (updated[idx].subtotal || 0) - updated[idx].deposit;
+                                setExpenses({ ...expenses, golf_course_settlement: updated });
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -2296,10 +2257,10 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                               </div>
                             )}
                             
-                            {(deposit.is_issued && deposit.verified_at) && (
-                              <p className="text-xs text-gray-500 mt-2">
+                            {deposit.verified_at && (
+                              <span className="text-xs text-gray-500">
                                 검증일: {new Date(deposit.verified_at).toLocaleDateString('ko-KR')}
-                              </p>
+                              </span>
                             )}
                           </div>
                         </div>
@@ -3333,6 +3294,30 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                   // 정산 폼에 적용된 후 expenses 데이터 재조회
                   fetchData();
                 }}
+                onLinkToDeposit={(documentId: string) => {
+                  // 잔금 파일을 골프장 입금 내역에 연결
+                  setPendingDocumentId(documentId);
+                  // 골프장 입금 내역 선택 모달 열기 (첫 번째 골프장의 첫 번째 카드 입금으로 자동 선택 제안)
+                  if (expenses?.golf_course_settlement && expenses.golf_course_settlement.length > 0) {
+                    const firstSettlement = expenses.golf_course_settlement[0];
+                    const cardDeposit = (firstSettlement.deposits || []).find((d: any) => d.method === 'card');
+                    if (cardDeposit) {
+                      const depositIdx = firstSettlement.deposits.indexOf(cardDeposit);
+                      setSelectedDeposit({ settlementIdx: 0, depositIdx });
+                      setReceiptLinkerOpen(true);
+                    } else {
+                      // 카드 입금이 없으면 첫 번째 입금으로
+                      if (firstSettlement.deposits && firstSettlement.deposits.length > 0) {
+                        setSelectedDeposit({ settlementIdx: 0, depositIdx: 0 });
+                        setReceiptLinkerOpen(true);
+                      } else {
+                        alert("골프장 입금 내역이 없습니다. 먼저 입금 내역을 추가해주세요.");
+                      }
+                    }
+                  } else {
+                    alert("골프장 정산 정보가 없습니다. 먼저 골프장 정산을 추가해주세요.");
+                  }
+                }}
               />
             </div>
           )}
@@ -3348,15 +3333,19 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
           onClose={() => {
             setReceiptLinkerOpen(false);
             setSelectedDeposit(null);
+            setPendingDocumentId(null);
           }}
           onSelect={async (documentId: string) => {
             if (!selectedDeposit || !expenses) return;
+            
+            // pendingDocumentId가 있으면 그것을 사용, 없으면 선택한 documentId 사용
+            const finalDocumentId = pendingDocumentId || documentId;
             
             const updated = [...(expenses.golf_course_settlement || [])];
             const deposits = [...(updated[selectedDeposit.settlementIdx].deposits || [])];
             deposits[selectedDeposit.depositIdx] = {
               ...deposits[selectedDeposit.depositIdx],
-              document_id: documentId
+              document_id: finalDocumentId
             };
             updated[selectedDeposit.settlementIdx] = {
               ...updated[selectedDeposit.settlementIdx],
@@ -3373,7 +3362,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
               const { data: doc } = await supabase
                 .from("tour_settlement_documents")
                 .select("file_path, file_type")
-                .eq("id", documentId)
+                .eq("id", finalDocumentId)
                 .single();
 
               if (doc && doc.file_type?.startsWith("image/")) {
@@ -3385,6 +3374,9 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
             } catch (error) {
               console.error("Failed to load thumbnail:", error);
             }
+            
+            // pendingDocumentId 초기화
+            setPendingDocumentId(null);
           }}
         />
       )}

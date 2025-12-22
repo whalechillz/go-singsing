@@ -9,7 +9,8 @@ import {
   Loader2,
   RefreshCw,
   FileText,
-  FileCheck
+  FileCheck,
+  Link2
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -48,6 +49,7 @@ interface SettlementReceiptViewerProps {
   tourId: string;
   refreshKey?: number;
   onExpenseUpdated?: () => void;
+  onLinkToDeposit?: (documentId: string) => void; // 골프장 입금 내역 연결 콜백
 }
 
 const formatBytes = (bytes?: number | null) => {
@@ -70,7 +72,8 @@ const formatDate = (value?: string | null) =>
 const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
   tourId,
   refreshKey = 0,
-  onExpenseUpdated
+  onExpenseUpdated,
+  onLinkToDeposit
 }) => {
   const [documents, setDocuments] = useState<SettlementDocument[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -267,6 +270,18 @@ const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
                   <td className="px-4 py-3 text-gray-500">{formatBytes(doc.file_size)}</td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
+                      {/* 잔금 파일인 경우 골프장 입금 내역 연결 버튼 */}
+                      {doc.file_name && (doc.file_name.includes("잔금") || doc.file_name.includes("balance")) && onLinkToDeposit && (
+                        <button
+                          type="button"
+                          onClick={() => onLinkToDeposit(doc.id)}
+                          className="p-2 rounded-full text-gray-500 hover:text-orange-600 hover:bg-orange-50"
+                          aria-label="골프장 입금에 연결"
+                          title="골프장 입금 내역에 연결"
+                        >
+                          <Link2 className="w-4 h-4" />
+                        </button>
+                      )}
                       {appliedDocuments.has(doc.id) ? (
                         <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
                           적용됨

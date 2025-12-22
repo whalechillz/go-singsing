@@ -47,16 +47,26 @@ const DepositReceiptLinker: React.FC<DepositReceiptLinkerProps> = ({
   const fetchDocuments = async () => {
     setLoading(true);
     try {
-      // 골프장 카테고리 또는 전체 문서 조회
+      // 골프장 카테고리 또는 전체 문서 조회 (잔금 파일 포함)
       const { data, error } = await supabase
         .from("tour_settlement_documents")
         .select("*")
         .eq("tour_id", tourId)
-        .in("category", ["golf-course", "tax-invoice", "other"])
         .order("uploaded_at", { ascending: false });
 
       if (error) throw error;
-      setDocuments(data || []);
+      // 골프장 관련 문서만 필터링 (golf-course, expenses 중 잔금 포함, tax-invoice, other)
+      const filtered = (data || []).filter(doc => {
+        if (doc.category === "golf-course" || doc.category === "tax-invoice" || doc.category === "other") {
+          return true;
+        }
+        // expenses 카테고리 중 잔금 파일 포함
+        if (doc.category === "expenses" && doc.file_name && (doc.file_name.includes("잔금") || doc.file_name.includes("balance"))) {
+          return true;
+        }
+        return false;
+      });
+      setDocuments(filtered);
     } catch (error) {
       console.error("Failed to fetch documents:", error);
     } finally {
