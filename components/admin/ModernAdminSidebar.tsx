@@ -288,6 +288,7 @@ export default function ModernAdminSidebar({ isCollapsed, onCollapse }: ModernAd
               width={150}
               height={32}
               className="h-8 w-auto object-contain filter brightness-0 invert"
+              style={{ width: 'auto', height: 'auto' }}
               priority
             />
           </div>

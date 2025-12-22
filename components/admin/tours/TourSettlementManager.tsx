@@ -18,6 +18,8 @@ import {
   Trash2,
   X
 } from "lucide-react";
+import SettlementReceiptUploader from "./SettlementReceiptUploader";
+import SettlementReceiptViewer from "./SettlementReceiptViewer";
 
 interface TourSettlementManagerProps {
   tourId: string;
@@ -92,6 +94,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
   const [payments, setPayments] = useState<any[]>([]);
   const [participantCount, setParticipantCount] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>("expenses");
+  const [documentsRefreshKey, setDocumentsRefreshKey] = useState<number>(0);
 
   // 데이터 가져오기
   useEffect(() => {
@@ -1486,6 +1489,16 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
               }`}
             >
               정산 상세
+            </button>
+            <button
+              onClick={() => setActiveTab("documents")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 ${
+                activeTab === "documents"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              정산 자료
             </button>
           </nav>
         </div>
@@ -3110,6 +3123,29 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                   )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === "documents" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">정산 자료</h3>
+              </div>
+              <SettlementReceiptUploader
+                tourId={tourId}
+                onUploaded={() => {
+                  // refreshKey를 증가시켜서 뷰어가 자동으로 새로고침되도록
+                  setDocumentsRefreshKey(prev => prev + 1);
+                }}
+              />
+              <SettlementReceiptViewer
+                tourId={tourId}
+                refreshKey={documentsRefreshKey}
+                onExpenseUpdated={() => {
+                  // 정산 폼에 적용된 후 expenses 데이터 재조회
+                  fetchData();
+                }}
+              />
             </div>
           )}
         </div>

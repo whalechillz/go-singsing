@@ -8,13 +8,15 @@ import {
   Trash2,
   Loader2,
   RefreshCw,
-  FileText
+  FileText,
+  FileCheck
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   createSettlementSignedUrl,
   deleteSettlementDocument
 } from "@/utils/settlementDocsUpload";
+import SettlementMappingModal from "./SettlementMappingModal";
 
 const categoryLabels: Record<string, string> = {
   "golf-course": "골프장",
@@ -45,6 +47,7 @@ interface SettlementDocument {
 interface SettlementReceiptViewerProps {
   tourId: string;
   refreshKey?: number;
+  onExpenseUpdated?: () => void;
 }
 
 const formatBytes = (bytes?: number | null) => {
@@ -66,7 +69,8 @@ const formatDate = (value?: string | null) =>
 
 const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
   tourId,
-  refreshKey = 0
+  refreshKey = 0,
+  onExpenseUpdated
 }) => {
   const [documents, setDocuments] = useState<SettlementDocument[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -74,6 +78,9 @@ const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<SettlementDocument | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [mappingModalOpen, setMappingModalOpen] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<SettlementDocument | null>(null);
+  const [appliedDocuments, setAppliedDocuments] = useState<Set<string>>(new Set());
 
   const handleFetchDocuments = async () => {
     setLoading(true);
@@ -89,6 +96,19 @@ const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
       }
 
       setDocuments(data || []);
+
+      // 이미 적용된 문서 확인
+      if (data && data.length > 0) {
+        const { data: mappings } = await supabase
+          .from("tour_settlement_document_mappings")
+          .select("document_id")
+          .in("document_id", data.map((d) => d.id))
+          .eq("is_applied", true);
+
+        if (mappings) {
+          setAppliedDocuments(new Set(mappings.map((m) => m.document_id)));
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch settlement documents:", error);
     } finally {
@@ -148,6 +168,22 @@ const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleApplyToSettlement = (doc: SettlementDocument) => {
+    // tax-invoice 카테고리는 매핑 불가
+    if (doc.category === "tax-invoice") {
+      alert("세금계산서는 다른 항목에 연결되어야 합니다. 해당 항목에서 직접 입력해주세요.");
+      return;
+    }
+
+    setSelectedDoc(doc);
+    setMappingModalOpen(true);
+  };
+
+  const handleMappingApplied = () => {
+    handleFetchDocuments();
+    onExpenseUpdated?.();
   };
 
   return (
@@ -231,6 +267,21 @@ const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
                   <td className="px-4 py-3 text-gray-500">{formatBytes(doc.file_size)}</td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
+                      {appliedDocuments.has(doc.id) ? (
+                        <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                          적용됨
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleApplyToSettlement(doc)}
+                          className="p-2 rounded-full text-gray-500 hover:text-purple-600 hover:bg-purple-50"
+                          aria-label="정산 폼에 적용"
+                          title="정산 폼에 적용"
+                        >
+                          <FileCheck className="w-4 h-4" />
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => handlePreview(doc)}
@@ -310,6 +361,20 @@ const SettlementReceiptViewer: React.FC<SettlementReceiptViewerProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* 매핑 모달 */}
+      {selectedDoc && (
+        <SettlementMappingModal
+          document={selectedDoc}
+          tourId={tourId}
+          isOpen={mappingModalOpen}
+          onClose={() => {
+            setMappingModalOpen(false);
+            setSelectedDoc(null);
+          }}
+          onApplied={handleMappingApplied}
+        />
       )}
     </div>
   );

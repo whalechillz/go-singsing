@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2, Power, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Send, Gift, Sparkles, Wand2 } from 'lucide-react';
 import PremiumLetterPreview from '@/components/letters/PremiumLetterPreview';
 import { createNumberInputProps } from '@/lib/utils';
-import { formatPhoneNumber, handlePhoneInputChange, normalizePhoneNumber } from '@/lib/phoneUtils';
 
 interface GolfCourseContact {
   id: string;
@@ -83,32 +82,21 @@ export default function GolfContactsPage() {
   const [giftToDelete, setGiftToDelete] = useState<any>(null);
   const [isGiftSaving, setIsGiftSaving] = useState(false);
   const [isGiftDeleting, setIsGiftDeleting] = useState(false);
-  const [showInactive, setShowInactive] = useState(false); // 비활성화된 항목 표시 여부
-  const [showLetterPreviewModal, setShowLetterPreviewModal] = useState(false); // 읽기 전용 미리보기 모달
-  const [previewLetter, setPreviewLetter] = useState<any>(null); // 미리보기할 편지 데이터
 
   useEffect(() => {
     fetchContacts();
-  }, [showInactive]);
-
-  useEffect(() => {
     fetchGiftHistory();
     fetchAllLetterHistory();
   }, []);
 
   const fetchContacts = async () => {
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('golf_course_contacts')
         .select('*')
+        .eq('is_active', true)
         .order('golf_course_name');
-      
-      // 비활성화된 항목도 보려면 필터 제거
-      if (!showInactive) {
-        query = query.eq('is_active', true);
-      }
 
-      const { data, error } = await query;
       if (error) throw error;
       setContacts(data || []);
     } catch (error) {
@@ -156,24 +144,17 @@ export default function GolfContactsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // 전화번호 정규화
-      const normalizedForm = {
-        ...form,
-        phone: normalizePhoneNumber(form.phone) || null,
-        mobile: normalizePhoneNumber(form.mobile) || null,
-      };
-      
       if (editingContact) {
         const { error } = await supabase
           .from('golf_course_contacts')
-          .update({ ...normalizedForm, updated_at: new Date().toISOString() })
+          .update({ ...form, updated_at: new Date().toISOString() })
           .eq('id', editingContact.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('golf_course_contacts')
-          .insert([normalizedForm]);
+          .insert([form]);
 
         if (error) throw error;
       }
@@ -231,43 +212,19 @@ export default function GolfContactsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    if (!confirm('정말 삭제하시겠습니까?')) return;
 
-    try {
-      // 실제 DELETE 수행 (CASCADE로 관련 이력도 자동 삭제됨)
-      const { error } = await supabase
-        .from('golf_course_contacts')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('삭제 오류 상세:', error);
-        alert(`삭제 중 오류가 발생했습니다: ${error.message || JSON.stringify(error)}`);
-        return;
-      }
-
-      alert('담당자가 완전히 삭제되었습니다.');
-      fetchContacts();
-    } catch (error: any) {
-      console.error('Error deleting contact:', error);
-      alert(`삭제 중 오류가 발생했습니다: ${error?.message || '알 수 없는 오류'}`);
-    }
-  };
-
-  // 비활성화 토글 함수
-  const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('golf_course_contacts')
-        .update({ is_active: !currentStatus })
+        .update({ is_active: false })
         .eq('id', id);
 
       if (error) throw error;
       fetchContacts();
-      alert(currentStatus ? '담당자가 비활성화되었습니다.' : '담당자가 활성화되었습니다.');
     } catch (error) {
-      console.error('Error toggling active status:', error);
-      alert('상태 변경 중 오류가 발생했습니다.');
+      console.error('Error deleting contact:', error);
+      alert('삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -277,8 +234,8 @@ export default function GolfContactsPage() {
       golf_course_name: contact.golf_course_name,
       contact_name: contact.contact_name,
       position: contact.position || '',
-      phone: formatPhoneNumber(contact.phone) || '',
-      mobile: formatPhoneNumber(contact.mobile) || '',
+      phone: contact.phone || '',
+      mobile: contact.mobile || '',
       email: contact.email || '',
       address: contact.address || '',
       notes: contact.notes || ''
@@ -670,17 +627,6 @@ export default function GolfContactsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">골프장 담당자 관리</h1>
         <div className="flex gap-2">
-          <label className="flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-            <input
-              type="checkbox"
-              checked={showInactive}
-              onChange={(e) => {
-                setShowInactive(e.target.checked);
-              }}
-              className="rounded"
-            />
-            <span className="text-sm text-gray-700">비활성화된 항목 표시</span>
-          </label>
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
@@ -701,7 +647,6 @@ export default function GolfContactsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">담당자</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">직책</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">연락처</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
               </tr>
             </thead>
@@ -711,9 +656,7 @@ export default function GolfContactsPage() {
                 return (
                   <tr 
                     key={contact.id} 
-                    className={`hover:bg-gray-50 cursor-pointer ${
-                      !contact.is_active ? 'opacity-50 bg-gray-100' : ''
-                    } ${isRepresentative ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''}`}
+                    className={`hover:bg-gray-50 cursor-pointer ${isRepresentative ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''}`}
                     onClick={() => {
                       // 담당자 클릭시 개별 이력 표시
                       setSelectedContact(contact);
@@ -739,36 +682,12 @@ export default function GolfContactsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
-                        {contact.phone && <div>📞 {formatPhoneNumber(contact.phone)}</div>}
-                        {contact.mobile && <div>📱 {formatPhoneNumber(contact.mobile)}</div>}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm">
-                        {contact.is_active ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            활성
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            비활성
-                          </span>
-                        )}
+                        {contact.phone && <div>📞 {contact.phone}</div>}
+                        {contact.mobile && <div>📱 {contact.mobile}</div>}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleToggleActive(contact.id, contact.is_active)}
-                          className={`${
-                            contact.is_active 
-                              ? 'text-orange-600 hover:text-orange-900' 
-                              : 'text-green-600 hover:text-green-900'
-                          }`}
-                          title={contact.is_active ? '비활성화' : '활성화'}
-                        >
-                          <Power className={`w-4 h-4 ${contact.is_active ? '' : 'opacity-50'}`} />
-                        </button>
                         <button
                           onClick={() => openEditModal(contact)}
                           className="text-blue-600 hover:text-blue-900"
@@ -863,9 +782,27 @@ export default function GolfContactsPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
-                              // 읽기 전용 미리보기 모달 열기
-                              setPreviewLetter(letter);
-                              setShowLetterPreviewModal(true);
+                              // 편지 내용 미리보기 모달 열기
+                              setSelectedContact({
+                                id: letter.golf_course_contact_id,
+                                golf_course_name: letter.golf_course_contacts?.golf_course_name || '',
+                                contact_name: letter.golf_course_contacts?.contact_name || '',
+                                position: '',
+                                phone: '',
+                                mobile: '',
+                                email: '',
+                                address: '',
+                                notes: '',
+                                is_active: true,
+                                created_at: '',
+                                updated_at: ''
+                              });
+                              setLetterForm({
+                                template: '',
+                                custom_content: letter.letter_content,
+                                occasion: letter.occasion
+                              });
+                              setShowLetterModal(true);
                             }}
                             className="text-blue-600 hover:text-blue-900"
                           >
@@ -1023,14 +960,8 @@ export default function GolfContactsPage() {
                 <input
                   type="tel"
                   value={form.phone}
-                  onChange={(e) => handlePhoneInputChange(e.target.value, (value) => setForm({ ...form, phone: value }))}
-                  onBlur={(e) => {
-                    const formatted = formatPhoneNumber(e.target.value);
-                    setForm({ ...form, phone: formatted });
-                  }}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="010-0000-0000"
-                  maxLength={13}
                 />
               </div>
               <div>
@@ -1038,14 +969,8 @@ export default function GolfContactsPage() {
                 <input
                   type="tel"
                   value={form.mobile}
-                  onChange={(e) => handlePhoneInputChange(e.target.value, (value) => setForm({ ...form, mobile: value }))}
-                  onBlur={(e) => {
-                    const formatted = formatPhoneNumber(e.target.value);
-                    setForm({ ...form, mobile: formatted });
-                  }}
+                  onChange={(e) => setForm({ ...form, mobile: e.target.value })}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="010-0000-0000"
-                  maxLength={13}
                 />
               </div>
               <div>
@@ -1206,29 +1131,12 @@ export default function GolfContactsPage() {
       {/* 손편지 발송 모달 */}
       {showLetterModal && selectedContact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
-            {/* 헤더 */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-              <div>
-                <h2 className="text-xl font-bold mb-1">📝 고급 손편지 발송</h2>
-                <p className="text-sm text-gray-600">
-                  {selectedContact.golf_course_name} - {selectedContact.contact_name}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowLetterModal(false);
-                  setLetterForm({ template: '', custom_content: '', occasion: '' });
-                  setAiImprovementRequest('');
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="닫기"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-            
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">📝 고급 손편지 발송</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                {selectedContact.golf_course_name} - {selectedContact.contact_name}
+              </p>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 편집 패널 */}
@@ -1457,56 +1365,6 @@ export default function GolfContactsPage() {
               >
                 {isDeleting ? '삭제 중...' : '삭제'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 읽기 전용 편지 미리보기 모달 */}
-      {showLetterPreviewModal && previewLetter && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-            {/* 헤더 */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">📝 편지 미리보기</h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  {previewLetter.golf_course_contacts?.golf_course_name} - {previewLetter.golf_course_contacts?.contact_name}
-                </p>
-                <div className="flex gap-2 mt-2">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    previewLetter.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-                    previewLetter.status === 'sent' ? 'bg-green-100 text-green-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
-                    {previewLetter.status === 'draft' ? '임시저장' :
-                     previewLetter.status === 'sent' ? '발송완료' : '인쇄완료'}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    발송일: {new Date(previewLetter.created_at).toLocaleDateString('ko-KR')}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setShowLetterPreviewModal(false);
-                  setPreviewLetter(null);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="닫기"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            {/* 편지 미리보기 */}
-            <div className="p-6">
-              <PremiumLetterPreview
-                content={previewLetter.letter_content}
-                occasion={previewLetter.occasion}
-                golfCourseName={previewLetter.golf_course_contacts?.golf_course_name || ''}
-                contactName={previewLetter.golf_course_contacts?.contact_name || ''}
-              />
             </div>
           </div>
         </div>
