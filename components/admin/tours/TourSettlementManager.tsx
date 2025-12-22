@@ -16,7 +16,11 @@ import {
   Plus,
   Edit,
   Trash2,
-  X
+  X,
+  Calendar,
+  Users,
+  Loader2,
+  Eye
 } from "lucide-react";
 import SettlementReceiptUploader from "./SettlementReceiptUploader";
 import SettlementReceiptViewer from "./SettlementReceiptViewer";
@@ -105,7 +109,7 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
   const [receiptPreviewFileName, setReceiptPreviewFileName] = useState<string>("");
-  const [depositThumbnails, setDepositThumbnails] = useState<Record<string, string>>({});
+  const [depositThumbnails, setDepositThumbnails] = useState<Record<string, string | undefined>>({});
 
   // 데이터 가져오기
   useEffect(() => {
@@ -137,7 +141,9 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
 
                   if (doc && doc.file_type?.startsWith("image/")) {
                     const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
-                    setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+                    if (url) {
+                      setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+                    }
                   }
                 } catch (error) {
                   console.error(`Failed to load thumbnail for deposit ${key}:`, error);
@@ -1340,8 +1346,39 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
   // 계산 차이 확인 (예상 마진과 실제 계산 마진 비교)
   const hasDiscrepancy = settlement?.expected_margin !== undefined && settlement?.expected_margin !== null && settlement?.margin !== undefined && Math.abs((settlement.margin || 0) - (settlement.expected_margin || 0)) > 1000; // 1,000원 이상 차이
 
+  const formatDateRange = (startDate?: string, endDate?: string) => {
+    if (!startDate) return "-";
+    const start = new Date(startDate).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+    if (!endDate) return start;
+    const end = new Date(endDate).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+    return `${start} ~ ${end}`;
+  };
+
   return (
     <div className="space-y-6">
+      {/* 투어 정보 헤더 */}
+      {tour && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{tour.title}</h2>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {formatDateRange(tour.start_date, tour.end_date)}
+                </span>
+                {participantCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {participantCount}명
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 확인 필요 알림 */}
       {(settlement?.needs_review || hasDiscrepancy) && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-sm">
@@ -2144,9 +2181,8 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                               setExpenses({ ...expenses, golf_course_settlement: updated });
                                               // 썸네일도 제거
                                               setDepositThumbnails(prev => {
-                                                const newThumbnails = { ...prev };
-                                                delete newThumbnails[`${idx}-${depositIdx}`];
-                                                return newThumbnails;
+                                                const { [`${idx}-${depositIdx}`]: _, ...rest } = prev;
+                                                return rest;
                                               });
                                             }}
                                             className="px-2 py-1 text-xs text-red-600 hover:text-red-700 w-fit"
@@ -3342,7 +3378,9 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
 
               if (doc && doc.file_type?.startsWith("image/")) {
                 const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
-                setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+                if (url) {
+                  setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+                }
               }
             } catch (error) {
               console.error("Failed to load thumbnail:", error);

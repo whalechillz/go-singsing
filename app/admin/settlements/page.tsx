@@ -11,6 +11,7 @@ interface TourSettlement {
   tour_id: string;
   tour_title: string;
   tour_start_date: string;
+  tour_end_date?: string; // 종료일 추가
   contract_revenue: number;
   settlement_amount: number;
   total_cost: number;
@@ -96,6 +97,7 @@ export default function SettlementsPage() {
             id,
             title,
             start_date,
+            end_date,
             tour_product_id
           )
         `)
@@ -114,7 +116,7 @@ export default function SettlementsPage() {
       // 2. 모든 투어 가져오기 (정산 미시작 투어 포함)
       const { data: allTours, error: toursError } = await supabase
         .from("singsing_tours")
-        .select("id, title, start_date, price, tour_product_id")
+        .select("id, title, start_date, end_date, price, tour_product_id")
         .is("quote_data", null)
         .order("start_date", { ascending: false })
         .limit(200);
@@ -178,6 +180,7 @@ export default function SettlementsPage() {
             tour_id: item.tour_id,
             tour_title: tour?.title || "투어명 없음",
             tour_start_date: tour?.start_date || "",
+            tour_end_date: tour?.end_date || undefined,
             contract_revenue: item.contract_revenue || 0,
             settlement_amount: settlementAmount,
             total_cost: totalCost,
@@ -217,6 +220,7 @@ export default function SettlementsPage() {
               tour_id: tour.id,
               tour_title: tour.title || "투어명 없음",
               tour_start_date: tour.start_date || "",
+              tour_end_date: tour.end_date || undefined,
               contract_revenue: contractRevenue,
               settlement_amount: 0,
               total_cost: 0,
@@ -290,21 +294,39 @@ export default function SettlementsPage() {
     }
   };
 
-  // 상품명에 따른 뱃지 색상 결정 함수
-  const getProductBadgeColor = (productName: string | undefined) => {
-    if (!productName) return { bg: 'bg-gray-100', text: 'text-gray-700' };
+  // 상품명에 따른 뱃지 색상 및 축약명 결정 함수
+  const getProductBadge = (productName: string | undefined) => {
+    if (!productName) return { bg: 'bg-gray-100', text: 'text-gray-700', short: '' };
     
     const name = productName.toLowerCase();
     
+    // 순천 풀패키지
     if (name.includes('순천') && name.includes('풀패키지')) {
-      return { bg: 'bg-green-100', text: 'text-green-700' };
+      return { bg: 'bg-green-100', text: 'text-green-700', short: '순천풀' };
     }
+    // 영덕 풀패키지
     if (name.includes('영덕') && name.includes('풀패키지')) {
-      return { bg: 'bg-orange-100', text: 'text-orange-700' };
+      return { bg: 'bg-orange-100', text: 'text-orange-700', short: '영덕풀' };
+    }
+    // 고창 풀패키지
+    if (name.includes('고창') && name.includes('풀패키지')) {
+      return { bg: 'bg-purple-100', text: 'text-purple-700', short: '고창풀' };
+    }
+    // 영덕 (일반)
+    if (name.includes('영덕')) {
+      return { bg: 'bg-orange-100', text: 'text-orange-700', short: '영덕' };
+    }
+    // 순천 (일반)
+    if (name.includes('순천')) {
+      return { bg: 'bg-green-100', text: 'text-green-700', short: '순천' };
+    }
+    // 고창 (일반)
+    if (name.includes('고창')) {
+      return { bg: 'bg-purple-100', text: 'text-purple-700', short: '고창' };
     }
     
     // 기본 색상
-    return { bg: 'bg-blue-100', text: 'text-blue-700' };
+    return { bg: 'bg-blue-100', text: 'text-blue-700', short: productName.length > 8 ? productName.substring(0, 8) + '...' : productName };
   };
 
   // 고유한 상품명 목록 생성
@@ -850,144 +872,159 @@ export default function SettlementsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 text-xs">
               <thead className="bg-gray-50">
                 <tr>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("tour_title")}
                   >
                     투어명 {getSortIcon("tour_title")}
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("start_date")}
                   >
-                    시작일 {getSortIcon("start_date")}
+                    기간 {getSortIcon("start_date")}
                   </th>
                   <th 
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("contract_revenue")}
                   >
                     계약 매출 {getSortIcon("contract_revenue")}
                   </th>
                   <th 
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("settlement_amount")}
                   >
                     정산 금액 {getSortIcon("settlement_amount")}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     총 원가
                   </th>
                   <th 
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("margin")}
                   >
                     마진 {getSortIcon("margin")}
                   </th>
                   <th 
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("margin_rate")}
                   >
                     마진률 {getSortIcon("margin_rate")}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     1인당 COM
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     상태
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     확인
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     작업
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {sortedSettlements.map((settlement) => {
-                  const badgeColors = getProductBadgeColor(settlement.product_name);
+                  const badge = getProductBadge(settlement.product_name);
                   return (
                   <tr key={settlement.tour_id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      <div className="flex flex-col gap-1">
-                        {settlement.product_name && (
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${badgeColors.bg} ${badgeColors.text}`}>
-                            {settlement.product_name}
-                          </span>
-                        )}
-                        <span>{settlement.tour_title}</span>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/tours/${settlement.tour_id}/settlement`}
+                          className="text-blue-600 hover:text-blue-800 flex-shrink-0"
+                          title="상세보기"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                        </Link>
+                        <div className="flex flex-col gap-1 min-w-0 flex-1">
+                          {settlement.product_name && badge.short && (
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${badge.bg} ${badge.text} w-fit`}>
+                              {badge.short}
+                            </span>
+                          )}
+                          <span className="text-xs font-medium text-gray-900 truncate">{settlement.tour_title}</span>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(settlement.tour_start_date)}
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="flex flex-col text-xs text-gray-500">
+                        <span>{formatDate(settlement.tour_start_date)}</span>
+                        {settlement.tour_end_date && (
+                          <span className="text-gray-400">~ {formatDate(settlement.tour_end_date)}</span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-gray-900">
                       {formatCurrency(settlement.contract_revenue)}원
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-semibold">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-blue-600 font-semibold">
                       {formatCurrency(settlement.settlement_amount)}원
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-orange-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-orange-600">
                       {formatCurrency(settlement.total_cost)}원
                     </td>
                     <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm text-right font-semibold ${
+                      className={`px-3 py-2 whitespace-nowrap text-xs text-right font-semibold ${
                         settlement.margin >= 0 ? "text-green-600" : "text-red-600"
                       }`}
                     >
                       {formatCurrency(settlement.margin)}원
                     </td>
                     <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm text-right font-semibold ${
+                      className={`px-3 py-2 whitespace-nowrap text-xs text-right font-semibold ${
                         settlement.margin_rate >= 0 ? "text-green-600" : "text-red-600"
                       }`}
                     >
                       {settlement.margin_rate.toFixed(2)}%
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-700">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-gray-700">
                       {settlement.participant_count && settlement.participant_count > 0
                         ? `${formatCurrency(settlement.com_per_person || 0)}원`
                         : "-"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       {settlement.settlement_status === "completed" ? (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 flex items-center gap-1">
+                        <span className="px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 inline-flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" />
-                          정산 완료
+                          완료
                         </span>
                       ) : settlement.settlement_status === "in_progress" ? (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex items-center gap-1">
+                        <span className="px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 inline-flex items-center gap-1">
                           <RefreshCw className="w-3 h-3" />
-                          정산 진행중
+                          진행중
                         </span>
                       ) : (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 flex items-center gap-1">
+                        <span className="px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 inline-flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          정산 미시작
+                          미시작
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    <td className="px-3 py-2 whitespace-nowrap text-center">
                       {settlement.needs_review ? (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full flex items-center gap-1 justify-center">
+                        <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full inline-flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
-                          확인 필요
+                          필요
                         </span>
                       ) : (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                          확인 완료
+                        <span className="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                          완료
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                    <td className="px-3 py-2 whitespace-nowrap text-center">
                       <Link
                         href={`/admin/tours/${settlement.tour_id}/settlement`}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
                       >
-                        상세보기
+                        <FileText className="w-3 h-3" />
+                        상세
                       </Link>
                     </td>
                   </tr>
