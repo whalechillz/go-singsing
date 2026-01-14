@@ -946,8 +946,8 @@ export default function SettlementsPage() {
                           {settlement.product_name && badge.short && (
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${badge.bg} ${badge.text} w-fit`}>
                               {badge.short}
-                            </span>
-                          )}
+                          </span>
+                        )}
                           <span className="text-xs font-medium text-gray-900 truncate">{settlement.tour_title}</span>
                         </div>
                       </div>
