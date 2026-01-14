@@ -31,18 +31,30 @@ export default function LoginPage() {
 
       if (authError) {
         console.error('로그인 에러:', authError);
-        setError(`로그인 실패: ${authError.message}`);
+        // CORS 에러인 경우 특별 처리
+        if (authError.message.includes('fetch') || authError.message.includes('CORS') || authError.message.includes('Failed to fetch')) {
+          setError('네트워크 연결 오류가 발생했습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
+        } else {
+          setError(`로그인 실패: ${authError.message}`);
+        }
         setLoading(false);
         return;
       }
 
       if (data.user) {
         // 사용자 정보 가져오기
-        const { data: userData } = await supabase
+        const { data: userData, error: userError } = await supabase
           .from("users")
           .select("role")
           .eq("email", data.user.email)
-          .single();
+          .maybeSingle();
+
+        if (userError) {
+          console.error('사용자 정보 조회 에러:', userError);
+          setError('사용자 정보를 불러올 수 없습니다. 관리자에게 문의해주세요.');
+          setLoading(false);
+          return;
+        }
 
         // 역할에 따라 리다이렉트
         if (userData?.role === "admin" || userData?.role === "manager") {
@@ -52,11 +64,18 @@ export default function LoginPage() {
         } else {
           router.push("/");
         }
+      } else {
+        setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+        setLoading(false);
       }
-    } catch (err) {
-      setError("로그인 중 오류가 발생했습니다.");
-      console.error(err);
-    } finally {
+    } catch (err: any) {
+      console.error('로그인 예외:', err);
+      // 네트워크 에러인 경우
+      if (err?.message?.includes('fetch') || err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
+        setError('네트워크 연결 오류가 발생했습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
+      } else {
+        setError(`로그인 중 오류가 발생했습니다: ${err?.message || '알 수 없는 오류'}`);
+      }
       setLoading(false);
     }
   };

@@ -514,3 +514,44 @@ CREATE TABLE user_roles (
   - 세금계산서 정보 중복 제거로 UI 단순화
   - 분할 납부 순번으로 입금 내역 관리 용이
   - 잔금 영수증을 골프장 입금 내역에 쉽게 연결 가능
+
+## 2025-12-22 에러 수정 및 안정성 개선
+
+**내용**:
+1. **입금 순번 배지 스타일 적용**:
+   - 입금 1차: 파란색 배지 (`bg-blue-100 text-blue-800`)
+   - 입금 2차: 초록색 배지 (`bg-green-100 text-green-800`)
+   - 입금 3차 이상: 보라색 배지 (`bg-purple-100 text-purple-800`)
+   - 텍스트에서 배지 스타일로 변경하여 시각적 구분 개선
+
+2. **영수증 URL null 체크 및 에러 처리**:
+   - `createSettlementSignedUrl`이 `null`을 반환할 경우 처리 추가
+   - 영수증 미리보기 및 썸네일 로드 시 에러 메시지 표시
+   - 사용자에게 명확한 에러 피드백 제공
+
+3. **Supabase 쿼리 에러 처리 개선**:
+   - `.single()` 대신 `.maybeSingle()` 사용하여 데이터 없음 상황 처리
+   - 쿼리 에러 발생 시 콘솔 로그 및 사용자 알림 추가
+   - 썸네일 로드 실패 시 무한 로딩 방지
+
+4. **Service Worker CORS 에러 수정**:
+   - Supabase 요청을 Service Worker에서 완전히 제외
+   - POST 요청 및 외부 API 요청을 Service Worker가 가로채지 않도록 수정
+   - 정적 리소스만 캐시 처리하도록 개선
+
+5. **로그인 페이지 에러 처리 개선**:
+   - CORS 에러 및 네트워크 에러에 대한 명확한 메시지 표시
+   - 사용자 정보 조회 실패 시 에러 처리 추가
+   - 예외 상황에 대한 상세한 에러 메시지 제공
+
+**변경 파일**:
+- `components/admin/tours/TourSettlementManager.tsx`: 입금 순번 배지, 영수증 에러 처리, 썸네일 로드 에러 처리 개선
+- `public/sw.js`: Service Worker에서 Supabase 요청 완전 제외
+- `app/login/page.tsx`: 로그인 에러 처리 개선
+- `docs/project_plan.md`: 에러 수정 내용 문서화
+
+**개선 효과**:
+- 입금 순번이 배지로 표시되어 시각적 구분이 명확해짐
+- 영수증 로드 실패 시 명확한 에러 메시지로 사용자 경험 개선
+- Service Worker가 Supabase 요청을 가로채지 않아 CORS 에러 해결
+- 로그인 실패 시 원인을 파악하기 쉬운 에러 메시지 제공

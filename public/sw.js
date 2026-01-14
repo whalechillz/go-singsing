@@ -29,13 +29,19 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // API 요청이나 외부 리소스는 캐시하지 않음
+  const url = new URL(event.request.url);
+  
+  // API 요청, 외부 리소스, Supabase 요청은 완전히 Service Worker를 우회
   if (event.request.url.includes('/api/') || 
       event.request.url.includes('supabase.co') ||
-      event.request.url.includes('solapi.com')) {
+      event.request.url.includes('supabase') ||
+      event.request.url.includes('solapi.com') ||
+      event.request.method !== 'GET') {
+    // 네트워크 요청만 수행, 캐시 사용 안 함
     return;
   }
 
+  // 정적 리소스만 캐시 처리
   event.respondWith(
     caches.match(event.request)
       .then(response => {

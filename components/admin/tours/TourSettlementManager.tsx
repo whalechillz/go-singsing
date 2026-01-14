@@ -134,20 +134,34 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
             thumbnailPromises.push(
               (async () => {
                 try {
-                  const { data: doc } = await supabase
+                  const { data: doc, error: docError } = await supabase
                     .from("tour_settlement_documents")
                     .select("file_path, file_type")
                     .eq("id", deposit.document_id)
-                    .single();
+                    .maybeSingle();
 
-                  if (doc && doc.file_type?.startsWith("image/")) {
-                    const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
-                    if (url) {
-                      setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+                  if (docError || !doc) {
+                    console.error(`Failed to fetch document for deposit ${key}:`, docError);
+                    setDepositThumbnails(prev => ({ ...prev, [key]: undefined }));
+                    return;
+                  }
+
+                  if (doc.file_type?.startsWith("image/")) {
+                    try {
+                      const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
+                      if (url) {
+                        setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+                      } else {
+                        setDepositThumbnails(prev => ({ ...prev, [key]: undefined }));
+                      }
+                    } catch (urlError) {
+                      console.error(`Failed to create signed URL for deposit ${key}:`, urlError);
+                      setDepositThumbnails(prev => ({ ...prev, [key]: undefined }));
                     }
                   }
                 } catch (error) {
                   console.error(`Failed to load thumbnail for deposit ${key}:`, error);
+                  setDepositThumbnails(prev => ({ ...prev, [key]: undefined }));
                 }
               })()
             );
@@ -1817,8 +1831,14 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                       {(settlement.deposits || []).map((deposit: any, depositIdx: number) => (
                         <div key={depositIdx} className="bg-white rounded-lg p-3 mb-2 border border-gray-200">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold text-gray-700">
-                              {deposit.sequence ? `입금 ${deposit.sequence}차` : `입금 ${depositIdx + 1}차`}
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              (deposit.sequence || depositIdx + 1) === 1 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : (deposit.sequence || depositIdx + 1) === 2 
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              입금 {deposit.sequence || depositIdx + 1}차
                             </span>
                             <button
                               type="button"
@@ -2087,17 +2107,35 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                               alt="영수증 썸네일"
                                               className="w-full h-full object-cover cursor-pointer"
                                               onClick={async () => {
-                                                const { data: doc } = await supabase
-                                                  .from("tour_settlement_documents")
-                                                  .select("file_path, file_name")
-                                                  .eq("id", deposit.document_id)
-                                                  .single();
-                                                
-                                                if (doc) {
-                                                  const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
-                                                  setReceiptPreviewUrl(url);
-                                                  setReceiptPreviewFileName(doc.file_name);
-                                                  setReceiptPreviewOpen(true);
+                                                try {
+                                                  const { data: doc, error: docError } = await supabase
+                                                    .from("tour_settlement_documents")
+                                                    .select("file_path, file_name")
+                                                    .eq("id", deposit.document_id)
+                                                    .maybeSingle();
+                                                  
+                                                  if (docError || !doc) {
+                                                    console.error("Failed to fetch document:", docError);
+                                                    alert('영수증 정보를 불러올 수 없습니다.');
+                                                    return;
+                                                  }
+
+                                                  try {
+                                                    const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
+                                                    if (url) {
+                                                      setReceiptPreviewUrl(url);
+                                                      setReceiptPreviewFileName(doc.file_name);
+                                                      setReceiptPreviewOpen(true);
+                                                    } else {
+                                                      alert('영수증 이미지를 불러올 수 없습니다.');
+                                                    }
+                                                  } catch (urlError) {
+                                                    console.error("Failed to create signed URL:", urlError);
+                                                    alert('영수증 이미지를 불러올 수 없습니다.');
+                                                  }
+                                                } catch (error) {
+                                                  console.error("Error loading receipt:", error);
+                                                  alert('영수증을 불러오는 중 오류가 발생했습니다.');
                                                 }
                                               }}
                                             />
@@ -2111,17 +2149,35 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
                                           <button
                                             type="button"
                                             onClick={async () => {
-                                              const { data: doc } = await supabase
-                                                .from("tour_settlement_documents")
-                                                .select("file_path, file_name")
-                                                .eq("id", deposit.document_id)
-                                                .single();
-                                              
-                                              if (doc) {
-                                                const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
-                                                setReceiptPreviewUrl(url);
-                                                setReceiptPreviewFileName(doc.file_name);
-                                                setReceiptPreviewOpen(true);
+                                              try {
+                                                const { data: doc, error: docError } = await supabase
+                                                  .from("tour_settlement_documents")
+                                                  .select("file_path, file_name")
+                                                  .eq("id", deposit.document_id)
+                                                  .maybeSingle();
+                                                
+                                                if (docError || !doc) {
+                                                  console.error("Failed to fetch document:", docError);
+                                                  alert('영수증 정보를 불러올 수 없습니다.');
+                                                  return;
+                                                }
+
+                                                try {
+                                                  const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
+                                                  if (url) {
+                                                    setReceiptPreviewUrl(url);
+                                                    setReceiptPreviewFileName(doc.file_name);
+                                                    setReceiptPreviewOpen(true);
+                                                  } else {
+                                                    alert('영수증 이미지를 불러올 수 없습니다.');
+                                                  }
+                                                } catch (urlError) {
+                                                  console.error("Failed to create signed URL:", urlError);
+                                                  alert('영수증 이미지를 불러올 수 없습니다.');
+                                                }
+                                              } catch (error) {
+                                                console.error("Error loading receipt:", error);
+                                                alert('영수증을 불러오는 중 오류가 발생했습니다.');
                                               }
                                             }}
                                             className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 w-fit"
@@ -3359,20 +3415,34 @@ const TourSettlementManager: React.FC<TourSettlementManagerProps> = ({
             // 썸네일 로드
             const key = `${selectedDeposit.settlementIdx}-${selectedDeposit.depositIdx}`;
             try {
-              const { data: doc } = await supabase
+              const { data: doc, error: docError } = await supabase
                 .from("tour_settlement_documents")
                 .select("file_path, file_type")
                 .eq("id", finalDocumentId)
-                .single();
+                .maybeSingle();
 
-              if (doc && doc.file_type?.startsWith("image/")) {
-                const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
-                if (url) {
-                  setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+              if (docError || !doc) {
+                console.error("Failed to fetch document for thumbnail:", docError);
+                setDepositThumbnails(prev => ({ ...prev, [key]: undefined }));
+                return;
+              }
+
+              if (doc.file_type?.startsWith("image/")) {
+                try {
+                  const url = await createSettlementSignedUrl(doc.file_path, 60 * 10);
+                  if (url) {
+                    setDepositThumbnails(prev => ({ ...prev, [key]: url }));
+                  } else {
+                    setDepositThumbnails(prev => ({ ...prev, [key]: undefined }));
+                  }
+                } catch (urlError) {
+                  console.error("Failed to create signed URL for thumbnail:", urlError);
+                  setDepositThumbnails(prev => ({ ...prev, [key]: undefined }));
                 }
               }
             } catch (error) {
               console.error("Failed to load thumbnail:", error);
+              setDepositThumbnails(prev => ({ ...prev, [key]: undefined }));
             }
             
             // pendingDocumentId 초기화
