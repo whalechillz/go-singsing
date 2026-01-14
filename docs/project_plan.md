@@ -548,7 +548,7 @@ CREATE TABLE user_roles (
 - `components/admin/tours/TourSettlementManager.tsx`: 입금 순번 배지, 영수증 에러 처리, 썸네일 로드 에러 처리 개선
 - `public/sw.js`: Service Worker에서 Supabase 요청 완전 제외
 - `app/login/page.tsx`: 로그인 에러 처리 개선
-- `utils/settlementMapping.ts`: 타입 에러 수정 (user.data.user → userData?.user)
+- `utils/settlementMapping.ts`: 타입 에러 수정 (userData?.user?.id → user?.id, 다른 파일들과 패턴 통일)
 - `docs/project_plan.md`: 에러 수정 내용 문서화
 
 **개선 효과**:
