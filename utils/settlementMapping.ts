@@ -293,7 +293,7 @@ export async function applyMappingToExpenses(
     }
 
     // 매핑 이력 저장
-    const { data: user } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
     
     const { error: mappingError } = await supabase
       .from('tour_settlement_document_mappings')
@@ -305,7 +305,7 @@ export async function applyMappingToExpenses(
         mapped_fields: fieldsToApply,
         is_applied: true,
         applied_at: new Date().toISOString(),
-        applied_by: user.data.user?.id || null,
+        applied_by: userData?.user?.id || null,
       });
 
     if (mappingError) {
